@@ -40,7 +40,7 @@ class environment:
     def __init__(self,epics = None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
-        self.areas = [ "support", "ioc", "matlab", "python"]
+        self.areas = ["support", "ioc", "matlab", "python"]
         if epics:
             self.setEpics(epics)
     
@@ -148,28 +148,6 @@ class environment:
             return [(x[7],x[8]) for x in order]
         else:        
             return [x[7] for x in order]
-    
-def makefile_location():
-    """Location of setuptools makefile, needed for building other python modules
-    """
-    print os.path.abspath(os.path.dirname(__file__))+"/setuptools.mk"
-    
-def make_new_app():
-    """Make a new python app using example as a template"""
-    usage = "%prog <module_name>\n"
-    usage+= "Start a new python app locally in . with name <module_name>\n"
-    usage+= "Create a directory called <module_name> and move into it first.\n"
-    usage+= "This module is NOT imported into svn"
-    parser = OptionParser(usage)
-    (options, args) = parser.parse_args()
-    if len(args)!=1:
-        parser.error("Incorrect number of arguments.")
-    module = args[0]
-    base = os.path.abspath(os.path.dirname(__file__))+"/example"
-    os.mkdir("src")
-    for f in ["Makefile","setup.py","src/__init__.py","src/example.py"]:
-        os.system("sed -e s/example/"+module+"/g "+os.path.join(base,f)+" > "+\
-                  f.replace("example",module))
             
 if __name__=="__main__":
     # test
