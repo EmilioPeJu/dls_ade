@@ -1,0 +1,177 @@
+#!/usr/bin/env python2.4
+# Author: Diamond Light Source, Copyright 2008
+#
+# License: This file is part of 'dls.environment'
+# 
+# 'dls.environment' is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# 'dls.environment' is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+# 
+# You should have received a copy of the GNU Lesser General Public License
+# along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
+
+import os, shutil,re
+from optparse import OptionParser
+
+class environment:
+    """A class representing the epics environment of a site. epics=version of
+    epics, e.g R3.14.8.2 If you modify this to suit your site environment, you
+    will be able to use any of the dls modules without modification. This module
+    has the idea of areas. An area is simply an argument that can be passed to
+    devArea or prodArea. support and ioc must exist to use modules like the
+    dependency checker, others may be added. For example the dls support devArea
+    contains all support modules, and is located at
+    /dls_sw/work/R3.14.8.2/support. This is the area for testing modules. There
+    is a similar prodArea at /dls_sw/prod/R3.14.8.2/support for releases. These
+    are then used to locate the root of a particular module.
+
+    Variables
+    epics: the version of epics
+    epics_ver_re: a useful regex for matching the version of epics
+    areas: the areas that can be passed to devArea() or prodArea()
+    """
+
+    def __init__(self,epics = None):
+        self.epics = None
+        self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
+        self.areas = [ "support", "ioc", "matlab", "python"]
+        if epics:
+            self.setEpics(epics)
+    
+    def setEpicsFromEnv(self):
+        """Try to get epics version from the environment, and set self.epics"""
+        try:
+            self.epics = os.environ['DLS_EPICS_RELEASE']
+        except KeyError:
+            try:
+                self.epics = os.environ['EPICS_RELEASE']
+            except KeyError:
+                self.epics = 'R3.14.8.2'
+
+    def copy(self):
+        """Return a copy of self"""
+        return environment(self.epicsVer())
+    
+    def setEpics(self,epics):
+        """Force the version of epics in self"""
+        self.epics = epics
+        
+    def epicsDir(self):
+        """Return the root directory of the epics installation"""
+        if self.epicsVer()<"R3.14":
+            return os.path.join("/home","epics",self.epicsVer())
+        else:
+            return os.path.join("/dls_sw","epics",self.epicsVer())
+        
+    def epicsVer(self):
+        """Return the version of epics from self. If it not set, try and get it
+        from the environment"""
+        if not self.epics:
+            self.setEpicsFromEnv()  
+        return self.epics           
+
+    def devArea(self,area = "support"):
+        """Return the development directory for a particular area"""
+        assert area in self.areas, "Only the following areas are supported: "+\
+               ",".join(self.areas)
+        if self.epicsVer()<"R3.14":
+            if area in ["support","ioc"]:
+                return os.path.join("/home","diamond",self.epicsVer(),"work",\
+                                    area)
+            elif area in ["init"]:
+                return os.path.join("/dls_sw","work","etc",area)
+            else:
+                return os.path.join("/home","diamond","common","work",area)
+        else:
+            if area in ["support","ioc"]:
+                return os.path.join("/dls_sw","work",self.epicsVer(),area)
+            elif area in ["init"]:
+                return os.path.join("/dls_sw","work","etc",area)
+            else:
+                return os.path.join("/dls_sw","work","common",area) 
+    
+    def prodArea(self,area = "support"):
+        """Return the production directory for a particular area"""
+        return self.devArea(area).replace("work","prod")
+
+    def sortReleases(self,releases):
+        """Sort a list of release numbers or release paths or tuples of release
+        paths with objects according to local rules, and return them in 
+        ascending order."""
+        order = []
+        # order = (1st,2nd,3rd,4th,5th,6th,suffix,path[,object])
+        # e.g. ./4-5dls1-3-1 = (4,5,0,1,3,1,"release",./4-5dls1-3)
+        for path in releases:
+            try:
+                if type(path) == tuple:
+                    o = [0,0,0,0,0,0,"release",path[0],path[1]]
+                    path = path[0]
+                else:
+                    o = [0,0,0,0,0,0,"release",path]
+                version = os.path.basename(path.rstrip("/"))
+                version = version.replace(".","-").replace("_","-")
+                split = [x.split("-") for x in version.split("dls")]
+                split0 = split[0]
+                numre = re.compile("\d*")
+                if len(split)>1:
+                    split1 = split[1]
+                    lastarray = split1
+                else:
+                    split1 = []
+                    lastarray = split0
+                lastnum = str(numre.findall(lastarray[-1])[0])
+                if lastnum != lastarray[-1]:
+                    # we have a bit of text on the end
+                    o[6]=lastarray[-1].replace(lastnum,"")
+                lastarray[-1]=lastnum                
+                for i,x in enumerate(split0):
+                    try:
+                        o[i]=int(x)
+                    except ValueError:
+                        pass
+                for i,x in enumerate(split1):
+                    try:                
+                        o[i+3]=int(x)
+                    except ValueError:
+                        pass                    
+                order.append(tuple(o))
+            except:
+                order.append(tuple(o))
+        order.sort()
+        if len(order[0])>8:
+            return [(x[7],x[8]) for x in order]
+        else:        
+            return [x[7] for x in order]
+    
+def makefile_location():
+    """Location of setuptools makefile, needed for building other python modules
+    """
+    print os.path.abspath(os.path.dirname(__file__))+"/setuptools.mk"
+    
+def make_new_app():
+    """Make a new python app using example as a template"""
+    usage = "%prog <module_name>\n"
+    usage+= "Start a new python app locally in . with name <module_name>\n"
+    usage+= "Create a directory called <module_name> and move into it first.\n"
+    usage+= "This module is NOT imported into svn"
+    parser = OptionParser(usage)
+    (options, args) = parser.parse_args()
+    if len(args)!=1:
+        parser.error("Incorrect number of arguments.")
+    module = args[0]
+    base = os.path.abspath(os.path.dirname(__file__))+"/example"
+    os.mkdir("src")
+    for f in ["Makefile","setup.py","src/__init__.py","src/example.py"]:
+        os.system("sed -e s/example/"+module+"/g "+os.path.join(base,f)+" > "+\
+                  f.replace("example",module))
+            
+if __name__=="__main__":
+    # test
+    e = environment("R3.14.8.2")
+    print "epics:",e.epicsVer()
