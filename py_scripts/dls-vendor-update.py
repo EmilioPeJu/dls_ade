@@ -85,7 +85,7 @@ def vendor_update():
     assert not diffs, 'Vendor "current" of: '+vendor+' is not at revision: ' + old
 
     print 'Importing: '+module+' from: '+source+' to update from version: '+old+' to version: '+new
-    os.system('dls-svn_load_dirs -t '+new+" "+vendor+" current "+source)
+    os.system('dls-svn-load-dirs.pl -t '+new+" "+vendor+" current "+source)
 
     print
     print 'You probably now want to merge this update into the trunk.'
