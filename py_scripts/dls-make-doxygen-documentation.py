@@ -9,12 +9,12 @@ run doxygen on the generated config.src to generate files"""
 
 import os, sys, glob, re
 from optparse import OptionParser
+from dls_environment import environment
 
 def make_config_dict(root = "../.."):
     """Make the Doxygen config dict from information on the current module.
     Assumes that $(pwd)/<root> is the module root"""
     root = os.path.abspath(root)    
-    from dls.dependency_tree import dependency_tree
     d = {}
     d["EXCLUDE"]    = " ".join(glob.glob(root+'/*App/src/*Main.cpp'))
     d["INPUT"]               = ". "
@@ -27,21 +27,22 @@ def make_config_dict(root = "../.."):
     if os.path.isdir(root+"/etc/"):
         d["INPUT"] += " " + root + "/etc/"
     # make a dependency_tree of . to find tree name and version information
-    tree = dependency_tree(None,root+"/configure/RELEASE",includes=False)
+    e = environment()
+    module_name, module_version = e.classifyPath(root+"/configure/RELEASE")
     # if the tree is invalid, check to see if what kind of module it is:
     version = ""
-    if tree.version == "invalid":
-        for area in tree.e.areas:
-            if tree.e.prodArea(area) in root:
-                split = root.replace(tree.e.prodArea(area),"").split("/")
+    if module_version == "invalid":
+        for area in module_e.areas:
+            if e.prodArea(area) in root:
+                split = root.replace(e.prodArea(area),"").split("/")
                 name = split[-2]
                 version = split[-1]
             else:
                 name = root.split("/")[-1]
     else:
-        name = tree.name
-        if tree.version not in ["work","local","invalid"]:
-            version = tree.version
+        name = module_name
+        if module_version not in ["work","local","invalid"]:
+            version = module_version
     d["PROJECT_NAME"]        = name
     d["PROJECT_NUMBER"]      = version
     return d
@@ -69,7 +70,8 @@ def main():
     filtname = "doxygen_filter.sh"
     filt = open(out+"/"+filtname,"w")
     print >> filt, "#!/bin/env sh"
-    print >> filt, '/dls_sw/tools/bin/python2.4 %s/input_filter.py $1'%os.path.abspath(os.path.dirname(__file__))
+    import dls_scripts.input_filter    
+    print >> filt, '%s %s $1'%(sys.executable, dls_scripts.input_filter.__file__)
     filt.close()
     # tell doxygen to use the filter
     f.write("FILTER_PATTERNS = %s\n"%(" ".join("*.%s=./%s"%(e,filtname) for e in ["vdb","proto","protocol","template","db", "pmc"])))
@@ -99,10 +101,8 @@ def main():
     # Make the filter executable
     os.system("chmod +x "+out+"/"+filtname)    
     print "Running Doxygen..."
-    os.system("cd %s; /dls_sw/tools/applications/doxygen-1.6.2/bin/doxygen config.cfg"%out)
+    os.system("cd %s; %s/doxygen config.cfg"%(out, os.path.dirname(sys.executable)))
     print "Done"
 
 if __name__=="__main__":
-    from pkg_resources import require
-    require("dls.dependency_tree==1.8")
-    main()
+    sys.exit(main())

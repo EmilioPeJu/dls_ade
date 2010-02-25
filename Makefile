@@ -4,9 +4,6 @@ INSTALL_DIR=$(PREFIX)/lib/python2.6/site-packages
 SCRIPT_DIR=$(PREFIX)/bin
 PYTHON=$(SCRIPT_DIR)/dls-python2.6
 
-INSTALL_DIR=testlib
-SCRIPT_DIR=testbin
-
 build: setup.py $(wildcard dls_scripts/*.py)
 	$(PYTHON) setup.py build
 
