@@ -2,17 +2,17 @@
 # Author: Diamond Light Source, Copyright 2008
 #
 # License: This file is part of 'dls.environment'
-# 
+#
 # 'dls.environment' is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # 'dls.environment' is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -43,7 +43,7 @@ class environment:
         self.areas = ["support", "ioc", "matlab", "python"]
         if epics:
             self.setEpics(epics)
-    
+
     def setEpicsFromEnv(self):
         """Try to get epics version from the environment, and set self.epics"""
         try:
@@ -57,24 +57,24 @@ class environment:
     def copy(self):
         """Return a copy of self"""
         return environment(self.epicsVer())
-    
+
     def setEpics(self,epics):
         """Force the version of epics in self"""
         self.epics = epics
-        
+
     def epicsDir(self):
         """Return the root directory of the epics installation"""
         if self.epicsVer()<"R3.14":
             return os.path.join("/home","epics",self.epicsVer())
         else:
             return os.path.join("/dls_sw","epics",self.epicsVer())
-        
+
     def epicsVer(self):
         """Return the version of epics from self. If it not set, try and get it
         from the environment"""
         if not self.epics:
-            self.setEpicsFromEnv()  
-        return self.epics           
+            self.setEpicsFromEnv()
+        return self.epics
 
     def devArea(self,area = "support"):
         """Return the development directory for a particular area"""
@@ -94,15 +94,15 @@ class environment:
             elif area in ["init"]:
                 return os.path.join("/dls_sw","work","etc",area)
             else:
-                return os.path.join("/dls_sw","work","common",area) 
-    
+                return os.path.join("/dls_sw","work","common",area)
+
     def prodArea(self,area = "support"):
         """Return the production directory for a particular area"""
         return self.devArea(area).replace("work","prod")
 
     def sortReleases(self,releases):
         """Sort a list of release numbers or release paths or tuples of release
-        paths with objects according to local rules, and return them in 
+        paths with objects according to local rules, and return them in
         ascending order."""
         order = []
         # order = (1st,2nd,3rd,4th,5th,6th,suffix,path[,object])
@@ -129,26 +129,49 @@ class environment:
                 if lastnum != lastarray[-1]:
                     # we have a bit of text on the end
                     o[6]=lastarray[-1].replace(lastnum,"")
-                lastarray[-1]=lastnum                
+                lastarray[-1]=lastnum
                 for i,x in enumerate(split0):
                     try:
                         o[i]=int(x)
                     except ValueError:
                         pass
                 for i,x in enumerate(split1):
-                    try:                
+                    try:
                         o[i+3]=int(x)
                     except ValueError:
-                        pass                    
+                        pass
                 order.append(tuple(o))
             except:
                 order.append(tuple(o))
         order.sort()
         if len(order[0])>8:
             return [(x[7],x[8]) for x in order]
-        else:        
+        else:
             return [x[7] for x in order]
-            
+
+    def classifyPath(self, path):
+        """Classify the name and version of the path of the root of a module"""
+        sections = path.split("/")
+        if self.prodArea("support") in path:
+            name = sections[-2]
+            version = sections[-1]
+        elif self.prodArea("ioc") in path:
+            name = sections[-3]+"/"+sections[-2]
+            version = sections[-1]
+        elif self.devArea("support") in path:
+            name = sections[-1]
+            version = "work"
+        elif self.devArea("ioc") in path:
+            name = sections[-2]+"/"+sections[-1]
+            version = "work"
+        else:
+            if "ioc" in path:
+                name = sections[-2]+"/"+sections[-1]
+            else:
+                name = sections[-1]
+            version = "local"
+        return (name, version)
+
 if __name__=="__main__":
     # test
     e = environment("R3.14.8.2")
