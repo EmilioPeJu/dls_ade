@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <source> <module> <version>
 
 Default <area> is 'support'.
@@ -9,11 +9,11 @@ The script imports the code from <source> to a vendor module in svn at diamond/v
 It also copies the code to the trunk and then checks the code out into the current directory."""
 
 import os, sys
-from common import *
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 
-@doc(usage)
 def vendor_import():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
         parser.error("Incorrect number of arguments.")
@@ -61,4 +61,4 @@ def vendor_import():
     print ''
 
 if __name__ == "__main__":
-    vendor_import()
+    sys.exit(vendor_import())

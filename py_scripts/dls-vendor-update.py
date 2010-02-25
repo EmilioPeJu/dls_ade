@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <source> <module> <old> <new>
 
 Default <area> is 'support'.
@@ -38,13 +38,12 @@ This takes into account any local Diamond changes already in trunk).
 Now check for conflicts and resolve these before commiting the changes back to the repository.
 Finally, it is possible to make a release of the new vendor code by using "dls-release.py"."""
 
-
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
 
-@doc(usage)
 def vendor_update():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=4:
         parser.error("Incorrect number of arguments.")
@@ -91,9 +90,9 @@ def vendor_update():
     print 'You probably now want to merge this update into the trunk.'
     print 'Do this by issuing the following commands:'
     print
-    print 'svn checkout ' + trunk + ' ' + disk_dir
+    print 'svn checkout ' + trunk + ' ' + disk_dir + ' > /dev/null'
     print 'svn merge ' + vendor_old + ' ' + vendor_new + ' ' + disk_dir
     print
 
 if __name__ == "__main__":
-    vendor_update()
+    sys.exit(vendor_update())

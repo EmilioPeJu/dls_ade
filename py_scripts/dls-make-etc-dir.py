@@ -1,4 +1,5 @@
-#!/bin/env dls-python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
 usage = """%prog [options]
 
@@ -28,8 +29,6 @@ This will create the following structure:
 """
 import os, sys, re, glob
 from optparse import OptionParser
-from common import doc
-from make_builder import make_builder_f, all_protos
 
 def create_file(filename, text):
     print "Creating", filename
@@ -39,7 +38,6 @@ def create_dir(dirname):
     print "Creating directory", dirname
     os.mkdir(dirname)    
 
-@doc(usage)
 def make_etc_dir():
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
@@ -70,18 +68,46 @@ include $(TOP)/configure/RULES_DIRS
         os.system("make > /dev/null")
     if os.path.isdir("db"):
         dbfiles = os.listdir("db")
+        all_protos = set()
         for dbf in dbfiles:
-#            try:
             print "Parsing", dbf
-            t, i, e = make_builder_f("db/"+dbf)
-#            except Exception, e:
-#                print "*** Warning: error occured: ", e
-#                continue
+            filename = "db/"+dbf
+                        
+            # get the template text
+            ft = open(filename).read()
+            basename = os.path.basename(filename)
+            clsname = basename.split(".")[0]
+            modname = os.path.basename(os.path.abspath("."))
+            
+            # find all protocol files
+            protos = set(re.findall(r"@(.*\.proto[^ ]*)",ft))
+            all_protos.update(protos)
+            
+            i = ["from iocbuilder import AutoSubstitution"]
+            if protos:
+                deps = "AutoSubstitution, AutoProtocol"
+                i.append("from iocbuilder.modules.streamDevice import AutoProtocol")
+            else:
+                deps = "AutoSubstitution"
+            text += "class %s(%s):\n" % (clsname, deps)
+            text += "    # Substitution attributes\n"
+            text += "    TemplateFile = '%s'\n"%basename  
+            text += "\n"    
+            if protos:
+                text += "    # AutoProtocol attributes\n"
+                text += "    ProtocolFiles = %s\n" % (list(protos).__repr__())
+                text += "\n"    
+            text += "\n"    
+            l = "\t<%s.%s" % (modname, clsname)
+            if protos:
+                p = list(protos)[0].split(".")[0]
+                extext += '\t<pyDrv.serial_sim_instance module="%s_sim" name="%sSim" pyCls="%s"/>\n' % (p, clsname, p)
+                extext += '\t<asyn.AsynIP name="%sAsyn" port="172.23.111.180:7001" simulation="%sSim"/>\n' %(clsname, p)        
+                l += ' PORT="%sAsyn"' % p
+            extext += l + "/>\n"
             for imp in i:
                 if imp not in imports:
                     imports.append(imp)
-            text += t
-            extext += e    
     create_file("etc/builder.py", "%s\n\n%s" % ("\n".join(imports), text)) 
       
     # now write the ioc makefile
@@ -280,5 +306,4 @@ include $(TOP)/configure/RULES_DIRS
         open("Makefile", "w").write(mtext.replace(srch, iline + srch))    
 
 if __name__=="__main__":
-    make_etc_dir()
-
+    sys.exit(make_etc_dir())

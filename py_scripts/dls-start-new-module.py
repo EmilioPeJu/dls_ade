@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <module_name>
 
 Default <area> is 'support'.
@@ -14,12 +14,11 @@ Otherwise it will be imported as BL02I/VA (old naming style)
 If the Technical area is BL then a different template is used, to create a top level module for screens and gda."""
 
 import os, sys, shutil
-from optparse import OptionParser
-from common import *
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 
-@doc(usage)
 def start_new_module():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     parser.add_option("-n", "--no_import", action="store_true", dest="no_import", help="Creates the module but doesn't import into svn")
     parser.add_option("-f","--fullname", action="store_true", dest="fullname", help="create new-style ioc, with full ioc name in path")
     (options, args) = parser.parse_args()
@@ -73,7 +72,7 @@ def start_new_module():
     def_message += '\nYou can also add dependencies to '+os.path.join(disk_dir,app_name+'App/src/Makefile')
     def_message += '\nand '+os.path.join(disk_dir,app_name+'App/Db/Makefile')+" if appropriate."
     # write the message to python modules
-    py_message = "\nPlease add your scripts to the "+os.path.join(disk_dir,"src")+" directory and edit "+os.path.join(disk_dir,"setup.py")+" appropriately."                
+    py_message = "\nPlease add your python files to the "+os.path.join(disk_dir,module)+" directory and edit "+os.path.join(disk_dir,"setup.py")+" appropriately."                
     # make the module in .
     if options.area in ["ioc","support"]:
         if options.area == "ioc":
@@ -87,9 +86,53 @@ def start_new_module():
                 print def_message
         else:
             os.system('makeBaseApp.pl -t dls ' + module)
+            os.system('dls-make-etc-dir.py && make clean uninstall')
             print def_message            
     elif options.area == "python":
-        os.system('dls-python-make-new-app.py '+module)
+    	os.mkdir(module)
+    	os.mkdir(os.path.join(module,module))
+    	open(os.path.join(module,"setup.py"),"w").write("""from setuptools import setup
+    	
+# this line allows the version to be specified in the release script
+globals().setdefault('version', '0.0')
+    	
+setup(
+#    install_requires = ['cothread'], # require statements go here
+    name = '%s',
+    version = version,
+    description = 'Module',
+    author = '%s',
+    author_email = '%s@rl.ac.uk',    
+    packages = ['%s'],
+#    entry_points = {'console_scripts': ['dls-hello-world.py = %s.%s:main']}, # this makes a script
+#    include_package_data = True, # use this to include non python files
+    zip_safe = False
+    )    	
+""" %(module, os.getlogin(), os.getlogin(), module, module, module))
+    	open(os.path.join(module,"Makefile"),"w").write("""# Specify where we should build for testing
+PYTHON=/dls_sw/work/tools/RHEL5/bin/dls-python2.6
+INSTALL_DIR=/dls_sw/work/tools/RHEL5/lib/python2.6/site-packages
+SCRIPT_DIR=/dls_sw/work/tools/RHEL5/bin
+
+dist: setup.py $(wildcard %s/*.py)
+	$(PYTHON) setup.py bdist_egg
+	touch dist
+
+clean:
+	$(PYTHON) setup.py clean
+	-rm -rf build dist *egg-info installed.files
+	-find -name '*.pyc' -exec rm {} \;
+
+install: dist
+	$(PYTHON) setup.py easy_install \
+		--record=installed.files \	
+		--install-dir=$(INSTALL_DIR) \
+		--script-dir=$(SCRIPT_DIR) dist/*.egg    	
+"""%module)
+    	open(os.path.join(module,module,module+".py"),"w").write("""def main():
+	print "Hello world from %s"
+"""%module)	    	
+    	open(os.path.join(module,module,"__init__.py"),"w").write("")
         print py_message
     else:
         raise TypeError, "Don't know how to make a module of type "+options.area
@@ -103,9 +146,12 @@ def start_new_module():
         print 'Checkout ' + disk_dir + ' from ' + dest
         svn.checkout( dest, disk_dir)
         user = os.getlogin()
-        svn.propset("svn:ignore","bin\ndata\ndb\ndbd\ninclude\nlib\n",disk_dir)
+        if options.area == "python":
+	        svn.propset("svn:ignore","dist\nbuild\ninstalled.files\n",disk_dir)        
+        else:
+	        svn.propset("svn:ignore","bin\ndata\ndb\ndbd\ninclude\nlib\n",disk_dir)	
         svn.propset("dls:contact",user,disk_dir)
         svn.checkin(disk_dir,module+": changed contact and set svn:ignore")
 
 if __name__ == "__main__":
-    start_new_module()
+    sys.exit(start_new_module())

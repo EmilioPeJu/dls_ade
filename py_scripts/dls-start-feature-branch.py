@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <module_name> <branch_name>
 
 Default <area> is 'support'.
@@ -8,11 +8,11 @@ Start a new feature branch, used to create a branch from the trunk.
 The script copies the trunk of the current module into a new branch <branch_name>, reflecting the current changes."""
 
 import os, sys, shutil
-from common import *
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 
-@doc(usage)
 def start_feature_branch():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=2:
         parser.error("Incorrect number of arguments.")
@@ -96,4 +96,4 @@ def start_feature_branch():
         svn.checkout(branch,branch.split("/")[-1])
 
 if __name__ == "__main__":
-    start_feature_branch()
+    sys.exit(start_feature_branch())

@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog [options] [<dom_name>]
 
 Default <area> is 'support'.
@@ -9,11 +9,11 @@ If <dom_name> and <area> = 'ioc', list the subdirectories of <dom_name>.
 e.g. %prog -i BL18I prints MO,VA,DI,etc. """
 
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
 
-@doc(usage)
 def list_modules():    
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args) not in [0,1]:
         parser.error("Incorrect number of arguments.")
@@ -31,4 +31,4 @@ def list_modules():
         print os.path.basename(node['name'])
 
 if __name__ == "__main__":
-    list_modules()
+    sys.exit(list_modules())

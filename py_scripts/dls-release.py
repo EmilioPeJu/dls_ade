@@ -1,10 +1,6 @@
-#!/bin/env dls-python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-from subprocess import call
-from pkg_resources import require
-require("dls.environment==1.0")
-
-author = "Tom Cobb"
 usage = """%prog [options] <module_name> <release_#>
 
 Default <area> is 'support'.
@@ -13,10 +9,11 @@ This script will do a test build of the module, and if it succeeds, will create 
 If run using the area "init", "svn update" will be updated in /dls_sw/prod/etc/init"""
 
 import os, subprocess, sys, time
-from common import *
-from dls.environment import environment
+from subprocess import call
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
+from dls_environment import environment
 
-@doc(usage)
 def release():
     "script for releasing modules"
     
@@ -30,7 +27,7 @@ def release():
     svn_mess = "%s: Released version %s. %s"
 
     # command line options  
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", dest="branch", help="Release from a branch BRANCH")
     parser.add_option("-f", "--force", action="store_true", dest="force", 
         help="force a release. If the release exists in prod it is removed. " \
@@ -260,7 +257,6 @@ def windowsbuild(svn, options, module, release_number, env, directories):
         print "Created release in svn directory: "+os.path.join(rel_dir,release_number)
 
     # Import the Windows batch script template and substitute all the relevant macros
-    from buildjobtemplate import winbuildscript
     winbuildscript = winbuildscript.replace("$(DLS_EPICS_RELEASE)", env.epicsVer())
     winbuildscript = winbuildscript.replace("$(AREA)", options.area)
     winbuildscript = winbuildscript.replace("$(MODULE)", module)
@@ -289,8 +285,76 @@ def createbuildjob(module, release_number, directories, build_script, prefix="re
         print "Note that Windows build logs are NOT emailed to you automatically. You must check the completion of the build manually by reading the build log and checking whether the module was build succesfully."
         print "The build log will appear once the build has completed in: /dls_sw/prod/etc/build/complete/"+filename+".log"
 
+# Template batch script to checkout and build a released
+# module in W:\prod\...
+#
+# This template will be used by the linux dls-release.py 
+# scripts to create a build job that can be executed by
+# the build server as a scheduled job when dumped in the 
+# build servers work queue.
+#
+# Usage: Substitute the various macros, defined as: $(MACRO)
+# The macros will identify module name, version, area and 
+# EPICS environment -all things needed to identify a particular
+# released module, it's version and build environment.
+#
+# Ulrik Pedersen 14-07-2009
+
+winbuildscript = r"""
+@rem ---------------------------------------------------------
+@rem Release build script
+@rem module: $(MODULE) version: $(VERSION)
+@rem EPICS version: $(DLS_EPICS_RELEASE)
+@rem area: '$(AREA)'
+@rem -----------------------------------------------------------
+
+set DLS_EPICS_RELEASE=$(DLS_EPICS_RELEASE)
+set _area=$(AREA)
+set _module=$(MODULE)
+set _version=$(VERSION)
+
+set _profile=W:\etc\profile.bat
+set _svn_root=http://serv0002.cs.diamond.ac.uk/repos/controls/diamond/release/%_area%
+set _dlsprod=W:\prod\%DLS_EPICS_RELEASE%\%_area%\%_module%\%_version%
+
+@rem Configure the environment by loading a profile.
+@rem The profile is responsible to set up the build environment:
+@rem  - Path to compiler, linker and all necessary environment setup
+@rem  - Path to subversion svn commands
+@rem  - path to minGW make tool
+@rem  - EPICS_BASE and other related EPICS environment variables.
+if exist %_profile% (
+	call %_profile%
+) else (
+	echo ### ERROR [%TIME%] ### Could not find profile. Aborting build.
+	exit /B 1
+)
+
+if not exist %_dlsprod% (
+	echo Creating directory %_dlsprod%
+	mkdir %_dlsprod%
+	if not %ErrorLevel%==0 (
+		echo ### ERROR [%TIME%] ### Unable to create directory: %_dlsprod%
+		echo                        Aborting build.
+		exit /B %ErrorLevel%
+	)
+	cd %_dlsprod%
+	svn checkout  %_svn_root%/%_module%/%_version% .
+    if not %ErrorLevel%==0 (
+    	echo ### ERROR [%TIME%] ### Unable to access subversion repository. Aborting build.
+    	exit /B %ErrorLevel%
+    )
+) else (
+	echo Module has already been released for this version.
+	cd %_dlsprod%
+)
+
+echo Performing Windows build using mingw32-make.
+mingw32-make clean
+mingw32-make
+
+"""
+
 
 if __name__ == "__main__":
-    from pkg_resources import require
-    require("dls.environment==1.0")
-    release()
+    sys.exit(release())

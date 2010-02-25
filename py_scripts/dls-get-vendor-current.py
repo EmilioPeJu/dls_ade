@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <module>
 
 Default <area> is 'support'.
@@ -10,11 +10,11 @@ $SVN_ROOT/diamond/vendor/support/<module>/current. This tag should be used as
 the <old> parameter in the input arguments to "dls-vendor-update.py"."""
 
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
 
-@doc(usage)
 def get_vendor_current():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
         parser.error("Incorrect number of arguments.")
@@ -41,4 +41,4 @@ def get_vendor_current():
           break
 
 if __name__ == "__main__":
-    get_vendor_current()
+    sys.exit(get_vendor_current())

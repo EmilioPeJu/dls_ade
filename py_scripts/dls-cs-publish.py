@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog [options] <module> <release>
 
 Default <area> is 'support'.
@@ -19,12 +19,12 @@ existing one, then you need to edit /dls_sw/cs-publish/<area>/index.html,
 placing a new link and description in the table of modules."""
 
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
+from dls_environment import environment
 
-@doc(usage)
 def cs_publish():
-    from dls.environment import environment
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     parser.add_option("-f", "--force",
         action="store_true", dest="force",
         help="force the publish, disable warnings")    
@@ -175,6 +175,4 @@ def cs_publish():
     print 'Done'
     
 if __name__ == "__main__":
-    from pkg_resources import require
-    require("dls.environment==1.0")
-    cs_publish()
+    sys.exit(cs_publish())

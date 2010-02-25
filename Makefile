@@ -1,7 +1,8 @@
 # Specify where we should build for testing
-INSTALL_DIR=/dls_sw/work/tools/RHEL5/lib/python2.6/site-packages
-SCRIPT_DIR=/dls_sw/work/tools/RHEL5/bin
-PYTHON=/dls_sw/work/tools/RHEL5/bin/dls-python2.6
+PREFIX=/scratch/tools
+INSTALL_DIR=$(PREFIX)/lib/python2.6/site-packages
+SCRIPT_DIR=$(PREFIX)/bin
+PYTHON=$(SCRIPT_DIR)/dls-python2.6
 
 INSTALL_DIR=testlib
 SCRIPT_DIR=testbin

@@ -1,16 +1,15 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog
 
 Synchronise a working copy of a branch with the changes from the trunk.
 No changes will be committed to the repository, the only changes made will be to the working copy."""
 
 import os, sys, shutil
-from optparse import OptionParser
-from common import *
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 
-@doc(usage)
 def sync_from_trunk():
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
@@ -46,4 +45,4 @@ def sync_from_trunk():
     svn.propset('dls:synced-from-trunk',str(trunk_revision),'.',svn.Revision(svn.opt_revision_kind.working),False)
 
 if __name__ == "__main__":
-    sync_from_trunk()
+    sys.exit(sync_from_trunk())

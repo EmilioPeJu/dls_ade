@@ -1,17 +1,17 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog [options] <module_name>
 
 Default <area> is 'support'.
 List the branches of a module in the <area> area of the repository."""
 
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
 
-@doc(usage)
 def list_branches():    
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
         parser.error("Incorrect number of arguments.")
@@ -31,4 +31,4 @@ def list_branches():
         print os.path.basename(node['name'])
 
 if __name__ == "__main__":
-    list_branches()
+    sys.exit(list_branches())

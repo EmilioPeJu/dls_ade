@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog [options] [<module_name>]
 
 Default <area> is 'support'.
@@ -8,11 +8,11 @@ Checkout a module in the <area> area of the repository to the current directory.
 If you do not enter a module name, the whole <area> area will be checked out."""
 
 import os, sys
-from common import *
+from dls_scripts.svn import svnClient
+from dls_scripts.options import OptionParser
 
-@doc(usage)
 def checkout_module():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", dest="branch",help="Checkout from a branch rather than from the trunk")
     parser.add_option("-f", "--force", action="store_true", dest="force", help="force the checkout, disable warnings")
     (options, args) = parser.parse_args()
@@ -59,4 +59,4 @@ def checkout_module():
     svn.checkout(source,module)
     
 if __name__ == "__main__":
-    checkout_module()
+    sys.exit(checkout_module())

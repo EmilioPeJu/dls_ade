@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Andy Foster"
 usage = """%prog [options] <module_name> <release> <branch_name>
 
 Default <area> is 'support'.
@@ -8,11 +8,11 @@ Start a new bug fix branch, used when a release has been made and we need to pat
 The script copies the release of <module_name>/<release> into a new branch <branch_name>, and is checked out in the current directory."""
 
 import os, sys
-from common import *
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 
-@doc(usage)
 def start_bugfix_branch():
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
         parser.error("Incorrect number of arguments.")
@@ -46,4 +46,4 @@ def start_bugfix_branch():
     print 'Checked out to ./'+branch_name
 
 if __name__ == "__main__":
-    start_bugfix_branch()
+    sys.exit(start_bugfix_branch())

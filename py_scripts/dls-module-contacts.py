@@ -1,6 +1,6 @@
-#!/bin/env python2.4
+#!/bin/env dls-python
+# This script comes from the dls_scripts python module
 
-author = "Tom Cobb"
 usage = """%prog [options] [<module_name_1> [<module_name_2> [...]]]
 
 Default <area> is 'support'.
@@ -24,8 +24,8 @@ e.g.
 # any specified contact and cc names are ignored, only fed-ids are used."""
 
 import os, sys, csv
-from common import *
-
+from dls_scripts.options import OptionParser
+from dls_scripts.svn import svnClient
 users = {}
 svn = svnClient()
 
@@ -60,9 +60,8 @@ def lookup_contacts(module,area):
         cc = ""
     return (contact,cc)
 
-@doc(usage)
 def module_contacts():    
-    parser = svnOptionParser(usage)
+    parser = OptionParser(usage)
     parser.add_option("-c","--contact",action="store",type="string",\
                       metavar="FED_ID",dest="contact",\
                       help="Set the contact property to FED_ID")
@@ -173,4 +172,4 @@ def module_contacts():
         os.system("rm -rf "+chk_dir)
 
 if __name__=="__main__":
-    cl_module_contacts()
+    sys.exit(cl_module_contacts())
