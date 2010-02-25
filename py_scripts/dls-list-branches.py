@@ -7,18 +7,19 @@ Default <area> is 'support'.
 List the branches of a module in the <area> area of the repository."""
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
 
 def list_branches():    
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
         parser.error("Incorrect number of arguments.")
-    
-    # setup the environment
     module = args[0]
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
+
     if options.area=="ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
     source = svn.devModule(module,options.area)

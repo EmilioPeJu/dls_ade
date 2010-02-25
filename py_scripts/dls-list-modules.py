@@ -9,17 +9,18 @@ If <dom_name> and <area> = 'ioc', list the subdirectories of <dom_name>.
 e.g. %prog -i BL18I prints MO,VA,DI,etc. """
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
 
 def list_modules():    
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args) not in [0,1]:
         parser.error("Incorrect number of arguments.")
     
-    # setup the environment
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
+    
     if options.area=="ioc" and len(args)==1:
         source = svn.devModule(args[0],options.area)
     else:

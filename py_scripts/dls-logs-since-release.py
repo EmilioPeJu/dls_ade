@@ -12,9 +12,6 @@ revision 0, and <later_release> defaults to the head revision. If
 to the latest release."""
 
 import os, sys, time
-from dls_scripts.svn import OptionParser
-from dls_scripts.svn import svnClient
-from dls_environment import environment
 
 BLACK   = 30
 RED     = 31
@@ -33,6 +30,7 @@ def colour(word, col):
     return '%(esc)c[%(col)dm%(word)s%(esc)c[0m' % locals()
 
 def logs_since_release():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",\
                     help="Print lots of log information")
@@ -43,11 +41,17 @@ def logs_since_release():
 
     if len(args) not in [1,2,3]:
         parser.error("Incorrect number of arguments.")
+    module = args[0]
+        
     
     # setup the environment
+    from dls_environment import environment    
     e = environment()
-    module = args[0]
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
+    
     if options.verbose:
         verbose = True
     else:
@@ -105,14 +109,15 @@ def logs_since_release():
                     print 'Repository does not contain "%s", using head'%(late_num)
                 else:
                     end = svn.Revision(svn.opt_revision_kind.number,releases[j][1].number + 1)
-	else:
-		r_logs = []                    
+            r_logs = svn.log(release, revision_start = start, revision_end = end,\
+                     discover_changed_paths = True)                        
+    else:
+        r_logs = []                    
     
     # now grab the logs from the 2 dirs
     logs =   svn.log(source, revision_start = start, revision_end = end,\
                      discover_changed_paths = verbose)    
-    r_logs = svn.log(release, revision_start = start, revision_end = end,\
-                     discover_changed_paths = True)    
+
     for l in r_logs:
         l["message"] += " (Release dir %s)" % l["changed_paths"][0]["path"].replace(release_dir, "").lstrip("/")
         if l["changed_paths"][0]["copyfrom_revision"]:

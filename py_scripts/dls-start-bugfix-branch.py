@@ -8,10 +8,9 @@ Start a new bug fix branch, used when a release has been made and we need to pat
 The script copies the release of <module_name>/<release> into a new branch <branch_name>, and is checked out in the current directory."""
 
 import os, sys
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
 
 def start_bugfix_branch():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
@@ -21,6 +20,9 @@ def start_bugfix_branch():
     module = args[0]
     release_number = args[1]
     branch_name = args[2]
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
     svn.setLogMessage(module + ": creating bugfix branch "+branch_name)
     

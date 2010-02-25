@@ -10,18 +10,18 @@ $SVN_ROOT/diamond/vendor/support/<module>/current. This tag should be used as
 the <old> parameter in the input arguments to "dls-vendor-update.py"."""
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
 
 def get_vendor_current():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
         parser.error("Incorrect number of arguments.")
-
-    # setup the environment
     module = args[0]
-    svn    = svnClient()
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
+    svn = svnClient()
 
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'

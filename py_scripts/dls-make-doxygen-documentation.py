@@ -8,8 +8,6 @@ Parse <cfg_file> and <pages_file>, add autogen stuff, and output to
 run doxygen on the generated config.src to generate files"""
 
 import os, sys, glob, re
-from optparse import OptionParser
-from dls_environment import environment
 
 def make_config_dict(root = "../.."):
     """Make the Doxygen config dict from information on the current module.
@@ -26,7 +24,8 @@ def make_config_dict(root = "../.."):
         d["INPUT"]          += " "+ (" ".join(glob.glob(root+"/"+dname+"/"))) 
     if os.path.isdir(root+"/etc/"):
         d["INPUT"] += " " + root + "/etc/"
-    # make a dependency_tree of . to find tree name and version information
+    # setup the environment
+    from dls_environment import environment        
     e = environment()
     module_name, module_version = e.classifyPath(root+"/configure/RELEASE")
     # if the tree is invalid, check to see if what kind of module it is:
@@ -50,6 +49,7 @@ def make_config_dict(root = "../.."):
 def main():
     """Commandline doxygen config generator for dls builds"""
     # create and option parser
+    from optparse import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-o", dest="out", default=".", \
         help="Output directory, default is '.'")
@@ -64,13 +64,13 @@ def main():
     # make the config dict
     f = open(out+"/"+config.replace(".src",".cfg"),"w")
     # include diamond defaults
-    f.write("@INCLUDE_PATH = %s\n"%os.path.abspath(os.path.dirname(__file__)))
+    import dls_scripts.input_filter        
+    f.write("@INCLUDE_PATH = %s\n"%os.path.dirname(dls_scripts.input_filter.__file__))
     f.write("@INCLUDE = def_config.cfg\n")
     # make a filter from input_filter.py
     filtname = "doxygen_filter.sh"
     filt = open(out+"/"+filtname,"w")
     print >> filt, "#!/bin/env sh"
-    import dls_scripts.input_filter    
     print >> filt, '%s %s $1'%(sys.executable, dls_scripts.input_filter.__file__)
     filt.close()
     # tell doxygen to use the filter

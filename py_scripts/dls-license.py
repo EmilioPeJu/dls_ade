@@ -8,10 +8,10 @@ text in a '#' commented block to <filenamex>. <module> is the module name that
 will appear in the license text."""
 
 import sys, os, time
-from optparse import OptionParser
 
 def include_license():
     """Parse args, then prepend license text to the filename arguments"""
+    from optparse import OptionParser    
     parser = OptionParser(usage)
     parser.add_option("-c", dest="c", action="store_true", \
         help="Write license in a /*...*/ commented block instead of a '#' block")

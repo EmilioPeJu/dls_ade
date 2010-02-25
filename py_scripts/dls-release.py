@@ -10,14 +10,12 @@ If run using the area "init", "svn update" will be updated in /dls_sw/prod/etc/i
 
 import os, subprocess, sys, time
 from subprocess import call
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
-from dls_environment import environment
 
 def release():
     "script for releasing modules"
     
     # override epics_version if set
+    from dls_environment import environment    
     e = environment()
     epics_version = e.epicsVer()
     
@@ -27,6 +25,7 @@ def release():
     svn_mess = "%s: Released version %s. %s"
 
     # command line options  
+    from dls_scripts.options import OptionParser    
     parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", dest="branch", help="Release from a branch BRANCH")
     parser.add_option("-f", "--force", action="store_true", dest="force", 
@@ -81,7 +80,8 @@ def release():
     else:
         print 'Releasing '+module+" "+release_number+" from branch "+options.branch+" using epics "+e.epicsVer()+" ..."
 
-    # setup svn             
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
     if options.message is None:
         options.message = ""
@@ -324,29 +324,29 @@ set _dlsprod=W:\prod\%DLS_EPICS_RELEASE%\%_area%\%_module%\%_version%
 @rem  - path to minGW make tool
 @rem  - EPICS_BASE and other related EPICS environment variables.
 if exist %_profile% (
-	call %_profile%
+    call %_profile%
 ) else (
-	echo ### ERROR [%TIME%] ### Could not find profile. Aborting build.
-	exit /B 1
+    echo ### ERROR [%TIME%] ### Could not find profile. Aborting build.
+    exit /B 1
 )
 
 if not exist %_dlsprod% (
-	echo Creating directory %_dlsprod%
-	mkdir %_dlsprod%
-	if not %ErrorLevel%==0 (
-		echo ### ERROR [%TIME%] ### Unable to create directory: %_dlsprod%
-		echo                        Aborting build.
-		exit /B %ErrorLevel%
-	)
-	cd %_dlsprod%
-	svn checkout  %_svn_root%/%_module%/%_version% .
+    echo Creating directory %_dlsprod%
+    mkdir %_dlsprod%
     if not %ErrorLevel%==0 (
-    	echo ### ERROR [%TIME%] ### Unable to access subversion repository. Aborting build.
-    	exit /B %ErrorLevel%
+        echo ### ERROR [%TIME%] ### Unable to create directory: %_dlsprod%
+        echo                        Aborting build.
+        exit /B %ErrorLevel%
+    )
+    cd %_dlsprod%
+    svn checkout  %_svn_root%/%_module%/%_version% .
+    if not %ErrorLevel%==0 (
+        echo ### ERROR [%TIME%] ### Unable to access subversion repository. Aborting build.
+        exit /B %ErrorLevel%
     )
 ) else (
-	echo Module has already been released for this version.
-	cd %_dlsprod%
+    echo Module has already been released for this version.
+    cd %_dlsprod%
 )
 
 echo Performing Windows build using mingw32-make.

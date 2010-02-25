@@ -14,10 +14,9 @@ Otherwise it will be imported as BL02I/VA (old naming style)
 If the Technical area is BL then a different template is used, to create a top level module for screens and gda."""
 
 import os, sys, shutil
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
 
 def start_new_module():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-n", "--no_import", action="store_true", dest="no_import", help="Creates the module but doesn't import into svn")
     parser.add_option("-f","--fullname", action="store_true", dest="fullname", help="create new-style ioc, with full ioc name in path")
@@ -30,6 +29,7 @@ def start_new_module():
     disk_dir = module
     app_name = module
     cwd = os.getcwd()
+    from dls_scripts.svn import svnClient     
     svn = svnClient()
 
     # setup area
@@ -89,13 +89,11 @@ def start_new_module():
             os.system('dls-make-etc-dir.py && make clean uninstall')
             print def_message            
     elif options.area == "python":
-    	os.mkdir(module)
-    	os.mkdir(os.path.join(module,module))
-    	open(os.path.join(module,"setup.py"),"w").write("""from setuptools import setup
-    	
+        open("setup.py","w").write("""from setuptools import setup
+        
 # this line allows the version to be specified in the release script
 globals().setdefault('version', '0.0')
-    	
+        
 setup(
 #    install_requires = ['cothread'], # require statements go here
     name = '%s',
@@ -107,32 +105,37 @@ setup(
 #    entry_points = {'console_scripts': ['dls-hello-world.py = %s.%s:main']}, # this makes a script
 #    include_package_data = True, # use this to include non python files
     zip_safe = False
-    )    	
+    )        
 """ %(module, os.getlogin(), os.getlogin(), module, module, module))
-    	open(os.path.join(module,"Makefile"),"w").write("""# Specify where we should build for testing
-PYTHON=/dls_sw/work/tools/RHEL5/bin/dls-python2.6
-INSTALL_DIR=/dls_sw/work/tools/RHEL5/lib/python2.6/site-packages
-SCRIPT_DIR=/dls_sw/work/tools/RHEL5/bin
+        open("Makefile","w").write("""# Specify where we should build for testing
+PREFIX=/dls_sw/work/tools/RHEL5
+INSTALL_DIR=$(PREFIX)/lib/python2.6/site-packages
+SCRIPT_DIR=$(PREFIX)/bin
+PYTHON=$(PREFIX)/bin/dls-python2.6
 
+# This is run when we type make
 dist: setup.py $(wildcard %s/*.py)
-	$(PYTHON) setup.py bdist_egg
-	touch dist
+\t$(PYTHON) setup.py bdist_egg
+\ttouch dist
 
+# Clean the module
 clean:
-	$(PYTHON) setup.py clean
-	-rm -rf build dist *egg-info installed.files
-	-find -name '*.pyc' -exec rm {} \;
+\t$(PYTHON) setup.py clean
+\t-rm -rf build dist *egg-info installed.files
+\t-find -name '*.pyc' -exec rm {} \\;
 
+# Install the built egg
 install: dist
-	$(PYTHON) setup.py easy_install \
-		--record=installed.files \	
-		--install-dir=$(INSTALL_DIR) \
-		--script-dir=$(SCRIPT_DIR) dist/*.egg    	
+\t$(PYTHON) setup.py easy_install -m \\
+\t\t--record=installed.files \\
+\t\t--install-dir=$(INSTALL_DIR) \\
+\t\t--script-dir=$(SCRIPT_DIR) dist/*.egg        
 """%module)
-    	open(os.path.join(module,module,module+".py"),"w").write("""def main():
-	print "Hello world from %s"
-"""%module)	    	
-    	open(os.path.join(module,module,"__init__.py"),"w").write("")
+        os.mkdir(module)
+        open(os.path.join(module,module+".py"),"w").write("""def main():
+    print "Hello world from %s"
+"""%module)            
+        open(os.path.join(module,"__init__.py"),"w").write("")
         print py_message
     else:
         raise TypeError, "Don't know how to make a module of type "+options.area
@@ -147,9 +150,9 @@ install: dist
         svn.checkout( dest, disk_dir)
         user = os.getlogin()
         if options.area == "python":
-	        svn.propset("svn:ignore","dist\nbuild\ninstalled.files\n",disk_dir)        
+            svn.propset("svn:ignore","dist\nbuild\ninstalled.files\n",disk_dir)        
         else:
-	        svn.propset("svn:ignore","bin\ndata\ndb\ndbd\ninclude\nlib\n",disk_dir)	
+            svn.propset("svn:ignore","bin\ndata\ndb\ndbd\ninclude\nlib\n",disk_dir)    
         svn.propset("dls:contact",user,disk_dir)
         svn.checkin(disk_dir,module+": changed contact and set svn:ignore")
 

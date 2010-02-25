@@ -4,15 +4,17 @@
 usage = """%prog [options] <module_name>
 
 Default <area> is 'support'.
-List the releases of a module in area <area>.
+List the releases of a module in the release area of <area>. By default uses
+the epics release number from your environment to work out the area on disk to
+look for the module, this can be overridden with the -e flag.
 """
 
 import os, sys
-from dls_scripts.options import OptionParser
-from dls_environment import environment
 
 def list_releases():
+    from dls_environment import environment
     e = environment()    
+    from dls_scripts.options import OptionParser    
     parser = OptionParser(usage)
     parser.add_option("-l", "--latest", action="store_true", dest="latest", help="Only print the latest release")
     parser.add_option("-e", "--epics_version", action="store", type="string", dest="epics_version", help="change the epics version, default is "+e.epicsVer()+" (from your environment)")
@@ -33,10 +35,10 @@ def list_releases():
     # Check for the existence of releases of this module/IOC    
     release_dir = os.path.join(e.prodArea(options.area), module)
     if not os.path.isdir(release_dir):
-    	print module + ": No releases made"
-    	return 1
+        print module + ": No releases made"
+        return 1
 
-	# sort the releases        
+    # sort the releases        
     release_paths = e.sortReleases(os.listdir(release_dir))
     if options.latest:
         print release_paths[-1].split("/")[-1]

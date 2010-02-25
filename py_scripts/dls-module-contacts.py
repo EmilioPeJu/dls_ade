@@ -172,4 +172,4 @@ def module_contacts():
         os.system("rm -rf "+chk_dir)
 
 if __name__=="__main__":
-    sys.exit(cl_module_contacts())
+    sys.exit(module_contacts())

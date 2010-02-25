@@ -39,10 +39,9 @@ Now check for conflicts and resolve these before commiting the changes back to t
 Finally, it is possible to make a release of the new vendor code by using "dls-release.py"."""
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
 
 def vendor_update():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=4:
@@ -53,6 +52,7 @@ def vendor_update():
     module = args[1]
     old = args[2]
     new = args[3]
+    from dls_scripts.svn import svnClient
     svn = svnClient()
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'

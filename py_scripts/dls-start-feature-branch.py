@@ -8,10 +8,9 @@ Start a new feature branch, used to create a branch from the trunk.
 The script copies the trunk of the current module into a new branch <branch_name>, reflecting the current changes."""
 
 import os, sys, shutil
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
 
 def start_feature_branch():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=2:
@@ -20,6 +19,9 @@ def start_feature_branch():
     # setup the environment
     module = args[0]
     branch_name = args[1]
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
     svn.setLogMessage(module + ": creating feature branch "+branch_name)
     if options.area == "ioc":

@@ -28,7 +28,6 @@ This will create the following structure:
       index.html -- A redirect html page     
 """
 import os, sys, re, glob
-from optparse import OptionParser
 
 def create_file(filename, text):
     print "Creating", filename
@@ -39,6 +38,7 @@ def create_dir(dirname):
     os.mkdir(dirname)    
 
 def make_etc_dir():
+    from optparse import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args) != 0:
@@ -138,23 +138,23 @@ install: $(IOC_DIRS)
 
 # General rule for building a Standard IOC from an XML file
 $(TOP)/iocs/%: %.xml
-	$(XMLBUILDER) $(DEBUG) $<
-	
+\t$(XMLBUILDER) $(DEBUG) $<
+    
 # General rule for building a Simulation IOC from an XML file
 $(TOP)/iocs/%_sim: %.xml
-	$(XMLBUILDER) $(DEBUG) --sim=linux-x86 $<
+\t$(XMLBUILDER) $(DEBUG) --sim=linux-x86 $<
 
 # Alternate rule for building a Standard IOC from a python file
 $(TOP)/iocs/%: %.py
-	./$< $(DEBUG) $*
+\t./$< $(DEBUG) $*
 
 # Alternate rule for building a Simulation IOC from a python file
 $(TOP)/iocs/%_sim: %.py
-	./$< $(DEBUG) --sim=linux-x86 $*
+\t./$< $(DEBUG) --sim=linux-x86 $*
 
 # Remove the generated iocs on clean
 clean:
-	rm -rf $(IOC_DIRS)
+    rm -rf $(IOC_DIRS)
 """)
 
     # and an example ioc
@@ -237,17 +237,17 @@ install: $(DOCDIR)
 
 # rule for documentation
 $(DOCDIR): config.src manual.src $(DOCDIR)/build_instructions
-	mkdir -p $(DOCDIR)
-	dls-make-doxygen-documentation.py -o $(DOCDIR) config.src manual.src
-	
+\tmkdir -p $(DOCDIR)
+\tdls-make-doxygen-documentation.py -o $(DOCDIR) config.src manual.src
+    
 # rule for generating build instructions from example.xml file
 $(DOCDIR)/build_instructions: $(TOP)/etc/makeIocs/example.xml
-	mkdir -p $(DOCDIR)
-	dls-xml-iocbuilder.py --doc=$@ $(DEBUG) $^
+\tmkdir -p $(DOCDIR)
+\tdls-xml-iocbuilder.py --doc=$@ $(DEBUG) $^
 
 # Remove entire documentation/doxygen dir on clean
 clean:
-	rm -rf $(DOCDIR)
+    rm -rf $(DOCDIR)
 """)
     create_file("etc/makeDocumentation/config.src", "# Include override doxygen config values here\n")
     vdbs = glob.glob("*App/Db/*.vdb") + glob.glob("*App/Db/*.db") + glob.glob("*App/Db/*.template")

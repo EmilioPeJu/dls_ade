@@ -9,10 +9,9 @@ The script imports the code from <source> to a vendor module in svn at diamond/v
 It also copies the code to the trunk and then checks the code out into the current directory."""
 
 import os, sys
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
 
 def vendor_import():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
@@ -22,6 +21,7 @@ def vendor_import():
     source = args[0]
     module = args[1]
     version = args[2]
+    from dls_scripts.svn import svnClient
     svn = svnClient()
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'

@@ -7,16 +7,16 @@ Synchronise a working copy of a branch with the changes from the trunk.
 No changes will be committed to the repository, the only changes made will be to the working copy."""
 
 import os, sys, shutil
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
 
 def sync_from_trunk():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=0:
         parser.error("Incorrect number of arguments.")
     
     # setup the environment
+    from dls_scripts.svn import svnClient
     svn = svnClient()
 
     # Check that we are currently in a working copy of a branch

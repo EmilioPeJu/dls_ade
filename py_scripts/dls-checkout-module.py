@@ -8,10 +8,9 @@ Checkout a module in the <area> area of the repository to the current directory.
 If you do not enter a module name, the whole <area> area will be checked out."""
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
 
 def checkout_module():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", dest="branch",help="Checkout from a branch rather than from the trunk")
     parser.add_option("-f", "--force", action="store_true", dest="force", help="force the checkout, disable warnings")
@@ -32,9 +31,11 @@ def checkout_module():
         if len(args)!=1:
             parser.error("Incorrect number of arguments.")
         module = args[0]
-
-    # setup the environment
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
+
     if options.area == "ioc" and a.upper()!="Y":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
     if options.branch:

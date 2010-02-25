@@ -19,11 +19,9 @@ existing one, then you need to edit /dls_sw/cs-publish/<area>/index.html,
 placing a new link and description in the table of modules."""
 
 import os, sys
-from dls_scripts.svn import svnClient
-from dls_scripts.options import OptionParser
-from dls_environment import environment
 
 def cs_publish():
+    from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-f", "--force",
         action="store_true", dest="force",
@@ -37,11 +35,15 @@ def cs_publish():
     area = options.area
 
     # setup the environment
+    from dls_environment import environment    
+    e = environment()
     path = "/tmp"
-    docdirs = ["documentation","docs"]
-
-    # find the released svn directory    
+    docdirs = ["documentation","docs"]    
+    
+    # import svn client
+    from dls_scripts.svn import svnClient    
     svn = svnClient()
+    
     if options.area == "ioc" and a.upper()!="Y":
         assert len(module.split('/'))>1, \
             'Missing Technical Area under Beamline'
@@ -59,7 +61,6 @@ def cs_publish():
     svn.export(source+"/"+release, export)
 
     # Locate built version of module
-    e = environment()    
     prodPath = e.prodArea(options.area) + "/" + module + "/" + release
     
     # Check the release isn't on the webserver
