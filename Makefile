@@ -12,14 +12,14 @@ clean:
 	-rm -rf build dist *egg-info installed.files
 	-find -name '*.pyc' -exec rm {} \;
 
-SHELL_SCRIPTS=$(patsubst shell_scripts/%,$(SCRIPT_DIR)/%,$(wildcard shell_scripts/*.sh))
+SCRIPTS=$(wildcard other_scripts/*.pl) $(wildcard other_scripts/*.sh)
 
-install: $(SHELL_SCRIPTS)
+install: $(patsubst other_scripts/%,$(SCRIPT_DIR)/%,$(SCRIPTS))
 	$(PYTHON) setup.py install \
 		--record installed.files \
 		--install-lib $(INSTALL_DIR) \
 		--install-script $(SCRIPT_DIR)
 			
-$(SCRIPT_DIR)/%: shell_scripts/%
+$(SCRIPT_DIR)/%: other_scripts/%
 	install $^ $@
 	

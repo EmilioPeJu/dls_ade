@@ -57,7 +57,7 @@ def release():
     if options.area=="init":
         print "Updating background process initialisation in prod..."
         path = out_dir+"prod_etc_init_update_"+user+".sh"
-        os.system('echo "svn update /dls_sw/prod/etc/init" > '+path)
+        os.system('echo "svn update /dls_sw/prod/etc/init && make -C /dls_sw/prod/etc/init" > '+path)
         print "Update request file created: "+path
         print "Request will be executed by the build server shortly"
         sys.exit()
