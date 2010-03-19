@@ -43,6 +43,9 @@ import os, sys
 def vendor_update():
     from dls_scripts.options import OptionParser
     parser = OptionParser(usage)
+    parser.add_option("-f", "--force",
+        action="store_true", dest="force",
+        help="force the update, disable warnings")      
     (options, args) = parser.parse_args()
     if len(args)!=4:
         parser.error("Incorrect number of arguments.")
@@ -80,19 +83,20 @@ def vendor_update():
 
     # check for diffs
     diffs = svn.diff( '/tmp/svn',vendor_current,svn.Revision(svn.opt_revision_kind.head),
-                      vendor_old,svn.Revision(svn.opt_revision_kind.head),True, True, True)
-    assert not diffs, 'Vendor "current" of: '+vendor+' is not at revision: ' + old
+                      vendor_old,svn.Revision(svn.opt_revision_kind.head),True, True, True)                          
+    assert options.force or not diffs, 'Vendor "current" of: '+vendor+' is not at revision: ' + old + "\nUse the -f flag if you are sure you want to do this"
 
     print 'Importing: '+module+' from: '+source+' to update from version: '+old+' to version: '+new
-    os.system('dls-svn-load-dirs.pl -t '+new+" "+vendor+" current "+source)
-
-    print
-    print 'You probably now want to merge this update into the trunk.'
-    print 'Do this by issuing the following commands:'
-    print
-    print 'svn checkout ' + trunk + ' ' + disk_dir + ' > /dev/null'
-    print 'svn merge ' + vendor_old + ' ' + vendor_new + ' ' + disk_dir
-    print
+    if os.system('dls-svn-load-dirs.pl -t '+new+" "+vendor+" current "+source):
+        print "dls-svn-load-dirs.pl command failed"
+    else:        
+        print
+        print 'You probably now want to merge this update into the trunk.'
+        print 'Do this by issuing the following commands:'
+        print
+        print 'svn checkout ' + trunk + ' ' + disk_dir + ' > /dev/null'
+        print 'svn merge ' + vendor_old + ' ' + vendor_new + ' ' + disk_dir
+        print
 
 if __name__ == "__main__":
     sys.exit(vendor_update())

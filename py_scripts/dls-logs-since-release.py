@@ -1,7 +1,7 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-usage = """%prog [options] <module_name> [<earlier_release> [<later_release>]]
+usage = """%prog [options] [<module_name> [<earlier_release> [<later_release>]]]
 
 Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
@@ -39,11 +39,9 @@ def logs_since_release():
                     
     (options, args) = parser.parse_args()
 
-    if len(args) not in [1,2,3]:
+    if len(args) not in range(4):
         parser.error("Incorrect number of arguments.")
-    module = args[0]
         
-    
     # setup the environment
     from dls_environment import environment    
     e = environment()
@@ -61,8 +59,15 @@ def logs_since_release():
     if options.raw:
         global raw
         raw = True
-    source = svn.devModule(module,options.area)
-    release = svn.prodModule(module,options.area)
+        
+    if args:    
+        module = args[0]
+        source = svn.devModule(module,options.area)
+        release = svn.prodModule(module,options.area)
+    else:
+        module = options.area
+        source = svn.devArea(options.area)
+        release = svn.prodArea(options.area)        
     
     # Work out the initial and end release numbers
     start = svn.Revision(svn.opt_revision_kind.number,0)

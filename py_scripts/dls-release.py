@@ -53,14 +53,34 @@ def release():
     # find out which user wants to release
     user = os.getlogin()
 
+    # set epics version, and extension
+    if options.epics_version:
+        if e.epics_ver_re.match(options.epics_version):
+            e.setEpics(options.epics_version)
+        else:
+            parser.error("Expected epics version like R3.14.8.2, got: "+options.epics_version)
+
+    # set postfix
+    if e.epicsVer() in ["R3.14.11"]:
+        postfix = ".sh5"
+    else:
+        postfix = ".sh"
+
     # if area is init, just update the relevant part of prod
-    if options.area=="init":
-        print "Updating background process initialisation in prod..."
-        path = out_dir+"prod_etc_init_update_"+user+".sh"
-        os.system('echo "svn update /dls_sw/prod/etc/init && make -C /dls_sw/prod/etc/init" > '+path)
+    if options.area in ["init", "tools"]:
+        if options.area == "init":
+            print "Updating background process initialisation in prod..."
+            path = out_dir+"prod_etc_init_update_"+user+postfix
+            os.system('echo "svn update /dls_sw/prod/etc/init && make -C /dls_sw/prod/etc/init" > '+path)
+        if options.area=="tools":
+            if len(args)!=1:
+                parser.error("Releasing tools: 1 argument, tool name")
+            print "Updating tools"
+            path = out_dir+"tool_"+args[0]+"_"+user+postfix        
+            os.system('echo "svn update /dls_sw/prod/tools/RHEL5/scripts && /dls_sw/prod/tools/RHEL5/scripts/build %s" > %s'%(args[0],path))            
         print "Update request file created: "+path
         print "Request will be executed by the build server shortly"
-        sys.exit()
+        sys.exit()        
 
     if len(args)!=2:
         parser.error("Incorrect number of arguments.")
@@ -68,11 +88,6 @@ def release():
     # set variables
     module = args[0]
     release_number = args[1].replace(".","-")
-    if options.epics_version:
-        if e.epics_ver_re.match(options.epics_version):
-            e.setEpics(options.epics_version)
-        else:
-            parser.error("Expected epics version like R3.14.8.2, got: "+options.epics_version)
         
     # print messages
     if not options.branch:
@@ -108,11 +123,11 @@ def release():
         prodDir = os.path.join(e.prodArea(options.area),module,release_number)
         assert options.force or not os.path.isdir(prodDir), \
         module+" "+release_number+" already exists in "+prodDir
-        unixbuild( svn, options, module, release_number, e, directories )
+        unixbuild( svn, options, module, release_number, e, directories, postfix )
 
     
             
-def unixbuild(svn, options, module, release_number, env, directories):
+def unixbuild(svn, options, module, release_number, env, directories, postfix):
     out_dir, test_dir, src_dir, rel_dir = directories
     user = os.getlogin()
     
@@ -154,10 +169,6 @@ def unixbuild(svn, options, module, release_number, env, directories):
         os.system('make')
         print "Release has been made in: "+os.getcwd() 
         sys.exit()
-    elif env.epicsVer() in ["R3.14.11"]:
-        postfix = ".sh5"
-    else:
-        postfix = ".sh"
     
     # in script: checkout svn module
     build_script = """#!/usr/bin/env bash
@@ -208,7 +219,7 @@ cat setup.py.svn >> setup.py || { echo Can not edit setup.py; exit 1; }"""
     if options.area=="python":
         command = "(make && make install)"
     else:
-        command = "(make clean && make)"
+        command = "make"
         
     # do the build
     build_script += r"""
@@ -281,7 +292,7 @@ def createbuildjob(module, release_number, directories, build_script, prefix="re
     f.close()
     print "Build request file created: "+os.path.join(out_dir,filename)
     print module+" "+release_number+" will be exported and built by the build server shortly"
-    if windows:
+    if postfix == ".bat":
         print "Note that Windows build logs are NOT emailed to you automatically. You must check the completion of the build manually by reading the build log and checking whether the module was build succesfully."
         print "The build log will appear once the build has completed in: /dls_sw/prod/etc/build/complete/"+filename+".log"
 
@@ -350,7 +361,6 @@ if not exist %_dlsprod% (
 )
 
 echo Performing Windows build using mingw32-make.
-mingw32-make clean
 mingw32-make
 
 """
