@@ -97,7 +97,7 @@ def module_contacts():
                 mods = svn.list(lname,recurse=False)
                 # if an IOC has a configure directory, there are no TAs listed here
                 if "configure" in [ s[0]["path"][-9:] for s in mods ]:
-                    modules.append(lname.split("/")[-2])
+                    modules.append(lname.split("/")[-1])
                 else:
                     for m in [ m for m in mods if m[0]["kind"]==dls.pysvn.node_kind.dir and m[0]["path"]!=lname]:
                         split = m[0]["path"].split("/")
