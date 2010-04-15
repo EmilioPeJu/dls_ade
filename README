@@ -21,7 +21,7 @@ It is assumed that the site environment is of a similar structure to dls:
 - modules are installed in <prodArea>
 - modules in prodArea have the path <prodArea>/<module_name>/<module_release>
 
-You should also define the following in Makefile:
+You should also define the following in Makefile.private:
 - INSTALL_DIR: Where to install the module
 - PYTHON: Where to find python
 
