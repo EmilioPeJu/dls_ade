@@ -32,6 +32,10 @@ def start_new_module():
     from dls_scripts.svn import svnClient     
     svn = svnClient()
 
+    # Check we know what to do
+    if options.area not in ("ioc", "support", "python"):
+        raise TypeError, "Don't know how to make a module of type "+options.area
+
     # setup area
     if options.area == "ioc":
         cols = module.split('/')
@@ -91,8 +95,9 @@ def start_new_module():
     elif options.area == "python":
         open("setup.py","w").write("""from setuptools import setup
         
-# this line allows the version to be specified in the release script
-globals().setdefault('version', '0.0')
+# these lines allow the version to be specified in Makefile.private
+import os
+version = os.environ.get("MODULEVER", "0.0")
         
 setup(
 #    install_requires = ['cothread'], # require statements go here
@@ -102,20 +107,24 @@ setup(
     author = '%s',
     author_email = '%s@rl.ac.uk',    
     packages = ['%s'],
-#    entry_points = {'console_scripts': ['dls-hello-world.py = %s.%s:main']}, # this makes a script
+#    entry_points = {'console_scripts': ['test-python-hello-world = %s.%s:main']}, # this makes a script
 #    include_package_data = True, # use this to include non python files
     zip_safe = False
     )        
 """ %(module, os.getlogin(), os.getlogin(), module, module, module))
-        open("Makefile","w").write("""# Specify where we should build for testing
-PREFIX=/dls_sw/work/tools/RHEL5
-INSTALL_DIR=$(PREFIX)/lib/python2.6/site-packages
-SCRIPT_DIR=$(PREFIX)/bin
-PYTHON=$(PREFIX)/bin/dls-python2.6
+        open("Makefile","w").write("""# Specify defaults for testing
+PREFIX = /dls_sw/prod/tools/RHEL5
+PYTHON = $(PREFIX)/bin/python2.6
+INSTALL_DIR = /dls_sw/work/common/python/test/packages
+SCRIPT_DIR = /dls_sw/work/common/python/test/scripts
+MODULEVER = 0.0
+
+# Override with any release info
+-include Makefile.private
 
 # This is run when we type make
 dist: setup.py $(wildcard %s/*.py)
-\t$(PYTHON) setup.py bdist_egg
+\tMODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
 \ttouch dist
 
 # Clean the module
@@ -137,8 +146,6 @@ install: dist
 """%module)            
         open(os.path.join(module,"__init__.py"),"w").write("")
         print py_message
-    else:
-        raise TypeError, "Don't know how to make a module of type "+options.area
 
     if not options.no_import:
     # import the module into svn
@@ -151,7 +158,7 @@ install: dist
         user = os.getlogin()
         if options.area == "python":
             svn.propset("svn:ignore","dist\nbuild\ninstalled.files\n",disk_dir)        
-        else:
+        elif options.area in ("support", "ioc"):
             svn.propset("svn:ignore","bin\ndata\ndb\ndbd\ninclude\nlib\n",disk_dir)    
         svn.propset("dls:contact",user,disk_dir)
         svn.checkin(disk_dir,module+": changed contact and set svn:ignore")
