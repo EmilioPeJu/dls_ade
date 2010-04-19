@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] [<module_name> [<earlier_release> [<later_release>]]]
@@ -49,21 +49,27 @@ def logs_since_release():
     # import svn client
     from dls_scripts.svn import svnClient    
     svn = svnClient()
-    
+
+    # show modified files if verbose    
     if options.verbose:
         verbose = True
     else:
         verbose = False
-    if options.area == "ioc":
-        assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
+
+    # don't write coloured text if options.raw (it confuses less)
     if options.raw:
         global raw
         raw = True
         
+    # if module specified then check logs for that module        
     if args:    
         module = args[0]
+        # check that iocs have a technical area
+        if options.area == "ioc":
+            assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'        
         source = svn.devModule(module,options.area)
         release = svn.prodModule(module,options.area)
+    # otherwise do it for the entire area        
     else:
         module = options.area
         source = svn.devArea(options.area)
@@ -158,4 +164,6 @@ def logs_since_release():
             print "%s %s"%(colour(pre, RED), mess)
                               
 if __name__ == "__main__":
+    import sys
+    sys.path.append("..")
     sys.exit(logs_since_release())
