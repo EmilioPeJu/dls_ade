@@ -25,7 +25,7 @@ e.g.
 
 import os, sys, csv
 from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient
+from dls_scripts.svn import svnClient, pysvn
 users = {}
 svn = svnClient()
 
@@ -99,7 +99,7 @@ def module_contacts():
                 if "configure" in [ s[0]["path"][-9:] for s in mods ]:
                     modules.append(lname.split("/")[-1])
                 else:
-                    for m in [ m for m in mods if m[0]["kind"]==dls.pysvn.node_kind.dir and m[0]["path"]!=lname]:
+                    for m in [ m for m in mods if m[0]["kind"]==pysvn.node_kind.dir and m[0]["path"]!=lname]:
                         split = m[0]["path"].split("/")
                         # add each of the TAs
                         modules.append(split[-2]+"/"+split[-1])
