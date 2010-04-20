@@ -239,11 +239,13 @@ dls-logs-since-release.py -r --area=%s %s > DEVHISTORY.autogen
     if options.area in ["support","ioc"]:
         build_script += r"""
 # Modify configure/RELEASE
-mv configure/RELEASE configure/RELEASE.svn || { echo Can not rename configure/RELEASE; exit 1; }
-sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version/base,"   \
-    -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version/support," \
-    -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," \
-configure/RELEASE.svn > configure/RELEASE  || { echo Can not edit configure/RELEASE; exit 1; }"""
+if [ -e "configure/RELEASE" ]; then
+    mv configure/RELEASE configure/RELEASE.svn || { echo Can not rename configure/RELEASE; exit 1; }
+    sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version/base,"   \
+        -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version/support," \
+        -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," \
+    configure/RELEASE.svn > configure/RELEASE  || { echo Can not edit configure/RELEASE; exit 1; }
+fi"""
 
     # if its a python module pass setup.py the version
     elif options.area == "python":
