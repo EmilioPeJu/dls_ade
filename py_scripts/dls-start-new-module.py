@@ -59,6 +59,8 @@ def start_new_module():
         BL_message  = '\nPlease now edit '+os.path.join(disk_dir,'/configure/RELEASE')+" to put in correct paths for the ioc\'s other technical areas and path to scripts."
         BL_message += '\nAlso edit '+os.path.join(disk_dir,app_name+'App/src/Makefile')+" to add all database files from these technical areas."
         BL_message += '\nAn example set of screens has been placed in '+os.path.join(disk_dir,app_name+'App/opi/edl')+' . Please modify these.\n'
+    elif options.area == "python":
+        assert module.startswith("dls_") and "-" not in module and "." not in module, "Python module names must start with 'dls_' and be valid python identifiers"
     dest = svn.devModule(module,options.area)
     if not options.no_import:
         dir_list = [dest,svn.vendorModule(module,options.area),svn.prodModule(module,options.area)]
