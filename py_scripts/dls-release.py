@@ -81,6 +81,10 @@ def release():
             parser.error("Expected epics version like R3.14.8.2, got '%s'" % \
                 options.epics_version)
 
+    # override rhel version
+    if options.rhel_version:
+        rhel_version = int(options.rhel_version)
+
     # set postfix
     if options.area in ["support", "ioc"]:
         if e.epicsVer() in ["R3.14.11"]:
