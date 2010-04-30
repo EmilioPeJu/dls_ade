@@ -112,7 +112,7 @@ def release():
             path = out_dir+"tool_"+args[0]+"_"+user+postfix
             command = "svn update /dls_sw/prod/tools/RHEL5/build_scripts && /dls_sw/prod/tools/RHEL5/build_scripts/build_program %s" % args[0]
             if os.listdir("/dls_sw/work/targetOS/tar-files"):
-                command = "cp /dls_sw/work/targetOS/tar-files/* /dls_sw/prod/targetOS/tar-files && " + command
+                command = "mv /dls_sw/work/targetOS/tar-files/* /dls_sw/prod/targetOS/tar-files && " + command
             os.system('echo "%s" > %s'%(command, path))            
         print "Update request file created: "+path
         print "Request will be executed by the build server shortly"
