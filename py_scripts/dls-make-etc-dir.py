@@ -66,9 +66,9 @@ include $(TOP)/configure/RULES_DIRS
     if not os.path.isdir("db"):
         print "Making the module"
         os.system("make > /dev/null")
+    all_protos = set()        
     if os.path.isdir("db"):
         dbfiles = os.listdir("db")
-        all_protos = set()
         for dbf in dbfiles:
             print "Parsing", dbf
             filename = "db/"+dbf
@@ -101,8 +101,7 @@ include $(TOP)/configure/RULES_DIRS
             l = "\t<%s.%s" % (modname, clsname)
             if protos:
                 p = list(protos)[0].split(".")[0]
-                extext += '\t<pyDrv.serial_sim_instance module="%s_sim" name="%sSim" pyCls="%s"/>\n' % (p, clsname, p)
-                extext += '\t<asyn.AsynIP name="%sAsyn" port="172.23.111.180:7001" simulation="%sSim"/>\n' %(clsname, p)        
+                extext += '\t<asyn.AsynIP name="%sAsyn" port="172.23.111.180:7001" simulation="localhost:9001"/>\n' %(clsname)        
                 l += ' PORT="%sAsyn"' % p
             extext += l + "/>\n"
             for imp in i:
@@ -154,21 +153,12 @@ $(TOP)/iocs/%_sim: %.py
 
 # Remove the generated iocs on clean
 clean:
-    rm -rf $(IOC_DIRS)
+\trm -rf $(IOC_DIRS)
 """)
 
     # and an example ioc
     create_file("etc/makeIocs/example.xml", extext + "</components>\n")  
-    if all_protos:
-        deps = "PYDRV=          $(SUPPORT)/pyDrv/1-2"
-    else:
-        deps = ""
-    create_file("etc/makeIocs/example_RELEASE", """SUPPORT=/dls_sw/prod/R3.14.8.2/support
-WORK=/dls_sw/work/R3.14.8.2/support
-
-# Place any example specific dependencies here
-%s
-""" % deps)          
+    create_file("etc/makeIocs/example_RELEASE", "# Place any example specific dependencies here\n")
 
     # create a simulations directory
     if all_protos:
@@ -198,12 +188,10 @@ class %s(serial_device):
     def reply(self,command):
         # reply to commands here
         return command
-
-if __name__ == "__main__":
-    # little test program, only run when this script is run from command line
-    device = %s()
-    device.start_ip(8001)
-    device.start_debug(9001)
+        
+if __name__=="__main__":
+    # run our simulation on the command line. Run this file with -h for help
+    CreateSimulation(eurotherm2k)
     raw_input()
 """ % (sim, sim))
     
@@ -247,7 +235,7 @@ $(DOCDIR)/build_instructions: $(TOP)/etc/makeIocs/example.xml
 
 # Remove entire documentation/doxygen dir on clean
 clean:
-    rm -rf $(DOCDIR)
+\trm -rf $(DOCDIR)
 """)
     create_file("etc/makeDocumentation/config.src", "# Include override doxygen config values here\n")
     vdbs = glob.glob("*App/Db/*.vdb") + glob.glob("*App/Db/*.db") + glob.glob("*App/Db/*.template")
@@ -259,7 +247,7 @@ clean:
 \mainpage %s EPICS Support Module
 \section intro_sec Introduction 
 I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \n
-You can also link to \link %s internally generated documentation \endlink with alternate text, or by just by mentioning its name, e.g. %s
+You can also link to \ref %s "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. %s
 
 \section bugs_sec Known Bugs
 - I'm going to describe any known bugs here
@@ -271,12 +259,9 @@ The \subpage user_manual page contains instructions for the end user
 The \subpage build_instructions page contains instructions to setup this module
 
 An example built using these instructions is available in iocs/example
-
-\section builder_sec Builder Objects
-The \subpage builder_objects page contains information on how to use the iocbuilder objects provided by this module
 **/
 
-/* Build instructions and builder objects page will be generated from the xml file given to dls-make-doxygen-documentation.py */
+/* Build instructions page will be generated from the xml file given to dls-xml-iocbuilder.py --doc */
 
 /** 
 \page user_manual User Manual
@@ -304,6 +289,7 @@ include $(TOP)/configure/RULES_DIRS
         iline += "DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))\n"
         srch = "include $(TOP)/configure/RULES_TOP"
         open("Makefile", "w").write(mtext.replace(srch, iline + srch))    
-
+    if extext:
+		print "*** Incomplete example.xml created, run xeb.py etc/makeIocs/example.xml to fix"
 if __name__=="__main__":
     sys.exit(make_etc_dir())

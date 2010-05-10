@@ -8,6 +8,7 @@ Parse <cfg_file> and <pages_file>, add autogen stuff, and output to
 run doxygen on the generated config.src to generate files"""
 
 import os, sys, glob, re
+from pkg_resources import require
 
 def make_config_dict(root = "../.."):
     """Make the Doxygen config dict from information on the current module.
@@ -71,7 +72,7 @@ def main():
     filtname = "doxygen_filter.sh"
     filt = open(out+"/"+filtname,"w")
     print >> filt, "#!/bin/env sh"
-    print >> filt, '%s %s $1'%(sys.executable, dls_scripts.input_filter.__file__)
+    print >> filt, 'PYTHONPATH=%s %s %s $1'%(require("iocbuilder")[0].location, sys.executable, dls_scripts.input_filter.__file__)
     filt.close()
     # tell doxygen to use the filter
     f.write("FILTER_PATTERNS = %s\n"%(" ".join("*.%s=./%s"%(e,filtname) for e in ["vdb","proto","protocol","template","db", "pmc"])))
