@@ -25,17 +25,17 @@ This will create the following structure:
     iocs/ -- This is where generated IOCs go
       Makefile
     documentation/ -- This is where the documentation goes
-      index.html -- A redirect html page     
+      index.html -- A redirect html page
 """
 import os, sys, re, glob
 
 def create_file(filename, text):
     print "Creating", filename
-    open(filename, "w").write(text)    
+    open(filename, "w").write(text)
 
 def create_dir(dirname):
     print "Creating directory", dirname
-    os.mkdir(dirname)    
+    os.mkdir(dirname)
 
 def make_etc_dir():
     from optparse import OptionParser
@@ -43,11 +43,11 @@ def make_etc_dir():
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("Incorrect number of arguments.")
-        
+
     # first check we are in the root of the module
     assert "configure" in os.listdir("."), \
         "This doesn't look like the root of a support or ioc module, doesn't have a configure directory"
-        
+
     # First make the top level directory
     module = os.path.basename(os.path.abspath("."))
     create_dir("etc")
@@ -66,23 +66,23 @@ include $(TOP)/configure/RULES_DIRS
     if not os.path.isdir("db"):
         print "Making the module"
         os.system("make > /dev/null")
-    all_protos = set()        
+    all_protos = set()
     if os.path.isdir("db"):
         dbfiles = os.listdir("db")
         for dbf in dbfiles:
             print "Parsing", dbf
             filename = "db/"+dbf
-                        
+
             # get the template text
             ft = open(filename).read()
             basename = os.path.basename(filename)
             clsname = basename.split(".")[0]
             modname = os.path.basename(os.path.abspath("."))
-            
+
             # find all protocol files
             protos = set(re.findall(r"@(.*\.proto[^ ]*)",ft))
             all_protos.update(protos)
-            
+
             i = ["from iocbuilder import AutoSubstitution"]
             if protos:
                 deps = "AutoSubstitution, AutoProtocol"
@@ -91,26 +91,26 @@ include $(TOP)/configure/RULES_DIRS
                 deps = "AutoSubstitution"
             text += "class %s(%s):\n" % (clsname, deps)
             text += "    # Substitution attributes\n"
-            text += "    TemplateFile = '%s'\n"%basename  
-            text += "\n"    
+            text += "    TemplateFile = '%s'\n"%basename
+            text += "\n"
             if protos:
                 text += "    # AutoProtocol attributes\n"
                 text += "    ProtocolFiles = %s\n" % (list(protos).__repr__())
-                text += "\n"    
-            text += "\n"    
+                text += "\n"
+            text += "\n"
             l = "\t<%s.%s" % (modname, clsname)
             if protos:
                 p = list(protos)[0].split(".")[0]
-                extext += '\t<asyn.AsynIP name="%sAsyn" port="172.23.111.180:7001" simulation="localhost:9001"/>\n' %(clsname)        
+                extext += '\t<asyn.AsynIP name="%sAsyn" port="172.23.111.180:7001" simulation="localhost:9001"/>\n' %(clsname)
                 l += ' PORT="%sAsyn"' % p
             extext += l + "/>\n"
             for imp in i:
                 if imp not in imports:
                     imports.append(imp)
-    create_file("etc/builder.py", "%s\n\n%s" % ("\n".join(imports), text)) 
-      
+    create_file("etc/builder.py", "%s\n\n%s" % ("\n".join(imports), text))
+
     # now write the ioc makefile
-    create_dir("etc/makeIocs")    
+    create_dir("etc/makeIocs")
     create_file("etc/makeIocs/Makefile", """TOP = ../..
 include $(TOP)/configure/CONFIG
 
@@ -138,7 +138,7 @@ install: $(IOC_DIRS)
 # General rule for building a Standard IOC from an XML file
 $(TOP)/iocs/%: %.xml
 \t$(XMLBUILDER) $(DEBUG) $<
-    
+
 # General rule for building a Simulation IOC from an XML file
 $(TOP)/iocs/%_sim: %.xml
 \t$(XMLBUILDER) $(DEBUG) --sim=linux-x86 $<
@@ -157,18 +157,18 @@ clean:
 """)
 
     # and an example ioc
-    create_file("etc/makeIocs/example.xml", extext + "</components>\n")  
+    create_file("etc/makeIocs/example.xml", extext + "</components>\n")
     create_file("etc/makeIocs/example_RELEASE", "# Place any example specific dependencies here\n")
 
     # create a simulations directory
     if all_protos:
         sims = [ x.split(".")[0] for x in all_protos ]
-        create_dir("etc/simulations")          
+        create_dir("etc/simulations")
         create_file("etc/simulations/Makefile","""TOP = ../..
 include $(TOP)/configure/CONFIG
 %s
 include $(TOP)/configure/RULES
-""" % ("\n".join([ "DATA += %s_sim.py" % x for x in sims ])))    
+""" % ("\n".join([ "DATA += %s_sim.py" % x for x in sims ])))
         for sim in sims:
             create_file("etc/simulations/%s_sim.py" % sim, """#!/dls_sw/tools/bin/python2.4
 
@@ -180,24 +180,24 @@ from dls_serial_sim import serial_device
 class %s(serial_device):
 
     Terminator = "\\n"
-    
+
     def __init__(self):
         # place your initialisation code here
         serial_device.__init__(self)
-    
+
     def reply(self,command):
         # reply to commands here
         return command
-        
+
 if __name__=="__main__":
     # run our simulation on the command line. Run this file with -h for help
     CreateSimulation(eurotherm2k)
     raw_input()
 """ % (sim, sim))
-    
+
     # now write the documentation template
     if not os.path.isdir("documentation"):
-        create_dir("documentation")          
+        create_dir("documentation")
     if not os.path.isfile("documentation/index.html"):
         create_file("documentation/index.html", """
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
@@ -208,9 +208,9 @@ if __name__=="__main__":
 <meta http-equiv="REFRESH" content="0;url=doxygen/index.html"></HEAD>
 <body/>
 </html>""")
-       
-    create_dir("etc/makeDocumentation")      
-    create_dir("etc/makeDocumentation/images")      
+
+    create_dir("etc/makeDocumentation")
+    create_dir("etc/makeDocumentation/images")
     create_file("etc/makeDocumentation/Makefile", """TOP = ../..
 include $(TOP)/configure/CONFIG
 
@@ -223,15 +223,20 @@ DOCDIR := $(TOP)/documentation/doxygen
 # add the documentation files to the install target
 install: $(DOCDIR)
 
-# rule for documentation
-$(DOCDIR): config.src manual.src $(DOCDIR)/build_instructions
+# rule for creating the doxygen documentation
+$(DOCDIR): config.src manual.src $(DOCDIR)/build_instructions_example
 \tmkdir -p $(DOCDIR)
 \tdls-make-doxygen-documentation.py -o $(DOCDIR) config.src manual.src
-    
-# rule for generating build instructions from example.xml file
-$(DOCDIR)/build_instructions: $(TOP)/etc/makeIocs/example.xml
+
+# rule for generating build instructions from an xml file
+$(DOCDIR)/build_instructions_%: $(TOP)/etc/makeIocs/%.xml
 \tmkdir -p $(DOCDIR)
 \tdls-xml-iocbuilder.py --doc=$@ $(DEBUG) $^
+
+# rule for generating build instructions from a py file
+$(DOCDIR)/build_instructions_%: $(TOP)/etc/makeIocs/%.py
+\tmkdir -p $(DOCDIR)
+\t$^ --doc=$@ $(DEBUG) example
 
 # Remove entire documentation/doxygen dir on clean
 clean:
@@ -245,25 +250,25 @@ clean:
         vdb = "thing.vdb"
     create_file("etc/makeDocumentation/manual.src", r"""/**
 \mainpage %s EPICS Support Module
-\section intro_sec Introduction 
+\section intro_sec Introduction
 I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \n
 You can also link to \ref %s "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. %s
 
 \section bugs_sec Known Bugs
 - I'm going to describe any known bugs here
 
-\section user_sec User Manual 
+\section user_sec User Manual
 The \subpage user_manual page contains instructions for the end user
 
 \section build_sec Build Instructions 
-The \subpage build_instructions page contains instructions to setup this module
+- \subpage build_instructions_example
 
-An example built using these instructions is available in iocs/example
+IOCs build using these build instructions are available in iocs/
 **/
 
 /* Build instructions page will be generated from the xml file given to dls-xml-iocbuilder.py --doc */
 
-/** 
+/**
 \page user_manual User Manual
 This needs to be hand generated. You can link directly to this page from the edm screen if you want
 **/
@@ -280,16 +285,15 @@ include $(TOP)/configure/RULES_DIRS
 """)
     # finally add it to the makefile
     mtext = open("Makefile").read()
-    line = "DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard etc))\n"    
+    line = "DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard etc))\n"
     if line not in mtext:
-        print "Adding etc and iocs dirs to Makefile"    
+        print "Adding etc and iocs dirs to Makefile"
         iline =  "# Comment out the following line to creation of example iocs and documentation\n"
         iline += line
         iline += "# Comment out the following line to disable building of example iocs\n"
         iline += "DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))\n"
         srch = "include $(TOP)/configure/RULES_TOP"
-        open("Makefile", "w").write(mtext.replace(srch, iline + srch))    
-    if extext:
-		print "*** Incomplete example.xml created, run xeb.py etc/makeIocs/example.xml to fix"
+        open("Makefile", "w").write(mtext.replace(srch, iline + srch))
+    print "*** Incomplete example.xml created, run xeb etc/makeIocs/example.xml to fix"
 if __name__=="__main__":
     sys.exit(make_etc_dir())
