@@ -172,7 +172,7 @@ def unixbuild(svn, options, module, release_number, env, directories, postfix):
     user = os.getlogin()
     
     # do a test build and create the release if the release isn't in subversion
-    if not svn.pathcheck(os.path.join(rel_dir, release_number)):
+    if not svn.pathcheck(os.path.join(rel_dir, release_number)) and not options.test:
         # check out to test area
         while os.path.isdir(test_dir):
             test_dir += "_1"

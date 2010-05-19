@@ -191,7 +191,7 @@ class %s(serial_device):
 
 if __name__=="__main__":
     # run our simulation on the command line. Run this file with -h for help
-    CreateSimulation(eurotherm2k)
+    CreateSimulation(%s)
     raw_input()
 """ % (sim, sim))
 
