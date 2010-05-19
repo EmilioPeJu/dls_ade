@@ -172,28 +172,29 @@ def unixbuild(svn, options, module, release_number, env, directories, postfix):
     user = os.getlogin()
     
     # do a test build and create the release if the release isn't in subversion
-    if not svn.pathcheck(os.path.join(rel_dir, release_number)) and not options.test:
-        # check out to test area
-        while os.path.isdir(test_dir):
-            test_dir += "_1"
-        print "Doing test build, logging in "+ os.path.join(test_dir,src_dir.split("/")[-1])+"/build.log ..."
-        os.mkdir(test_dir)
-        os.chdir(test_dir)
-        os.system("rm -rf "+src_dir.split("/")[-1])
-        os.system("svn co "+src_dir+" > /dev/null")
-        os.chdir(src_dir.split("/")[-1])
-        # check python files look right
-        if options.area == "python" and postfix != ".sh":
-            assert "Makefile.private" in open("Makefile").read(), "New build system no longer hacks setup.py. You need to include Makefile.private in your Makefile. See the ADE for more details."
-        if os.path.isfile("./configure/RELEASE"):
-            os.system("mv configure/RELEASE configure/RELEASE.svn")
-            os.system("""sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/"""+env.epicsVer()+"""/base," -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/"""+env.epicsVer()+"""/support," -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," configure/RELEASE.svn > configure/RELEASE""")
-        success = call('. /dls_sw/etc/profile && make &> build.log', 
-            shell=True, env={'DLS_EPICS_RELEASE': env.epicsVer()})
-        assert success == 0, "Module will not build. Please check module does not depend on work"
-        os.chdir("../..")
-        os.system("rm -rf "+test_dir)
-        print "Test build successful, continuing with release"
+    if not svn.pathcheck(os.path.join(rel_dir, release_number)):
+        if not options.test:
+            # check out to test area
+            while os.path.isdir(test_dir):
+                test_dir += "_1"
+            print "Doing test build, logging in "+ os.path.join(test_dir,src_dir.split("/")[-1])+"/build.log ..."
+            os.mkdir(test_dir)
+            os.chdir(test_dir)
+            os.system("rm -rf "+src_dir.split("/")[-1])
+            os.system("svn co "+src_dir+" > /dev/null")
+            os.chdir(src_dir.split("/")[-1])
+            # check python files look right
+            if options.area == "python" and postfix != ".sh":
+                assert "Makefile.private" in open("Makefile").read(), "New build system no longer hacks setup.py. You need to include Makefile.private in your Makefile. See the ADE for more details."
+            if os.path.isfile("./configure/RELEASE"):
+                os.system("mv configure/RELEASE configure/RELEASE.svn")
+                os.system("""sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/"""+env.epicsVer()+"""/base," -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/"""+env.epicsVer()+"""/support," -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," configure/RELEASE.svn > configure/RELEASE""")
+            success = call('. /dls_sw/etc/profile && make &> build.log', 
+                shell=True, env={'DLS_EPICS_RELEASE': env.epicsVer()})
+            assert success == 0, "Module will not build. Please check module does not depend on work"
+            os.chdir("../..")
+            os.system("rm -rf "+test_dir)
+            print "Test build successful, continuing with release"
 
         # copy the source to the release directory
         svn.mkdir(rel_dir)
