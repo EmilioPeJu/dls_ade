@@ -418,6 +418,7 @@ if not exist %_dlsprod% (
 )
 
 echo Performing Windows build using mingw32-make.
+mingw32-make clean
 mingw32-make
 
 """
