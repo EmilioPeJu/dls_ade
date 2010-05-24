@@ -305,8 +305,8 @@ def windowsbuild(svn, options, module, release_number, env, directories):
     out_dir, test_dir, src_dir, rel_dir = directories
     user = os.getlogin()
     
-    assert env.epicsVer() == "R3.14.10", \
-        "Only epics version R3.14.10 is supported for the Windows platform"
+    assert env.epicsVer() in ("R3.14.10","R3.14.11"), \
+        "Only epics versions R3.14.10 and R3.14.11 is supported for the Windows platform"
         
     assert options.area in ("support","ioc"), \
         "Only areas 'support' and 'ioc' are not supported under Windows."
@@ -325,11 +325,12 @@ def windowsbuild(svn, options, module, release_number, env, directories):
         print "Created release in svn directory: "+os.path.join(rel_dir,release_number)
 
     # Import the Windows batch script template and substitute all the relevant macros
-    winbuildscript = winbuildscript.replace("$(DLS_EPICS_RELEASE)", env.epicsVer())
-    winbuildscript = winbuildscript.replace("$(AREA)", options.area)
-    winbuildscript = winbuildscript.replace("$(MODULE)", module)
-    winbuildscript = winbuildscript.replace("$(VERSION)", release_number)
-    createbuildjob(module, release_number, directories, winbuildscript, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = ".bat")
+    script = winbuildscript
+    script = script.replace("$(DLS_EPICS_RELEASE)", env.epicsVer())
+    script = script.replace("$(AREA)", options.area)
+    script = script.replace("$(MODULE)", module)
+    script = script.replace("$(VERSION)", release_number)
+    createbuildjob(module, release_number, directories, script, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = ".bat")
 
 def createbuildjob(module, release_number, directories, build_script, prefix="release", postfix = ".sh"):
     out_dir, test_dir, src_dir, rel_dir = directories
