@@ -125,6 +125,7 @@ MODULEVER = 0.0
 -include Makefile.private
 
 # This is run when we type make
+# It can depend on other targets e.g. the .py files produced by pyuic4 
 dist: setup.py $(wildcard %s/*.py)
 \tMODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
 \ttouch dist
@@ -135,7 +136,7 @@ clean:
 \t-rm -rf build dist *egg-info installed.files
 \t-find -name '*.pyc' -exec rm {} \\;
 
-# Install the built egg
+# Install the built egg and keep track of what was installed
 install: dist
 \t$(PYTHON) setup.py easy_install -m \\
 \t\t--record=installed.files \\
