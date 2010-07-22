@@ -132,7 +132,10 @@ def logs_since_release():
     for l in r_logs:
         l["message"] += " (Release dir %s)" % l["changed_paths"][0]["path"].replace(release_dir, "").lstrip("/")
         if l["changed_paths"][0]["copyfrom_revision"]:
-            l["revision"] = l["changed_paths"][0]["copyfrom_revision"]
+            # hack the revision so it's a little later than the copy from location
+            class rev:
+                number = l["changed_paths"][0]["copyfrom_revision"].number + 0.1            
+            l["revision"] = rev()
     
     # intersperse them
     ll =  [(l["revision"].number, l) for l in r_logs]                                                          
@@ -147,7 +150,7 @@ def logs_since_release():
             mess = mess[0].strip()
         else:
             mess = mess[1].strip()
-        rev = "(r%s)"%log["revision"].number
+        rev = "(r%s)"%int(log["revision"].number)
         pre = ("%%-%ds %%s:" % (17 - len(rev))) % (log["author"], rev)
         if verbose:                                
             header = "%s %s"%(pre,time.ctime(log["date"]))
