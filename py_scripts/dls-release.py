@@ -100,11 +100,15 @@ def release():
             postfix = ".sh"
 
     # if area is init, just update the relevant part of prod
-    if options.area in ["init", "build_scripts"]:
+    if options.area in ["init", "build_scripts", "Launcher"]:
         if options.area == "init":
             print "Updating background process initialisation in prod..."
             path = out_dir+"prod_etc_init_update_"+user+postfix
             os.system('echo "svn update /dls_sw/prod/etc/init && make -C /dls_sw/prod/etc/init" > '+path)
+        if options.area == "Launcher":
+            print "Updating Launcher in prod..."
+            path = out_dir+"prod_etc_Launcher_update_"+user+postfix
+            os.system('echo "svn update /dls_sw/prod/etc/Launcher && make -C /dls_sw/prod/etc/Launcher" > '+path)            
         if options.area=="build_scripts":
             if len(args)!=1:
                 parser.error("Releasing tools: 1 argument, tool name")

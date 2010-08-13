@@ -19,14 +19,14 @@ def checkout_module():
     flag = False
     a = ""
     if len(args)==0:
-        if options.force:
+        if options.force or options.area in ("Launcher", "init", "build_scripts"):
             a = "Y"
         while not a.upper() in ["Y","N"]:
             a=raw_input("Would you like to checkout the whole "+options.area+" area? This may take some time. Enter Y or N: ")
-        if a.upper() == "Y":
-            module = ""
+        if a.upper() == "N":
+            return
         else:
-            sys.exit()
+            module = ""
     else:
         if len(args)!=1:
             parser.error("Incorrect number of arguments.")
