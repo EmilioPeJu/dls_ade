@@ -23,8 +23,6 @@ def make_config_dict(root = "../.."):
     for dname in ["src"]:
         # parse <dname>/* for doxygen comments    
         d["INPUT"]          += " "+ (" ".join(glob.glob(root+"/"+dname+"/"))) 
-    if os.path.isdir(root+"/etc/"):
-        d["INPUT"] += " " + root + "/etc/"
     # setup the environment
     from dls_environment import environment        
     e = environment()
