@@ -16,33 +16,38 @@ def include_license():
     parser.add_option("-c", dest="c", action="store_true", \
         help="Write license in a /*...*/ commented block instead of a '#' block")
     parser.add_option("-d", dest="doxygen", action="store_true", \
-        help="Write a doxygen formatted license section to <filename1> in a /*...*/ block")
+        help="Format the license for doxygen (wrap in in a section and put it at the end")
     parser.add_option("-l", dest="license", action="store_true", \
         help="Also copy the LGPL and GPL licenses to .")
     (options,args) = parser.parse_args()
     filenames = args[1:]
     if options.license:
-        root = os.path.abspath(os.path.dirname(__file__))
+        import dls_scripts.input_filter        
+        root = os.path.abspath(os.path.dirname(dls_scripts.input_filter.__file__))
         os.system("cp %(root)s/COPYING COPYING"%locals())
         os.system("cp %(root)s/COPYING.LESSER COPYING.LESSER"%locals())            
         print "Wrote COPYING, COPYING.LESSER"
+    module = args[0]            
+    year = time.strftime("%Y")        
+    if options.doxygen:
+        text = dltext % locals()
+    else:
+        text = ltext % locals()
+    if options.c:
+        text = "/**\n" + text.replace("#"," *") + " */\n"
     for filename in filenames:
-        module = args[0]    
         lines = open(filename,"r").readlines()
-        year = time.strftime("%Y")
         open(filename + "~","w").writelines(lines)
         print "Created backup of",filename+"~"
         if options.doxygen:
-            open(filename,"w").writelines(lines+[dltext%locals()])
-            return     
-        licensetext = ltext%locals()          
-        if options.c:
-            licensetext = "/*\n"+licensetext.replace("#"," *")+" */\n"        
-        if lines[0].startswith("#!"):
-            open(filename,"w").writelines(lines[:1]+[licensetext]+lines[1:])
+            open(filename,"w").writelines(lines+[text])
+            print "Appended license to",filename            
         else:
-            open(filename,"w").writelines([licensetext]+lines)
-        print "Prepended license to",filename
+            if lines[0].startswith("#!"):
+                open(filename,"w").writelines(lines[:1]+[text]+lines[1:])
+            else:
+                open(filename,"w").writelines([text]+lines)
+            print "Prepended license to",filename
 
 ltext = """# Author: Diamond Light Source, Copyright %(year)s
 #
@@ -62,21 +67,22 @@ ltext = """# Author: Diamond Light Source, Copyright %(year)s
 # along with '%(module)s'.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-dltext = """
-\section License
-    '%(module)s' is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    '%(module)s' is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with '%(module)s'.  If not, see http://www.gnu.org/licenses/.
-**/
+dltext = r"""# \file
+# \section License
+# Author: Diamond Light Source, Copyright %(year)s
+#
+# '%(module)s' is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# '%(module)s' is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with '%(module)s'.  If not, see http://www.gnu.org/licenses/.
 """
 if __name__=="__main__":
     sys.exit(include_license())

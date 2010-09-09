@@ -14,7 +14,7 @@ setup(
     # version: over-ridden by the release script
     version = version,
     packages = ["dls_scripts"],
-    package_data = {'dls_scripts' : ["def_config.cfg"] },
+    package_data = {'dls_scripts' : ["def_config.cfg", "COPYING", "COPYING.LESSER"] },
     # define console_scripts
     scripts = scripts,
     )

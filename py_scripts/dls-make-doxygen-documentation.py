@@ -26,7 +26,7 @@ def make_config_dict(root = "../.."):
     # setup the environment
     from dls_environment import environment        
     e = environment()
-    module_name, module_version = e.classifyPath(root+"/configure/RELEASE")
+    module_name, module_version = e.classifyPath(root)
     # if the tree is invalid, check to see if what kind of module it is:
     version = ""
     if module_version == "invalid":
