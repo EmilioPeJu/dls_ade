@@ -73,7 +73,6 @@ def cs_publish():
     
     # Check the release isn't on the webserver
     webPath = "/dls_sw/cs-publish/downloads/%(area)s/%(module)s"%locals() 
-    webPath = "/tmp/%(module)s"%locals() 
     if os.path.isdir(webPath+"/"+release):
         msg = "%(module)s release %(release)s already exists on webserver" % locals()
         if options.force:
