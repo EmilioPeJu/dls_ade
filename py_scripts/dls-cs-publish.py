@@ -107,13 +107,14 @@ def cs_publish():
             shutil.copytree("%(export)s/%(docdir)s"%locals(),"%(webPath)s/%(release)s/%(docdir)s"%locals())                    
 
     # add in iocs
-    for ioc in os.listdir(prodPath + "/iocs"):
-        if os.path.isdir(prodPath + "/iocs/" + ioc) and ioc not in os.listdir(export + "/iocs") and ioc != ".svn":
-            shutil.copytree("%s/iocs/%s"%(prodPath,ioc),"%s/iocs/%s" % (export,ioc))
-            assert not os.system(r"find %(export)s/iocs/%(ioc)s -name '.svn' -prune -exec rm -rf {} \;"%locals()), \
-                "Can't remove all .svn directories in iocs dir"                    
-            assert not os.system("make -C %(export)s/iocs/%(ioc)s clean uninstall > /dev/null" %locals()), \
-                "Can't do a make clean uninstall on the ioc"
+    if os.path.exists(prodPath + "/iocs"):
+        for ioc in os.listdir(prodPath + "/iocs"):
+            if os.path.isdir(prodPath + "/iocs/" + ioc) and ioc not in os.listdir(export + "/iocs") and ioc != ".svn":
+                shutil.copytree("%s/iocs/%s"%(prodPath,ioc),"%s/iocs/%s" % (export,ioc))
+                assert not os.system(r"find %(export)s/iocs/%(ioc)s -name '.svn' -prune -exec rm -rf {} \;"%locals()), \
+                    "Can't remove all .svn directories in iocs dir"                    
+                assert not os.system("make -C %(export)s/iocs/%(ioc)s clean uninstall > /dev/null" %locals()), \
+                    "Can't do a make clean uninstall on the ioc"
 
     # do any other steps
     if os.path.isfile("%(export)s/preparePublish.sh"%locals()):
