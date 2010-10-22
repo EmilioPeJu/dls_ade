@@ -17,7 +17,6 @@ def release():
     # override epics_version if set
     from dls_environment import environment    
     e = environment()
-    epics_version = e.epicsVer()
     
     # work out rhel version
     rhel_text = open("/etc/redhat-release").read()
@@ -74,9 +73,11 @@ def release():
     (options, args) = parser.parse_args()    
 
     # set epics version, and extension
+    force_epics = False
     if options.epics_version:
         if e.epics_ver_re.match(options.epics_version):
             e.setEpics(options.epics_version)
+            force_epics = True
         else:
             parser.error("Expected epics version like R3.14.8.2, got '%s'" % \
                 options.epics_version)
@@ -156,6 +157,22 @@ def release():
     # check for existence of directories    
     assert svn.pathcheck(src_dir),src_dir+' does not exist in the repository.'
         
+    # check if we really meant to release with this epics version
+    if options.area in ["ioc", "support"]:
+        if not os.system("svn export "+src_dir+"/configure/RELEASE /tmp/RELEASE > /dev/null"):
+            text = open("/tmp/RELEASE").read()
+            os.system("rm -rf /tmp/RELEASE")
+            module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
+            if module_epics:
+                module_epics = module_epics[0]
+            if force_epics == False and module_epics != e.epicsVer():
+                if "y" != raw_input("You are trying to release a %s module under %s without using the -e flag. Are you sure [y/n]?"%(module_epics, e.epicsVer())).lower():
+                    sys.exit()
+            # check if there are any versions made in R3.14.11
+            if os.path.isdir("/dls_sw/prod/R3.14.11/%s/%s" %(options.area,module)) and e.epicsVer() != "R3.14.11" and not options.branch:
+                if "y" != raw_input("There are already R3.14.11 releases of %s, are you sure you want to release a %s version [y/n]?"%(module, e.epicsVer())).lower():
+                    sys.exit()
+                    
     directories = (out_dir, test_dir, src_dir, rel_dir)
     if options.windows == True:
         assert options.area in ["support","ioc"], \
