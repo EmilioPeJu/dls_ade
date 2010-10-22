@@ -104,6 +104,8 @@ def cs_publish():
                 shutil.rmtree("%(export)s/%(docdir)s/private"%locals())
             assert not os.system("chmod -R ug+rwX,o+rX,o-w %(export)s"%locals()), \
                 "Can't chmod the directory"    
+            assert not os.system("chgrp -R dcs %(export)s"%locals()), \
+                "Can't chgrp the directory"                  
             shutil.copytree("%(export)s/%(docdir)s"%locals(),"%(webPath)s/%(release)s/%(docdir)s"%locals())                    
 
     # add in iocs
