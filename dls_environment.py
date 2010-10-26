@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, shutil,re
+import os, shutil, re
 from optparse import OptionParser
+from subprocess import Popen, PIPE
 
 class environment:
     """A class representing the epics environment of a site. epics=version of
@@ -149,6 +150,18 @@ class environment:
         else:
             return [x[7] for x in order]
 
+    def svnName(self, path):
+        """Find the name that the module is under in svn. Very dls specific"""
+        output = Popen(["svn", "info", path], stdout=PIPE).communicate()[0]
+        for line in output.splitlines():
+            if line.startswith("URL:"):
+                split = line.split("/")
+                if "/branches/" in line:   
+                    if len(split) > 1:                 
+                        return split[-2].strip()
+                else:
+                    return split[-1].strip()    
+
     def classifyPath(self, path):
         """Classify the name and version of the path of the root of a module"""
         sections = path.split("/")
@@ -158,18 +171,19 @@ class environment:
         elif self.prodArea("ioc") in path:
             name = sections[-3]+"/"+sections[-2]
             version = sections[-1]
-        elif self.devArea("support") in path:
-            name = sections[-1]
-            version = "work"
-        elif self.devArea("ioc") in path:
-            name = sections[-2]+"/"+sections[-1]
-            version = "work"
         else:
-            if "ioc" in path:
-                name = sections[-2]+"/"+sections[-1]
-            else:
+            name = self.svnName(path)
+            if not name:
                 name = sections[-1]
-            version = "local"
+            if self.devArea("support") in path:
+                version = "work"
+            elif self.devArea("ioc") in path:
+                name = sections[-2]+"/"+name
+                version = "work"
+            else:
+                if "ioc" in path:
+                    name = sections[-2]+"/"+name
+                version = "local"
         return (name, version)
 
 if __name__=="__main__":
