@@ -18,7 +18,7 @@
 
 import os, shutil, re
 from optparse import OptionParser
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 
 class environment:
     """A class representing the epics environment of a site. epics=version of
@@ -152,7 +152,7 @@ class environment:
 
     def svnName(self, path):
         """Find the name that the module is under in svn. Very dls specific"""
-        output = Popen(["svn", "info", path], stdout=PIPE).communicate()[0]
+        output = Popen(["svn", "info", path], stdout=PIPE, stderr=STDOUT).communicate()[0]
         for line in output.splitlines():
             if line.startswith("URL:"):
                 split = line.split("/")
