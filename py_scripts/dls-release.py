@@ -158,8 +158,9 @@ def release():
     assert svn.pathcheck(src_dir),src_dir+' does not exist in the repository.'
         
     # check if we really meant to release with this epics version
-    if options.area in ["ioc", "support"]:
-        if not os.system("svn export "+src_dir+"/configure/RELEASE /tmp/RELEASE > /dev/null"):
+    if options.area in ["ioc", "support"]:        
+        os.system("svn export "+src_dir+"/configure/RELEASE /tmp/RELEASE > /dev/null")
+        if os.path.isfile("/tmp/RELEASE"):
             text = open("/tmp/RELEASE").read()
             os.system("rm -rf /tmp/RELEASE")
             module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
