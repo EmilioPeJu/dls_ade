@@ -237,6 +237,8 @@ def unixbuild(svn, options, module, release_number, env, directories, postfix):
         sys.exit()
     
     # in script: checkout svn module
+    if svn.root().rstrip("/").split("/")[-1] == "scratch":
+        return    
     build_script = """#!/usr/bin/env bash
 
 # Script for building a diamond production module.
