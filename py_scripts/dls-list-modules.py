@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] [<dom_name>]
@@ -28,8 +28,8 @@ def list_modules():
 
     # print the modules
     assert svn.pathcheck(source), source + " does not exist in the repository"
-    for node in svn.ls(source):
-        print os.path.basename(node['name'])
+    for node, _ in svn.list(source)[1:]:
+        print os.path.basename(node.path)
 
 if __name__ == "__main__":
     sys.exit(list_modules())

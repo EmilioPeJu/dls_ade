@@ -154,34 +154,34 @@ def cs_publish():
   </tr>
 """%locals()
     cls = ""
-    for release in releases:
+    for r in releases:
         text += '  <tr>\n'
-        text += '    <td%(cls)s><strong>%(release)s</strong></td>\n'%locals()
-        filename = "%(module)s-%(release)s.tgz"%locals()
-        text += '    <td%(cls)s><a href="%(release)s/%(filename)s"><img src="../../img/archive.png" alt="icon"/>%(filename)s</a></td>\n'%locals()  
+        text += '    <td%(cls)s><strong>%(r)s</strong></td>\n'%locals()
+        filename = "%(module)s-%(r)s.tgz"%locals()
+        text += '    <td%(cls)s><a href="%(r)s/%(filename)s"><img src="../../img/archive.png" alt="icon"/>%(filename)s</a></td>\n'%locals()  
         text += '    <td%(cls)s>'%locals()
         htmls = []
         pdfs = []
         for docdir in docdirs:
-            if os.path.isdir("%(webPath)s/%(release)s/%(docdir)s/html"%locals()):
+            if os.path.isdir("%(webPath)s/%(r)s/%(docdir)s/html"%locals()):
                 docpath = docdir + "/html"
-            elif os.path.isdir("%(webPath)s/%(release)s/%(docdir)s"%locals()):
+            elif os.path.isdir("%(webPath)s/%(r)s/%(docdir)s"%locals()):
                 docpath = docdir
             else:
                 continue
-            htmls = [ x.replace(".html","") for x in os.listdir("%(webPath)s/%(release)s/%(docpath)s"%locals()) if x.endswith(".html") ]            
-            pdfs = [ x for x in os.listdir("%(webPath)s/%(release)s/%(docpath)s"%locals()) if x.endswith(".pdf") ]                        
+            htmls = [ x.replace(".html","") for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s"%locals()) if x.endswith(".html") ]            
+            pdfs = [ x for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s"%locals()) if x.endswith(".pdf") ]                        
         if htmls:
             # if an index exists, only include that
             if "index" in htmls:
                 htmls = ["index"]
             for html in htmls:
-                text += '<a href="%(release)s/%(docpath)s/%(html)s.html"><img src="../../img/html.png" alt="icon"/>%(html)s</a>'%locals() 
+                text += '<a href="%(r)s/%(docpath)s/%(html)s.html"><img src="../../img/html.png" alt="icon"/>%(html)s</a>'%locals() 
                 if len(htmls)>1:
                     text += '<br/>'
         elif pdfs:
             for pdf in pdfs:
-                text += '<a href="%(release)s/%(docpath)s/%(pdf)s"><img src="../../img/pdficon_small.gif" alt="icon"/>%(pdf)s</a>'%locals()             
+                text += '<a href="%(r)s/%(docpath)s/%(pdf)s"><img src="../../img/pdficon_small.gif" alt="icon"/>%(pdf)s</a>'%locals()             
                 if len(pdfs)>1:
                     text += '<br/>'
                 

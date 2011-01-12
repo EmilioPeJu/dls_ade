@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] <module_name>
@@ -17,6 +17,7 @@ def list_releases():
     from dls_scripts.options import OptionParser    
     parser = OptionParser(usage)
     parser.add_option("-l", "--latest", action="store_true", dest="latest", help="Only print the latest release")
+    parser.add_option("-s", "--svn", action="store_true", dest="svn", help="Print releases available in svn")
     parser.add_option("-e", "--epics_version", action="store", type="string", dest="epics_version", help="change the epics version, default is "+e.epicsVer()+" (from your environment)")
     (options, args) = parser.parse_args()
     if len(args)!=1:
@@ -33,13 +34,31 @@ def list_releases():
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
             
     # Check for the existence of releases of this module/IOC    
-    release_dir = os.path.join(e.prodArea(options.area), module)
-    if not os.path.isdir(release_dir):
-        print module + ": No releases made"
+    release_paths = []    
+    if options.svn:
+        from dls_scripts.svn import svnClient 
+        svn = svnClient()
+        source = os.path.join(svn.prodArea(options.area), module)
+        for node, _ in svn.list(source)[1:]:
+            release_paths.append(os.path.basename(node.path))
+    else:
+        release_dir = os.path.join(e.prodArea(options.area), module)
+        if os.path.isdir(release_dir):        
+            for p in os.listdir(release_dir):
+                if os.path.isdir(os.path.join(release_dir, p)):
+                    release_paths.append(p)
+
+    # check some releases have been made
+    if len(release_paths) == 0:
+        if options.svn:
+            msg = "No releases made in svn"
+        else:
+            msg = "No releases made for %s" % options.epics_version
+        print "%s: %s" % (module, msg)
         return 1
 
     # sort the releases        
-    release_paths = e.sortReleases(os.listdir(release_dir))
+    release_paths = e.sortReleases(release_paths)
     if options.latest:
         print release_paths[-1].split("/")[-1]
     else:
