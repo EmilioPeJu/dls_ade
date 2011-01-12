@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] <module_name> <release_#>
