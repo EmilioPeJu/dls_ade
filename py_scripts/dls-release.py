@@ -185,8 +185,8 @@ def release():
         prodDir = os.path.join(e.prodArea(options.area),module,release_number)
         assert options.force or not os.path.isdir(prodDir), \
         module+" "+release_number+" already exists in "+prodDir
-        assert os.path.isfile(prodDir+".tar.gz"), \
-        module+" "+release_number+".tar.gz archive already exists. Please run dls-archive-module.py -u to extract"
+        assert not os.path.isfile(prodDir+".tar.gz"), \
+        module+"/"+release_number+".tar.gz archive already exists. Please run dls-tar-module.py -u to extract"
         unixbuild( svn, options, module, release_number, e, directories, postfix )
         # remove old builds
 #        svn_releases = svn.list(rel_dir)[1:]
