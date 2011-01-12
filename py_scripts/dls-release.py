@@ -188,7 +188,8 @@ def release():
         assert os.path.isfile(prodDir+".tar.gz"), \
         module+" "+release_number+".tar.gz archive already exists. Please run dls-archive-module.py -u to extract"
         unixbuild( svn, options, module, release_number, e, directories, postfix )
-
+        # remove old builds
+#        svn_releases = svn.list(rel_dir)[1:]
     
             
 def unixbuild(svn, options, module, release_number, env, directories, postfix):
