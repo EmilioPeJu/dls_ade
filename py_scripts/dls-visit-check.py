@@ -24,8 +24,8 @@ def visit_check(start,end,exclude,restore,ldif,args ):
 
         if (visit.enddate(name)   and
             visit.startdate(name) and
-            ( start and (startdate < visit.enddate(name)) ) and
-            ( end and (enddate > visit.startdate(name)) ) and
+            ( not start or (startdate < visit.enddate(name)) ) and
+            ( not end   or (enddate > visit.startdate(name)) ) and
             args and visit.beamline(name) in args ):
 
             group_name=name.replace("-","_")
