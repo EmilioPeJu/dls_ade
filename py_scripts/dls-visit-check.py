@@ -3,11 +3,11 @@ usage = """%prog [options] <beamline>...
 
 This command is checks the Linux LDAP groups against the user office
 database and prints out any discrepencies either in LDIF or text
-format."""
+format. if <beamline> is ommitted then all beamlines are processed"""
 
 import sys
 
-def visit_check(start,end,exclude,ldif, restore ):
+def visit_check(start,end,exclude,restore,ldif,args ):
     from dls_scripts.dlsgroups import visit,ldapgrp
     import datetime
     import optparse
@@ -25,7 +25,8 @@ def visit_check(start,end,exclude,ldif, restore ):
         if (visit.enddate(name)   and
             visit.startdate(name) and
             ( start and (startdate < visit.enddate(name)) ) and
-            ( end and (enddate > visit.startdate(name)) )):
+            ( end and (enddate > visit.startdate(name)) ) and
+            args and visit.beamline(name) in args ):
 
             group_name=name.replace("-","_")
             if group_name not in group.all():
@@ -37,27 +38,27 @@ def visit_check(start,end,exclude,ldif, restore ):
                 group_members = group.members(group_name)
 
             if (exclude and
+                excludedate > visit.enddate(name) and
                 group_name not in restore and
-                excludedate > visit.enddate(name)):
+                visit.beamline(name) not in restore ):
                 
                 visit_members = set()
             else:
-                visit_members = visit.members(name)
-
-            excess_members= group_members ^ visit_members                   
-            not_in_visit = excess_members & group_members
-            not_in_group = excess_members & visit_members
+                bl_staff = group.members(visit.beamline(group_name)+"_staff")
+                visit_members = visit.members(name) - bl_staff
 
             if ldif:
-                if not_in_group or not_in_visit:
-                    group.setmembers( group_name, not_in_group, not_in_visit )
+                if visit_members != group_members:
+                    group.setmembers( group_name, visit_members )
             else:
+                not_in_visit = group_members - visit_members
                 if not_in_visit:
                     print "Visit",name,
                     print " is missing all FedId's in the",not_in_visit,
                     print "Start:",visit.startdate(name),
                     print "End:",visit.enddate(name)
 
+                not_in_group = visit_members - group_members
                 if not_in_group:
                     print "Group ",group_name,
                     print "is missing all FedId's in the", not_in_group,
@@ -75,11 +76,20 @@ if __name__ == "__main__":
                       help="Include only visits that start before <to> days time")
     parser.add_option("-x", "--exclude", dest="exclude",type="int",default=0,
                       help="Exclude users from groups whose visits ended over <exclude> days ago")
-    parser.add_option("-r", "--restore", dest="restore",type="string",nargs=1,
-                      help="Restore all users to the specified visits")    
+    parser.add_option("-i","--restore-file", dest="restorefile",type="str",nargs=1,
+                      help="Filename containing a list of beamlines and visits to restore all users to" )
     parser.add_option("-l", "--ldif", dest="ldif",nargs=0,
                       help="generate difference in ldif format")
     
     (options, args) = parser.parse_args()
 
-    sys.exit(visit_check(options.start, options.end,options.exclude,options.ldif!=None,args))
+    restore=set([])
+    if options.restorefile != None:
+        try:
+            for line in file( options.restorefile ):
+                restore |= set( line.split())
+        except:
+            print >> sys.stderr, "Cannot open restore file:",options.restorefile
+            sys.exit(1)
+
+    sys.exit(visit_check(options.start, options.end,options.exclude,restore,options.ldif!=None,args))
