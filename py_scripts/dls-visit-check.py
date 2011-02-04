@@ -14,6 +14,7 @@ def visit_check(start,end,exclude,ldif, restore ):
 
     visit=visit()
     group=ldapgrp()
+    group.initgid(100000)
 
     excludedate=datetime.date.today()-datetime.timedelta(exclude)
     startdate=datetime.date.today()-datetime.timedelta(start)
@@ -29,11 +30,16 @@ def visit_check(start,end,exclude,ldif, restore ):
             group_name=name.replace("-","_")
             if group_name not in group.all():
                 group_members = set()
-                print "Visit",name,"does not have a group (yet). Start:",visit.startdate(name)
+                if not ldif:
+                    print "Visit",name,"does not have a group (yet). Start:",
+                    print visit.startdate(name)
             else:
                 group_members = group.members(group_name)
 
-            if exclude and group_name not in restore and excludedate > visit.enddate(name):
+            if (exclude and
+                group_name not in restore and
+                excludedate > visit.enddate(name)):
+                
                 visit_members = set()
             else:
                 visit_members = visit.members(name)

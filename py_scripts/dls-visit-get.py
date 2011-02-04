@@ -13,9 +13,10 @@ import sys
 
 def visit_get(args):
     from dls_scripts.dlsgroups import visit
+    from getpass import getuser
 
     if len(args) == 0:
-        usernames = [ getpass.getuser() ]
+        usernames = [ getuser() ]
     else:
         usernames=args
 
