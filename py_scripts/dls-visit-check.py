@@ -24,9 +24,10 @@ def visit_check(start,end,exclude,restore,ldif,args ):
 
         if (visit.enddate(name)   and
             visit.startdate(name) and
-            ( not start or (startdate < visit.enddate(name)) ) and
-            ( not end   or (enddate > visit.startdate(name)) ) and
-            args and visit.beamline(name) in args ):
+            not (start and (visit.enddate(name) <= startdate) ) and
+            not (end   and (visit.startdate(name) <= enddate) ) and
+            not (args and visit.beamline(name) not in args) ):
+
 
             group_name=name.replace("-","_")
             if group_name not in group.all():
@@ -44,8 +45,10 @@ def visit_check(start,end,exclude,restore,ldif,args ):
                 
                 visit_members = set()
             else:
+                visit_members = visit.members(name)
                 bl_staff = group.members(visit.beamline(group_name)+"_staff")
-                visit_members = visit.members(name) - bl_staff
+                if bl_staff:
+                    visit_members -= bl_staff
 
             if ldif:
                 if visit_members != group_members:
