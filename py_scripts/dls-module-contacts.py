@@ -28,6 +28,7 @@ from dls_scripts.options import OptionParser
 from dls_scripts.svn import svnClient, pysvn
 users = {}
 svn = svnClient()
+import pysvn
 
 def lookup(uid):
     # ldap lookup using the commandline interface (takes a while)
@@ -92,9 +93,9 @@ def module_contacts():
             print "Building list of modules..."
         path = svn.devArea(options.area)
         if options.area == "ioc":
-            for l in [ l for l in svn.list(path,recurse=False) if l[0]["path"]!=path ]:
+            for l in [ l for l in svn.list(path, depth=pysvn.depth.immediates) if l[0]["path"]!=path ]:
                 lname = l[0]["path"]
-                mods = svn.list(lname,recurse=False)
+                mods = svn.list(lname, depth=pysvn.depth.immediates)
                 # if an IOC has a configure directory, there are no TAs listed here
                 if "configure" in [ s[0]["path"][-9:] for s in mods ]:
                     modules.append(lname.split("/")[-1])
@@ -104,7 +105,7 @@ def module_contacts():
                         # add each of the TAs
                         modules.append(split[-2]+"/"+split[-1])
         else:
-            for l in [ l for l in svn.list(path,recurse=False) if l[0]["path"]!=path ]:
+            for l in [ l for l in svn.list(path, depth=pysvn.depth.immediates) if l[0]["path"]!=path ]:
                 modules.append(l[0]["path"].split("/")[-1])
         
     # print them and finish here if we don't have to set them

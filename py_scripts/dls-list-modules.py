@@ -20,6 +20,7 @@ def list_modules():
     # import svn client
     from dls_scripts.svn import svnClient    
     svn = svnClient()
+    import pysvn
     
     if options.area=="ioc" and len(args)==1:
         source = svn.devModule(args[0],options.area)
@@ -28,7 +29,7 @@ def list_modules():
 
     # print the modules
     assert svn.pathcheck(source), source + " does not exist in the repository"
-    for node, _ in svn.list(source)[1:]:
+    for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
         print os.path.basename(node.path)
 
 if __name__ == "__main__":

@@ -38,8 +38,9 @@ def list_releases():
     if options.svn:
         from dls_scripts.svn import svnClient 
         svn = svnClient()
+        import pysvn
         source = os.path.join(svn.prodArea(options.area), module)
-        for node, _ in svn.list(source)[1:]:
+        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
             release_paths.append(os.path.basename(node.path))
     else:
         release_dir = os.path.join(e.prodArea(options.area), module)
