@@ -7,8 +7,9 @@ than the Linux groups. Of course, there is a lot of overlap between
 these for beamline scientists. The result is a colon delimited line
 per visit. The fields are:
 
-<visit>:<beamline>:<start-date>:<end-date>:<staff?>: <fedid1> ...
+<visit>:<beamline>:<start-date>:<end-date>:<type>: <fedid1> ...
 
+<type> is one of staff, non-staff, commissioning or industrial.
 If no visit is specified all visits are returned."""
 
 import sys
@@ -43,7 +44,7 @@ def visit_info(fullname,names):
                                        visit.beamline(name),
                                        visit.startdate(name).strftime("%d-%b-%Y"),
                                        visit.enddate(name).strftime("%d-%b-%Y"),
-                                       "staff" if visit.is_staff(name) else "non-staff" ),
+                                       visit.type(name)  ),
         except:
             print "%s::::" % (name),
 
