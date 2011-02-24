@@ -164,22 +164,36 @@ class environment:
 
     def classifyPath(self, path):
         """Classify the name and version of the path of the root of a module"""
-        sections = path.split("/")
+        sections = path.rstrip("/").split("/")
         if self.prodArea("support") in path:
-            name = sections[-2]
-            version = sections[-1]
+            if len(sections) - len(self.prodArea("support").split("/")) == 2: 
+                name = sections[-2]
+                version = sections[-1]
+            else:
+                name = sections[-1]
+                version = "invalid"
         elif self.prodArea("ioc") in path:
-            name = sections[-3]+"/"+sections[-2]
-            version = sections[-1]
+            if len(sections) - len(self.prodArea("ioc").split("/")) == 3:         
+                name = sections[-3]+"/"+sections[-2]
+                version = sections[-1]
+            else:
+                name = sections[-2]+"/"+sections[-1]
+                version = "invalid"
         else:
             name = self.svnName(path)
             if not name:
                 name = sections[-1]
             if self.devArea("support") in path:
-                version = "work"
+                if len(sections) - len(self.devArea("support").split("/")) == 1:                    
+                    version = "work"
+                else:
+                    version = "invalid"
             elif self.devArea("ioc") in path:
-                name = sections[-2]+"/"+name
-                version = "work"
+                name = sections[-2]+"/"+name            
+                if len(sections) - len(self.devArea("ioc").split("/")) == 2:                    
+                    version = "work"
+                else:
+                    version = "invalid"
             else:
                 if "ioc" in path:
                     name = sections[-2]+"/"+name
