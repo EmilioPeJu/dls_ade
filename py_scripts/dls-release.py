@@ -355,7 +355,8 @@ def windowsbuild(svn, options, module, release_number, env, directories):
     script = winbuildscript
     script = script.replace("$(DLS_EPICS_RELEASE)", env.epicsVer())
     script = script.replace("$(AREA)", options.area)
-    script = script.replace("$(MODULE)", module)
+    script = script.replace("$(SVNMODULE)", module)
+    script = script.replace("$(MODULE)", module.replace('/','\\') )
     script = script.replace("$(VERSION)", release_number)
     createbuildjob(module, release_number, directories, script, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = ".bat")
 
@@ -406,6 +407,7 @@ winbuildscript = r"""
 
 set DLS_EPICS_RELEASE=$(DLS_EPICS_RELEASE)
 set _area=$(AREA)
+set _svnmodule=$(SVNMODULE)
 set _module=$(MODULE)
 set _version=$(VERSION)
 
@@ -435,7 +437,7 @@ if not exist %_dlsprod% (
         exit /B %ErrorLevel%
     )
     cd %_dlsprod%
-    svn checkout  %_svn_root%/%_module%/%_version% .
+    svn checkout  %_svn_root%/%_svnmodule%/%_version% .
     if not %ErrorLevel%==0 (
         echo ### ERROR [%TIME%] ### Unable to access subversion repository. Aborting build.
         exit /B %ErrorLevel%
