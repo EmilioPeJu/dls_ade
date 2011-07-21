@@ -82,7 +82,7 @@ def vendor_update():
     assert not svn.pathcheck(vendor_new), vendor_new  + " already exists in the repository"
 
     # check for diffs
-    diffs = svn.diff( '/tmp/svn',vendor_current,svn.Revision(svn.opt_revision_kind.head),
+    diffs = svn.diff( '/tmp',vendor_current,svn.Revision(svn.opt_revision_kind.head),
                       vendor_old,svn.Revision(svn.opt_revision_kind.head),True, True, True)                          
     assert options.force or not diffs, 'Vendor "current" of: '+vendor+' is not at revision: ' + old + "\nUse the -f flag if you are sure you want to do this"
 

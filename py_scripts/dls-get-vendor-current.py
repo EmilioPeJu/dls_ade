@@ -34,7 +34,7 @@ def get_vendor_current():
       tt = os.path.join(vendor,os.path.basename(node['name']))
 
       if os.path.basename(node['name']) != "current":
-        diffs = svn.diff( '/tmp/svn',vendor_current,svn.Revision(svn.opt_revision_kind.head),
+        diffs = svn.diff( '/tmp',vendor_current,svn.Revision(svn.opt_revision_kind.head),
                            tt,svn.Revision(svn.opt_revision_kind.head),True, True, True)
         if not diffs:
           print os.path.basename(node['name'])
