@@ -7,12 +7,13 @@ Default <area> is 'support'.
 Publish a module <module> in the <area> area of the repository to the downloads
 page. The script takes the following steps:
 * svn export of the release
-* copy built documentation or docs directory in and remove .svn dirs
+* remove the etc directory
+* copy built documentation or docs directory to the export and remove .svn dirs
 * remove documentation/private and docs/private directories
+* copy any builder iocs to the export
+* run preparePublish.sh script in the root of the export if it exists
 * make a web release in /dls_sw/cs-publish/<area>/<module>/<release>
 * copy the documentation into the web release directory
-* copy any builder iocs into the web release directory
-* remove the etc directory
 * zip up the export and copy it into the web release directory
 * regenerate an index page (releases.html) from all the releases in the directory
 
