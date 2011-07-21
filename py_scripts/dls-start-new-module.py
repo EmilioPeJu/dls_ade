@@ -167,7 +167,7 @@ $(DOCDIR): config.cfg manual.src
 
 # Remove entire documentation/doxygen dir on clean
 clean:
-\trm -rf $(DOCDIR
+\trm -rf $(DOCDIR)
 """)        
         open("documentation/index.html","w").write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
