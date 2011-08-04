@@ -25,7 +25,7 @@ def visit_check(start,end,exclude,restore,ldif,args ):
         if (visit.enddate(name)   and
             visit.startdate(name) and
             not (start and (visit.enddate(name) <= startdate) ) and
-            not (end   and (visit.startdate(name) <= enddate) ) and
+            not (end   and (visit.startdate(name) >= enddate) ) and
             not (args and visit.beamline(name) not in args) ):
 
 
