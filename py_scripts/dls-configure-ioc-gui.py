@@ -9,8 +9,8 @@ from dls_environment import environment
 
 usage = """%prog [ioc_filter_re]
 
-This program interrogates configure-ioc for all IOCs for a beamline, then shows
-a gui with options to redirect iocs to different versions
+This program interrogates configure-ioc for all IOCs that match ioc_filter_re,
+then shows a gui with options to redirect iocs to different versions
 """
 
 class MainWindow(QDialog):
