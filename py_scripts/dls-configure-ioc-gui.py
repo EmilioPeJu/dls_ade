@@ -21,7 +21,8 @@ class MainWindow(QDialog):
         self.e = environment()
         layout = QGridLayout()
         self.setLayout(layout)
-        self.iocs, self.names, self.versions, self.exts, self.logs, self.logfs = [], [], [], [], [], []
+        self.fns = []
+        self.iocs, self.names, self.versions, self.exts, self.logs = [], [], [], [], []
         i = 0
         for i, (ioc, name, version, root, ext) in enumerate(self.getIocData()):
             self.iocs.append(QLabel(ioc + ":", self))
@@ -32,7 +33,14 @@ class MainWindow(QDialog):
             self.versions.append(QComboBox(self))
             versions = self.getVersions(i)
             self.versions[-1].addItems(versions)
-            self.versions[-1].setCurrentIndex(versions.index(version))
+            def f(index, i=i):
+                if index!=0:
+                    self.versions[i].setStyleSheet('QComboBox { background-color: lightgreen }')
+                else:
+                    self.versions[i].setStyleSheet('')                                                                              
+            self.fns.append(f)
+            self.versions[-1].currentIndexChanged.connect(f)
+            self.versions[-1].setCurrentIndex(versions.index(version))                        
             layout.addWidget(self.versions[-1], i, 2)             
             self.exts.append(QLineEdit(ext, self))
             layout.addWidget(self.exts[-1], i, 3)
@@ -41,9 +49,9 @@ class MainWindow(QDialog):
             layout.addWidget(self.logs[-1], i, 4)
             def f(checked=False, i=i):
                 self.svnLog(i)
-            self.logfs.append(f)
-            self.logs[-1].clicked.connect(self.logfs[-1])
-        
+            self.fns.append(f)
+            self.logs[-1].clicked.connect(f)
+    
     def getIocData(self):
         output = Popen(["configure-ioc", "l"], stdout=PIPE).communicate()[0]
         self.iocData = []
@@ -61,13 +69,12 @@ class MainWindow(QDialog):
                 if index:
                     ext = path[index:]
                     root = path[:index]
-                    name, version = self.e.classifyPath(root)
-                    matches = self.e.epics_ver_re.search(root)
+                    e = self.e.copy()                     
+                    matches = e.epics_ver_re.search(root)
                     if matches:
-                        epicsVer = matches.group()
-                    else:
-                        epicsVer = self.e.epicsVer()
-                    self.iocData.append((ioc, name, version, epicsVer, ext))
+                        e.setEpics(matches.group())
+                    name, version = e.classifyPath(root)                        
+                    self.iocData.append((ioc, name, version, e.epicsVer(), ext))
                     self.paths.append(path)
         return self.iocData
 
