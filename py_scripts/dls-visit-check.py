@@ -7,7 +7,7 @@ format. if <beamline> is ommitted then all beamlines are processed"""
 
 import sys
 
-def visit_check(start,end,exclude,restore,ldif,args ):
+def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
     from dls_scripts.dlsgroups import visit,ldapgrp
     import datetime
     import optparse
@@ -15,6 +15,8 @@ def visit_check(start,end,exclude,restore,ldif,args ):
     visit=visit()
     group=ldapgrp()
     group.initgid(100000)
+
+    fedids = set()
 
     excludedate=datetime.date.today()-datetime.timedelta(exclude)
     startdate=datetime.date.today()-datetime.timedelta(start)
@@ -32,7 +34,7 @@ def visit_check(start,end,exclude,restore,ldif,args ):
             group_name=name.replace("-","_")
             if group_name not in group.all():
                 group_members = set()
-                if not ldif:
+                if (not ldif and not dir and not userlist):
                     print "Visit",name,"does not have a group (yet). Start:",
                     print visit.startdate(name)
             else:
@@ -50,10 +52,17 @@ def visit_check(start,end,exclude,restore,ldif,args ):
                 if bl_staff:
                     visit_members -= bl_staff
 
+            fedids |= visit_members
+
             if ldif:
                 if visit_members != group_members:
                     group.setmembers( group_name, visit_members )
-            else:
+            elif dir:
+		# output format will be:
+		# FEDID,VISITDIR,VISITGROUP,BEAMLINE
+		for user in visit_members:
+		    print "%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,visit.beamline(group_name) )
+	    elif not userlist:
                 not_in_visit = group_members - visit_members
                 if not_in_visit:
                     print "Visit",name,
@@ -67,6 +76,13 @@ def visit_check(start,end,exclude,restore,ldif,args ):
                     print "is missing all FedId's in the", not_in_group,
                     print "Start:",visit.startdate(name),
                     print "End:",visit.enddate(name)
+
+    if userlist:
+	dls_staff = group.members("dls_staff")
+	fedids -= dls_staff
+        if fedids:
+            for name in fedids:
+                print name
 
 
 if __name__ == "__main__":
@@ -83,6 +99,10 @@ if __name__ == "__main__":
                       help="Filename containing a list of beamlines and visits to restore all users to" )
     parser.add_option("-l", "--ldif", dest="ldif",nargs=0,
                       help="generate difference in ldif format")
+    parser.add_option("-d", "--directories", dest="directory", nargs=0,
+		      help="generate list of visits and beamlines to create experiment directories" )
+    parser.add_option("-u", "--users", dest="userlist", nargs=0,
+		      help="generate list containing all (non-staff) users listed on visits" )
     
     (options, args) = parser.parse_args()
 
@@ -95,4 +115,5 @@ if __name__ == "__main__":
             print >> sys.stderr, "Cannot open restore file:",options.restorefile
             sys.exit(1)
 
-    sys.exit(visit_check(options.start, options.end,options.exclude,restore,options.ldif!=None,args))
+    sys.exit(visit_check(options.start, options.end,options.exclude,restore,
+	     options.ldif!=None,options.directory!=None,options.userlist!=None,args))
