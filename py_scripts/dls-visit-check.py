@@ -86,9 +86,14 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
     if userlist:
 	dls_staff = group.members("dls_staff")
 	fedids -= dls_staff
+	# every existing user will have a group with the same name
+	# only print users where no group exists as these need to be created
         if fedids:
             for name in fedids:
-                print name
+		usergroup = group.members(name)
+		if ( usergroup == None ):
+		    print name
+		    
 
 
 if __name__ == "__main__":
