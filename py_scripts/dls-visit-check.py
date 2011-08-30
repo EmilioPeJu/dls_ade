@@ -66,6 +66,8 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
 		# FEDID,VISITDIR,VISITGROUP,BEAMLINE
 		for user in visit_members:
 		    print "%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,visit.beamline(group_name) )
+		if not visit_members:
+		    print ",%s,%s,%s" % (name.replace("_","-"),group_name,visit.beamline(group_name) )
 	    elif not userlist:
                 not_in_visit = group_members - visit_members
                 if not_in_visit:
