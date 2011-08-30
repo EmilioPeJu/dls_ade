@@ -18,6 +18,8 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
 
     fedids = set()
 
+    dls_dasc = group.members("dls_dasc")
+
     excludedate=datetime.date.today()-datetime.timedelta(exclude)
     startdate=datetime.date.today()-datetime.timedelta(start)
     enddate  =datetime.date.today()+datetime.timedelta(end)
@@ -51,6 +53,8 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 bl_staff = group.members(visit.beamline(group_name)+"_staff")
                 if bl_staff:
                     visit_members -= bl_staff
+		if dls_dasc:
+		    visit_members -= dls_dasc
 
             fedids |= visit_members
 
