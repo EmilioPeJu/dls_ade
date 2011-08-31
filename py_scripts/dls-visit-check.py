@@ -59,7 +59,8 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
             fedids |= visit_members
 
             if ldif:
-                if visit_members != group_members:
+                if ( ( visit_members != group_members )
+                        or not visit_members):
                     group.setmembers( group_name, visit_members )
             elif dir:
                 # output format will be:
