@@ -46,7 +46,7 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 excludedate > visit.enddate(name) and
                 group_name not in restore and
                 visit.beamline(name) not in restore ):
-                
+
                 visit_members = set()
             else:
                 visit_members = visit.members(name)
@@ -63,11 +63,13 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                     group.setmembers( group_name, visit_members )
             elif dir:
                 # output format will be:
-                # FEDID,VISITDIR,VISITGROUP,BEAMLINE
+                # FEDID,VISITDIR,VISITGROUP,BEAMLINE,YEAR
                 for user in visit_members:
-                    print "%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,visit.beamline(group_name) )
+                    print "%s,%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,
+                            visit.beamline(group_name),visit.startdate(group_name).year )
                 if not visit_members:
-                    print ",%s,%s,%s" % (name.replace("_","-"),group_name,visit.beamline(group_name) )
+                    print ",%s,%s,%s,%s " % (name.replace("_","-"),group_name,
+                            visit.beamline(group_name),visit.startdate(group_name).year )
             elif not userlist:
                 not_in_visit = group_members - visit_members
                 if not_in_visit:
@@ -93,12 +95,10 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 usergroup = group.members(name)
                 if ( usergroup == None ):
                     print name
-                    
-
 
 if __name__ == "__main__":
     from optparse import OptionParser
-   
+
     parser = OptionParser(usage=usage)
     parser.add_option("-f", "--from", dest="start",type="int",default=0,
                       help="Include only visits that ended after <from> days ago")
@@ -114,7 +114,7 @@ if __name__ == "__main__":
                       help="generate list of visits and beamlines to create experiment directories" )
     parser.add_option("-u", "--users", dest="userlist", nargs=0,
                       help="generate list containing all (non-staff) users listed on visits" )
-    
+
     (options, args) = parser.parse_args()
 
     restore=set([])
