@@ -53,8 +53,8 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 bl_staff = group.members(visit.beamline(group_name)+"_staff")
                 if bl_staff:
                     visit_members -= bl_staff
-		if dls_dasc:
-		    visit_members -= dls_dasc
+                if dls_dasc:
+                    visit_members -= dls_dasc
 
             fedids |= visit_members
 
@@ -62,13 +62,13 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 if visit_members != group_members:
                     group.setmembers( group_name, visit_members )
             elif dir:
-		# output format will be:
-		# FEDID,VISITDIR,VISITGROUP,BEAMLINE
-		for user in visit_members:
-		    print "%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,visit.beamline(group_name) )
-		if not visit_members:
-		    print ",%s,%s,%s" % (name.replace("_","-"),group_name,visit.beamline(group_name) )
-	    elif not userlist:
+                # output format will be:
+                # FEDID,VISITDIR,VISITGROUP,BEAMLINE
+                for user in visit_members:
+                    print "%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,visit.beamline(group_name) )
+                if not visit_members:
+                    print ",%s,%s,%s" % (name.replace("_","-"),group_name,visit.beamline(group_name) )
+            elif not userlist:
                 not_in_visit = group_members - visit_members
                 if not_in_visit:
                     print "Visit",name,
@@ -84,16 +84,16 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                     print "End:",visit.enddate(name)
 
     if userlist:
-	dls_staff = group.members("dls_staff")
-	fedids -= dls_staff
-	# every existing user will have a group with the same name
-	# only print users where no group exists as these need to be created
+        dls_staff = group.members("dls_staff")
+        fedids -= dls_staff
+        # every existing user will have a group with the same name
+        # only print users where no group exists as these need to be created
         if fedids:
             for name in fedids:
-		usergroup = group.members(name)
-		if ( usergroup == None ):
-		    print name
-		    
+                usergroup = group.members(name)
+                if ( usergroup == None ):
+                    print name
+                    
 
 
 if __name__ == "__main__":
@@ -111,9 +111,9 @@ if __name__ == "__main__":
     parser.add_option("-l", "--ldif", dest="ldif",nargs=0,
                       help="generate difference in ldif format")
     parser.add_option("-d", "--directories", dest="directory", nargs=0,
-		      help="generate list of visits and beamlines to create experiment directories" )
+                      help="generate list of visits and beamlines to create experiment directories" )
     parser.add_option("-u", "--users", dest="userlist", nargs=0,
-		      help="generate list containing all (non-staff) users listed on visits" )
+                      help="generate list containing all (non-staff) users listed on visits" )
     
     (options, args) = parser.parse_args()
 
@@ -127,4 +127,4 @@ if __name__ == "__main__":
             sys.exit(1)
 
     sys.exit(visit_check(options.start, options.end,options.exclude,restore,
-	     options.ldif!=None,options.directory!=None,options.userlist!=None,args))
+             options.ldif!=None,options.directory!=None,options.userlist!=None,args))
