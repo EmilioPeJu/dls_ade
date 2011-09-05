@@ -21,12 +21,12 @@ def visit_get(args):
         usernames=args
 
     for user in usernames:
-        visit=visit(user)
+        uservisit=visit(user)
 
         if len(args) > 0:
             print user,':',
         
-        for group in visit.all():
+        for group in uservisit.all():
             print group,
 
         print
