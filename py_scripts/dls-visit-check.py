@@ -68,7 +68,10 @@ def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
                     group.setmembers( group_name, visit_members )
             elif dir:
                 # output format will be:
+                # don't create line for bl_staff members
+                # avoiding special ACLs for bl_staff
                 # FEDID,VISITDIR,VISITGROUP,BEAMLINE,YEAR
+                visit_members -= bl_staff
                 for user in visit_members:
                     print "%s,%s,%s,%s,%s " % ( user,name.replace("_","-"),
                             group_name,visit.beamline(group_name),
