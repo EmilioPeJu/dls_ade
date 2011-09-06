@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env python2.6
 
 usage = """%prog [options] <fedid>...
 
