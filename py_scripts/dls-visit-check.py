@@ -1,4 +1,4 @@
-#!/bin/env python2.6
+#!/bin/env dls-python2.6
 usage = """%prog [options] <beamline>...
 
 This command is checks the Linux LDAP groups against the user office
@@ -73,11 +73,11 @@ def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
                 # FEDID,VISITDIR,VISITGROUP,BEAMLINE,YEAR
                 visit_members -= bl_staff
                 for user in visit_members:
-                    print "%s,%s,%s,%s,%s " % ( user,name.replace("_","-"),
+                    print "%s,%s,%s,%s,%s" % ( user,name.replace("_","-"),
                             group_name,visit.beamline(group_name),
                             visit.startdate(group_name).year )
                 if not visit_members:
-                    print ",%s,%s,%s,%s " % (name.replace("_","-"),
+                    print ",%s,%s,%s,%s" % (name.replace("_","-"),
                             group_name,visit.beamline(group_name),
                             visit.startdate(group_name).year )
             elif not userlist:

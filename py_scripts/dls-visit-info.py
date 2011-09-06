@@ -1,4 +1,4 @@
-#!/bin/env python2.6
+#!/bin/env dls-python2.6
 usage = """%prog [options] <visit>...
 
 This command is similar to the Linux 'getent group' command except it
