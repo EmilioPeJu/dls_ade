@@ -7,7 +7,7 @@ format. if <beamline> is ommitted then all beamlines are processed"""
 
 import sys
 
-def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
+def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
     from dls_scripts.dlsgroups import visit,ldapgrp
     import datetime
     import optparse
@@ -23,6 +23,7 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
     excludedate=datetime.date.today()-datetime.timedelta(exclude)
     startdate=datetime.date.today()-datetime.timedelta(start)
     enddate  =datetime.date.today()+datetime.timedelta(end)
+    bl_staff_removal_date = datetime.date.today()-datetime.timedelta(staff_end)
 
     for name in visit.all():
 
@@ -30,7 +31,7 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
             visit.startdate(name) and
             not (start and (visit.enddate(name) <= startdate) ) and
             not (end   and (visit.startdate(name) >= enddate) ) and
-            not (args and visit.beamline(name) not in args) ):
+            not (args  and visit.beamline(name) not in args) ):
 
 
             group_name=name.replace("-","_")
@@ -51,7 +52,10 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
             else:
                 visit_members = visit.members(name)
                 bl_staff = group.members(visit.beamline(group_name)+"_staff")
-                if bl_staff:
+                if not bl_staff:
+                    bl_staff = group.members(visit.beamline(group_name).
+                               replace("-1","")+"_staff")
+                if ( bl_staff and visit.enddate(name) < bl_staff_removal_date ):
                     visit_members -= bl_staff
                 if dls_dasc:
                     visit_members -= dls_dasc
@@ -66,11 +70,13 @@ def visit_check(start,end,exclude,restore,ldif,dir,userlist,args ):
                 # output format will be:
                 # FEDID,VISITDIR,VISITGROUP,BEAMLINE,YEAR
                 for user in visit_members:
-                    print "%s,%s,%s,%s,%s " % ( user,name.replace("_","-"),group_name,
-                            visit.beamline(group_name),visit.startdate(group_name).year )
+                    print "%s,%s,%s,%s,%s " % ( user,name.replace("_","-"),
+                            group_name,visit.beamline(group_name),
+                            visit.startdate(group_name).year )
                 if not visit_members:
-                    print ",%s,%s,%s,%s " % (name.replace("_","-"),group_name,
-                            visit.beamline(group_name),visit.startdate(group_name).year )
+                    print ",%s,%s,%s,%s " % (name.replace("_","-"),
+                            group_name,visit.beamline(group_name),
+                            visit.startdate(group_name).year )
             elif not userlist:
                 not_in_visit = group_members - visit_members
                 if not_in_visit:
@@ -107,6 +113,8 @@ if __name__ == "__main__":
                       help="Include only visits that start before <to> days time")
     parser.add_option("-x", "--exclude", dest="exclude",type="int",default=0,
                       help="Exclude users from groups whose visits ended over <exclude> days ago")
+    parser.add_option("-s", "--remove_staff_to", dest="remove_staff_end",type="int", default=30,
+                      help="Exclude bl-staff from groups that end before <staff_end> days ago")
     parser.add_option("-i","--restore-file", dest="restorefile",type="str",nargs=1,
                       help="Filename containing a list of beamlines and visits to restore all users to" )
     parser.add_option("-l", "--ldif", dest="ldif",nargs=0,
@@ -127,5 +135,6 @@ if __name__ == "__main__":
             print >> sys.stderr, "Cannot open restore file:",options.restorefile
             sys.exit(1)
 
-    sys.exit(visit_check(options.start, options.end,options.exclude,restore,
-             options.ldif!=None,options.directory!=None,options.userlist!=None,args))
+    sys.exit(visit_check(options.start, options.end,options.remove_staff_end,
+             options.exclude,restore,options.ldif!=None,options.directory!=None,
+             options.userlist!=None,args))
