@@ -59,7 +59,7 @@ def lookup_contacts(module,area):
         cc = cc.values()[0]
     else:
         cc = ""
-    return (contact,cc)
+    return (contact.strip(),cc.strip())
 
 def module_contacts():    
     parser = OptionParser(usage)
@@ -160,6 +160,7 @@ def module_contacts():
     os.system("rm -rf "+chk_dir)    
     for module,contact,cc in contacts:
         svn.checkout(svn.devModule(module,options.area),chk_dir,recurse=False)
+        contact, cc = contact.strip(), cc.strip()
         mess = module+": changed module contacts: "
         if not contact==None:
             print "%s: Setting Contact to %s (%s)"%(module,lookup(contact),contact)
