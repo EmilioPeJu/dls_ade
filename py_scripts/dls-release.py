@@ -339,7 +339,8 @@ def windowsbuild(svn, options, module, release_number, env, directories):
         "Only areas 'support' and 'ioc' are not supported under Windows."
 
     # Check whether a configure/RELEASE.win32-x86 exist in the modules repository.
-    assert svn.pathcheck(os.path.join(src_dir, "configure/RELEASE.win32-x86")),\
+    assert svn.pathcheck(os.path.join(src_dir, "configure/RELEASE.win32-x86")) or \
+        svn.pathcheck(os.path.join(src_dir, "configure/RELEASE.win32-x86.Common")),\
         "The module does not contain a configure/RELEASE.win32-x86 file which "\
         "is required for building on the windows platform. \nPlease create "\
         "this file with the windows paths for EPICS_BASE and SUPPORT."
