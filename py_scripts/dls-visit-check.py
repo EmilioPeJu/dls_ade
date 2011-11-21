@@ -55,7 +55,7 @@ def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
                 if not bl_staff:
                     bl_staff = group.members(visit.beamline(group_name).
                                replace("-1","")+"_staff")
-                if ( bl_staff and visit.enddate(name) < bl_staff_removal_date ):
+                if bl_staff:
                     visit_members -= bl_staff
                 if dls_dasc:
                     visit_members -= dls_dasc
