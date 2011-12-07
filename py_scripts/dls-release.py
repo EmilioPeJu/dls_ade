@@ -29,6 +29,7 @@ def release():
         
     # set default variables
     out_dir = "/dls_sw/work/etc/build/queue/"
+    #out_dir = "/tmp"
     test_dir = "/dls_sw/work/etc/build/test/"+"_".join([str(x) for x in time.localtime()[:6]])+"_"+user
     svn_mess = "%s: Released version %s. %s"
 
@@ -52,7 +53,7 @@ def release():
         dest="rhel_version", 
         help="change the rhel version of the build. This will determine which "\
             "build server your job is build on for non-epics modules. Default "\
-            "is %d (from /etc/redhat-release)" % rhel_version)    
+            "is %d (from /etc/redhat-release). Can be 4,5,5_64" % rhel_version)    
     parser.add_option("-m", "--message", action="store", type="string", 
         dest="message", 
         help="Add user message to the end of the default svn commit message. " \
@@ -84,19 +85,20 @@ def release():
 
     # override rhel version
     if options.rhel_version:
-        rhel_version = int(options.rhel_version)
+        rhel_version = options.rhel_version
 
     # set postfix
     if options.area in ["support", "ioc"]:
         if e.epicsVer() in ["R3.14.11"]:
-            postfix = ".sh5"
-            rhel_version = 5
+            if str(rhel_version) == "4":
+                rhel_version = 5            
+            postfix = ".sh%s" % rhel_version
         else:
             postfix = ".sh"
             rhel_version = 4
     else:
         if rhel_version > 4:
-            postfix = ".sh%d" % rhel_version
+            postfix = ".sh%s" % rhel_version
         else:
             postfix = ".sh"
 
@@ -183,16 +185,16 @@ def release():
     else:
         # check if release is in prod
         prodDir = os.path.join(e.prodArea(options.area),module,release_number)
-        assert options.force or not os.path.isdir(prodDir), \
+        assert options.force or not os.path.isdir(prodDir) or postfix.endswith("_64"), \
         module+" "+release_number+" already exists in "+prodDir
         assert not os.path.isfile(prodDir+".tar.gz"), \
-        module+"/"+release_number+".tar.gz archive already exists. Please run dls-tar-module.py -u to extract"
-        unixbuild( svn, options, module, release_number, e, directories, postfix )
+        module+"/"+release_number+".tar.gz archive already exists. Please run dls-tar-module.py %s %s -u to extract" %(module, release_number)
+        unixbuild( svn, options, module, release_number, e, directories, postfix, prodDir )
         # remove old builds
 #        svn_releases = svn.list(rel_dir)[1:]
     
             
-def unixbuild(svn, options, module, release_number, env, directories, postfix):
+def unixbuild(svn, options, module, release_number, env, directories, postfix, prodDir):
     out_dir, test_dir, src_dir, rel_dir = directories
     user = os.getlogin()
     
@@ -242,6 +244,10 @@ def unixbuild(svn, options, module, release_number, env, directories, postfix):
     # in script: checkout svn module
     if svn.root().rstrip("/").split("/")[-1] == "scratch":
         return    
+    if postfix == ".sh5_64":
+        suff = "_64"
+    else:
+        suff = ""
     build_script = """#!/usr/bin/env bash
 
 # Script for building a diamond production module.
@@ -251,7 +257,7 @@ build_dir="""+env.prodArea(options.area)+"/"+module+"""
 version="""+release_number+r"""
 
 # Set up environment
-DLS_EPICS_RELEASE=$epics_version
+DLS_EPICS_RELEASE=${epics_version}%s
 DLS_DEV=1
 source /dls_sw/etc/profile
 SVN_ROOT=%s
@@ -259,19 +265,22 @@ SVN_ROOT=%s
 # Checkout module
 mkdir -p $build_dir                     || { echo Can not mkdir $build_dir; exit 1; }
 cd $build_dir                           || { echo Can not cd to $build_dir; exit 1; }
-rm -rf $version                         || { echo Can not rm $version; exit 1; }
+"""%(suff, "http://serv0002.cs.diamond.ac.uk/repos/controls")
+    if options.force or not os.path.isdir(prodDir):
+        build_script += """rm -rf $version                         || { echo Can not rm $version; exit 1; }
 svn checkout $svn_dir/$version          || { echo Can not check out  $svn_dir/$version; exit 1; }
-cd $version                             || { echo Can not cd to $version; exit 1; }
+"""
+    build_script += """cd $version                             || { echo Can not cd to $version; exit 1; }
 
 # Write some history
 dls-logs-since-release.py -r --area=%s %s > DEVHISTORY.autogen
-"""%("http://serv0002.cs.diamond.ac.uk/repos/controls",options.area,module)
+"""%(options.area,module)
 
     # if we're looking at a support or ioc module then edit its configure/RELEASE to remove references to work
     if options.area in ["support","ioc"]:
         build_script += r"""
 # Modify configure/RELEASE
-if [ -e "configure/RELEASE" ]; then
+if [ -e "configure/RELEASE" ] && [ ! -e "configure/RELEASE.svn" ]; then
     mv configure/RELEASE configure/RELEASE.svn || { echo Can not rename configure/RELEASE; exit 1; }
     sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version/base,"   \
         -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version/support," \
@@ -304,6 +313,8 @@ MODULEVER = %s' > Makefile.private || { echo Cannot write to Makefile.private; e
     # setup the command to run
     if options.area=="python":
         command = "(make && make install)"
+    elif os.path.isdir(prodDir) and not options.force:
+        command = "(make clean && make)"    
     else:
         command = "make"
         
