@@ -1,4 +1,5 @@
 #!/bin/env dls-python2.6
+# This script comes from the dls_scripts python module
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
