@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] <module> <release>
@@ -21,7 +21,7 @@ Note: if you are publishing a new module and not just a new release of an
 existing one, then you need to edit /dls_sw/cs-publish/<area>/header.html, 
 placing a new link and description in the table of modules."""
 
-import os, sys, shutil
+import os, sys, shutil, glob
 
 def cs_publish():
     from dls_scripts.options import OptionParser
@@ -143,7 +143,8 @@ def cs_publish():
     print 'Generating releases page...'
     releases = e.sortReleases([x
         for x in os.listdir(webPath)
-        if os.path.isdir(webPath+"/"+x) and x != ".svn"])
+        if os.path.isdir(webPath+"/"+x) and x != ".svn"
+        and glob.glob(webPath+"/"+x+"/*.tgz")])
     releases.reverse()
     text = """<h2>Releases</h2>
 
