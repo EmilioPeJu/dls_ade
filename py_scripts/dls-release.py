@@ -251,13 +251,13 @@ def unixbuild(svn, options, module, release_number, env, directories, postfix, p
     build_script = """#!/usr/bin/env bash
 
 # Script for building a diamond production module.
-epics_version="""+env.epicsVer()+"""
+epics_version_var="""+env.epicsVer()+"""
 svn_dir="""+rel_dir.replace(svn.root(),"http://serv0002.cs.diamond.ac.uk/repos/controls")+"""
 build_dir="""+env.prodArea(options.area)+"/"+module+"""
 version="""+release_number+r"""
 
 # Set up environment
-DLS_EPICS_RELEASE=${epics_version}%s
+DLS_EPICS_RELEASE=${epics_version_var}%s
 DLS_DEV=1
 source /dls_sw/etc/profile
 SVN_ROOT=%s
@@ -282,8 +282,8 @@ dls-logs-since-release.py -r --area=%s %s > DEVHISTORY.autogen
 # Modify configure/RELEASE
 if [ -e "configure/RELEASE" ] && [ ! -e "configure/RELEASE.svn" ]; then
     mv configure/RELEASE configure/RELEASE.svn || { echo Can not rename configure/RELEASE; exit 1; }
-    sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version/base,"   \
-        -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version/support," \
+    sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version_var/base,"   \
+        -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version_var/support," \
         -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," \
     configure/RELEASE.svn > configure/RELEASE  || { echo Can not edit configure/RELEASE; exit 1; }
 fi"""
