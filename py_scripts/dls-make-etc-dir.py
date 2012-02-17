@@ -352,7 +352,7 @@ include $(TOP)/configure/RULES_DIRS
         iline =  "# Comment out the following lines to disable creation of example iocs and documentation\n"
         iline += line
         iline += "\n"
-        iline =  'ifeq ($(wildcard etc),etc)\n'
+        iline +=  'ifeq ($(wildcard etc),etc)\n'
         iline += '\tinclude $(TOP)/etc/makeIocs/Makefile.iocs\n'
         iline += '\tUNINSTALL_DIRS += documentation/doxygen $(IOC_DIRS)\n'
         iline += 'endif\n'        
