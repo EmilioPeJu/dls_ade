@@ -24,6 +24,10 @@ def release():
     assert rhel_version, "Cannot parse /etc/redhat-release for rhel version"
     rhel_version = int(rhel_version[0][0])
     
+    # HACK: RHEL6 build server not operational yet...
+    if rhel_version == 6:
+        rhel_version = 5
+    
     # find out which user wants to release
     user = os.getlogin()
         
@@ -90,7 +94,7 @@ def release():
     # set postfix
     if options.area in ["support", "ioc"]:
         if e.epicsVer() in ["R3.14.11"]:
-            if str(rhel_version) == "4":
+            if str(rhel_version) not in ["5", "5_64"]:
                 rhel_version = 5            
             postfix = ".sh%s" % rhel_version
         else:
