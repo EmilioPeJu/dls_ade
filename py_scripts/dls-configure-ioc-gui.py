@@ -38,7 +38,7 @@ class MainWindow(QDialog):
                 if index!=0:
                     self.versions[i].setStyleSheet('QComboBox { background-color: lightgreen }')
                 else:
-                    self.versions[i].setStyleSheet('')                                                                              
+                    self.versions[i].setStyleSheet('')
             self.fns.append(f)
             self.versions[-1].currentIndexChanged.connect(f)
             self.versions[-1].setCurrentIndex(versions.index(version))                        
@@ -74,7 +74,11 @@ class MainWindow(QDialog):
                     matches = e.epics_ver_re.search(root)
                     if matches:
                         e.setEpics(matches.group())
-                    name, version = e.classifyPath(root)                        
+                    name, version = e.classifyPath(root)
+                    # hack for iocbuilder modules                        
+                    if name == ioc and version == "invalid" and "-BUILDER/iocs" in root:
+                        name = os.path.join(ioc.split("-")[0], ioc)
+                        version = "work"
                     self.iocData.append((ioc, name, version, e.epicsVer(), ext))
                     self.paths.append(path)
         return self.iocData
@@ -102,6 +106,12 @@ class MainWindow(QDialog):
             version = str(self.versions[i].currentText())
             if version == "work":
                 newPath = os.path.join(e.devArea("ioc"), self.iocData[i][1]) + ext
+                # hack for iocbuilder modules                        
+                if not os.path.isfile(newPath):
+                    ioc = self.iocData[i][0]
+                    builderPath = os.path.join(e.devArea("support"), ioc.split("-")[0] + "-BUILDER", "iocs", ioc) + ext
+                    if os.path.isfile(builderPath):
+                        newPath = builderPath
             elif version in ("local", "invalid"):
                 newPath = self.paths[i]
             else:
