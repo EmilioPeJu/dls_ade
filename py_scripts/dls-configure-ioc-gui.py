@@ -25,7 +25,7 @@ class MainWindow(QDialog):
         self.fns = []
         self.iocs, self.names, self.versions, self.exts, self.logs = [], [], [], [], []
         i = 0
-        for i, (ioc, name, version, root, ext) in enumerate(self.getIocData()):
+        for i, (ioc, name, version, root, ext, area) in enumerate(self.getIocData()):
             self.iocs.append(QLabel(ioc + ":", self))
             layout.addWidget(self.iocs[-1], i, 0)
             self.names.append(QLabel(name, self))
@@ -75,19 +75,24 @@ class MainWindow(QDialog):
                     if matches:
                         e.setEpics(matches.group())
                     name, version = e.classifyPath(root)
+                    area = "ioc"
+                    for a in ["ioc", "support", "python", "matlab"]:
+                        if root.startswith(e.prodArea(a)) or root.startswith(e.devArea(a)):
+                            area = a
+                            break
                     # hack for iocbuilder modules                        
                     if name == ioc and version == "invalid" and "-BUILDER/iocs" in root:
                         name = os.path.join(ioc.split("-")[0], ioc)
                         version = "work"
-                    self.iocData.append((ioc, name, version, e.epicsVer(), ext))
+                        area = "ioc"                            
+                    self.iocData.append((ioc, name, version, e.epicsVer(), ext, area))
                     self.paths.append(path)
         return self.iocData
 
     def getVersions(self, i):
         e = self.e.copy()        
         e.setEpics(self.iocData[i][3])
-        area = e.prodArea("ioc")
-        releaseDir = os.path.join(e.prodArea("ioc"), self.iocData[i][1])
+        releaseDir = os.path.join(e.prodArea(self.iocData[i][-1]), self.iocData[i][1])
         versions = []        
         if os.path.isdir(releaseDir):
             versions = e.sortReleases(os.listdir(releaseDir))
@@ -105,18 +110,18 @@ class MainWindow(QDialog):
             ext = str(self.exts[i].text())
             version = str(self.versions[i].currentText())
             if version == "work":
-                newPath = os.path.join(e.devArea("ioc"), self.iocData[i][1]) + ext
+                newPath = os.path.join(e.devArea(self.iocData[i][-1]), self.iocData[i][1]) + ext
                 # hack for iocbuilder modules                        
                 if not os.path.isfile(newPath):
                     ioc = self.iocData[i][0]
                     builderPath = os.path.join(e.devArea("support"), ioc.split("-")[0] + "-BUILDER", "iocs", ioc) + ext
                     if os.path.isfile(builderPath):
-                        newPath = builderPath
+                        newPath = builderPath  
             elif version in ("local", "invalid"):
                 newPath = self.paths[i]
             else:
-                newPath = os.path.join(e.prodArea("ioc"), self.iocData[i][1], version) + ext
-            if newPath != self.paths[i]:
+                newPath = os.path.join(e.prodArea(self.iocData[i][-1]), self.iocData[i][1], version) + ext
+            if newPath != self.paths[i] and os.path.isfile(newPath):
                 yield (self.iocData[i][0], self.paths[i], newPath)
 
     def writeChanges(self):
@@ -147,8 +152,8 @@ class MainWindow(QDialog):
         
     def svnLog(self, i):
         oldver = self.iocData[i][2]
-        newver = str(self.versions[i].currentText())
-        args = ["dls-logs-since-release.py","-i","-r",self.iocData[i][1]]
+        newver = str(self.versions[i].currentText())        
+        args = ["dls-logs-since-release.py","--area=%s"%(self.iocData[i][-1]),"-r",self.iocData[i][1]]
         if oldver != newver:
             if oldver not in ("local", "invalid", "work"):
                 args.append(oldver)
