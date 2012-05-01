@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """usage: %prog [options] <cfg_file> <pages_file>
@@ -30,7 +30,7 @@ def make_config_dict(root = "../.."):
     # if the tree is invalid, check to see if what kind of module it is:
     version = ""
     if module_version == "invalid":
-        for area in module_e.areas:
+        for area in e.areas:
             if e.prodArea(area) in root:
                 split = root.replace(e.prodArea(area),"").split("/")
                 name = split[-2]
