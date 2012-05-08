@@ -7,7 +7,7 @@ format. if <beamline> is ommitted then all beamlines are processed"""
 
 import sys
 
-def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
+def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,visit_list,args ):
     from dls_scripts.dlsgroups import visit,ldapgrp
     import datetime
     import optparse
@@ -33,6 +33,9 @@ def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,args ):
             not (end   and (visit.startdate(name) >= enddate) ) and
             not (args  and visit.beamline(name) not in args) ):
 
+            if visit_list:
+                print name
+                continue
 
             group_name=name.replace("-","_")
             if group_name not in group.all():
@@ -126,6 +129,8 @@ if __name__ == "__main__":
                       help="generate list of visits and beamlines to create experiment directories" )
     parser.add_option("-u", "--users", dest="userlist", nargs=0,
                       help="generate list containing all (non-staff) users listed on visits" )
+    parser.add_option("-v", "--visits", dest="visitlist", nargs=0,
+                      help="generate list containing all visits in the specified interval" )
 
     (options, args) = parser.parse_args()
 
@@ -140,4 +145,4 @@ if __name__ == "__main__":
 
     sys.exit(visit_check(options.start, options.end,options.remove_staff_end,
              options.exclude,restore,options.ldif!=None,options.directory!=None,
-             options.userlist!=None,args))
+             options.userlist!=None,options.visitlist!=None,args))
