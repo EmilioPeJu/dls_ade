@@ -5,7 +5,9 @@ usage = """%prog [options] <module_name> <release_#>
 
 Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
-This script will do a test build of the module, and if it succeeds, will create the release in svn. It will then write a build request file to the build server, causing it to schedule a checkout and build of the svn release in prod.
+This script will do a test build of the module, and if it succeeds, will create the
+release in svn. It will then write a build request file to the build server,
+causing it to schedule a checkout and build of the svn release in prod.
 If run using the area "init", "svn update" will be updated in /dls_sw/prod/etc/init"""
 
 import os, subprocess, sys, time, re
@@ -38,7 +40,8 @@ def release():
     svn_mess = "%s: Released version %s. %s"
 
     # command line options  
-    from dls_scripts.options import OptionParser    
+    from dls_scripts.options import OptionParser
+    from optparse import OptionGroup
     parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", 
         dest="branch", help="Release from a branch BRANCH")
@@ -53,27 +56,28 @@ def release():
         help="Change the epics version. This will determine which build " \
             "server your job is built on for epics modules. Default is %s " \
             "(from your environment)" % e.epicsVer())
-    parser.add_option("-r", "--rhel_version", action="store", type="string", 
-        dest="rhel_version", 
-        help="change the rhel version of the build. This will determine which "\
-            "build server your job is build on for non-epics modules. Default "\
-            "is %d (from /etc/redhat-release). Can be 4,5,5_64" % rhel_version)    
     parser.add_option("-m", "--message", action="store", type="string", 
         dest="message", 
         help="Add user message to the end of the default svn commit message. " \
             "The message will be '%s'" % \
             (svn_mess%("<module_name>","<release_#>","<message>")))
-    parser.add_option("-w", "--windows", action="store_true", dest="windows", 
-        default=False,
-        help="Release the module or IOC only for the Windows platform. " \
+    group = OptionGroup( parser, "Build operating system options",
+                         "Note: The following options are mutually exclusive - only use one" )
+    group.add_option("-r", "--rhel_version", action="store", type="string", 
+        dest="rhel_version", 
+        help="change the rhel version of the build. This will determine which "\
+            "build server your job is build on for non-epics modules. Default "\
+            "is %d (from /etc/redhat-release). Can be 4,5,5_64" % rhel_version)    
+    group.add_option("-w", "--windows", action="store", dest="windows", 
+        help="Release the module or IOC only for the Windows version. " \
             "Note that the windows build server can not create a test build. " \
-            "A configure/RELEASE.win32-x86 file must exist in the module in " \
-            "in order for the build to start. " \
+            "A configure/RELEASE.win32-x86 or configure/RELEASE.windows64 file"
+            "must exist in the module in order for the build to start. " \
             "If the module has already been released with the same version " \
             "the build server will rebuild that release for windows. " \
             "Existing unix builds of the same module version will not be "\
-            "affected.")
-
+            "affected. Can be 32 or 64")
+    parser.add_option_group( group )
 
     (options, args) = parser.parse_args()    
 
@@ -181,11 +185,11 @@ def release():
                     sys.exit()
                     
     directories = (out_dir, test_dir, src_dir, rel_dir)
-    if options.windows == True:
+    if options.windows:
         assert options.area in ["support","ioc"], \
             "Windows build can only be done for areas 'support' and 'ioc'\n"\
             "\t\tAborting release."
-        windowsbuild( svn, options, module, release_number, e, directories )
+        windowsbuild( options.windows, svn, options, module, release_number, e, directories )
     else:
         # check if release is in prod
         prodDir = os.path.join(e.prodArea(options.area),module,release_number)
@@ -343,20 +347,30 @@ fi
     # The build server itself will take care of the rest
     createbuildjob(module, release_number, directories, build_script, postfix = postfix)
 
-def windowsbuild(svn, options, module, release_number, env, directories):
+def windowsbuild(winversion,svn, options, module, release_number, env, directories):
     out_dir, test_dir, src_dir, rel_dir = directories
     user = os.getlogin()
+
+    assert winversion in ("32", "64"), "Windows OS version should be either 32 or 64"
+    if winversion=="32":
+        arch="win32-x86"
+        make="mingw32-make"
+        suff=".bat"
+    else:
+        arch="windows-x64"
+        make="make"
+        suff=".bat64"
     
-    assert env.epicsVer() in ("R3.14.10","R3.14.11"), \
+    assert env.epicsVer() in ("R3.14.10","R3.14.11","R3.14.12.1"), \
         "Only epics versions R3.14.10 and R3.14.11 is supported for the Windows platform"
         
     assert options.area in ("support","ioc"), \
         "Only areas 'support' and 'ioc' are not supported under Windows."
 
     # Check whether a configure/RELEASE.win32-x86 exist in the modules repository.
-    assert svn.pathcheck(os.path.join(src_dir, "configure/RELEASE.win32-x86")) or \
-        svn.pathcheck(os.path.join(src_dir, "configure/RELEASE.win32-x86.Common")),\
-        "The module does not contain a configure/RELEASE.win32-x86 file which "\
+    assert svn.pathcheck(os.path.join(src_dir, "configure/RELEASE."+arch)) or \
+        svn.pathcheck(os.path.join(src_dir, "configure/RELEASE."+arch+".Common")),\
+        "The module does not contain a configure/RELEASE."+arch+" file which "\
         "is required for building on the windows platform. \nPlease create "\
         "this file with the windows paths for EPICS_BASE and SUPPORT."
 
@@ -374,7 +388,8 @@ def windowsbuild(svn, options, module, release_number, env, directories):
     script = script.replace("$(SVNMODULE)", module)
     script = script.replace("$(MODULE)", module.replace('/','\\') )
     script = script.replace("$(VERSION)", release_number)
-    createbuildjob(module, release_number, directories, script, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = ".bat")
+    script = script.replace("$(MAKE)", make)
+    createbuildjob(module, release_number, directories, script, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = suff )
 
 def createbuildjob(module, release_number, directories, build_script, prefix="release", postfix = ".sh"):
     out_dir, test_dir, src_dir, rel_dir = directories
@@ -394,7 +409,7 @@ def createbuildjob(module, release_number, directories, build_script, prefix="re
     f.close()
     print "Build request file created: "+os.path.join(out_dir,filename)
     print module+" "+release_number+" will be exported and built by the build server shortly"
-    if postfix == ".bat":
+    if postfix[:4] == ".bat":
         print "Note that Windows build logs are NOT emailed to you automatically. You must check the completion of the build manually by reading the build log and checking whether the module was build succesfully."
         print "The build log will appear once the build has completed in: /dls_sw/prod/etc/build/complete/"+filename+".log"
 
@@ -426,6 +441,7 @@ set _area=$(AREA)
 set _svnmodule=$(SVNMODULE)
 set _module=$(MODULE)
 set _version=$(VERSION)
+set _make=$(MAKE)
 
 set _profile=W:\etc\profile.bat
 set _svn_root=http://serv0002.cs.diamond.ac.uk/repos/controls/diamond/release/%_area%
@@ -435,7 +451,7 @@ set _dlsprod=W:\prod\%DLS_EPICS_RELEASE%\%_area%\%_module%\%_version%
 @rem The profile is responsible to set up the build environment:
 @rem  - Path to compiler, linker and all necessary environment setup
 @rem  - Path to subversion svn commands
-@rem  - path to minGW make tool
+@rem  - path to make tool
 @rem  - EPICS_BASE and other related EPICS environment variables.
 if exist %_profile% (
     call %_profile%
@@ -463,9 +479,9 @@ if not exist %_dlsprod% (
     cd %_dlsprod%
 )
 
-echo Performing Windows build using mingw32-make.
-mingw32-make clean
-mingw32-make
+echo Performing Windows build using %_make%.
+%_make% clean
+%_make%
 
 """
 
