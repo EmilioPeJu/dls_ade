@@ -97,7 +97,7 @@ def release():
 
     # set postfix
     if options.area in ["support", "ioc"]:
-        if e.epicsVer() in ["R3.14.11"]:
+        if e.epicsVer() in ["R3.14.11", "R3.14.12.1"]:
             if str(rhel_version) not in ["5", "5_64"]:
                 rhel_version = 5            
             postfix = ".sh%s" % rhel_version
