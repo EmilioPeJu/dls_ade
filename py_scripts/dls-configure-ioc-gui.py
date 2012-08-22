@@ -7,6 +7,9 @@ import os, sys, re, signal, time
 from subprocess import Popen, PIPE
 from optparse import OptionParser
 from dls_environment import environment
+from pkg_resources import require
+require("cothread")
+from cothread.catools import caget
 
 usage = """%prog [ioc_filter_re]
 
@@ -103,7 +106,7 @@ class MainWindow(QDialog):
             versions.append(self.iocData[i][2])
         return versions
         
-    def getChanges(self):
+    def getNewPaths(self):
         for i in range(len(self.iocData)):
             e = self.e.copy()        
             e.setEpics(self.iocData[i][3])       
@@ -121,8 +124,12 @@ class MainWindow(QDialog):
                 newPath = self.paths[i]
             else:
                 newPath = os.path.join(e.prodArea(self.iocData[i][-1]), self.iocData[i][1], version) + ext
-            if newPath != self.paths[i] and os.path.isfile(newPath):
-                yield (self.iocData[i][0], self.paths[i], newPath)
+            yield (i, newPath)
+    
+    def getChanges(self):
+        for i, new in self.getNewPaths():
+            if new != self.paths[i] and os.path.isfile(new):
+                yield (self.iocData[i][0], self.paths[i], new)
 
     def writeChanges(self):
         text = ""
@@ -166,6 +173,25 @@ class MainWindow(QDialog):
         x.setWindowTitle("SVN Log: %s"%self.iocData[i][1])
         x.show() 
 
+    def iocReboot(self):
+        text = ""
+        for i, new in self.getNewPaths():
+            ioc = self.iocData[i][0]
+            try:
+                d1 = caget(ioc+":APP_DIR1", timeout=0.2)            
+            except:
+                text += "%s: Can't tell\n" % ioc
+            else:            
+                d2 = caget(ioc+":APP_DIR2", timeout=0.2)
+                iocdir = d1.split(":")[-1]+d2+str(self.exts[i].text())            
+                if iocdir != new:
+                    text += "%s: %s\n"% (ioc, iocdir)  
+                    text += " " * (len(ioc) - 1)
+                    text += "-> %s\n" % new
+        x = formLog(text,self)
+        x.setWindowTitle("IOCs needing a reboot")
+        x.show()        
+        
 class formLog(QDialog):
     """SVN log form"""
     def __init__(self,text,*args):
@@ -179,7 +205,7 @@ class formLog(QDialog):
         self.lab.setReadOnly(True)
         self.scroll.setWidget(self.lab)
         self.scroll.setWidgetResizable(True)
-        self.scroll.setMinimumWidth(800)        
+        self.scroll.setMinimumWidth(1024)        
         formLayout.addWidget(self.scroll,1,1)        
         self.btnClose = QPushButton("btnClose", self)
         formLayout.addWidget(self.btnClose,2,1)
@@ -197,15 +223,18 @@ class Top(QDialog):
         sa.setWidget(self.mw)
         layout = QGridLayout(self)
         self.setLayout(layout)
-        layout.addWidget(sa, 0, 0, 1, 3)        
+        layout.addWidget(sa, 0, 0, 1, 4)        
         showChanges = QPushButton("Show Changes", self)
         layout.addWidget(showChanges, 1, 0)
         showChanges.clicked.connect(self.mw.showChanges)
         writeChanges = QPushButton("Write Changes", self)
         layout.addWidget(writeChanges, 1, 1)
         writeChanges.clicked.connect(self.mw.writeChanges)        
+        iocReboot = QPushButton("IOCs to reboot?", self)
+        layout.addWidget(iocReboot, 1, 2)
+        iocReboot.clicked.connect(self.mw.iocReboot)                
         close = QPushButton("Close", self)
-        layout.addWidget(close, 1, 2)
+        layout.addWidget(close, 1, 3)
         close.clicked.connect(self.close)        
 
 if __name__ == "__main__":
