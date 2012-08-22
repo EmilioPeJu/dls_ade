@@ -178,11 +178,11 @@ class MainWindow(QDialog):
         for i, new in self.getNewPaths():
             ioc = self.iocData[i][0]
             try:
-                d1 = caget(ioc+":APP_DIR1", timeout=0.2)            
+                d1 = caget(ioc+":APP_DIR1", timeout=0.4)            
             except:
                 text += "%s: Can't tell\n" % ioc
             else:            
-                d2 = caget(ioc+":APP_DIR2", timeout=0.2)
+                d2 = caget(ioc+":APP_DIR2", timeout=0.5)
                 iocdir = d1.split(":")[-1]+d2+str(self.exts[i].text())            
                 if iocdir != new:
                     text += "%s: %s\n"% (ioc, iocdir)  
