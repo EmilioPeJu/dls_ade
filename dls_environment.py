@@ -41,7 +41,7 @@ class environment:
     def __init__(self,epics = None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
-        self.areas = ["support", "ioc", "matlab", "python"]
+        self.areas = ["support", "ioc", "matlab", "python","etc","build_scripts","epics"]
         if epics:
             self.setEpics(epics)
 
@@ -66,16 +66,23 @@ class environment:
     def epicsDir(self):
         """Return the root directory of the epics installation"""
         if self.epicsVer()<"R3.14":
-            return os.path.join("/home","epics",self.epicsVer())
+            return os.path.join("/home","epics",self.epicsVerDir())
         else:
-            return os.path.join("/dls_sw","epics",self.epicsVer())
+            return os.path.join("/dls_sw","epics",self.epicsVerDir())
 
     def epicsVer(self):
         """Return the version of epics from self. If it not set, try and get it
-        from the environment"""
+        from the environment. This may have a _64 suffix for 64 bit architectures"""
         if not self.epics:
             self.setEpicsFromEnv()
         return self.epics
+
+    def epicsVerDir(self):
+        """Return the directory version of epics from self. If it not set, try and get it
+        from the environment. This will not have a _64 suffix for 64 bit architectures"""
+        if not self.epics:
+            self.setEpicsFromEnv()
+        return self.epics.split("_")[0]
 
     def devArea(self,area = "support"):
         """Return the development directory for a particular area"""
@@ -83,23 +90,28 @@ class environment:
                ",".join(self.areas)
         if self.epicsVer()<"R3.14":
             if area in ["support","ioc"]:
-                return os.path.join("/home","diamond",self.epicsVer(),"work",\
+                return os.path.join("/home","diamond",self.epicsVerDir(),"work",\
                                     area)
-            elif area in ["init"]:
-                return os.path.join("/dls_sw","work","etc",area)
+            elif area in ["epics","etc"]:
+                return os.path.join("/home","work",area)
             else:
                 return os.path.join("/home","diamond","common","work",area)
         else:
             if area in ["support","ioc"]:
-                return os.path.join("/dls_sw","work",self.epicsVer(),area)
-            elif area in ["init"]:
-                return os.path.join("/dls_sw","work","etc",area)
+                return os.path.join("/dls_sw","work",self.epicsVerDir(),area)
+            elif area in ["epics", "etc"]:
+                return os.path.join("/dls_sw","work",area)
+            elif area in ["build_scripts"]:
+                return os.path.join("/dls_sw","work","tools","RHEL5",area)
             else:
                 return os.path.join("/dls_sw","work","common",area)
 
     def prodArea(self,area = "support"):
         """Return the production directory for a particular area"""
-        return self.devArea(area).replace("work","prod")
+        if area in ["epics"]:
+            return os.path.join("/dls_sw",area)
+        else:
+            return self.devArea(area).replace("work","prod")
 
     def sortReleases(self,releases):
         """Sort a list of release numbers or release paths or tuples of release
@@ -204,3 +216,8 @@ if __name__=="__main__":
     # test
     e = environment("R3.14.8.2")
     print "epics:",e.epicsVer()
+
+    for area in e.areas:
+        print "Production  directory for area %s is %s"%(area,e.prodArea(area))
+        print "Development directory for area %s is %s"%(area,e.devArea(area))
+        print
