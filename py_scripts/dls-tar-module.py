@@ -50,56 +50,24 @@ def archive_module():
     # If an archive already exists fail
     release_dir = os.path.join(w_dir, release)
     archive = release_dir + ".tar.gz"
-    
-    # create test build filename
-    user = os.getlogin()    
-    ev = e.epicsVer()
-    out_dir = "/dls_sw/work/etc/build/queue"   
-    #out_dir = "/tmp"
-    filename = "%(action)s-%(module)s-%(release)s-%(ev)s-%(user)s.sh5" % locals()
-    filename = os.path.join(out_dir, filename.replace("/", "_"))
-    
-    # Send the build script
+
     if options.untar:
         assert os.path.isfile(archive), "Archive '%s' doesn't exist" % archive
         assert not os.path.isdir(release_dir), "Path '%s' already exists" % release_dir        
-        command = "tar -xzpf '%(archive)s' -C '%(w_dir)s' &&\nrm %(archive)s" % locals()  
     else:
         assert os.path.isdir(release_dir), "Path '%s' doesn't exist" % release_dir
         assert not os.path.isfile(archive), "Archive '%s' already exists" % archive
-    	command = ""
-    	dirs = ("O.linux-x86", "O.linux-arm", "O.vxWorks-ppc604_long", "O.win32-x86", "O.Common")
-    	for d in dirs:
-    		 command += "find '%(release_dir)s' -name '%(d)s' -prune -exec rm -rf {} \; &&\n" % locals()        
-        command += "tar -czf '%(archive)s' -C '%(w_dir)s' '%(release)s' &&\nrm -rf '%(release_dir)s'" % locals()
-    archive_script = """#!/usr/bin/env bash
-__run_job()
-{
-    TEMP_LOG="$(mktemp)"
-    trap 'rm -f "$TEMP_LOG"' EXIT
-    {
-        {
-        
-%(command)s
+    
+    # Create build object for release
+    import dls_scripts.dlsbuild as dlsbuild
+    build=dlsbuild.archive_build( options.untar )
+    
+    if options.epics_version:
+        build.set_epics(options.epics_version)
+    
+    build.set_area( options.area )
 
-        } || echo Job failed with rc $?
-    } >"$TEMP_LOG" 2>&1
-    if (($(stat -c%%s "$TEMP_LOG") != 0 || 0)); then
-        {
-            echo dls-archive-module.py %(action)s failed creating output:
-            echo
-            cat "$TEMP_LOG"
-        } |
-            mail -s 'dls-archive-module.py %(action)s failure' %(user)s@rl.ac.uk
-    fi
-}
-__run_job &
-""" %locals()
-
-    # create the build request
-    open(os.path.join(filename),"w").write(archive_script)
-    print "%s request file created: '%s'" %(action.title(), filename)
-    print "%(module)s %(release)s will be %(action)sd by the build server shortly" %locals()
+    build.submit( "", module, release )
     
 if __name__ == "__main__":
     sys.exit(archive_module())

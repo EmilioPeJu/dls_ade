@@ -10,36 +10,125 @@ release in svn. It will then write a build request file to the build server,
 causing it to schedule a checkout and build of the svn release in prod.
 If run using the area "init", "svn update" will be updated in /dls_sw/prod/etc/init"""
 
-import os, subprocess, sys, time, re
-from subprocess import call
+import os, sys, re
 
-def release():
-    "script for releasing modules"
+# set default variables
+svn_mess = "%s: Released version %s. %s"
+
+def release(module, version, options):
+    """script for releasing modules"""
+    import dls_scripts.dlsbuild as dlsbuild
+
+    # Import svn client and initialise it
+    from dls_scripts.svn import svnClient    
+    svn = svnClient()
+
+    # Generate a next minor version number, if required
+    if options.next_version:
+        import pysvn
+        release_paths=[]
+        source = svn.prodModule(module,options.area)
+        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
+            release_paths.append(os.path.basename(node.path))
+
+        if len(release_paths) == 0:
+            version = "0-1"
+        else:
+            from dls_environment import environment
+            last_release=environment().sortReleases( release_paths )[-1].split("/")[-1]
+            print "Last release for %s was %s"%(module,last_release)
+
+            numre=re.compile("(.*)(\d+)([^\d/]*)$")
+            match=numre.match(last_release).groups()
+            version="%s%d%s"%(match[0],int(match[1])+1,match[2])
+
+    if options.message is None:
+        options.message = ""
+
+    svn.setLogMessage((svn_mess%(module,version,options.message)).strip())
     
-    # override epics_version if set
-    from dls_environment import environment    
-    e = environment()
+    # setup svn directories
+    if options.branch:
+        src_dir = os.path.join(svn.branchModule(module,options.area),options.branch)
+    else:
+        src_dir = svn.devModule(module,options.area)
+
+    rel_dir = os.path.join(svn.prodModule(module,options.area), version)
     
-    # work out rhel version
-    rhel_text = open("/etc/redhat-release").read()
-    rhel_version = re.findall(r"release (\d*)(.\d*)?", rhel_text)
-    assert rhel_version, "Cannot parse /etc/redhat-release for rhel version"
-    rhel_version = int(rhel_version[0][0])
-    
-    # HACK: RHEL6 build server not operational yet...
-    if rhel_version == 6:
-        rhel_version = 5
-    
-    # find out which user wants to release
-    user = os.getlogin()
+    # Create build object for version
+    if options.rhel_version:
+        build=dlsbuild.redhat_build( options.rhel_version )
+    elif options.windows:
+        build=dlsbuild.windows_build( options.windows )
+    else:
+        build=dlsbuild.default_build()
+
+    if options.epics_version:
+        build.set_epics(options.epics_version)
+
+    build.set_area( options.area )
+    build.set_force( options.force )
+
+    # print messages
+    if options.branch:
+        btext = "branch %s" % options.branch
+    else:
+        btext = "trunk"
+    print 'Releasing %s %s from %s, using %s build server'%(module,version,btext,build.get_server()),
+    if options.area in ("ioc","support"):
+        print "and epics %s" % build.epics(),
+    print
+
+    # check for existence of directories    
+    assert svn.pathcheck(src_dir),src_dir+' does not exist in the repository.'
         
-    # set default variables
-    out_dir = "/dls_sw/work/etc/build/queue/"
-    #out_dir = "/tmp"
-    test_dir = "/dls_sw/work/etc/build/test/"+"_".join([str(x) for x in time.localtime()[:6]])+"_"+user
-    svn_mess = "%s: Released version %s. %s"
+    # check if we really meant to release with this epics version
+    if options.area in ["ioc", "support"]:        
+        os.system("svn export "+src_dir+"/configure/RELEASE /tmp/RELEASE > /dev/null")
+        if os.path.isfile("/tmp/RELEASE"):
+            text = open("/tmp/RELEASE").read()
+            os.system("rm -rf /tmp/RELEASE")
+            module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
+            if module_epics:
+                module_epics = module_epics[0]
+            if not options.force and module_epics != build.epics():
+                if "y" != raw_input("You are trying to release a %s module under %s without using the -e flag. Are you sure [y/n]?"%(module_epics, build.epics())).lower():
+                    sys.exit()
 
-    # command line options  
+    # If this release already exists, test from the release directory, not the trunk.
+    if svn.pathcheck(rel_dir):
+        src_dir = rel_dir
+
+    # Do the test build
+    if not options.skip_test:
+        if dlsbuild.default_build().get_server() != build.get_server():
+            print "Local test build not possible since local system not the same OS as build server"
+        else:
+            print "Performing test build on local system"
+
+            if build.test( src_dir, module, version ) != 0:
+                sys.exit(1)
+
+            print "Test build successful, continuing with build server submission"
+
+    if options.local_build:
+        sys.exit(0)
+
+    # Copy the source to the release directory in subversion
+    if src_dir != rel_dir and not options.test_only:
+        svn.mkdir(rel_dir)
+        svn.copy(src_dir,os.path.join(rel_dir, version))
+        src_dir = rel_dir
+        print "Created release in svn directory: "+os.path.join(rel_dir,version)
+
+    test="work" if options.work_build else options.test_only
+
+    # Submit the build job
+    build.submit( src_dir, module, version, test=test )
+
+
+if __name__=="__main__":
+    # Parse command line options  
     from dls_scripts.options import OptionParser
     from optparse import OptionGroup
     parser = OptionParser(usage)
@@ -49,25 +138,33 @@ def release():
         help="force a release. If the release exists in prod it is removed. " \
             "If the release exists in svn it is exported to prod, otherwise " \
             "the release is created in svn from the trunk and exported to prod")
-    parser.add_option("-t", "--test_build", action="store_true", dest="test", 
-        help="If set, this will skip the test build and just do a release")
+    parser.add_option("-t", "--no-test-build", action="store_true", dest="skip_test", 
+        help="If set, this will skip the local test build and just do a release")
+    parser.add_option("-l", "--local-build-only", action="store_true", dest="local_build", 
+        help="If set, this will only do the local test build and no more.")
+    parser.add_option("-T", "--test_build-only", action="store_true", dest="test_only", 
+        help="If set, this will only do a test build on the build server")
+    parser.add_option("-W", "--work_build", action="store_true", dest="work_build", 
+        help="If set, this will do a test build on the build server in the modules work area")
     parser.add_option("-e", "--epics_version", action="store", type="string", 
         dest="epics_version", 
         help="Change the epics version. This will determine which build " \
-            "server your job is built on for epics modules. Default is %s " \
-            "(from your environment)" % e.epicsVer())
+            "server your job is built on for epics modules. Default is " \
+            "from your environment" )
     parser.add_option("-m", "--message", action="store", type="string", 
         dest="message", 
         help="Add user message to the end of the default svn commit message. " \
             "The message will be '%s'" % \
             (svn_mess%("<module_name>","<release_#>","<message>")))
+    parser.add_option("-n", "--next_version", action="store_true", dest="next_version", 
+        help="Use the next version number as the release version" )
     group = OptionGroup( parser, "Build operating system options",
                          "Note: The following options are mutually exclusive - only use one" )
     group.add_option("-r", "--rhel_version", action="store", type="string", 
         dest="rhel_version", 
         help="change the rhel version of the build. This will determine which "\
             "build server your job is build on for non-epics modules. Default "\
-            "is %d (from /etc/redhat-release). Can be 4,5,5_64" % rhel_version)    
+            "is from /etc/redhat-release. Can be 4,5,5_64" )    
     group.add_option("-w", "--windows", action="store", dest="windows", 
         help="Release the module or IOC only for the Windows version. " \
             "Note that the windows build server can not create a test build. " \
@@ -81,410 +178,17 @@ def release():
 
     (options, args) = parser.parse_args()    
 
-    # set epics version, and extension
-    force_epics = False
-    if options.epics_version:
-        if e.epics_ver_re.match(options.epics_version):
-            e.setEpics(options.epics_version)
-            force_epics = True
-        else:
-            parser.error("Expected epics version like R3.14.8.2, got '%s'" % \
-                options.epics_version)
-
-    # override rhel version
-    if options.rhel_version:
-        rhel_version = options.rhel_version
-
-    # set postfix
-    if options.area in ["support", "ioc"]:
-        if e.epicsVer() in ["R3.14.11", "R3.14.12.1"]:
-            if str(rhel_version) not in ["5", "5_64"]:
-                rhel_version = 5            
-            postfix = ".sh%s" % rhel_version
-        else:
-            postfix = ".sh"
-            rhel_version = 4
+    # set variables - the first is a bit of a backwards compatible hack, for now.
+    if len(args) < 1:
+        parser.error("Module name not specified")
     else:
-        if rhel_version > 4:
-            postfix = ".sh%s" % rhel_version
-        else:
-            postfix = ".sh"
+        module  = args[0]
 
-    # if area is init, just update the relevant part of prod
-    if options.area in ["init", "build_scripts", "Launcher"]:
-        if options.area == "init":
-            print "Updating background process initialisation in prod..."
-            path = out_dir+"prod_etc_init_update_"+user+postfix
-            os.system('echo "svn update /dls_sw/prod/etc/init && make -C /dls_sw/prod/etc/init" > '+path)
-        if options.area == "Launcher":
-            print "Updating Launcher in prod..."
-            path = out_dir+"prod_etc_Launcher_update_"+user+postfix
-            os.system('echo "svn update /dls_sw/prod/etc/Launcher && make -C /dls_sw/prod/etc/Launcher" > '+path)            
-        if options.area=="build_scripts":
-            if len(args)!=1:
-                parser.error("Releasing tools: 1 argument, tool name")
-            print "Updating tools"
-            path = out_dir+"tool_"+args[0]+"_"+user+postfix
-            command = "svn update /dls_sw/prod/tools/RHEL5/build_scripts && /dls_sw/prod/tools/RHEL5/build_scripts/build_program %s" % args[0]
-            if os.listdir("/dls_sw/work/targetOS/tar-files"):
-                command = "mv /dls_sw/work/targetOS/tar-files/* /dls_sw/prod/targetOS/tar-files && " + command
-            os.system('echo "%s" > %s'%(command, path))            
-        print "Update request file created: "+path
-        print "Request will be executed by the build server shortly"
-        sys.exit()        
-
-    if len(args)!=2:
-        parser.error("Incorrect number of arguments.")
-
-    # set variables
-    module = args[0]
-    release_number = args[1].replace(".","-")
-        
-    # print messages
-    if options.branch:
-        btext = "branch %s" % options.branch
+    if options.next_version:
+        version=None
+    elif len(args) < 2:
+        parser.error("Module version not specified")
     else:
-        btext = "trunk"
-    print 'Releasing %s %s from %s, using RHEL%s build server'%(module,release_number,btext,rhel_version),
-    if options.area in ("ioc","support"):
-        print "and epics %s" % e.epicsVer(),
-    print        
+        version = args[1].replace(".","-")
 
-    # import svn client
-    from dls_scripts.svn import svnClient    
-    svn = svnClient()
-    if options.message is None:
-        options.message = ""
-    svn.setLogMessage((svn_mess%(module,release_number,options.message)).strip())
-    
-    # setup svn directories
-    if options.branch:
-        src_dir = os.path.join(svn.branchModule(module,options.area),options.branch)
-    else:
-        src_dir = svn.devModule(module,options.area)
-    rel_dir = svn.prodModule(module,options.area)
-    
-    # check for existence of directories    
-    assert svn.pathcheck(src_dir),src_dir+' does not exist in the repository.'
-        
-    # check if we really meant to release with this epics version
-    if options.area in ["ioc", "support"]:        
-        os.system("svn export "+src_dir+"/configure/RELEASE /tmp/RELEASE > /dev/null")
-        if os.path.isfile("/tmp/RELEASE"):
-            text = open("/tmp/RELEASE").read()
-            os.system("rm -rf /tmp/RELEASE")
-            module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
-            if module_epics:
-                module_epics = module_epics[0]
-            if force_epics == False and module_epics != e.epicsVer():
-                if "y" != raw_input("You are trying to release a %s module under %s without using the -e flag. Are you sure [y/n]?"%(module_epics, e.epicsVer())).lower():
-                    sys.exit()
-            # check if there are any versions made in R3.14.11
-            if os.path.isdir("/dls_sw/prod/R3.14.11/%s/%s" %(options.area,module)) and e.epicsVer() != "R3.14.11" and not options.branch:
-                if "y" != raw_input("There are already R3.14.11 releases of %s, are you sure you want to release a %s version [y/n]?"%(module, e.epicsVer())).lower():
-                    sys.exit()
-                    
-    directories = (out_dir, test_dir, src_dir, rel_dir)
-    if options.windows:
-        assert options.area in ["support","ioc"], \
-            "Windows build can only be done for areas 'support' and 'ioc'\n"\
-            "\t\tAborting release."
-        windowsbuild( options.windows, svn, options, module, release_number, e, directories )
-    else:
-        # check if release is in prod
-        prodDir = os.path.join(e.prodArea(options.area),module,release_number)
-        assert options.force or not os.path.isdir(prodDir) or postfix.endswith("_64"), \
-        module+" "+release_number+" already exists in "+prodDir
-        assert not os.path.isfile(prodDir+".tar.gz"), \
-        module+"/"+release_number+".tar.gz archive already exists. Please run dls-tar-module.py %s %s -u to extract" %(module, release_number)
-        unixbuild( svn, options, module, release_number, e, directories, postfix, prodDir )
-        # remove old builds
-#        svn_releases = svn.list(rel_dir)[1:]
-    
-            
-def unixbuild(svn, options, module, release_number, env, directories, postfix, prodDir):
-    out_dir, test_dir, src_dir, rel_dir = directories
-    user = os.getlogin()
-    
-    # do a test build and create the release if the release isn't in subversion
-    if not svn.pathcheck(os.path.join(rel_dir, release_number)):
-        if not options.test:
-            # check out to test area
-            while os.path.isdir(test_dir):
-                test_dir += "_1"
-            print "Doing test build, logging in "+ os.path.join(test_dir,src_dir.split("/")[-1])+"/build.log ..."
-            os.mkdir(test_dir)
-            os.chdir(test_dir)
-            os.system("rm -rf "+src_dir.split("/")[-1])
-            os.system("svn co "+src_dir+" > /dev/null")
-            os.chdir(src_dir.split("/")[-1])
-            # check python files look right
-            if options.area == "python" and postfix != ".sh":
-                assert "Makefile.private" in open("Makefile").read(), "New build system no longer hacks setup.py. You need to include Makefile.private in your Makefile. See the ADE for more details."
-            if os.path.isfile("./configure/RELEASE"):
-                os.system("mv configure/RELEASE configure/RELEASE.svn")
-                os.system("""sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/"""+env.epicsVer()+"""/base," -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/"""+env.epicsVer()+"""/support," -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," configure/RELEASE.svn > configure/RELEASE""")
-            success = call('. /dls_sw/etc/profile && make &> build.log', 
-                shell=True, env={'DLS_EPICS_RELEASE': env.epicsVer()})
-            assert success == 0, "Module will not build. Please check module does not depend on work"
-            os.chdir("../..")
-            os.system("rm -rf "+test_dir)
-            print "Test build successful, continuing with release"
-
-        # copy the source to the release directory
-        svn.mkdir(rel_dir)
-        svn.copy(src_dir,os.path.join(rel_dir, release_number))
-        print "Created release in svn directory: "+os.path.join(rel_dir,release_number)
-    
-    # temporary hack to make it work for R3.13.9
-    if env.epicsVer() == "R3.13.9":
-        path = os.path.join("/home/diamond/R3.13.9/prod",options.area,module)
-        if not os.path.isdir(path):
-            os.system("mkdir -p "+path)
-        os.chdir(path)
-        assert not os.path.isdir(release_number), "Release already exists in prod"
-        os.system("svn co "+rel_dir+"/"+release_number+" > /dev/null")
-        os.chdir(release_number)
-        os.system('make')
-        print "Release has been made in: "+os.getcwd() 
-        sys.exit()
-    
-    # in script: checkout svn module
-    if svn.root().rstrip("/").split("/")[-1] == "scratch":
-        return    
-    if postfix == ".sh5_64":
-        suff = "_64"
-    else:
-        suff = ""
-    build_script = """#!/usr/bin/env bash
-
-# Script for building a diamond production module.
-epics_version_var="""+env.epicsVer()+"""
-svn_dir="""+rel_dir.replace(svn.root(),"http://serv0002.cs.diamond.ac.uk/repos/controls")+"""
-build_dir="""+env.prodArea(options.area)+"/"+module+"""
-version="""+release_number+r"""
-
-# Set up environment
-DLS_EPICS_RELEASE=${epics_version_var}%s
-DLS_DEV=1
-source /dls_sw/etc/profile
-SVN_ROOT=%s
-
-# Checkout module
-mkdir -p $build_dir                     || { echo Can not mkdir $build_dir; exit 1; }
-cd $build_dir                           || { echo Can not cd to $build_dir; exit 1; }
-"""%(suff, "http://serv0002.cs.diamond.ac.uk/repos/controls")
-    if options.force or not os.path.isdir(prodDir):
-        build_script += """rm -rf $version                         || { echo Can not rm $version; exit 1; }
-svn checkout $svn_dir/$version          || { echo Can not check out  $svn_dir/$version; exit 1; }
-"""
-    build_script += """cd $version                             || { echo Can not cd to $version; exit 1; }
-
-# Write some history
-dls-logs-since-release.py -r --area=%s %s > DEVHISTORY.autogen
-"""%(options.area,module)
-
-    # if we're looking at a support or ioc module then edit its configure/RELEASE to remove references to work
-    if options.area in ["support","ioc"]:
-        build_script += r"""
-# Modify configure/RELEASE
-if [ -e "configure/RELEASE" ] && [ ! -e "configure/RELEASE.svn" ]; then
-    mv configure/RELEASE configure/RELEASE.svn || { echo Can not rename configure/RELEASE; exit 1; }
-    sed -e 's,^ *EPICS_BASE *=.*$,'"EPICS_BASE=/dls_sw/epics/$epics_version_var/base,"   \
-        -e 's,^ *SUPPORT *=.*$,'"SUPPORT=/dls_sw/prod/$epics_version_var/support," \
-        -e 's,^ *WORK *=.*$,'"#WORK=commented out to prevent prod modules depending on work modules," \
-    configure/RELEASE.svn > configure/RELEASE  || { echo Can not edit configure/RELEASE; exit 1; }
-fi"""
-
-    # if its a python module pass setup.py the version
-    elif options.area == "python":
-        if postfix == ".sh":
-            # old rhel 4 way
-            build_script += r"""
-# Modify setup.py
-mv setup.py setup.py.svn || { echo Can not move setup.py to setup.py.svn; exit 1; }
-echo '# The following line was added by the release script' >> setup.py || { echo Can not edit setup.py; exit 1; }
-echo -e "version = '"""+release_number.replace("-",".")+r"""'" >> setup.py || { echo Can not edit setup.py; exit 1; }
-cat setup.py.svn >> setup.py || { echo Can not edit setup.py; exit 1; }"""
-        else:
-            # new way with Makefile.private
-            build_script += r"""
-# Add Makefile.private
-echo '# Overrides for release info
-PREFIX = /dls_sw/prod/tools/RHEL5
-PYTHON=$(PREFIX)/bin/python2.6
-INSTALL_DIR=$(PREFIX)/lib/python2.6/site-packages
-SCRIPT_DIR=$(PREFIX)/bin
-MODULEVER = %s' > Makefile.private || { echo Cannot write to Makefile.private; exit 1; }
-"""%release_number.replace("-",".")
-            
-    # setup the command to run
-    if options.area=="python":
-        command = "(make && make install)"
-    elif os.path.isdir(prodDir) and not options.force:
-        command = "(make clean && make)"    
-    else:
-        command = "make"
-        
-    # do the build
-    build_script += r"""
-# Build
-timestamp=$(date +%%Y%%m%%d-%%H%%M%%S)
-error_log=build_${timestamp}.err
-build_log=build_${timestamp}.log
-{
-    %(command)s 4>&1 1>&3 2>&4 |
-    tee $error_log
-} >$build_log 3>&1
-if [ $(stat -c%%s $error_log) -ne 0 ] ; then
-    cat $error_log | mail -s 'Build Errors: %(module)s %(release_number)s' %(user)s@rl.ac.uk
-elif [ -e documentation/Makefile ]; then 
-    make -C documentation
-fi
- """ % locals()
-
-    # Finally create the file with the build job/script
-    # The build server itself will take care of the rest
-    createbuildjob(module, release_number, directories, build_script, postfix = postfix)
-
-def windowsbuild(winversion,svn, options, module, release_number, env, directories):
-    out_dir, test_dir, src_dir, rel_dir = directories
-    user = os.getlogin()
-
-    assert winversion in ("32", "64"), "Windows OS version should be either 32 or 64"
-    if winversion=="32":
-        arch="win32-x86"
-        make="mingw32-make"
-        suff=".bat"
-    else:
-        arch="windows-x64"
-        make="make"
-        suff=".bat64"
-    
-    assert env.epicsVer() in ("R3.14.10","R3.14.11","R3.14.12.1"), \
-        "Only epics versions R3.14.10 and R3.14.11 is supported for the Windows platform"
-        
-    assert options.area in ("support","ioc"), \
-        "Only areas 'support' and 'ioc' are not supported under Windows."
-
-    # Check whether a configure/RELEASE.win32-x86 exist in the modules repository.
-    assert svn.pathcheck(os.path.join(src_dir, "configure/RELEASE."+arch)) or \
-        svn.pathcheck(os.path.join(src_dir, "configure/RELEASE."+arch+".Common")),\
-        "The module does not contain a configure/RELEASE."+arch+" file which "\
-        "is required for building on the windows platform. \nPlease create "\
-        "this file with the windows paths for EPICS_BASE and SUPPORT."
-
-    # create the release if the release is not in subversion already
-    if not svn.pathcheck(os.path.join(rel_dir, release_number)):
-        # copy the source to the release directory
-        svn.mkdir(rel_dir)
-        svn.copy(src_dir,os.path.join(rel_dir, release_number))
-        print "Created release in svn directory: "+os.path.join(rel_dir,release_number)
-
-    # Import the Windows batch script template and substitute all the relevant macros
-    script = winbuildscript
-    script = script.replace("$(DLS_EPICS_RELEASE)", env.epicsVer())
-    script = script.replace("$(AREA)", options.area)
-    script = script.replace("$(SVNMODULE)", module)
-    script = script.replace("$(MODULE)", module.replace('/','\\') )
-    script = script.replace("$(VERSION)", release_number)
-    script = script.replace("$(MAKE)", make)
-    createbuildjob(module, release_number, directories, script, prefix = "_".join([str(x) for x in time.localtime()[:6]])+"release", postfix = suff )
-
-def createbuildjob(module, release_number, directories, build_script, prefix="release", postfix = ".sh"):
-    out_dir, test_dir, src_dir, rel_dir = directories
-    user = os.getlogin()
-    
-    # generate the filename
-    filename = "-".join([prefix,module,release_number,user+postfix])
-    filename = filename.replace("/","_")
-
-    # check filename isn't already in use
-    while os.path.isfile(filename):
-        filename = filename.replace(postfix,"_1"+postfix)
-
-    # create the build request
-    f = open(os.path.join(out_dir,filename),"w")
-    f.write( build_script )
-    f.close()
-    print "Build request file created: "+os.path.join(out_dir,filename)
-    print module+" "+release_number+" will be exported and built by the build server shortly"
-    if postfix[:4] == ".bat":
-        print "Note that Windows build logs are NOT emailed to you automatically. You must check the completion of the build manually by reading the build log and checking whether the module was build succesfully."
-        print "The build log will appear once the build has completed in: /dls_sw/prod/etc/build/complete/"+filename+".log"
-
-# Template batch script to checkout and build a released
-# module in W:\prod\...
-#
-# This template will be used by the linux dls-release.py 
-# scripts to create a build job that can be executed by
-# the build server as a scheduled job when dumped in the 
-# build servers work queue.
-#
-# Usage: Substitute the various macros, defined as: $(MACRO)
-# The macros will identify module name, version, area and 
-# EPICS environment -all things needed to identify a particular
-# released module, it's version and build environment.
-#
-# Ulrik Pedersen 14-07-2009
-
-winbuildscript = r"""
-@rem ---------------------------------------------------------
-@rem Release build script
-@rem module: $(MODULE) version: $(VERSION)
-@rem EPICS version: $(DLS_EPICS_RELEASE)
-@rem area: '$(AREA)'
-@rem -----------------------------------------------------------
-
-set DLS_EPICS_RELEASE=$(DLS_EPICS_RELEASE)
-set _area=$(AREA)
-set _svnmodule=$(SVNMODULE)
-set _module=$(MODULE)
-set _version=$(VERSION)
-set _make=$(MAKE)
-
-set _profile=W:\etc\profile.bat
-set _svn_root=http://serv0002.cs.diamond.ac.uk/repos/controls/diamond/release/%_area%
-set _dlsprod=W:\prod\%DLS_EPICS_RELEASE%\%_area%\%_module%\%_version%
-
-@rem Configure the environment by loading a profile.
-@rem The profile is responsible to set up the build environment:
-@rem  - Path to compiler, linker and all necessary environment setup
-@rem  - Path to subversion svn commands
-@rem  - path to make tool
-@rem  - EPICS_BASE and other related EPICS environment variables.
-if exist %_profile% (
-    call %_profile%
-) else (
-    echo ### ERROR [%TIME%] ### Could not find profile. Aborting build.
-    exit /B 1
-)
-
-if not exist %_dlsprod% (
-    echo Creating directory %_dlsprod%
-    mkdir %_dlsprod%
-    if not %ErrorLevel%==0 (
-        echo ### ERROR [%TIME%] ### Unable to create directory: %_dlsprod%
-        echo                        Aborting build.
-        exit /B %ErrorLevel%
-    )
-    cd %_dlsprod%
-    svn checkout  %_svn_root%/%_svnmodule%/%_version% .
-    if not %ErrorLevel%==0 (
-        echo ### ERROR [%TIME%] ### Unable to access subversion repository. Aborting build.
-        exit /B %ErrorLevel%
-    )
-) else (
-    echo Module has already been released for this version.
-    cd %_dlsprod%
-)
-
-echo Performing Windows build using %_make%.
-%_make% clean
-%_make%
-
-"""
-
-
-if __name__ == "__main__":
-    sys.exit(release())
+    release( module, version, options )

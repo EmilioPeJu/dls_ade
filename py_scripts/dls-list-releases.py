@@ -32,7 +32,11 @@ def list_releases():
             parser.error("Expected epics version like R3.14.8.2, got: "+options.epics_version)
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
-            
+
+    # Force options.svn if no releases in the file system
+    if options.area in ["etc", "build_scripts", "epics"]:
+        options.svn = True
+        
     # Check for the existence of releases of this module/IOC    
     release_paths = []    
     if options.svn:
