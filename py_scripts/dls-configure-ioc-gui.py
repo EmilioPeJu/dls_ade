@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 from optparse import OptionParser
 from dls_environment import environment
 from pkg_resources import require
-require("cothread")
+require("cothread==2.8")
 from cothread.catools import caget
 
 usage = """%prog [ioc_filter_re]
