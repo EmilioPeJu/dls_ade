@@ -57,7 +57,9 @@ def logs_since_release():
         verbose = False
 
     # don't write coloured text if options.raw (it confuses less)
-    if options.raw:
+    if  not options.raw and ( not sys.stdout.isatty() or 
+                              os.getenv("TERM") == None  
+                              or "dumb" == os.getenv("TERM") ):
         global raw
         raw = True
         
