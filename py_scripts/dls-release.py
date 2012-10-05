@@ -12,16 +12,16 @@ If run using the area "init", "svn update" will be updated in
 /dls_sw/prod/etc/init"""
 
 import os, sys, re
+import dls_scripts.dlsbuild as dlsbuild
+from dls_scripts.svn import svnClient
 
 # set default variables
 svn_mess = "%s: Released version %s. %s"
 
 def release(module, version, options):
     """script for releasing modules"""
-    import dls_scripts.dlsbuild as dlsbuild
 
     # Import svn client and initialise it
-    from dls_scripts.svn import svnClient
     svn = svnClient()
 
     # Generate a next minor version number, if required
