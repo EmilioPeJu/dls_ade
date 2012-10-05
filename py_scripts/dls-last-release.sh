@@ -3,20 +3,22 @@
 
 usage()
 {
-    echo "Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w]"
-    echo ""
-    echo "  options:"
-    echo "    -n # : # is a number and specifies to search for the #th last job"
-    echo "    -j : Print the job file executed by the build server"
-    echo "    -o : Print the job output file collected by the build server"
-    echo "    -s : Print the make status (if it exists)"
-    echo "    -e : Print the make error file (if it exists)"
-    echo "    -l : Print the make log file (if it exists)"
-    echo "    -f : Follow the make log file (if it exists)"
-    echo "    -w : Wait for the build to complete"
-    exit $1
+    cat <<EOF
+Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w]
 
+  options:
+    -n # : # is a number and specifies to search for the #th last job
+    -j : Print the job file executed by the build server
+    -o : Print the job output file collected by the build server
+    -s : Print the make status (if it exists)
+    -e : Print the make error file (if it exists)
+    -l : Print the make log file (if it exists)
+    -f : Follow the make log file (if it exists)
+    -w : Wait for the build to complete
+EOF
+    exit $1
 }
+
 
 build_num=1
 job=0
@@ -45,7 +47,7 @@ while getopts 'n:joseltwfh' option; do
 done
 
 
-# If this script has any argument then assume it is being tested
+# For test mode use local directories
 if (( $test )) ; then
     queue_dir=queue
     pending_dir=pending
