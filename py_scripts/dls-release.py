@@ -129,11 +129,10 @@ def release(module, version, options):
 
     # Copy the source to the release directory in subversion
     if src_dir != rel_dir and not options.test_only:
-        svn.mkdir(rel_dir)
-        svn.copy(src_dir, os.path.join(rel_dir, version))
+        svn.mkdir(svn.prodModule(module, options.area))
+        svn.copy(src_dir, rel_dir )
         src_dir = rel_dir
-        print "Created release in svn directory: " + \
-            os.path.join(rel_dir, version)
+        print "Created release in svn directory: " + rel_dir
 
     test = "work" if options.work_build else options.test_only
 
