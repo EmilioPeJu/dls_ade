@@ -41,7 +41,7 @@ class environment:
     def __init__(self,epics = None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
-        self.areas = ["support", "ioc", "matlab", "python","etc","build_scripts","epics"]
+        self.areas = ["support", "ioc", "matlab", "python","etc","tools","epics"]
         if epics:
             self.setEpics(epics)
 
@@ -101,8 +101,8 @@ class environment:
                 return os.path.join("/dls_sw","work",self.epicsVerDir(),area)
             elif area in ["epics", "etc"]:
                 return os.path.join("/dls_sw","work",area)
-            elif area in ["build_scripts"]:
-                return os.path.join("/dls_sw","work","tools","RHEL5",area)
+            elif area in ["tools"]:
+                return os.path.join("/dls_sw","work",area,"RHEL5" )
             else:
                 return os.path.join("/dls_sw","work","common",area)
 
