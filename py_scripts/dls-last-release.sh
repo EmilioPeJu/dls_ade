@@ -66,12 +66,25 @@ read -r release_dir module version jobname server <<< $(tail -$build_num ~/.dls-
 release_dir=${release_dir//\\//}
 release_dir=${release_dir/W://dls_sw}
 
-
 queued=$queue_dir/${jobname}.$server
 pending=$pending_dir/$jobname*
 complete=$complete_dir/${jobname}.$server
 output=$complete_dir/${jobname}.out
-build_dir=$release_dir/$module/$version
+
+case "$(echo $jobname | cut -d_ -f4)" in
+    tools)
+        if [ "${server:0:7}" == "redhat5" ] ; then
+            build_dir=$release_dir/RHEL5/build_scripts/$module
+        else
+            build_dir=$release_dir/${server/redhat/RHEL}/build_scripts/$module
+        fi
+        ;;
+    etc)
+        build_dir=$release_dir/$module
+    *
+        build_dir=$release_dir/$module/$version
+        ;;
+esac
 
 if [ -e $queued  ] ; then
     job_status=queued
