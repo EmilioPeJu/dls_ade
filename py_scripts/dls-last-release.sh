@@ -4,11 +4,10 @@
 usage()
 {
     cat <<EOF
-Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w]
+Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w] [-q] [-h]
 
   options:
     -n # : # is a number and specifies to search for the #th last job
-    -s : Suppress the job summary information
     -j : Print the job file executed by the build server
     -o : Print the job output file collected by the build server
     -s : Print the make status (if it exists)
@@ -16,6 +15,8 @@ Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w]
     -l : Print the make log file (if it exists)
     -f : Follow the make log file (if it exists)
     -w : Wait for the build to complete
+    -q : Quiet mode - suppress the job summary information
+    -h : Print this message
 EOF
     exit $1
 }
@@ -31,7 +32,7 @@ wait=0
 follow=0
 suppress=0
 
-while getopts 'n:joseltwsfh' option; do
+while getopts 'n:joselfwqth' option; do
     case "$option" in
         n ) build_num=$OPTARG ;;
         j ) job=1 ;;
@@ -41,7 +42,7 @@ while getopts 'n:joseltwsfh' option; do
         l ) logs=1 ;;
         f ) follow=1 ;;
         w ) wait=1 ;;
-        s ) suppress=1 ;;
+        q ) suppress=1 ;;
         t ) test=1 ;;
         h ) usage 0 ;;
          *) echo >&2 "Invalid option: $option"
