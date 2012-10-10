@@ -92,17 +92,15 @@ class environment:
             if area in ["support","ioc"]:
                 return os.path.join("/home","diamond",self.epicsVerDir(),"work",\
                                     area)
-            elif area in ["epics","etc"]:
+            elif area in ["epics","etc", "tools"]:
                 return os.path.join("/home","work",area)
             else:
                 return os.path.join("/home","diamond","common","work",area)
         else:
             if area in ["support","ioc"]:
                 return os.path.join("/dls_sw","work",self.epicsVerDir(),area)
-            elif area in ["epics", "etc"]:
+            elif area in ["epics", "etc", "tools"]:
                 return os.path.join("/dls_sw","work",area)
-            elif area in ["tools"]:
-                return os.path.join("/dls_sw","work",area,"RHEL5" )
             else:
                 return os.path.join("/dls_sw","work","common",area)
 
