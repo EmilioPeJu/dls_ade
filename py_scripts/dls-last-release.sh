@@ -81,7 +81,8 @@ case "$(echo $jobname | cut -d_ -f4)" in
         ;;
     etc)
         build_dir=$release_dir/$module
-    *
+        ;;
+    *)
         build_dir=$release_dir/$module/$version
         ;;
 esac
