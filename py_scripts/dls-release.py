@@ -29,8 +29,10 @@ def release(module, version, options):
         import pysvn
         release_paths = []
         source = svn.prodModule(module, options.area)
-        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
-            release_paths.append(os.path.basename(node.path))
+        
+        if svn.pathcheck(source):
+            for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
+                release_paths.append(os.path.basename(node.path))
 
         if len(release_paths) == 0:
             version = "0-1"
@@ -121,8 +123,9 @@ def release(module, version, options):
             if build.test(src_dir, module, version) != 0:
                 sys.exit(1)
 
-            print "Test build successful, " \
-                  "continuing with build server submission"
+            if not options.local_build:
+                print "Test build successful, " \
+                      "continuing with build server submission"
 
     if options.local_build:
         sys.exit(0)

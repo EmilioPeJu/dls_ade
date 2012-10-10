@@ -34,7 +34,7 @@ def list_releases():
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
 
     # Force options.svn if no releases in the file system
-    if options.area in ["etc", "build_scripts", "epics"]:
+    if options.area in ["etc", "tools", "epics"]:
         options.svn = True
         
     # Check for the existence of releases of this module/IOC    
@@ -44,8 +44,9 @@ def list_releases():
         svn = svnClient()
         import pysvn
         source = os.path.join(svn.prodArea(options.area), module)
-        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
-            release_paths.append(os.path.basename(node.path))
+        if svn.pathcheck(source):
+            for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
+                release_paths.append(os.path.basename(node.path))
     else:
         release_dir = os.path.join(e.prodArea(options.area), module)
         if os.path.isdir(release_dir):        
