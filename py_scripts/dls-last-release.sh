@@ -67,7 +67,8 @@ release_dir=${release_dir//\\//}
 release_dir=${release_dir/W://dls_sw}
 
 queued=$queue_dir/${jobname}.$server
-pending=$pending_dir/$jobname*
+pending=$pending_dir/${jobname}.bat
+[ -e $pending ] || pending=$pending_dir/${jobname}.$server
 complete=$complete_dir/${jobname}.$server
 output=$complete_dir/${jobname}.out
 
@@ -90,7 +91,7 @@ esac
 if [ -e $queued  ] ; then
     job_status=queued
     status_dir=/dls_sw/work/etc/build/queue
-elif [ "$(echo $pending)" != "$pending_dir/$jobname*" ] ; then
+elif [ -e $pending ] ; then
     job_status=pending
     status_dir=/dls_sw/prod/etc/build/pending
 elif [ -e $complete ] ; then
@@ -140,11 +141,11 @@ if (( ! $suppress )) ; then
             echo "Make status: $(basename $make_status) (status returned was: $(cat $make_status))"
         fi
 
-        if [ -s $make_errors ] ; then
+        if [ -e $make_errors ] ; then
             echo "Error msgs: $(basename $make_errors)"
         fi
 
-        if [ -s $make_logs ] ; then
+        if [ -e $make_logs ] ; then
             echo "Output log : $(basename $make_logs)"
         fi
     else
