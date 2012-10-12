@@ -7,9 +7,7 @@ Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
 the release in svn. It will then write a build request file to the build server,
-causing it to schedule a checkout and build of the svn release in prod.
-If run using the area "init", "svn update" will be updated in
-/dls_sw/prod/etc/init"""
+causing it to schedule a checkout and build of the svn release in prod."""
 
 import os, sys, re
 import dls_scripts.dlsbuild as dlsbuild
