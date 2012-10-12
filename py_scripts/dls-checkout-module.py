@@ -1,4 +1,4 @@
-#!/bin/env dls-python
+#!/bin/env dls-python2.6
 # This script comes from the dls_scripts python module
 
 usage = """%prog [options] [<module_name>]
@@ -17,12 +17,8 @@ def checkout_module():
     (options, args) = parser.parse_args()
     
     flag = False
-    a = ""
     if len(args)==0:
-        if options.force or options.area in ("Launcher", "init", "build_scripts"):
-            a = "Y"
-        while not a.upper() in ["Y","N"]:
-            a=raw_input("Would you like to checkout the whole "+options.area+" area? This may take some time. Enter Y or N: ")
+        a=raw_input("Would you like to checkout the whole "+options.area+" area? This may take some time. Enter Y or N: ")
         if a.upper() == "N":
             return
         else:
@@ -36,16 +32,17 @@ def checkout_module():
     from dls_scripts.svn import svnClient    
     svn = svnClient()
 
-    if options.area == "ioc" and a.upper()!="Y":
+    if options.area == "ioc" and module!="":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
+
     if options.branch:
-        if a.upper()=="Y":
+        if module=="":
             source = svn.branchArea(options.area)
             module = source.split("/")[-1]
         else:
             source = os.path.join(svn.branchModule(module,options.area),options.branch)
     else:
-        if a.upper()=="Y":
+        if module=="":
             source = svn.devArea(options.area)
             module = source.split("/")[-1]
         else:
