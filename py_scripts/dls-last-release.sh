@@ -139,7 +139,7 @@ if (( ! $suppress )) ; then
         echo "Build directory contains the following files:"
 
         if [ -e $make_status ] ; then
-            echo "Make status: $(basename $make_status) (status returned was: $(cat $make_status))"
+            echo "Make status: $(basename $make_status) (status returned was: $(cat $make_status| tr '\r\n' ' '))"
         fi
 
         if [ -e $make_errors ] ; then
