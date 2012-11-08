@@ -39,10 +39,13 @@ def release(module, version, options):
             last_release = environment().sortReleases(release_paths)[-1]. \
                 split("/")[-1]
             print "Last release for %s was %s"%(module, last_release)
-
-            numre = re.compile("(.*)(\d+)([^\d/]*)$")
-            match = numre.match(last_release).groups()
-            version = "%s%d%s"%(match[0], int(match[1])+1, match[2])
+            numre = re.compile("\d+|[^\d]+")
+            tokens = numre.findall(last_release)
+            for i in reversed(range(len(tokens))):
+                if tokens[i].isdigit():
+                    tokens[i] = str(int(tokens[i]) + 1)
+                    break
+            version = "".join(tokens)
 
     if options.message is None:
         options.message = ""
@@ -60,14 +63,11 @@ def release(module, version, options):
 
     # Create build object for version
     if options.rhel_version:
-        build = dlsbuild.redhat_build(options.rhel_version)
+        build = dlsbuild.redhat_build(options.rhel_version, options.epics_version)
     elif options.windows:
-        build = dlsbuild.windows_build(options.windows)
+        build = dlsbuild.windows_build(options.windows, options.epics_version)
     else:
-        build = dlsbuild.default_build()
-
-    if options.epics_version:
-        build.set_epics(options.epics_version)
+        build = dlsbuild.default_build(options.epics_version)
 
     build.set_area(options.area)
     build.set_force(options.force)
@@ -97,11 +97,12 @@ def release(module, version, options):
                 re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
             if module_epics:
                 module_epics = module_epics[0]
-            if not options.force and module_epics != build.epics():
+            build_epics = build.epics().replace("_64", "")
+            if not options.epics_version and module_epics != build_epics:
                 sure = raw_input(
                     "You are trying to release a %s module under %s without "
                     "using the -e flag. Are you sure [y/n]?" %
-                    (module_epics, build.epics())).lower()
+                    (module_epics, build_epics)).lower()
                 if sure != "y":
                     sys.exit()
 
@@ -112,7 +113,7 @@ def release(module, version, options):
 
     # Do the test build
     if not options.skip_test:
-        if dlsbuild.default_build().get_server() != build.get_server():
+        if not build.local_test_possible():
             print "Local test build not possible since local system not " \
                   "the same OS as build server"
         else:
