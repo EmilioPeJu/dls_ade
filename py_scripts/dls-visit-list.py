@@ -11,8 +11,6 @@ def visit_list( start, end, beamline, current, previous ):
     import datetime
     import optparse
 
-    print start, end, beamline, current, previous
-
     visit=visit()
 
     if not (start is None):
@@ -32,13 +30,14 @@ def visit_list( start, end, beamline, current, previous ):
 
             if (current):   
                 if ( visit.startdate(name) < datetime.date.today() and
-                     datetime.date.today() < visit.enddate(name) ):
+                     datetime.date.today() <= visit.enddate(name) ):
                     print visit.beamline(name), name, visit.startdate(name), visit.enddate(name)
             elif (previous):
                 if ( last != None and
                      ( visit.enddate(name) > datetime.date.today() or
                        visit.beamline(last) != visit.beamline(name) ) and
-                     visit.enddate(last) < datetime.date.today() ):
+                     (visit.enddate(last) < datetime.date.today()) and
+                     ((beamline is None) or (visit.beamline(last) == beamline))):
                
                     print visit.beamline(last), name, visit.startdate(last), visit.enddate(last) 
             else:
