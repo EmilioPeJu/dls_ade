@@ -78,7 +78,14 @@ case "$(echo $jobname | cut -d_ -f4)" in
         if [ "${server:0:7}" == "redhat5" ] ; then
             build_dir=$release_dir/RHEL5/build_scripts/$module
         else
-            build_dir=$release_dir/${server/redhat/RHEL}/build_scripts/$module
+            build_dir=$release_dir/${server/redhat/RHEL}/$module/$version
+        fi
+        ;;
+    python)
+        if [ "${server:0:7}" == "redhat5" ] ; then
+            build_dir=$release_dir/$module/$version
+        else
+            build_dir=$release_dir/${server/redhat/RHEL}/$module/$version
         fi
         ;;
     etc)
