@@ -10,6 +10,7 @@ MODULEVER = 0.0
 
 build: setup.py $(wildcard */*.py)
 	$(PYTHON) setup.py build
+	./patchpath.sh
 
 clean:
 	$(PYTHON) setup.py clean
@@ -21,4 +22,3 @@ install:
 		--record installed.files \
 		--install-lib $(INSTALL_DIR) \
 		--install-script $(SCRIPT_DIR)
-	
