@@ -4,10 +4,11 @@
 usage()
 {
     cat <<EOF
-Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w] [-q] [-h]
+Usage: $0 [-n #] [-u user] [-j] [-o] [-s] [-e] [-l] [-f] [-w] [-q] [-h]
 
   options:
-    -n # : # is a number and specifies to search for the #th last job
+    -n #    : # is a number and specifies to search for the #th last job
+    -u user : Look at the last jobs for the specified user
     -j : Print the job file executed by the build server
     -o : Print the job output file collected by the build server
     -s : Print the make status (if it exists)
@@ -15,6 +16,7 @@ Usage: $0 [-n #] [-j] [-o] [-s] [-e] [-l] [-f] [-w] [-q] [-h]
     -l : Print the make log file (if it exists)
     -f : Follow the make log file (if it exists)
     -w : Wait for the build to complete
+    -u user : Run the 
     -q : Quiet mode - suppress the job summary information
     -h : Print this message
 EOF
@@ -31,22 +33,24 @@ logs=0
 wait=0
 follow=0
 suppress=0
+user=$USER
 
-while getopts 'n:joselfwqth' option; do
+while getopts 'n:u:joselfwqth' option; do
     case "$option" in
-        n ) build_num=$OPTARG ;;
-        j ) job=1 ;;
-        o ) out=1 ;;
-        s ) status=1 ;;
-        e ) errors=1 ;;
-        l ) logs=1 ;;
-        f ) follow=1 ;;
-        w ) wait=1 ;;
-        q ) suppress=1 ;;
-        t ) test=1 ;;
-        h ) usage 0 ;;
-         *) echo >&2 "Invalid option: $option"
-            usage 1 ;;
+        n) build_num=$OPTARG ;;
+        u) eval user=~$OPTARG ;;
+        j) job=1 ;;
+        o) out=1 ;;
+        s) status=1 ;;
+        e) errors=1 ;;
+        l) logs=1 ;;
+        f) follow=1 ;;
+        w) wait=1 ;;
+        q) suppress=1 ;;
+        t) test=1 ;;
+        h) usage 0 ;;
+        *) echo >&2 "Invalid option: $option"
+           usage 1 ;;
     esac
 done
 
@@ -63,7 +67,7 @@ else
 fi
 
 # Find the build we wish to know about
-read -r release_dir module version jobname server <<< $(tail -$build_num ~/.dls-release-log | head -1) 
+read -r release_dir module version jobname server <<< $(tail -$build_num $user/.dls-release-log | head -1) 
 release_dir=${release_dir//\\//}
 release_dir=${release_dir/W://dls_sw}
 
