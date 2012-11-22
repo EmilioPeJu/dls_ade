@@ -33,7 +33,7 @@ logs=0
 wait=0
 follow=0
 suppress=0
-user=$USER
+user=~
 
 while getopts 'n:u:joselfwqth' option; do
     case "$option" in
