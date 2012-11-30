@@ -95,6 +95,14 @@ case "$(echo $jobname | cut -d_ -f4)" in
     etc)
         build_dir=$release_dir/$module
         ;;
+    epics)
+        # This is a bit of a kludge to get the EPICS version from the job file
+        for file in $queued $pending $complete ; do
+            if [ -e $file ] ; then
+                build_dir=$release_dir/$(awk -F= '/_epics=/{print $2}' $file)/$module
+            fi
+        done
+        ;;
     *)
         build_dir=$release_dir/$module/$version
         ;;
