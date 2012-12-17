@@ -15,7 +15,7 @@ import os, sys
 def archive_module():
     from dls_environment import environment
     e = environment()
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-u", "--untar", action="store_true", dest="untar", help="Untar archive created with dls-archive-module.py")
     parser.add_option("-e", "--epics_version", action="store", type="string", dest="epics_version", help="change the epics version, default is "+e.epicsVer()+" (from your environment)")    
@@ -59,7 +59,7 @@ def archive_module():
         assert not os.path.isfile(archive), "Archive '%s' already exists" % archive
     
     # Create build object for release
-    import dls_scripts.dlsbuild as dlsbuild
+    import dls_environment.dlsbuild as dlsbuild
     build=dlsbuild.archive_build( options.untar )
     
     if options.epics_version:

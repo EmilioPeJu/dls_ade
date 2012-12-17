@@ -10,7 +10,7 @@ The script copies the release of <module_name>/<release> into a new branch <bran
 import os, sys
 
 def start_bugfix_branch():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
@@ -22,7 +22,7 @@ def start_bugfix_branch():
     branch_name = args[2]
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
     svn.setLogMessage(module + ": creating bugfix branch "+branch_name)
     

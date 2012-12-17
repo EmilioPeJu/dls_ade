@@ -30,7 +30,7 @@ def colour(word, col):
     return '%(esc)c[%(col)dm%(word)s%(esc)c[0m' % locals()
 
 def logs_since_release():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",\
                     help="Print lots of log information")
@@ -47,7 +47,7 @@ def logs_since_release():
     e = environment()
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
 
     # show modified files if verbose    

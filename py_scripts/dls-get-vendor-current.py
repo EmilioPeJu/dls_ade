@@ -12,7 +12,7 @@ the <old> parameter in the input arguments to "dls-vendor-update.py"."""
 import os, sys
 
 def get_vendor_current():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
@@ -20,7 +20,7 @@ def get_vendor_current():
     module = args[0]
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
 
     if options.area == "ioc":

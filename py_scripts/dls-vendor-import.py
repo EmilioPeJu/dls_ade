@@ -11,7 +11,7 @@ It also copies the code to the trunk and then checks the code out into the curre
 import os, sys
 
 def vendor_import():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=3:
@@ -21,7 +21,7 @@ def vendor_import():
     source = args[0]
     module = args[1]
     version = args[2]
-    from dls_scripts.svn import svnClient
+    from dls_environment.svn import svnClient
     svn = svnClient()
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'

@@ -9,7 +9,7 @@ List the branches of a module in the <area> area of the repository."""
 import os, sys
 
 def list_branches():    
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
@@ -17,7 +17,7 @@ def list_branches():
     module = args[0]
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
 
     if options.area=="ioc":

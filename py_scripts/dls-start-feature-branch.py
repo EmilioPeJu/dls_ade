@@ -10,7 +10,7 @@ The script copies the trunk of the current module into a new branch <branch_name
 import os, sys, shutil
 
 def start_feature_branch():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=2:
@@ -21,7 +21,7 @@ def start_feature_branch():
     branch_name = args[1]
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
     svn.setLogMessage(module + ": creating feature branch "+branch_name)
     if options.area == "ioc":

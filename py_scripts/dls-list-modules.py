@@ -11,14 +11,14 @@ e.g. %prog -i BL18I prints MO,VA,DI,etc. """
 import os, sys
 
 def list_modules():    
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args) not in [0,1]:
         parser.error("Incorrect number of arguments.")
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
     import pysvn
     

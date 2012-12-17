@@ -10,7 +10,7 @@ import os, sys
 
 def changes_since_release():
     # parse options
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args)!=1:
@@ -22,7 +22,7 @@ def changes_since_release():
     e = environment()
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
     
     if options.area == "ioc":

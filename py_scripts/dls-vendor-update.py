@@ -41,7 +41,7 @@ Finally, it is possible to make a release of the new vendor code by using "dls-r
 import os, sys
 
 def vendor_update():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-f", "--force",
         action="store_true", dest="force",
@@ -55,7 +55,7 @@ def vendor_update():
     module = args[1]
     old = args[2]
     new = args[3]
-    from dls_scripts.svn import svnClient
+    from dls_environment.svn import svnClient
     svn = svnClient()
     if options.area == "ioc":
         assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'

@@ -14,7 +14,7 @@ import os, sys
 def list_releases():
     from dls_environment import environment
     e = environment()    
-    from dls_scripts.options import OptionParser    
+    from dls_environment.options import OptionParser    
     parser = OptionParser(usage)
     parser.add_option("-l", "--latest", action="store_true", dest="latest", help="Only print the latest release")
     parser.add_option("-s", "--svn", action="store_true", dest="svn", help="Print releases available in svn")
@@ -40,7 +40,7 @@ def list_releases():
     # Check for the existence of releases of this module/IOC    
     release_paths = []    
     if options.svn:
-        from dls_scripts.svn import svnClient 
+        from dls_environment.svn import svnClient 
         svn = svnClient()
         import pysvn
         source = os.path.join(svn.prodArea(options.area), module)

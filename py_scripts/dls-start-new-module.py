@@ -16,7 +16,7 @@ If the Technical area is BL then a different template is used, to create a top l
 import os, sys, shutil
 
 def start_new_module():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-n", "--no_import", action="store_true", dest="no_import", help="Creates the module but doesn't import into svn")
     parser.add_option("-f","--fullname", action="store_true", dest="fullname", help="create new-style ioc, with full ioc name in path")
@@ -29,7 +29,7 @@ def start_new_module():
     disk_dir = module
     app_name = module
     cwd = os.getcwd()
-    from dls_scripts.svn import svnClient     
+    from dls_environment.svn import svnClient     
     svn = svnClient()
 
     # Check we know what to do

@@ -24,8 +24,8 @@ e.g.
 # any specified contact and cc names are ignored, only fed-ids are used."""
 
 import os, sys, csv
-from dls_scripts.options import OptionParser
-from dls_scripts.svn import svnClient, pysvn
+from dls_environment.options import OptionParser
+from dls_environment.svn import svnClient, pysvn
 users = {}
 svn = svnClient()
 import pysvn

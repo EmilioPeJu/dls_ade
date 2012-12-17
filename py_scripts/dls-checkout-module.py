@@ -10,7 +10,7 @@ If you do not enter a module name, the whole <area> area will be checked out."""
 import os, sys
 
 def checkout_module():
-    from dls_scripts.options import OptionParser
+    from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-b", "--branch", action="store", type="string", dest="branch",help="Checkout from a branch rather than from the trunk")
     parser.add_option("-f", "--force", action="store_true", dest="force", help="force the checkout, disable warnings")
@@ -29,7 +29,7 @@ def checkout_module():
         module = args[0]
     
     # import svn client
-    from dls_scripts.svn import svnClient    
+    from dls_environment.svn import svnClient    
     svn = svnClient()
 
     if options.area == "ioc" and module!="":
