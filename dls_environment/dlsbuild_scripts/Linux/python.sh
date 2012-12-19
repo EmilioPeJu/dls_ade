@@ -48,6 +48,7 @@ case "$OS_VERSION" in
         PREFIX=${build_dir}/${_version}/prefix
         PYTHON=/dls_sw/prod/tools/RHEL6-x86_64/Python/2-7-3/prefix/bin/python2.7
         INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
+        TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
 esac
 
 # Checkout module
@@ -100,6 +101,8 @@ build_log=${_build_name}.log
         if  [[ "$build_dir" =~ "/prod/" && "$(cat ${_build_name}.sta)" == "0" ]] ; then
             make install
             echo $? >${_build_name}.sta
+
+            /dls_sw/prod/etc/build/tools_build/post_install $TOOLS_DIR  $(dirname $build_dir) ${_module} ${_version}
         fi
     } 4>&1 1>&3 2>&4 |
     tee $error_log

@@ -209,6 +209,9 @@ if __name__ == "__main__":
     else:
         module = args[0]
 
+    if options.area == "etc" and module in [ "build", "redirector" ]:
+        parser.error("Cannot release etc/build or etc/redirector as modules - use configure system instead")
+
     if options.next_version:
         version = None
     elif len(args) < 2:
