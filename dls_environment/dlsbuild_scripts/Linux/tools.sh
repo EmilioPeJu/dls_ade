@@ -91,7 +91,7 @@ set -o xtrace
 
         /dls_sw/prod/etc/build/tools_build/build_program ${_version}
 
-        /dls_sw/prod/etc/build/tools_build/post_install $build_dir $build_dir ${_module} ${_version} 
+        /dls_sw/prod/etc/build/tools_build/post-install $build_dir $build_dir ${_module} ${_version} 
     fi
 
 } > "$TEMP_LOG" 2>&1

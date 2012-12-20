@@ -102,7 +102,7 @@ build_log=${_build_name}.log
             make install
             echo $? >${_build_name}.sta
 
-            /dls_sw/prod/etc/build/tools_build/post_install $TOOLS_DIR  $(dirname $build_dir) ${_module} ${_version}
+            /dls_sw/prod/etc/build/tools_build/post-install $TOOLS_DIR  $(dirname $build_dir) ${_module} ${_version}
         fi
     } 4>&1 1>&3 2>&4 |
     tee $error_log
