@@ -73,6 +73,7 @@ set -o xtrace
 
         ./build_program $_module
     else
+        TOOLS_DIR=/dls_sw/prod/etc/build/tools_build
         build_dir=$_build_dir/RHEL$rhel_version-$(uname -m)
 
         # Checkout module
@@ -89,9 +90,9 @@ set -o xtrace
             ReportFailure
         fi
 
-        /dls_sw/prod/etc/build/tools_build/build_program ${_version}
+        $TOOLS_DIR/build_program -n $_build_name ${_version}
 
-        /dls_sw/prod/etc/build/tools_build/post-install $build_dir $build_dir ${_module} ${_version} 
+        $TOOLS_DIR/post-install $build_dir $build_dir ${_module} ${_version} 
     fi
 
 } > "$TEMP_LOG" 2>&1
