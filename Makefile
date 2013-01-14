@@ -1,6 +1,6 @@
 # Specify defaults for testing
-PREFIX = $(PWD)/prefix
-PYTHON = python
+PREFIX := $(shell pwd)/prefix
+PYTHON = dls-python
 MODULEVER = 0.0
 
 # Override with any release info
