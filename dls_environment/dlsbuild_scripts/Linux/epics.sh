@@ -33,11 +33,17 @@ export PATH
 export SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 case $_module in
-    base|extensions)
+    base)
         build_dir=${_build_dir}/${_epics%%_64}
+    extensions)
+        build_dir=${_build_dir}/${_epics%%_64}
+        DLS_EPICS_RELEASE=${_epics}
+        source /dls_sw/etc/profile
         ;;
     *)
         build_dir=${_build_dir}/${_epics%%_64}/extensions/src
+        DLS_EPICS_RELEASE=${_epics}
+        source /dls_sw/etc/profile
         ;;
 esac
 
