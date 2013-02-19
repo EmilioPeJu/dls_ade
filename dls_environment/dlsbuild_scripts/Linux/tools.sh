@@ -91,8 +91,6 @@ set -o xtrace
         fi
 
         $TOOLS_DIR/build_program -n $_build_name ${_version}
-
-        $TOOLS_DIR/post-install $build_dir $build_dir ${_module} ${_version} 
     fi
 
 } > "$TEMP_LOG" 2>&1
