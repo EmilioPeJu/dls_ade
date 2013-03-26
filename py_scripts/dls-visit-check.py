@@ -7,6 +7,8 @@ format. if <beamline> is ommitted then all beamlines are processed"""
 
 import sys
 
+debug=False
+
 def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,visit_list,args ):
     from dls_scripts.dlsgroups import visit,ldapgrp
     import datetime
@@ -45,6 +47,12 @@ def visit_check(start,end,staff_end,exclude,restore,ldif,dir,userlist,visit_list
                     print visit.startdate(name)
             else:
                 group_members = group.members(group_name)
+
+            if debug:
+                if group_name in restore:
+                    print "restoring based on name: %s" % name
+                if visit.beamline(name) in restore:
+                    print "restoring based on beamline: %s" % name
 
             if (exclude and
                 excludedate > visit.enddate(name) and
@@ -131,17 +139,27 @@ if __name__ == "__main__":
                       help="generate list containing all (non-staff) users listed on visits" )
     parser.add_option("-v", "--visits", dest="visitlist", nargs=0,
                       help="generate list containing all visits in the specified interval" )
+    parser.add_option("-D", "--debug", dest="debug", nargs=0,
+                      help="enable debugging output" )
 
     (options, args) = parser.parse_args()
+
+    if options.debug != None :
+        print "enabling debug"
+        debug=True
 
     restore=set([])
     if options.restorefile != None:
         try:
             for line in file( options.restorefile ):
-                restore |= set( line.split())
+                if line[:1] != "#":
+                    restore |= set( line.split())
         except:
             print >> sys.stderr, "Cannot open restore file:",options.restorefile
             sys.exit(1)
+
+        if debug:
+            print "restore: %s" % restore
 
     sys.exit(visit_check(options.start, options.end,options.remove_staff_end,
              options.exclude,restore,options.ldif!=None,options.directory!=None,
