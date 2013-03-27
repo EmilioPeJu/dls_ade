@@ -153,6 +153,7 @@ if __name__ == "__main__":
         try:
             for line in file( options.restorefile ):
                 if line[:1] != "#":
+                    line=line.replace("-","_")
                     restore |= set( line.split())
         except:
             print >> sys.stderr, "Cannot open restore file:",options.restorefile
