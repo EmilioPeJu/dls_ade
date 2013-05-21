@@ -100,7 +100,11 @@ def main():
     # Make the filter executable
     os.system("chmod +x "+out+"/"+filtname)    
     print "Running Doxygen..."
-    os.system("cd %s; %s/doxygen config.cfg"%(out, os.path.dirname(sys.executable)))
+    doxygen = "%s/doxygen" % os.path.dirname(sys.executable)
+    if not os.path.isfile(doxygen):
+        # on RHEL6 and beyond just pick up the doxygen on your path
+        doxygen = "doxygen"
+    os.system("cd %s; %s config.cfg"%(out, doxygen))
     print "Done"
 
 if __name__=="__main__":
