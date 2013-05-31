@@ -33,7 +33,7 @@ def start_new_module():
     svn = svnClient()
 
     # Check we know what to do
-    if options.area not in ("ioc", "support", "python"):
+    if options.area not in ("ioc", "support", "tools", "python"):
         raise TypeError, "Don't know how to make a module of type "+options.area
 
     # setup area
@@ -93,7 +93,22 @@ def start_new_module():
         else:
             os.system('makeBaseApp.pl -t dls ' + module)
             os.system('dls-make-etc-dir.py && make clean uninstall')
-            print def_message            
+            print def_message
+    elif options.area == "tools":
+        open("build_script","w").write("""PROGRAM=%s
+VERSION=<insert version here>
+# EXTENSION=<The tar or zip extension, defaults to .tar.gz.>
+# TAR_FILE=<The tar file name or list of tar files. Defaults to ${PROGRAM}-${VERSION}${EXTENSION}>
+
+build()
+{
+    # Insert build instructions here. For example, for a Python tool with a setupegg.py:
+    # setuptools_build setupegg.py
+}
+
+# vim: set filetype=sh:
+"""%(module) )
+        print "\nPlease add your patch files to the %s directory and edit %s/build_script appropriately"%(module, module)
     elif options.area == "python":
         open("setup.py","w").write("""from setuptools import setup
         
@@ -115,11 +130,9 @@ setup(
     )        
 """ %(module, os.getlogin(), os.getlogin(), module, module, module))
         open("Makefile","w").write("""# Specify defaults for testing
-PREFIX = /dls_sw/prod/tools/RHEL5
-PYTHON = $(PREFIX)/bin/python2.6
-INSTALL_DIR = /dls_sw/work/common/python/test/packages
-SCRIPT_DIR = /dls_sw/work/common/python/test/scripts
-MODULEVER = 0.0
+PREFIX := $(shell pwd)/prefix
+PYTHON = dls-python
+MODULEVER=0.0
 
 # Override with any release info
 -include Makefile.private
@@ -142,8 +155,7 @@ clean:
 install: dist
 \t$(PYTHON) setup.py easy_install -m \\
 \t\t--record=installed.files \\
-\t\t--install-dir=$(INSTALL_DIR) \\
-\t\t--script-dir=$(SCRIPT_DIR) dist/*.egg        
+\t\t--prefix=$(PREFIX) dist/*.egg        
 """%module)
         os.mkdir(module)
         open(os.path.join(module,module+".py"),"w").write("""def main():
@@ -155,7 +167,7 @@ install: dist
 DOCDIR := doxygen
 
 # this is the doxygen executable
-DOXYGEN := /dls_sw/work/tools/RHEL5/bin/doxygen
+DOXYGEN := doxygen
 
 # add the documentation files to the install target
 all install: $(DOCDIR)
