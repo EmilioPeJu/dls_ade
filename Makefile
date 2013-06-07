@@ -6,17 +6,19 @@ MODULEVER = 0.0
 # Override with any release info
 -include Makefile.private
 
-build: setup.py $(wildcard */*.py)
-	$(PYTHON) setup.py build
+dist: setup.py $(wildcard */*.py)
+	MODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
+	touch dist
 
 clean:
 	$(PYTHON) setup.py clean
-	-rm -rf build installed.files
+	-rm -rf build dist *egg-info installed.files
+	-rm -rf prefix
 	-find -name '*.pyc' -exec rm {} \;
 
-install:
-	MODULEVER=$(MODULEVER) $(PYTHON) setup.py install \
-		--record installed.files \
-		--prefix $(PREFIX)
+install: dist
+	$(PYTHON) setup.py easy_install -m \
+		--record=installed.files \
+		--prefix $(PREFIX) dist/*.egg
 
 .PHONY: clean install

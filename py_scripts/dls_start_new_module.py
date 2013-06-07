@@ -147,7 +147,7 @@ dist: setup.py $(wildcard %s/*.py)
 # Clean the module
 clean:
 \t$(PYTHON) setup.py clean
-\t-rm -rf build dist *egg-info installed.files
+\t-rm -rf build dist *egg-info installed.files prefix
 \t-find -name '*.pyc' -exec rm {} \\;
 \t$(MAKE) -C documentation clean
 
@@ -155,7 +155,7 @@ clean:
 install: dist
 \t$(PYTHON) setup.py easy_install -m \\
 \t\t--record=installed.files \\
-\t\t--prefix=$(PREFIX) dist/*.egg        
+\t\t--prefix=$(PREFIX) dist/*.egg
 """%module)
         os.mkdir(module)
         open(os.path.join(module,module+".py"),"w").write("""def main():

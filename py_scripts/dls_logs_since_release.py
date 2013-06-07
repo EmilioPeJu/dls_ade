@@ -30,6 +30,9 @@ def colour(word, col):
     return '%(esc)c[%(col)dm%(word)s%(esc)c[0m' % locals()
 
 def logs_since_release():
+    import sys
+    sys.path.append("..")
+
     from dls_environment.options import OptionParser
     parser = OptionParser(usage)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",\
@@ -170,6 +173,4 @@ def logs_since_release():
             print "%s %s"%(colour(pre, RED), mess)
                               
 if __name__ == "__main__":
-    import sys
-    sys.path.append("..")
     sys.exit(logs_since_release())

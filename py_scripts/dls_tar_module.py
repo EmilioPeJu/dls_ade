@@ -12,7 +12,7 @@ a -u flag will untar the module and remove the archive.
 
 import os, sys
 
-def archive_module():
+def tar_module():
     from dls_environment import environment
     e = environment()
     from dls_environment.options import OptionParser
@@ -59,7 +59,7 @@ def archive_module():
         assert not os.path.isfile(archive), "Archive '%s' already exists" % archive
     
     # Create build object for release
-    import dls_environment.dlsbuild as dlsbuild
+    import dls_release.dlsbuild as dlsbuild
     build=dlsbuild.archive_build( options.untar )
     
     if options.epics_version:
@@ -70,4 +70,4 @@ def archive_module():
     build.submit( "", module, release )
     
 if __name__ == "__main__":
-    sys.exit(archive_module())
+    sys.exit(tar_module())
