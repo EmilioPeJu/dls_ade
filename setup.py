@@ -18,10 +18,6 @@ install_requires = [
     'numpy==1.6.2',
     'cothread==2.8']
 
-# print entry_points, install_requires
-print entry_points
-print install_requires
-
 setup(
     # name of the module
     name = "dls_scripts",
