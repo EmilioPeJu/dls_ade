@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.4
+#!/usr/bin/env dls-python2.6
 # Author: Diamond Light Source, Copyright 2008
 #
 # License: This file is part of 'dls.environment'
@@ -111,111 +111,131 @@ class environment:
         else:
             return self.devArea(area).replace("work","prod")
 
-    def sortReleases(self,releases):
-        """Sort a list of release numbers or release paths or tuples of release
-        paths with objects according to local rules, and return them in
-        ascending order."""
-        order = []
-        # order = (1st,2nd,3rd,4th,5th,6th,suffix,path[,object])
-        # e.g. ./4-5dls1-3-1 = (4,5,0,1,3,1,"release",./4-5dls1-3)
-        for path in releases:
-            try:
-                if type(path) == tuple:
-                    o = [0,0,0,0,0,0,"release",path[0],path[1]]
-                    path = path[0]
+    def normaliseRelease(self, release):
+        """This function takes a release number, and returns a list of
+        component parts that are then sortable by python's inbuild sort function
+        E.g. 4-5beta2dls1-3 => [4,'z',5,'beta2z',0,'',1,'z',3,'z',0,'']
+        The z allows us to sort alpha, beta and release candidates before
+        release numbers without a text suffix"""
+        components = []
+        # first split by dls
+        for part in release.split("dls", 1):
+            # rejig separators
+            part = part.replace(".","-").replace("_","-")
+            # allow up to 3 -'s
+            for subpart in part.split("-", 3):
+                match = re.match("\d+", subpart)
+                if match:
+                    # turn the digit to an int so it sorts properly
+                    components.append(int(match.group()))
+                    components.append(subpart[match.start()+1:] + "z")
                 else:
-                    o = [0,0,0,0,0,0,"release",path]
-                version = os.path.basename(path.rstrip("/"))
-                version = version.replace(".","-").replace("_","-")
-                split = [x.split("-") for x in version.split("dls")]
-                split0 = split[0]
-                numre = re.compile("\d*")
-                if len(split)>1:
-                    split1 = split[1]
-                    lastarray = split1
-                else:
-                    split1 = []
-                    lastarray = split0
-                lastnum = str(numre.findall(lastarray[-1])[0])
-                if lastnum != lastarray[-1]:
-                    # we have a bit of text on the end
-                    o[6]=lastarray[-1].replace(lastnum,"")
-                lastarray[-1]=lastnum
-                for i,x in enumerate(split0):
-                    try:
-                        o[i]=int(x)
-                    except ValueError:
-                        pass
-                for i,x in enumerate(split1):
-                    try:
-                        o[i+3]=int(x)
-                    except ValueError:
-                        pass
-                order.append(tuple(o))
-            except:
-                order.append(tuple(o))
-        order.sort()
-        if len(order[0])>8:
-            return [(x[7],x[8]) for x in order]
-        else:
-            return [x[7] for x in order]
-
+                    # just add the string part
+                    components.append(0)
+                    components.append(subpart)
+            # pad to 6 elements
+            components += [0, '']*(6-len(components))
+        # pad to 12 elements
+        components += [0, '']*(12-len(components))
+        return components
+            
+    def sortReleases(self, paths):
+        """Sort a list of paths by their release numbers. Assume that the
+        paths end in a release number"""
+        releases = []
+        istuple = paths and type(paths[0]) == tuple
+        for path in paths:
+            if type(path) == tuple:
+                release = os.path.split(os.path.normpath(path[0]))[1]
+            else:
+                release = os.path.split(os.path.normpath(path))[1]
+            releases.append((self.normaliseRelease(release), path))
+        return [x[1] for x in sorted(releases)]
+        
     def svnName(self, path):
         """Find the name that the module is under in svn. Very dls specific"""
         output = Popen(["svn", "info", path], stdout=PIPE, stderr=STDOUT).communicate()[0]
         for line in output.splitlines():
             if line.startswith("URL:"):
                 split = line.split("/")
-                if "/branches/" in line:   
-                    if len(split) > 1:                 
+                if "/branches/" in line or "/release/" in line:   
+                    if "/ioc/" in line and len(split) > 2:
+                        return "/".join((split[-3].strip(), split[-2].strip()))
+                    elif len(split) > 1:                 
                         return split[-2].strip()
                 else:
-                    return split[-1].strip()    
+                    if "/ioc/" in line and len(split) > 1:
+                        return "/".join((split[-2].strip(), split[-1].strip()))                
+                    else:
+                        return split[-1].strip()    
+
+    def classifyArea(self, path):
+        """Classify the area of a path, returning
+        (area, work/prod/invalid, epicsVer)"""
+        for a in self.areas:
+            if path.startswith(self.devArea(a)):
+                return (a, "work", self.epicsVer())
+            elif path.startswith(self.prodArea(a)):
+                return (a, "prod", self.epicsVer())
+            elif a in path:
+                area = a
+        # not found, so strip epicsVer out and try again
+        match = self.epics_ver_re.search(path)
+        if match and match.group() != self.epicsVer():
+            return self.__class__(match.group()).classifyArea(path)
+        else:
+            return ("invalid", "invalid", self.epicsVer())
 
     def classifyPath(self, path):
-        """Classify the name and version of the path of the root of a module"""
-        sections = path.rstrip("/").split("/")
-        if self.prodArea("support") in path:
-            if len(sections) - len(self.prodArea("support").split("/")) == 2: 
-                name = sections[-2]
-                version = sections[-1]
-            else:
-                name = sections[-1]
-                version = "invalid"
-        elif self.prodArea("ioc") in path:
-            if len(sections) - len(self.prodArea("ioc").split("/")) == 3:         
-                name = sections[-3]+"/"+sections[-2]
-                version = sections[-1]
-            else:
-                name = sections[-2]+"/"+sections[-1]
-                version = "invalid"
+        """Return a (module, version) tuple for the path, where 
+        version is "invalid", "work", or a version number"""
+        # classify the area
+        (area, domain, epicsVer) = self.classifyArea(path)
+        e = self
+        if epicsVer != self.epicsVer:
+            e = self.__class__(epicsVer)
+        # try and find the name in svn
+        module = self.svnName(path)
+        # deal with valid domains
+        if domain == "work":
+            root = e.devArea(area)
+        elif domain == "prod":
+            root = e.prodArea(area)
         else:
-            name = self.svnName(path)
-            if not name:
-                name = sections[-1]
-            if self.devArea("support") in path:
-                if len(sections) - len(self.devArea("support").split("/")) == 1:                    
-                    version = "work"
-                else:
-                    version = "invalid"
-            elif self.devArea("ioc") in path:
-                name = sections[-2]+"/"+name            
-                if len(sections) - len(self.devArea("ioc").split("/")) == 2:                    
-                    version = "work"
-                else:
-                    version = "invalid"
+            root = ""
+        assert path.startswith(root), "'%s' should start with '%s'" %(path,root)           
+        sections = os.path.normpath(path[len(root):]).strip(os.sep).split(os.sep)
+        # check they are the right length
+        if domain == "work":        
+            if len(sections) == 1 or area == "ioc" and len(sections) == 2:
+                version = "work"
             else:
-                if "ioc" in path:
-                    name = sections[-2]+"/"+name
-                version = "local"
-        return (name, version)
+                version = "invalid"
+        elif domain == "prod":
+            if len(sections) == 2 or area == "ioc" and len(sections) == 3:                
+                version = sections[-1]
+                module = os.sep.join(sections[:-1])
+            else:
+                version = "invalid"
+                sections = sections[:-1]
+        else:
+            version = "invalid"
+        if module is None:
+            if area == "ioc":
+                module = os.sep.join(sections[-2:])
+            else:
+                module = sections[-1]
+        return (module, version)
+
 
 if __name__=="__main__":
     # test
-    e = environment("R3.14.8.2")
+    e = environment("R3.14.11")
     print "epics:",e.epicsVer()
 
     for area in e.areas:
         print "Production  directory for area %s is %s"%(area,e.prodArea(area))
         print "Development directory for area %s is %s"%(area,e.devArea(area))
         print
+        
+    print e.classifyPath("/dls_sw/prod/R3.14.12.3/support/asyn/4-21")
