@@ -223,7 +223,7 @@ class environment:
         if module is None:
             if area == "ioc":
                 module = os.sep.join(sections[-2:])
-            else:
+            elif len(sections) > 1:
                 module = sections[-1]
         return (module, version)
 
