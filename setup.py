@@ -9,11 +9,11 @@ script_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "py_scripts
 entry_points = [ x.replace('_','-') + " = py_scripts." + x[:-3] + ":"+x.replace('dls_','')[:-3] 
                     for x in os.listdir(script_dir) if x.endswith(".py") and x != "__init__.py" ]
 install_requires = [
-    'dls_environment==4.5',
-    'dls_release==1.0',
+    'dls_environment==4.6',
+    'dls_release==1.1',
     'cx_Oracle==5.0.4',
     'dls_serial_sim==1.17',
-    'iocbuilder==3.34',
+    'iocbuilder==3.40',
     'python-ldap==2.3.12',
     'numpy==1.6.2',
     'cothread==2.8']
