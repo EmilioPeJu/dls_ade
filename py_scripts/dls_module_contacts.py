@@ -107,7 +107,7 @@ def module_contacts():
         else:
             for l in [ l for l in svn.list(path, depth=pysvn.depth.immediates) if l[0]["path"]!=path ]:
                 modules.append(l[0]["path"].split("/")[-1])
-        
+
     # print them and finish here if we don't have to set them
     if not (options.contact or options.cc or options.imp):
         if options.csv:
@@ -118,21 +118,22 @@ def module_contacts():
                 print "%s,%s,%s,%s,%s"%(name,contact,lookup(contact),\
                                         cc,lookup(cc))
             else:
-                out = name +": "
+                out = name + ": "
                 if contact:
-                    out+="Contact is %s (%s)"%(lookup(contact),contact)
+                    out += "Contact is %s (%s)" % (lookup(contact), contact)
                 if cc:
-                    out+=",Cc is %s (%s)"%(lookup(cc),cc)
+                    out += "; cc is %s (%s)" % (lookup(cc), cc)
                 if not contact and not cc:
-                    out+= "No contacts set"
+                    out += "No contacts set"
                 print out
         sys.exit()
 
     # give user a chance to back out
     if len(args) == 0 and (options.contact or options.cc):
+        a = ""
         while not a.upper() in ["Y","N"]:
             a=raw_input("Are you sure you want to set the contacts and cc for"+\
-                        " all modules in area %s? Enter Y or N: "+options.area)
+                        " all modules in area %s? Enter Y or N: " % options.area)
         if a.upper() == "N":
             sys.exit()
 
@@ -155,23 +156,25 @@ def module_contacts():
         for module in modules:
             contacts.append((module,options.contact,options.cc))
 
+
     # checkout modules and change properties
     chk_dir = "/tmp/module_contacts_change"
-    os.system("rm -rf "+chk_dir)    
-    for module,contact,cc in contacts:
-        svn.checkout(svn.devModule(module,options.area),chk_dir,recurse=False)
-        contact, cc = contact.strip(), cc.strip()
-        mess = module+": changed module contacts: "
-        if not contact==None:
-            print "%s: Setting Contact to %s (%s)"%(module,lookup(contact),contact)
-            mess += "Set Contact to %s (%s). "%(lookup(contact),contact)
-            svn.propset("dls:contact",contact,chk_dir)
-        if not cc==None:
-            print "%s: Setting Cc to %s (%s)"%(module,lookup(cc),cc)
-            mess += "Set Cc to %s (%s). "%(lookup(cc),cc)
-            svn.propset("dls:cc",cc,chk_dir)
-        svn.checkin(chk_dir,mess)
-        os.system("rm -rf "+chk_dir)
+    os.system("rm -rf " + chk_dir)
+    for module, contact, cc in contacts:
+        svn.checkout(svn.devModule(module, options.area), chk_dir, recurse=False)
+        contact = contact.strip() if contact is not None else None
+        cc = cc.strip() if cc is not None else None
+        msg = module + ": changed module contacts: "
+        if contact is not None:
+            print "%s: Setting contact to %s (%s)" % (module, lookup(contact), contact)
+            msg += "Set contact to %s (%s). " % (lookup(contact), contact)
+            svn.propset("dls:contact", contact, chk_dir)
+        if cc is not None:
+            print "%s: Setting cc to %s (%s)" % (module, lookup(cc), cc)
+            msg += "Set cc to %s (%s). " % (lookup(cc), cc)
+            svn.propset("dls:cc", cc, chk_dir)
+        svn.checkin(chk_dir, msg)
+        os.system("rm -rf " + chk_dir)
 
 if __name__=="__main__":
     sys.exit(module_contacts())
