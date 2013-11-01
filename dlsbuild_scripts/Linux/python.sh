@@ -105,7 +105,7 @@ build_log=${_build_name}.log
             # If successful, run make-defaults
             if (( ! $(cat ${_build_name}.sta) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-                $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$rhel_version-$(uname -m)
+                $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
             fi
         fi
     } 4>&1 1>&3 2>&4 |

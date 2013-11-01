@@ -46,10 +46,10 @@ set -o xtrace
     fi
 
     # Ensure there is a architecture dependent build directory available
-    rhel_version=$(lsb_release -sr | cut -d. -f1)
+    OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 
-    if (( $rhel_version < 6 )) ; then
-        build_dir=$_build_dir/RHEL$rhel_version
+    if (( $OS_VERSION < 6 )) ; then
+        build_dir=$_build_dir/RHEL$OS_VERSION
 
         mkdir -p $build_dir
         cd $build_dir
@@ -74,7 +74,7 @@ set -o xtrace
         ./build_program $_module
     else
         TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-        build_dir=$_build_dir/RHEL$rhel_version-$(uname -m)
+        build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
         # Checkout module
         mkdir -p $build_dir/${_module}
@@ -92,7 +92,7 @@ set -o xtrace
 
         $TOOLS_BUILD/build_program -n $_build_name ${_version}
 
-        $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$rhel_version-$(uname -m)
+        $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
     fi
 
 } > "$TEMP_LOG" 2>&1
