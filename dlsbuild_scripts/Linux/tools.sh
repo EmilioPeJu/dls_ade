@@ -56,7 +56,7 @@ set -o xtrace
 
         # Checkout build program - always from RHEL5 directory in branches
         if [ ! -d build_scripts ]; then
-            svn checkout --depth=files $SVN_ROOT/diamond/branches/build_scripts/RHEL5 build_scripts
+            svn checkout -q --depth=files $SVN_ROOT/diamond/branches/build_scripts/RHEL5 build_scripts
         else
             svn switch --depth=files $SVN_ROOT/diamond/branches/build_scripts/RHEL5 build_scripts 
         fi
@@ -66,7 +66,7 @@ set -o xtrace
         [ "$_force" == "true" ] && rm -rf $_module
 
         if [ ! -d $_module ]; then
-            svn checkout $_svn_dir $_module
+            svn checkout -q $_svn_dir $_module
         else
             svn switch $_svn_dir $_module
         fi
@@ -81,10 +81,10 @@ set -o xtrace
         cd $build_dir/${_module}
 
         if [ ! -d $_version ]; then
-            svn checkout $_svn_dir $_version
+            svn checkout -q $_svn_dir $_version
         elif [ "$_force" == "true" ] ; then
             rm -rf $_version
-            svn checkout $_svn_dir $_version
+            svn checkout -q $_svn_dir $_version
         elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
             echo "Directory $build_dir/$_version not up to date with $_svn_dir"
             ReportFailure

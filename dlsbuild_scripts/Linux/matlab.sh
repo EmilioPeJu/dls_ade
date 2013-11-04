@@ -37,10 +37,10 @@ build_dir=${_build_dir}/${_module}
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
 if [ ! -d $_version ]; then
-    svn checkout $_svn_dir $_version        || ReportFailure "Can not check out  $_svn_dir"
+    svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
 elif [ "$_force" == "true" ] ; then
     rm -rf $_version                        || ReportFailure "Can not rm $_version"
-    svn checkout $_svn_dir $_version        || ReportFailure "Can not check out  $_svn_dir"
+    svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
 elif [[ ! "$(svn status -qu $_version)" =~ ^Status\ against\ revision: ]] ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
 fi
