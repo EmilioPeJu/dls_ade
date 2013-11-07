@@ -205,8 +205,6 @@ class environment:
             root = ""
         assert path.startswith(root), "'%s' should start with '%s'" %(path,root)           
         sections = os.path.normpath(path[len(root):]).strip(os.sep).split(os.sep)
-        print sections
-
         # check they are the right length
         if domain == "work":        
             if len(sections) == 1 or area in [ "ioc", "tools", "python" ] and len(sections) == 2:
