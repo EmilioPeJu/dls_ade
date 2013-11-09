@@ -74,6 +74,7 @@ set -o xtrace
         ./build_program $_module
     else
         TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
+        TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
         build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
         # Checkout module
@@ -94,9 +95,9 @@ set -o xtrace
         if [ -f "$_version"/RELEASE ] ; then
             if (( ! $(grep -c '^ *ROOT' RELEASE) )) ; then
                 sed -i "1i\
-ROOT=$(dirname $PWD))" "$_version"/RELEASE
+ROOT=$TOOLS_ROOT" "$_version"/RELEASE
             else
-                sed -i -e 's,^ *ROOT *=.*$,ROOT='"$(dirname $PWD))," "$_version"/RELEASE
+                sed -i -e 's,^ *ROOT *=.*$,ROOT='"$TOOLS_ROOT," "$_version"/RELEASE
             fi
         fi
 
