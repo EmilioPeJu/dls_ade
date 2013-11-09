@@ -81,13 +81,23 @@ set -o xtrace
         cd $build_dir/${_module}
 
         if [ ! -d $_version ]; then
-            svn checkout -q $_svn_dir $_version
+            svn checkout -q "$_svn_dir" "$_version"
         elif [ "$_force" == "true" ] ; then
             rm -rf $_version
-            svn checkout -q $_svn_dir $_version
-        elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
+            svn checkout -q "$_svn_dir" "$_version"
+        elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
             echo "Directory $build_dir/$_version not up to date with $_svn_dir"
             ReportFailure
+        fi
+
+        # Add the ROOT definition to the RELEASE file
+        if [ -f "$_version"/RELEASE ] ; then
+            if (( ! $(grep -c '^ *ROOT' RELEASE) )) ; then
+                sed -i "1i\
+ROOT=$(dirname $PWD))" "$_version"/RELEASE
+            else
+                sed -i -e 's,^ *ROOT *=.*$,ROOT='"$(dirname $PWD))," "$_version"/RELEASE
+            fi
         fi
 
         $TOOLS_BUILD/build_program -n $_build_name ${_version}
