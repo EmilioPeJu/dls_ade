@@ -93,7 +93,7 @@ set -o xtrace
 
         # Add the ROOT definition to the RELEASE file
         if [ -f "$_version"/RELEASE ] ; then
-            if (( ! $(grep -c '^ *ROOT' RELEASE) )) ; then
+            if (( ! $(grep -c '^ *ROOT' "$_version"/RELEASE) )) ; then
                 sed -i "1i\
 ROOT=$TOOLS_ROOT" "$_version"/RELEASE
             else
