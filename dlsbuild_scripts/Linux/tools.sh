@@ -92,12 +92,20 @@ set -o xtrace
         fi
 
         # Add the ROOT definition to the RELEASE file
-        if [ -f "$_version"/RELEASE ] ; then
-            if (( ! $(grep -c '^ *ROOT' "$_version"/RELEASE) )) ; then
+        release_file="$_version"/configure/RELEASE
+
+        # The following is for short term compatibility purposes
+        [ ! -f "$release_file" ] && release_file="$_version"/RELEASE
+
+        if [ -f "$release_file" ] ; then
+            if (( ! $(grep -c '^( *ROOT| *TOOLS_SUPPORT)' "$release_file") )) ; then
                 sed -i "1i\
-ROOT=$TOOLS_ROOT" "$_version"/RELEASE
+TOOLS_SUPPORT=$TOOLS_ROOT" "$release_file"
             else
-                sed -i -e 's,^ *ROOT *=.*$,ROOT='"$TOOLS_ROOT," "$_version"/RELEASE
+                sed -i \
+                    -e 's,^ *ROOT *=.*$,ROOT='"$TOOLS_ROOT," \
+                    -e 's,^ *TOOLS_SUPPORT *=.*$,TOOLS_SUPPORT='"$TOOLS_ROOT," \
+                    "$release_file"
             fi
         fi
 
