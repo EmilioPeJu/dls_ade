@@ -95,7 +95,7 @@ def start_new_module():
             os.system('dls-make-etc-dir.py && make clean uninstall')
             print def_message
     elif options.area == "tools":
-        open("build_script","w").write("""PROGRAM=%s
+        open("build","w").write("""PROGRAM=%s
 VERSION=<insert version here>
 # EXTENSION=<The tar or zip extension, defaults to .tar.gz.>
 # TAR_FILE=<The tar file name or list of tar files. Defaults to ${PROGRAM}-${VERSION}${EXTENSION}>
@@ -108,7 +108,7 @@ build()
 
 # vim: set filetype=sh:
 """%(module) )
-        print "\nPlease add your patch files to the %s directory and edit %s/build_script appropriately"%(module, module)
+        print "\nPlease add your patch files to the %s directory and edit %s/build script appropriately"%(module, module)
     elif options.area == "python":
         open("setup.py","w").write("""from setuptools import setup
         
