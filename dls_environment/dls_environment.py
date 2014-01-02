@@ -205,6 +205,11 @@ class environment:
             root = ""
         assert path.startswith(root), "'%s' should start with '%s'" %(path,root)           
         sections = os.path.normpath(path[len(root):]).strip(os.sep).split(os.sep)
+
+        # strip off a prefix suffix
+        if sections[-1] == "prefix" and area in [ "python", "tools" ]:
+            sections = sections[:-1]
+
         # check they are the right length
         if domain == "work":        
             if len(sections) == 1 or area in [ "ioc", "tools", "python" ] and len(sections) == 2:
@@ -244,8 +249,9 @@ if __name__=="__main__":
         
     print e.classifyPath("/dls_sw/prod/R3.14.12.3/support/asyn/4-21")
     print e.classifyArea("/dls_sw/prod/tools/RHEL6-x86_64/boost/1-48-0")
-    print e.classifyPath("/dls_sw/prod/tools/RHEL6-x86_64/boost/1-48-0")
+    print e.classifyPath("/dls_sw/prod/tools/RHEL6-x86_64/boost/1-48-0/prefix")
     print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/boost/1-48-0")
+    print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/boost/1-48-0/prefix")
     print e.classifyPath("/dls_sw/work/tools/RHEL6-x86_64/boost")
     print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/dls_environment/4-6")
 
