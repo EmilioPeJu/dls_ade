@@ -91,6 +91,9 @@ def logs_since_release():
     
     if svn.pathcheck(release):
         release_dir = release.replace(svn.info2(release, recurse = False)[0][1]["repos_root_URL"], "")    
+        # Remove unicode attribute from release_dir so that it doesn't propogate
+        # into other values and cause unexpected decode failures.
+        release_dir = str(release_dir)
                           
         # Now grab the logs from the release dir
         r_logs = svn.log(release, discover_changed_paths = True)
