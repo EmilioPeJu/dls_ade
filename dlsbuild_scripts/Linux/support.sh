@@ -31,22 +31,40 @@ ReportFailure()
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-export SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 build_dir=${_build_dir}/${_module}
 
 # Checkout module
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
-if [ ! -d $_version ]; then
-    svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
-elif [ "$_force" == "true" ] ; then
-    rm -rf $_version                        || ReportFailure "Can not rm $_version"
-    svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
-elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
-    ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
+
+if [[ "${svn_dir:-undefined}" == "undefined" ]] ; then
+    if [ ! -d $_version ]; then
+        svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
+    elif [ "$_force" == "true" ] ; then
+        rm -rf $_version                        || ReportFailure "Can not rm $_version"
+        svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
+    elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
+        ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
+    fi
+else
+    if [ ! -d $_version ]; then
+        git clone --depth=100 $_git_dir $_version             || ReportFailure "Can not clone  $_git_dir"
+        ( cd $_version &&  git checkout $_version )  || ReportFailure "Can not checkout $_version"        
+    elif [ "$_force" == "true" ] ; then
+        rm -rf $_version                            || ReportFailure "Can not rm $_version"
+        git clone $_git_dir $_version               || ReportFailure "Can not clone  $_git_dir"
+        ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
+    else
+        ( cd $_version &&  && git fetch --tags && git checkout $_version ) ||
+            ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
+    fi
 fi
+
 cd $_version                                || ReportFailure "Can not cd to $_version"
+if [ ! -f configure/RELEASE.svn ] ; then
+    cp configure/RELEASE configure/RELEASE.svn
+exit
 
 # Write some history
 dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen

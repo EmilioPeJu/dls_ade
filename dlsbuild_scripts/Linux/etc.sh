@@ -31,8 +31,6 @@ ReportFailure()
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-export SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
-
 build_dir=${_build_dir}
 
 # Checkout module

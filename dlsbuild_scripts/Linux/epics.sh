@@ -30,7 +30,6 @@ ReportFailure()
 
 # Set up environment
 export PATH
-export SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 case $_module in
     base)
