@@ -122,7 +122,7 @@ setup(
     version = version,
     description = 'Module',
     author = '%s',
-    author_email = '%s@rl.ac.uk',    
+    author_email = '%s@fed.cclrc.ac.uk',    
     packages = ['%s'],
 #    entry_points = {'console_scripts': ['test-python-hello-world = %s.%s:main']}, # this makes a script
 #    include_package_data = True, # use this to include non python files
