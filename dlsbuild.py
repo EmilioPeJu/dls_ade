@@ -71,7 +71,7 @@ def get_email(user):
     """Get a users email address from Active directory using LDAP"""
     try:
         # Try and get email from Active DIrectory
-        l = ldap.initialize('ldap://fed.cclrc.ac.uk')
+        l = ldap.initialize('ldap://altfed.cclrc.ac.uk')
         result = l.search_s(
             "OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk",
             ldap.SCOPE_SUBTREE, "(CN=%s)" % user, ['mail'])
