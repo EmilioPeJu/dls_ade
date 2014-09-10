@@ -81,7 +81,7 @@ set -o xtrace
         mkdir -p $build_dir/${_module}
         cd $build_dir/${_module}
 
-        if [[ "${svn_dir:-undefined}" == "undefined" ]] ; then
+        if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
             if [ ! -d $_version ]; then
                 svn checkout -q "$_svn_dir" "$_version"
             elif [ "$_force" == "true" ] ; then

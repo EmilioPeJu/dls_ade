@@ -35,7 +35,7 @@ build_dir=${_build_dir}/${_module}
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
 
-if [[ "${svn_dir:-undefined}" == "undefined" ]] ; then
+if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
         svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
     elif [ "$_force" == "true" ] ; then
