@@ -47,6 +47,8 @@ def cs_publish():
     area = options.area
     # set epics version, and extension
     if options.epics_version:
+        if not options.epics_version.startswith("R"):
+            options.epics_version = "R%s" % options.epics_version    
         if e.epics_ver_re.match(options.epics_version):
             e.setEpics(options.epics_version)
         else:

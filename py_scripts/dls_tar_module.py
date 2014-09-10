@@ -63,6 +63,8 @@ def tar_module():
     build=dlsbuild.archive_build( options.untar )
     
     if options.epics_version:
+        if not options.epics_version.startswith("R"):
+            options.epics_version = "R%s" % options.epics_version    
         build.set_epics(options.epics_version)
     
     build.set_area( options.area )
