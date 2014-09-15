@@ -83,16 +83,6 @@ set -o xtrace
 
         if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
             if [ ! -d $_version ]; then
-                svn checkout -q "$_svn_dir" "$_version"
-            elif [ "$_force" == "true" ] ; then
-                rm -rf $_version
-                svn checkout -q "$_svn_dir" "$_version"
-            elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
-                echo "Directory $build_dir/$_version not up to date with $_svn_dir"
-                ReportFailure
-            fi
-        else
-            if [ ! -d $_version ]; then
                 git clone --depth=100 $_git_dir $_version
                 ( cd $_version &&  git checkout $_version )
             elif [ "$_force" == "true" ] ; then
@@ -100,7 +90,17 @@ set -o xtrace
                 git clone $_git_dir $_version
                 ( cd $_version && git checkout $_version )
             else
-                ( cd $_version &&  && git fetch --tags && git checkout $_version )
+                ( cd $_version && git fetch --tags && git checkout $_version )
+            fi
+        else
+            if [ ! -d $_version ]; then
+                svn checkout -q "$_svn_dir" "$_version"
+            elif [ "$_force" == "true" ] ; then
+                rm -rf $_version
+                svn checkout -q "$_svn_dir" "$_version"
+            elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
+                echo "Directory $build_dir/$_version not up to date with $_svn_dir"
+                ReportFailure
             fi
         fi
 
