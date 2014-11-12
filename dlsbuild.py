@@ -22,7 +22,8 @@ build_servers = {
         "redhat6-x86_64" : ["R3.14.12.3"]
     },
     "Windows": {
-        "windows5-x86"   : ["R3.14.11", "R3.14.10", "R3.14.12.1","R3.14.12.3"],
+        "windows5-x86"   : ["R3.14.11", "R3.14.10", "R3.14.12.1"],
+        "windows6-x86"   : ["R3.14.12.3"],
         "windows6-AMD64" : ["R3.14.12.3", "R3.14.12.1" ]
     }
 }
@@ -38,7 +39,7 @@ server_shortcut = {
     "5": "redhat5-i686",
     "5_64": "redhat5-x86_64",
     "6": "redhat6-x86_64",
-    "32": "windows5-x86",
+    "32": "windows6-x86",
     "64": "windows6-AMD64" }
 
 os_list = set(os.listdir(build_scripts))
