@@ -287,10 +287,10 @@ class windows_build(builder):
                 params[name] = params[name].replace("/dls_sw/", "W:/")
 #                params[name] = params[name].replace("/", "\\")
 
-        if self.server == "windows6-AMD64":
-            params["make"] = "make"
-        else:
+        if self.server == "windows5-x86":
             params["make"] = "mingw32-make"
+        else:
+            params["make"] = "make"
 
         return builder._script(self, params, "@echo on", "set %s=%s")
 
