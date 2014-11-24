@@ -11,14 +11,41 @@ look for the module, this can be overridden with the -e flag.
 
 import os, sys
 
+def get_rhel_version():
+    import platform
+    default_rhel_version = "6"
+    if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
+        dist , release_str , name = platform.dist()
+        release = release_str.split(".")[0]
+        return release
+    else:
+        return default_rhel_version
+
 def list_releases():
     from dls_environment import environment
     e = environment()    
     from dls_environment.options import OptionParser    
     parser = OptionParser(usage)
-    parser.add_option("-l", "--latest", action="store_true", dest="latest", help="Only print the latest release")
-    parser.add_option("-s", "--svn", action="store_true", dest="svn", help="Print releases available in svn")
-    parser.add_option("-e", "--epics_version", action="store", type="string", dest="epics_version", help="change the epics version, default is "+e.epicsVer()+" (from your environment)")
+    parser.add_option("-l", "--latest", action="store_true", 
+                      dest="latest", 
+                      help="Only print the latest release")
+    parser.add_option("-s", "--svn", action="store_true", 
+                      dest="svn", 
+                      help="Print releases available in svn")
+    parser.add_option("-e", "--epics_version", 
+                      action="store", type="string", 
+                      dest="epics_version", 
+                      help="change the epics version, default is " + \
+                           e.epicsVer() + \
+                           " (from your environment)")
+    parser.add_option("-r", "--rhel_version", 
+                      action="store", type="int", 
+                      dest="rhel_version", 
+                      help="change the rhel version of the " + \
+                           "environment, default is " + \
+                            get_rhel_version() + \
+                           " (from your system)",
+                      default=get_rhel_version())
     (options, args) = parser.parse_args()
     if len(args)!=1:
         parser.error("Incorrect number of arguments.")
@@ -51,6 +78,9 @@ def list_releases():
                 release_paths.append(os.path.basename(node.path))
     else:
         release_dir = os.path.join(e.prodArea(options.area), module)
+        if options.area == 'python' and options.rhel_version == 6:
+            release_dir = os.path.join(e.prodArea(options.area), 
+                                       "RHEL6-x86_64",module)
         if os.path.isdir(release_dir):        
             for p in os.listdir(release_dir):
                 if os.path.isdir(os.path.join(release_dir, p)):
