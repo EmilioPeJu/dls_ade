@@ -7,7 +7,7 @@ Default <area> is 'support'.
 Start a new diamond module of particular type.
 Uses makeBaseApp with the dls template for a 'support' or 'ioc' module, copies the example from the environment module for python.
 Creates this module and imports it into subversion.
-If the -i flag is used, <module_name> is expected to be of the form "Domain/Technical Area/IOC number" i.e. BL02I/VA/03.
+If the -i flag is used, <module_name> is expected to be of the form "Domain/Technical Area/IOC number" i.e. BL02I/VA/03 or BL02I-VA-IOC-03 is also accepted
 The IOC number can be omitted, in which case, it defaults to "01".
 If the --fullname flag is used, the IOC will be imported as BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same technical area)
 Otherwise it will be imported as BL02I/VA (old naming style)
@@ -38,22 +38,33 @@ def start_new_module():
 
     # setup area
     if options.area == "ioc":
+        area = "ioc"    
         cols = module.split('/')
-        assert len(cols)>1 and cols[1]!='' , 'Missing Technical Area under Domain'
-        area = "ioc"
-        domain = cols[0]
-        technical_area = cols[1]
-        if len(cols) == 3 and cols[2]!='':
-            ioc_number = cols[2]
+        if len(cols)>1 and cols[1]!='':
+            domain = cols[0]
+            technical_area = cols[1]
+            if len(cols) == 3 and cols[2]!='':
+                ioc_number = cols[2]
+            else:
+                ioc_number = '01'
+            module = domain + "/" + technical_area            
+            if technical_area == "BL":
+                app_name = domain
+            else:
+                app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+                if options.fullname:
+                    module = domain + "/" + app_name
         else:
-            ioc_number = '01'
-        module = domain + "/" + technical_area            
-        if technical_area == "BL":
-            app_name = domain
-        else:
-            app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+            # assume full IOC name is given
+            cols = module.split('-')
+            assert len(cols) > 1, "Need a name with dashes in it, got %" % module
+            domain = cols[0]
+            technical_area = cols[1]            
+            app_name = module
             if options.fullname:
                 module = domain + "/" + app_name
+            else:
+                module = domain + "/" + technical_area
         disk_dir = module
         # write the message for ioc BL
         BL_message  = '\nPlease now edit '+os.path.join(disk_dir,'/configure/RELEASE')+" to put in correct paths for the ioc\'s other technical areas and path to scripts."
@@ -257,4 +268,6 @@ I'm going to describe how to use the module here
         svn.checkin(disk_dir,module+": changed contact and set svn:ignore")
 
 if __name__ == "__main__":
+    from pkg_resources import require
+    require("dls_environment")
     sys.exit(start_new_module())
