@@ -16,23 +16,14 @@ import dlsbuild
 # set default variables
 svn_mess = "%s: Released version %s. %s"
 
-def release(module, version, options):
-    """script for releasing modules"""
-
-    # Import svn client and initialise it
-    svn = svnClient()
-
-    # Generate a next minor version number, if required
-    if options.next_version:
-        import pysvn
-        release_paths = []
-        source = svn.prodModule(module, options.area)
-        
-        if svn.pathcheck(source):
-            for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
-                release_paths.append(os.path.basename(node.path))
-
-        if len(release_paths) == 0:
+def svn_next_release(svn, module, area):
+    import pysvn
+    release_paths = []
+    source = svn.prodModule(module, area)
+    if svn.pathcheck(source):
+        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
+            release_paths.append(os.path.basename(node.path))
+    if len(release_paths) == 0:
             version = "0-1"
         else:
             from dls_environment import environment
@@ -47,9 +38,15 @@ def release(module, version, options):
                     break
             version = "".join(tokens)
 
-    if options.message is None:
-        options.message = ""
+def release(module, version, options):
+    """script for releasing modules"""
 
+    # Import svn client and initialise it
+    svn = svnClient()
+
+    # Generate a next minor version number, if required
+    if options.next_version and options.git is None:
+        svn_next_release(svn, module, options.area)
     svn.setLogMessage((svn_mess%(module, version, options.message)).strip())
 
     # setup svn directories
@@ -172,13 +169,16 @@ def main():
             "server your job is built on for epics modules. Default is "
             "from your environment")
     parser.add_option("-m", "--message", action="store", type="string",
-        dest="message",
+        dest="message", default="",
         help="Add user message to the end of the default svn commit message. "
             "The message will be '%s'" %
             (svn_mess % ("<module_name>", "<release_#>", "<message>")))
     parser.add_option(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
+    parser.add_option(
+        "-g", "--git", action="store_true", dest="git",
+        help="Release from a git tag from the diamond gitolite repository")
 
     group = OptionGroup(
         parser, "Build operating system options",
