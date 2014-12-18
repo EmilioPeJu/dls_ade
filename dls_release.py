@@ -25,38 +25,37 @@ def svn_next_release(svn, module, area):
             release_paths.append(os.path.basename(node.path))
     if len(release_paths) == 0:
             version = "0-1"
-        else:
-            from dls_environment import environment
-            last_release = environment().sortReleases(release_paths)[-1]. \
-                split("/")[-1]
-            print "Last release for %s was %s"%(module, last_release)
-            numre = re.compile("\d+|[^\d]+")
-            tokens = numre.findall(last_release)
-            for i in reversed(range(len(tokens))):
-                if tokens[i].isdigit():
-                    tokens[i] = str(int(tokens[i]) + 1)
-                    break
-            version = "".join(tokens)
+    else:
+        from dls_environment import environment
+        last_release = environment().sortReleases(release_paths)[-1]. \
+                       split("/")[-1]
+        print "Last release for %s was %s" % (module, last_release)
+        numre = re.compile("\d+|[^\d]+")
+        tokens = numre.findall(last_release)
+        for i in range(0, len(tokens), -1):
+            if tokens[i].isdigit():
+                tokens[i] = str(int(tokens[i]) + 1)
+                break
+        version = "".join(tokens)
+    return version
 
 def release(module, version, options):
     """script for releasing modules"""
 
-    # Import svn client and initialise it
-    svn = svnClient()
-
-    # Generate a next minor version number, if required
-    if options.next_version and options.git is None:
-        svn_next_release(svn, module, options.area)
-    svn.setLogMessage((svn_mess%(module, version, options.message)).strip())
-
-    # setup svn directories
-    if options.branch:
-        src_dir = os.path.join(
-            svn.branchModule(module, options.area), options.branch)
-    else:
-        src_dir = svn.devModule(module, options.area)
-
-    rel_dir = os.path.join(svn.prodModule(module, options.area), version)
+    if not options.git:
+        svn = svnClient()
+        if options.next_version:
+            version = svn_next_release(svn, module, options.area)
+        svn.setLogMessage((svn_mess%(module, version, options.message)).strip())
+        # setup svn directories
+        if options.branch:
+            src_dir = os.path.join(
+                svn.branchModule(module, options.area), options.branch)
+        else:
+            src_dir = svn.devModule(module, options.area)
+        rel_dir = os.path.join(svn.prodModule(module, options.area), version)
+        assert svn.pathcheck(src_dir), \
+            src_dir + ' does not exist in the repository.'
 
     # Create build object for version
     if options.rhel_version:
@@ -79,9 +78,6 @@ def release(module, version, options):
     if options.area in ("ioc", "support"):
         print "and epics %s" % build.epics(),
     print
-
-    # check for existence of directories
-    assert svn.pathcheck(src_dir), src_dir+' does not exist in the repository.'
 
     # check if we really meant to release with this epics version
     if options.area in ["ioc", "support"]:
