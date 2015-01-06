@@ -17,11 +17,10 @@ import dlsbuild
 svn_mess = "%s: Released version %s. %s"
 
 def svn_next_release(svn, module, area):
-    import pysvn
     release_paths = []
     source = svn.prodModule(module, area)
     if svn.pathcheck(source):
-        for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
+        for node, _ in svn.list(source, depth=svn.depth.immediates)[1:]:
             release_paths.append(os.path.basename(node.path))
     if len(release_paths) == 0:
             version = "0-1"
@@ -39,9 +38,33 @@ def svn_next_release(svn, module, area):
         version = "".join(tokens)
     return version
 
+def svn_check_epics_version(svn, src_dir, build_epics, epics_version):
+    conf_release = svn.cat(src_dir + "/configure/RELEASE")
+    module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
+                              conf_release)
+    if module_epics:
+        module_epics = module_epics[0]
+    if not epics_version and module_epics != build_epics:
+        sure = raw_input(
+            "You are trying to release a %s module under %s without "
+            "using the -e flag. Are you sure [y/n]?" %
+            (module_epics, build_epics)).lower()
+        if sure != "y":
+            sys.exit()
+    
 def release(module, version, options):
     """script for releasing modules"""
 
+    # Create build object for version
+    if options.rhel_version:
+        build = dlsbuild.redhat_build(options.rhel_version, options.epics_version)
+    elif options.windows:
+        build = dlsbuild.windows_build(options.windows, options.epics_version)
+    else:
+        build = dlsbuild.default_build(options.epics_version)
+    build.set_area(options.area)
+    build.set_force(options.force)
+    
     if not options.git:
         svn = svnClient()
         if options.next_version:
@@ -57,17 +80,6 @@ def release(module, version, options):
         assert svn.pathcheck(src_dir), \
             src_dir + ' does not exist in the repository.'
 
-    # Create build object for version
-    if options.rhel_version:
-        build = dlsbuild.redhat_build(options.rhel_version, options.epics_version)
-    elif options.windows:
-        build = dlsbuild.windows_build(options.windows, options.epics_version)
-    else:
-        build = dlsbuild.default_build(options.epics_version)
-
-    build.set_area(options.area)
-    build.set_force(options.force)
-
     # print messages
     if options.branch:
         btext = "branch %s" % options.branch
@@ -81,23 +93,8 @@ def release(module, version, options):
 
     # check if we really meant to release with this epics version
     if options.area in ["ioc", "support"]:
-        os.system("svn export " + src_dir +
-                  "/configure/RELEASE /tmp/RELEASE > /dev/null")
-        if os.path.isfile("/tmp/RELEASE"):
-            text = open("/tmp/RELEASE").read()
-            os.system("rm -rf /tmp/RELEASE")
-            module_epics = \
-                re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", text)
-            if module_epics:
-                module_epics = module_epics[0]
-            build_epics = build.epics().replace("_64", "")
-            if not options.epics_version and module_epics != build_epics:
-                sure = raw_input(
-                    "You are trying to release a %s module under %s without "
-                    "using the -e flag. Are you sure [y/n]?" %
-                    (module_epics, build_epics)).lower()
-                if sure != "y":
-                    sys.exit()
+        svn_check_epics_version(svn, src_dir, build.epics().replace("_64", ""),
+                                options.epics_version)
 
     # If this release already exists, test from the release directory, not the
     # trunk.
