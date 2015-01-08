@@ -57,7 +57,10 @@ def release(module, version, options):
 
     # Create build object for version
     if options.rhel_version:
-        build = dlsbuild.redhat_build(options.rhel_version, options.epics_version)
+        build = dlsbuild.redhat_build(
+            options.rhel_version, 
+            options.epics_version
+            )
     elif options.windows:
         build = dlsbuild.windows_build(options.windows, options.epics_version)
     else:
@@ -202,7 +205,8 @@ def main():
         module = args[0]
 
     if options.area == "etc" and module in [ "build", "redirector" ]:
-        parser.error("Cannot release etc/build or etc/redirector as modules - use configure system instead")
+        parser.error("Cannot release etc/build or etc/redirector as modules"
+                     " - use configure system instead")
 
     if options.next_version:
         version = None
