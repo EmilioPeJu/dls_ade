@@ -6,13 +6,13 @@ class BaseVCS(object):
 
 
     @abc.abstractmethod
-    def check_epics_version(self, build_epics, epics_version):
+    def check_epics_version(self, src_dir, build_epics, epics_version):
         ''' Compare epics version on machine and requested, confirm choice '''
         raise NotImplementedError
 
 
     @abc.abstractmethod
-    def next_release(self, module, area):
+    def next_release(self, module, area, options):
         ''' Work out the release number by checking source directory '''
         raise NotImplementedError
 
@@ -37,5 +37,3 @@ class BaseVCS(object):
         raise NotImplementedError
 
 
-    # read/write-able attribute
-    # LogMessage = abc.abstractproperty(getLogMessage,setLogMessage)
