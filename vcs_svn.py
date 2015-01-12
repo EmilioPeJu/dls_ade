@@ -1,4 +1,4 @@
-import abc
+import abc, os
 from vcs import BaseVCS
 from dls_environment.svn import svnClient
 
