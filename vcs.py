@@ -29,11 +29,13 @@ class BaseVCS(object):
         raise NotImplementedError
 
 
-    def getLogMessage(self):
-        return "Should never see this"
+    @abc.abstractmethod
+    def setLogMessage(self, message):
+        '''
+        abstraction for callback function to return message string for log
+        '''
+        raise NotImplementedError
 
-    def setLogMessage(self,newmessage):
-        return
 
     # read/write-able attribute
-    LogMessage = abc.abstractproperty(getLogMessage,setLogMessage)
+    # LogMessage = abc.abstractproperty(getLogMessage,setLogMessage)

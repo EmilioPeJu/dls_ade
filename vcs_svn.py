@@ -1,8 +1,12 @@
 import abc
 from vcs import BaseVCS
-
+from dls_environment.svn import svnClient
 
 class vcs_svn(BaseVCS):
+
+    def __init__(self):
+        # self._LogMessage = ''
+        self.client = svnClient()
 
 
     def check_epics_version(self, build_epics, epics_version):
@@ -34,15 +38,17 @@ class vcs_svn(BaseVCS):
         print src_dir, rel_dir
 
 
-    _LogMessage = ''
-
-    def getLogMessage(self):
-        return self._LogMessage
+    # _LogMessage = ''
 
     def setLogMessage(self, message):
-        self._LogMessage = message
+        ''' callback function to return message string for log '''
+        self.client.setLogMessage(message)
 
-    LogMessage = property(getLogMessage,setLogMessage)
+    # def setLogMessage(self, message):
+    #     self.client.setLogMessage(message)
+    #     self._LogMessage = message
+
+    # LogMessage = property(getLogMessage,setLogMessage)
 
 
 # sanity check: ensure class fully implements the interface (abc)
