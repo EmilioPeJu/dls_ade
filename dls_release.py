@@ -1,9 +1,8 @@
 #!/bin/env dls-python
-# This script comes from the dls_environment python module
 import os
 import sys
 import re
-from dls_environment.svn import svnClient
+import vcs_svn
 import dlsbuild
 
 usage = """%prog [options] <module_name> <release_#>
@@ -17,45 +16,7 @@ prod."""
 
 
 # set default variables
-svn_mess = "%s: Released version %s. %s"
-
-
-def svn_next_release(svn, module, area):
-    release_paths = []
-    source = svn.prodModule(module, area)
-    if svn.pathcheck(source):
-        for node, _ in svn.list(source, depth=svn.depth.immediates)[1:]:
-            release_paths.append(os.path.basename(node.path))
-    if len(release_paths) == 0:
-            version = "0-1"
-    else:
-        from dls_environment import environment
-        last_release = environment().sortReleases(release_paths)[-1]. \
-            split("/")[-1]
-        print "Last release for %s was %s" % (module, last_release)
-        numre = re.compile("\d+|[^\d]+")
-        tokens = numre.findall(last_release)
-        for i in range(0, len(tokens), -1):
-            if tokens[i].isdigit():
-                tokens[i] = str(int(tokens[i]) + 1)
-                break
-        version = "".join(tokens)
-    return version
-
-
-def svn_check_epics_version(svn, src_dir, build_epics, epics_version):
-    conf_release = svn.cat(src_dir + "/configure/RELEASE")
-    module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
-                              conf_release)
-    if module_epics:
-        module_epics = module_epics[0]
-    if not epics_version and module_epics != build_epics:
-        sure = raw_input(
-            "You are trying to release a %s module under %s without "
-            "using the -e flag. Are you sure [y/n]?" %
-            (module_epics, build_epics)).lower()
-        if sure != "y":
-            sys.exit()
+log_mess = "%s: Released version %s. %s"
 
 
 def release(module, version, options):
@@ -65,8 +26,7 @@ def release(module, version, options):
     if options.rhel_version:
         build = dlsbuild.redhat_build(
             options.rhel_version,
-            options.epics_version
-            )
+            options.epics_version)
     elif options.windows:
         build = dlsbuild.windows_build(options.windows, options.epics_version)
     else:
@@ -74,21 +34,21 @@ def release(module, version, options):
     build.set_area(options.area)
     build.set_force(options.force)
 
-    if not options.git:
-        svn = svnClient()
-        if options.next_version:
-            version = svn_next_release(svn, module, options.area)
-        svn.setLogMessage(
-            (svn_mess % (module, version, options.message)).strip())
-        # setup svn directories
-        if options.branch:
-            src_dir = os.path.join(
-                svn.branchModule(module, options.area), options.branch)
-        else:
-            src_dir = svn.devModule(module, options.area)
-        rel_dir = os.path.join(svn.prodModule(module, options.area), version)
-        assert svn.pathcheck(src_dir), \
-            src_dir + ' does not exist in the repository.'
+    if options.git:
+        vcs = vcs_svn.Svn()
+    else:
+        vcs = vcs_svn.Svn()
+
+    if options.next_version:
+        version = vcs.next_release(module, options.area)
+    vcs.set_log_message(
+        (log_mess % (module, version, options.message)).strip())
+
+    src_dir = vcs.src_dir(module, options)
+    rel_dir = vcs.rel_dir(module, options, version)
+
+    assert vcs.path_check(src_dir), \
+        src_dir + ' does not exist in the repository.'
 
     # print messages
     if options.branch:
@@ -103,12 +63,13 @@ def release(module, version, options):
 
     # check if we really meant to release with this epics version
     if options.area in ["ioc", "support"]:
-        svn_check_epics_version(svn, src_dir, build.epics().replace("_64", ""),
-                                options.epics_version)
+        vcs.check_epics_version(
+            src_dir, build.epics().replace("_64",""), options.epics_version)
+        
 
     # If this release already exists, test from the release directory, not the
     # trunk.
-    if svn.pathcheck(rel_dir):
+    if vcs.path_check(rel_dir):
         src_dir = rel_dir
 
     # Do the test build
@@ -131,15 +92,14 @@ def release(module, version, options):
 
     # Copy the source to the release directory in subversion
     if src_dir != rel_dir and not options.test_only:
-        svn.mkdir(svn.prodModule(module, options.area))
-        svn.copy(src_dir, rel_dir)
+        vcs.checkout_module(module, options.area, src_dir, rel_dir)
         src_dir = rel_dir
         print "Created release in svn directory: " + rel_dir
 
     test = "work" if options.work_build else options.test_only
 
     # Submit the build job
-    build.submit(src_dir, module, version, test=test)
+    build.submit(rel_dir, module, version, test=test)
 
 
 def main():
@@ -180,7 +140,7 @@ def main():
         default="",
         help="Add user message to the end of the default svn commit message. "
         "The message will be '%s'" %
-        (svn_mess % ("<module_name>", "<release_#>", "<message>")))
+        (log_mess % ("<module_name>", "<release_#>", "<message>")))
     parser.add_option(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
@@ -230,7 +190,7 @@ def main():
     else:
         version = args[1].replace(".", "-")
 
-    # release(module, version, options)
+    release(module, version, options)
 
 if __name__ == "__main__":
     main()
