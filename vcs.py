@@ -1,5 +1,6 @@
 import abc
 
+
 class BaseVCS(object):
     ''' Abstract interface to a version control system class '''
     __metaclass__ = abc.ABCMeta
@@ -16,7 +17,7 @@ class BaseVCS(object):
         ''' Work out the release number by checking source directory '''
         raise NotImplementedError
 
-    
+
     @abc.abstractmethod
     def pathcheck(self, path):
         ''' search for path '''
@@ -35,5 +36,3 @@ class BaseVCS(object):
         abstraction for callback function to return message string for log
         '''
         raise NotImplementedError
-
-

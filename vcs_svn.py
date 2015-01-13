@@ -1,6 +1,8 @@
-import abc, os
+import abc
+import os
 from vcs import BaseVCS
 from dls_environment.svn import svnClient
+
 
 class vcs_svn(BaseVCS):
 
@@ -34,8 +36,9 @@ class vcs_svn(BaseVCS):
         source = self.client.prodModule(module, area)
 
         if self.client.pathcheck(source):
-            for node, _ in self.client.list(source, \
-                depth=self.client.depth.immediates)[1:]:
+            for node, _ in self.client.list(
+                    source,
+                    depth=self.client.depth.immediates)[1:]:
                 release_paths.append(os.path.basename(node.path))
 
         if len(release_paths) == 0:
@@ -43,7 +46,7 @@ class vcs_svn(BaseVCS):
         else:
             from dls_environment import environment
             last_release = environment().sortReleases(release_paths)[-1]. \
-                           split("/")[-1]
+                split("/")[-1]
             print "Last release for %s was %s" % (module, last_release)
             numre = re.compile("\d+|[^\d]+")
             tokens = numre.findall(last_release)
@@ -79,9 +82,10 @@ class vcs_svn(BaseVCS):
 
         if src_dir != rel_dir and not options.test_only:
             self.mkdir(self.client.prodModule(module, area))
-            self.copy(src_dir,rel_dir)
+            self.copy(src_dir, rel_dir)
             src_dir = rel_dir
             print "Created release in svn directory: " + rel_dir
+
 
     def mkdir(self, module, area):
         ''' svn specific; create new directory (used for creating release) '''
@@ -90,7 +94,7 @@ class vcs_svn(BaseVCS):
 
     def copy(self, src_dir, rel_dir):
         ''' svn specific; copy dir contents (used for creating release) '''
-        self.client.copy(src_dir,rel_dir)
+        self.client.copy(src_dir, rel_dir)
 
 
     def setLogMessage(self, message):
@@ -99,4 +103,4 @@ class vcs_svn(BaseVCS):
 
 
 # sanity check: ensure class fully implements the interface (abc)
-assert issubclass(vcs_svn,BaseVCS)
+assert issubclass(vcs_svn, BaseVCS)

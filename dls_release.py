@@ -1,20 +1,24 @@
 #!/bin/env dls-python
 # This script comes from the dls_environment python module
+import os
+import sys
+import re
+from dls_environment.svn import svnClient
+import dlsbuild
 
 usage = """%prog [options] <module_name> <release_#>
 
 Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
-the release in svn. It will then write a build request file to the build server,
-causing it to schedule a checkout and build of the svn release in prod."""
+the release in svn. It will then write a build request file to the build
+server, causing it to schedule a checkout and build of the svn release in
+prod."""
 
-import os, sys, re
-from dls_environment.svn import svnClient
-import dlsbuild
 
 # set default variables
 svn_mess = "%s: Released version %s. %s"
+
 
 def svn_next_release(svn, module, area):
     release_paths = []
@@ -27,7 +31,7 @@ def svn_next_release(svn, module, area):
     else:
         from dls_environment import environment
         last_release = environment().sortReleases(release_paths)[-1]. \
-                       split("/")[-1]
+            split("/")[-1]
         print "Last release for %s was %s" % (module, last_release)
         numre = re.compile("\d+|[^\d]+")
         tokens = numre.findall(last_release)
@@ -37,6 +41,7 @@ def svn_next_release(svn, module, area):
                 break
         version = "".join(tokens)
     return version
+
 
 def svn_check_epics_version(svn, src_dir, build_epics, epics_version):
     conf_release = svn.cat(src_dir + "/configure/RELEASE")
@@ -51,14 +56,15 @@ def svn_check_epics_version(svn, src_dir, build_epics, epics_version):
             (module_epics, build_epics)).lower()
         if sure != "y":
             sys.exit()
-    
+
+
 def release(module, version, options):
     """script for releasing modules"""
 
     # Create build object for version
     if options.rhel_version:
         build = dlsbuild.redhat_build(
-            options.rhel_version, 
+            options.rhel_version,
             options.epics_version
             )
     elif options.windows:
@@ -67,12 +73,13 @@ def release(module, version, options):
         build = dlsbuild.default_build(options.epics_version)
     build.set_area(options.area)
     build.set_force(options.force)
-    
+
     if not options.git:
         svn = svnClient()
         if options.next_version:
             version = svn_next_release(svn, module, options.area)
-        svn.setLogMessage((svn_mess%(module, version, options.message)).strip())
+        svn.setLogMessage(
+            (svn_mess % (module, version, options.message)).strip())
         # setup svn directories
         if options.branch:
             src_dir = os.path.join(
@@ -125,7 +132,7 @@ def release(module, version, options):
     # Copy the source to the release directory in subversion
     if src_dir != rel_dir and not options.test_only:
         svn.mkdir(svn.prodModule(module, options.area))
-        svn.copy(src_dir, rel_dir )
+        svn.copy(src_dir, rel_dir)
         src_dir = rel_dir
         print "Created release in svn directory: " + rel_dir
 
@@ -134,21 +141,24 @@ def release(module, version, options):
     # Submit the build job
     build.submit(src_dir, module, version, test=test)
 
+
 def main():
     # Parse command line options
     from dls_environment.options import OptionParser
     from optparse import OptionGroup
     parser = OptionParser(usage)
-    parser.add_option("-b", "--branch", action="store", type="string",
-        dest="branch", help="Release from a branch BRANCH")
-    parser.add_option("-f", "--force", action="store_true", dest="force",
+    parser.add_option(
+        "-b", "--branch", action="store", type="string", dest="branch",
+        help="Release from a branch BRANCH")
+    parser.add_option(
+        "-f", "--force", action="store_true", dest="force",
         help="force a release. If the release exists in prod it is removed. "
-            "If the release exists in svn it is exported to prod, otherwise "
-            "the release is created in svn from the trunk and exported to prod")
-    parser.add_option("-t", "--no-test-build",
-        action="store_true", dest="skip_test",
+        "If the release exists in svn it is exported to prod, otherwise "
+        "the release is created in svn from the trunk and exported to prod")
+    parser.add_option(
+        "-t", "--no-test-build", action="store_true", dest="skip_test",
         help="If set, this will skip the local test build "
-             "and just do a release")
+        "and just do a release")
     parser.add_option(
         "-l", "--local-build-only", action="store_true", dest="local_build",
         help="If set, this will only do the local test build and no more.")
@@ -159,16 +169,18 @@ def main():
         "-W", "--work_build", action="store_true", dest="work_build",
         help="If set, this will do a test build on the build server "
              "in the modules work area")
-    parser.add_option("-e", "--epics_version", action="store", type="string",
+    parser.add_option(
+        "-e", "--epics_version", action="store", type="string",
         dest="epics_version",
         help="Change the epics version. This will determine which build "
-            "server your job is built on for epics modules. Default is "
-            "from your environment")
-    parser.add_option("-m", "--message", action="store", type="string",
-        dest="message", default="",
+        "server your job is built on for epics modules. Default is "
+        "from your environment")
+    parser.add_option(
+        "-m", "--message", action="store", type="string", dest="message",
+        default="",
         help="Add user message to the end of the default svn commit message. "
-            "The message will be '%s'" %
-            (svn_mess % ("<module_name>", "<release_#>", "<message>")))
+        "The message will be '%s'" %
+        (svn_mess % ("<module_name>", "<release_#>", "<message>")))
     parser.add_option(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
@@ -179,23 +191,26 @@ def main():
     group = OptionGroup(
         parser, "Build operating system options",
         "Note: The following options are mutually exclusive - only use one")
-    group.add_option("-r", "--rhel_version", action="store", type="string",
+    group.add_option(
+        "-r", "--rhel_version", action="store", type="string",
         dest="rhel_version",
         help="change the rhel version of the build. This will determine which "
-            "build server your job is build on for non-epics modules. Default "
-            "is from /etc/redhat-release. Can be 4,5,5_64")
-    group.add_option("-w", "--windows", action="store", dest="windows",
+        "build server your job is build on for non-epics modules. Default "
+        "is from /etc/redhat-release. Can be 4,5,5_64")
+    group.add_option(
+        "-w", "--windows", action="store", dest="windows",
         help="Release the module or IOC only for the Windows version. "
-            "Note that the windows build server can not create a test build. "
-            "A configure/RELEASE.win32-x86 or configure/RELEASE.windows64 file "
-            "must exist in the module in order for the build to start. "
-            "If the module has already been released with the same version "
-            "the build server will rebuild that release for windows. "
-            "Existing unix builds of the same module version will not be "
-            "affected. Can be 32 or 64")
+        "Note that the windows build server can not create a test build. "
+        "A configure/RELEASE.win32-x86 or configure/RELEASE.windows64 file"
+        " must exist in the module in order for the build to start. "
+        "If the module has already been released with the same version "
+        "the build server will rebuild that release for windows. "
+        "Existing unix builds of the same module version will not be "
+        "affected. Can be 32 or 64")
     parser.add_option_group(group)
 
     options, args = parser.parse_args()
+    print "options: ", options, "args: ", args
 
     # set variables - the first is a bit of a backwards compatible hack, for
     # now.
@@ -204,7 +219,7 @@ def main():
     else:
         module = args[0]
 
-    if options.area == "etc" and module in [ "build", "redirector" ]:
+    if options.area == "etc" and module in ["build", "redirector"]:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
 
@@ -215,7 +230,7 @@ def main():
     else:
         version = args[1].replace(".", "-")
 
-    release(module, version, options)
+    # release(module, version, options)
 
 if __name__ == "__main__":
     main()
