@@ -62,9 +62,9 @@ def default_build(epics):
     """Return the default build object for this platform"""
     os = platform.system()
     if os == "Windows":
-        return windows_build(None, epics)
+        return WindowsBuild(None, epics)
     else:
-        return redhat_build(None, epics)
+        return RedhatBuild(None, epics)
 
 
 def default_server():
@@ -73,7 +73,7 @@ def default_server():
     if os == "Windows":
         server = "windows%s-%s" % (
             platform.version().split(".")[0], platform.machine())
-        return windows_build(server, epics)
+        return WindowsBuild(server, epics)
     else:
         server = "%s%s-%s" % (
             platform.dist()[0], platform.dist()[1].split(".")[0],
@@ -96,7 +96,7 @@ def get_email(user):
         return "%s@rl.ac.uk" % user
 
 
-class builder:
+class Builder:
     "Base class for Diamond build server submissions"
 
     def __init__(self, bld_os, server=None, epics=None):
@@ -148,8 +148,7 @@ class builder:
         assert self.epics() in build_servers[self.os][self.server], \
             "EPICS version %s not allowed for server %s" % (
                 self.epics(),
-                self.server
-                )
+                self.server)
 
     def set_area(self, area):
         """Sets the release area to use in the build"""
@@ -223,8 +222,7 @@ class builder:
         local = default_server()
         remote = self.get_server()
         return local == remote or (
-            local == "redhat5-x86_64" and remote == "redhat5-i686"
-            )
+            local == "redhat5-x86_64" and remote == "redhat5-i686")
 
     def test(self, src_dir, module, version):
         """Builds module version on the local system using the code in the
@@ -263,6 +261,7 @@ class builder:
         module is built in work, if it is anything else that evaluates to True
         it is built in the test directory. Otherwise it is a normal production
         build."""
+
         build_name = self.build_name("build", module, version)
         if test == "work":
             build_dir = self.dls_env.devArea(self.area)
@@ -278,17 +277,17 @@ class builder:
         # generate the filename
         pathname = os.path.join(root_dir, "work", "etc", "build", "queue")
         filename = "%s.%s" % (params["build_name"], self.server)
+        print pathname, filename
 
         # Submit the build script
-        f = file(os.path.join(pathname, filename), "w")
+        f = open(os.path.join(pathname, filename), "w")
         f.write(self.build_script(params))
         f.close()
 
         # Create a log of the build
         f = file(
             os.path.expanduser(os.path.join("~", ".dls-release-log")),
-            "a"
-            )
+            "a")
         f.write(" ".join([
             params["build_dir"], params["module"], params["version"],
             params["build_name"], self.server]) + "\n")
@@ -297,48 +296,47 @@ class builder:
         print "Build request file: %s\nCreated in : %s" % (filename, pathname)
 
 
-class windows_build(builder):
+class WindowsBuild(Builder):
     """Implements the build class for Windows"""
     def __init__(self, server, epics):
-        builder.__init__(self, "Windows", server, epics)
+        Builder.__init__(self, "Windows", server, epics)
         self.exten = ".bat"
 
     def build_script(self, params):
         for name in params.keys():
             if params[name][:1] == "/":
                 params[name] = params[name].replace(root_dir, windows_root_dir)
-#                params[name] = params[name].replace("/", "\\")
 
         if self.server == "windows5-x86":
             params["make"] = "mingw32-make"
         else:
             params["make"] = "make"
 
-        return builder._script(self, params, "@echo on", "set %s=%s")
+        return Builder._script(self, params, "@echo on", "set %s=%s")
 
 
-class redhat_build(builder):
+class RedhatBuild(Builder):
     """Implements the build class for Red Hat"""
     def __init__(self, server, epics):
-        builder.__init__(self, "Linux", server, epics)
+        Builder.__init__(self, "Linux", server, epics)
         self.exten = ".sh"
 
     def build_script(self, params):
-        return builder._script(self, params, "#!/bin/bash", "%s=%s")
+        return Builder._script(self, params, "#!/bin/bash", "%s=%s")
 
 
-class archive_build(builder):
+class ArchiveBuild(Builder):
     """Implements the build class for archiving or de-archiving modules. The
     constructor takes a single parameter which, if true, dearchives, otherwise
     the module will be archived."""
     def __init__(self, untar):
-        builder.__init__(self, "Linux", "redhat5-i686")
+        Builder.__init__(self, "Linux", "redhat5-i686")
         self.exten = ".sh"
         self.action = "unarchive" if untar else "archive"
 
     def build_script(self, params):
         params["action"] = self.action
-        return builder._script(self, params, "#!/bin/bash", "%s=%s")
+        return Builder._script(self, params, "#!/bin/bash", "%s=%s")
 
     def script_file(self):
         return os.path.join(build_scripts, self.os, "archive.sh")
@@ -346,12 +344,12 @@ class archive_build(builder):
 
 if __name__ == "__main__":
     # test
-    bld = windows_build("64")
+    bld = WindowsBuild("64")
     bld.set_area("support")
     bld.set_epics("R3.14.12.1")
     print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
 
-    bld = archive_build(True)
+    bld = ArchiveBuild(True)
     bld.set_area("archive")
     bld.set_epics("R3.14.12.1")
     print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
