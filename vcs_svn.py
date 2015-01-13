@@ -1,10 +1,11 @@
 import abc
 import os
+import re
 from vcs import BaseVCS
 from dls_environment.svn import svnClient
 
 
-class vcs_svn(BaseVCS):
+class Svn(BaseVCS):
 
     def __init__(self):
         self.client = svnClient()
@@ -59,32 +60,16 @@ class vcs_svn(BaseVCS):
         return version
 
 
-    def pathcheck(self, path):
+    def path_check(self, path):
         ''' search for path '''
-        self.client.pathcheck(path)
+        return self.client.pathcheck(path)
 
 
-    def create_release(self, module, area, options):
+    def checkout_module(self, module, area, src_dir, rel_dir):
         ''' create release of module using mkdir and copy '''
-        print "this should use both mkdir and copy methods"
-        raise NotImplementedError
-
-        if options.next_version:
-            version = next_release(module, area)
-        if options.branch:
-            src_dir = os.path.join(
-                self.client.branchModule(module, area), options.branch)
-        else:
-            src_dir = self.client.devModule(module, area)
-        rel_dir = os.path.join(self.client.prodModule(module, area), version)
-        assert self.pathcheck(src_dir), \
-            src_dir + ' does not exist in the repository.'
-
-        if src_dir != rel_dir and not options.test_only:
-            self.mkdir(self.client.prodModule(module, area))
-            self.copy(src_dir, rel_dir)
-            src_dir = rel_dir
-            print "Created release in svn directory: " + rel_dir
+        # print "this should use both mkdir and copy methods"
+        self.mkdir(self.client.prodModule(module, area))
+        self.copy(src_dir, rel_dir)
 
 
     def mkdir(self, module, area):
@@ -97,10 +82,31 @@ class vcs_svn(BaseVCS):
         self.client.copy(src_dir, rel_dir)
 
 
-    def setLogMessage(self, message):
+    def set_log_message(self, message):
         ''' callback function to return message string for log '''
         self.client.setLogMessage(message)
 
 
+    def get_src_dir(self, module, options):
+        '''
+        Find/create the source directory from which to release the module.
+        '''
+        if options.branch:
+            return os.path.join(
+                self.client.branchModule(module, options.area),
+                options.branch)
+        else:
+            return self.client.devModule(module, options.area)
+
+
+    def get_rel_dir(self, module, options, version):
+        '''
+        Create the release directory the module will be released into.
+        '''
+        return os.path.join(
+            self.client.prodModule(module, options.area),
+            version)
+
+
 # sanity check: ensure class fully implements the interface (abc)
-assert issubclass(vcs_svn, BaseVCS)
+assert issubclass(Svn, BaseVCS)
