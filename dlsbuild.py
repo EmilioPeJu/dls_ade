@@ -16,7 +16,8 @@ build_scripts = os.path.join(
 
 # Root directory to perform build operations.
 # For testing/development, this can be changed to redirect build scripts away
-# from the build server, e.g. a user's home directory.
+# from the build server, e.g. a user's home directory. Just be sure that it
+# contains the expected directories (e.g. work/etc/build/queue).
 # Similarly defined for windows, as it replaces the root dir in the windows
 # builder method.
 root_dir = "/dls_sw"
