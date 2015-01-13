@@ -4,7 +4,8 @@ import time
 import getpass
 import subprocess
 import ldap
-import tempfile, stat
+import tempfile
+import stat
 import shutil
 
 from dls_environment import environment
@@ -12,6 +13,14 @@ from dls_environment import environment
 build_scripts = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "dlsbuild_scripts")
 
+
+# Root directory to perform build operations.
+# For testing/development, this can be changed to redirect build scripts away
+# from the build server, e.g. a user's home directory.
+# Similarly defined for windows, as it replaces the root dir in the windows
+# builder method.
+root_dir = "/dls_sw"
+windows_root_dir = "W:/"
 
 # A list of build servers and the EPICS releases they support
 build_servers = {
@@ -24,9 +33,10 @@ build_servers = {
     "Windows": {
         "windows5-x86"   : ["R3.14.11", "R3.14.10", "R3.14.12.1"],
         "windows6-x86"   : ["R3.14.12.3"],
-        "windows6-AMD64" : ["R3.14.12.3", "R3.14.12.1" ]
+        "windows6-AMD64" : ["R3.14.12.3", "R3.14.12.1"]
     }
 }
+
 
 def epics_servers(os, epics):
     """Return list of servers that can build a version of epics"""
@@ -40,12 +50,13 @@ server_shortcut = {
     "5_64": "redhat5-x86_64",
     "6": "redhat6-x86_64",
     "32": "windows6-x86",
-    "64": "windows6-AMD64" }
+    "64": "windows6-AMD64"}
 
 os_list = set(os.listdir(build_scripts))
 os_list -= set([".svn"])
 svn_rw = os.environ["SVN_ROOT"]
 svn_ro = "http://serv0002.cs.diamond.ac.uk/repos/controls"
+
 
 def default_build(epics):
     """Return the default build object for this platform"""
@@ -54,6 +65,7 @@ def default_build(epics):
         return windows_build(None, epics)
     else:
         return redhat_build(None, epics)
+
 
 def default_server():
     """Return the default server for this machine"""
@@ -67,6 +79,7 @@ def default_server():
             platform.dist()[0], platform.dist()[1].split(".")[0],
             platform.machine())
     return server
+
 
 def get_email(user):
     """Get a users email address from Active directory using LDAP"""
@@ -87,18 +100,19 @@ class builder:
     "Base class for Diamond build server submissions"
 
     def __init__(self, bld_os, server=None, epics=None):
-        if server in server_shortcut.keys(): server = server_shortcut[server]
+        if server in server_shortcut.keys():
+            server = server_shortcut[server]
         assert bld_os in os_list, "Build operating system not supported"
-        
+
         self.os = bld_os
         self.force = False
         self.area = ""
         self.user = getpass.getuser()
         self.email = get_email(self.user)
         self.dls_env = environment()
-                
+
         if epics is None:
-            # if we have not specifier the epics version        
+            # if we have not specifier the epics version
             if server is None:
                 # use the default server and epics from env
                 self.server = default_server()
@@ -109,10 +123,10 @@ class builder:
                     self.server = "redhat5-i686"
             else:
                 # set specified server
-                self.server = server                
+                self.server = server
             # set epics from server
             if self.epics() not in build_servers[self.os][self.server]:
-                self.set_epics(build_servers[self.os][self.server][0])                
+                self.set_epics(build_servers[self.os][self.server][0])
         else:
             # if we have specified epics version then set it
             self.set_epics(epics)
@@ -124,15 +138,18 @@ class builder:
                     assert servers, \
                         "No %s build servers exist for epics version %s" % \
                         (self.os, self.epics())
-                    self.server = servers[0]                
+                    self.server = servers[0]
             else:
-                # set specified server          
+                # set specified server
                 self.server = server
 
         assert self.server in build_servers[self.os].keys(), \
             "No build server for this OS server: %s" % self.server
         assert self.epics() in build_servers[self.os][self.server], \
-            "EPICS version %s not allowed for server %s" % (self.epics(), self.server)
+            "EPICS version %s not allowed for server %s" % (
+                self.epics(),
+                self.server
+                )
 
     def set_area(self, area):
         """Sets the release area to use in the build"""
@@ -199,13 +216,15 @@ class builder:
             "version"   : version,
             "area"      : self.area,
             "force"     : "true" if self.force else "false",
-            "build_name": build_name }
+            "build_name": build_name}
 
     def local_test_possible(self):
         """Returns True if a local test build is possible"""
         local = default_server()
         remote = self.get_server()
-        return local == remote or (local == "redhat5-x86_64" and remote == "redhat5-i686")
+        return local == remote or (
+            local == "redhat5-x86_64" and remote == "redhat5-i686"
+            )
 
     def test(self, src_dir, module, version):
         """Builds module version on the local system using the code in the
@@ -213,7 +232,7 @@ class builder:
 
         build_name = self.build_name("local", module, version)
         build_dir = os.path.join(
-            "/dls_sw", "work", "etc", "build", "test", build_name)
+            root_dir, "work", "etc", "build", "test", build_name)
 
         print "Test build of module in "+build_dir
 
@@ -249,7 +268,7 @@ class builder:
             build_dir = self.dls_env.devArea(self.area)
         elif test:
             build_dir = os.path.join(
-                "/dls_sw", "work", "etc", "build", "test", build_name)
+                root_dir, "work", "etc", "build", "test", build_name)
         else:
             build_dir = self.dls_env.prodArea(self.area)
 
@@ -257,16 +276,19 @@ class builder:
             build_dir, src_dir, module, version, build_name)
 
         # generate the filename
-        pathname = os.path.join("/dls_sw", "work", "etc", "build", "queue")
+        pathname = os.path.join(root_dir, "work", "etc", "build", "queue")
         filename = "%s.%s" % (params["build_name"], self.server)
 
-        #Submit the build script
+        # Submit the build script
         f = file(os.path.join(pathname, filename), "w")
         f.write(self.build_script(params))
         f.close()
 
         # Create a log of the build
-        f = file(os.path.expanduser(os.path.join("~", ".dls-release-log")), "a")
+        f = file(
+            os.path.expanduser(os.path.join("~", ".dls-release-log")),
+            "a"
+            )
         f.write(" ".join([
             params["build_dir"], params["module"], params["version"],
             params["build_name"], self.server]) + "\n")
@@ -284,7 +306,7 @@ class windows_build(builder):
     def build_script(self, params):
         for name in params.keys():
             if params[name][:1] == "/":
-                params[name] = params[name].replace("/dls_sw/", "W:/")
+                params[name] = params[name].replace(root_dir, windows_root_dir)
 #                params[name] = params[name].replace("/", "\\")
 
         if self.server == "windows5-x86":
@@ -303,6 +325,7 @@ class redhat_build(builder):
 
     def build_script(self, params):
         return builder._script(self, params, "#!/bin/bash", "%s=%s")
+
 
 class archive_build(builder):
     """Implements the build class for archiving or de-archiving modules. The
@@ -326,9 +349,9 @@ if __name__ == "__main__":
     bld = windows_build("64")
     bld.set_area("support")
     bld.set_epics("R3.14.12.1")
-    print "build_script is:\n"+bld.build_script({"test" : "/dls_sw/test"})
+    print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
 
     bld = archive_build(True)
     bld.set_area("archive")
     bld.set_epics("R3.14.12.1")
-    print "build_script is:\n"+bld.build_script({"test" : "/dls_sw/test"})
+    print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
