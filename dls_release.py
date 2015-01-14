@@ -44,8 +44,8 @@ def release(module, version, options):
     vcs.set_log_message(
         (log_mess % (module, version, options.message)).strip())
 
-    src_dir = vcs.src_dir(module, options)
-    rel_dir = vcs.rel_dir(module, options, version)
+    src_dir = vcs.get_src_dir(module, options)
+    rel_dir = vcs.get_rel_dir(module, options, version)
 
     assert vcs.path_check(src_dir), \
         src_dir + ' does not exist in the repository.'
