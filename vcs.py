@@ -7,8 +7,8 @@ class BaseVCS(object):
 
 
     @abc.abstractmethod
-    def check_epics_version(self, src_dir, build_epics, epics_version):
-        ''' Compare epics version on machine and requested, confirm choice. '''
+    def cat(self,filename):
+        ''' Fetch contents of particular file in remote repository '''
         raise NotImplementedError
 
 

@@ -24,11 +24,11 @@ def release(module, version, options):
 
     # Create build object for version
     if options.rhel_version:
-        build = dlsbuild.redhat_build(
+        build = dlsbuild.RedhatBuild(
             options.rhel_version,
             options.epics_version)
     elif options.windows:
-        build = dlsbuild.windows_build(options.windows, options.epics_version)
+        build = dlsbuild.WindowsBuild(options.windows, options.epics_version)
     else:
         build = dlsbuild.default_build(options.epics_version)
     build.set_area(options.area)
@@ -47,6 +47,9 @@ def release(module, version, options):
     src_dir = vcs.get_src_dir(module, options)
     rel_dir = vcs.get_rel_dir(module, options, version)
 
+    # print "src_dir =", src_dir
+    # print "rel_dir =", rel_dir
+
     assert vcs.path_check(src_dir), \
         src_dir + ' does not exist in the repository.'
 
@@ -63,9 +66,20 @@ def release(module, version, options):
 
     # check if we really meant to release with this epics version
     if options.area in ["ioc", "support"]:
-        vcs.check_epics_version(
-            src_dir, build.epics().replace("_64",""), options.epics_version)
-        
+        conf_release = vcs.cat(src_dir+"/configure/RELEASE")
+        module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
+                                  conf_release)
+        if module_epics:
+            module_epics = module_epics[0]
+        build_epics = build.epics().replace("_64","")
+        if not options.epics_version and module_epics != build_epics:
+            sure = raw_input(
+                "You are trying to release a %s module under %s without "
+                "using the -e flag. Are you sure [y/n]?" %
+                (module_epics, build_epics)).lower()
+            if sure != "y":
+                sys.exit()
+    # sys.exit(0)        
 
     # If this release already exists, test from the release directory, not the
     # trunk.

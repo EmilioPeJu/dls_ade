@@ -11,22 +11,9 @@ class Svn(BaseVCS):
         self.client = svnClient()
 
 
-    def check_epics_version(self, src_dir, build_epics, epics_version):
-        ''' Compare epics version on machine and requested, confirm choice '''
-        print src_dir, build_epics, epics_version
-
-        conf_release = self.client.cat(src_dir + "/configure/RELEASE")
-        module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
-                                  conf_release)
-        if module_epics:
-            module_epics = module_epics[0]
-        if not epics_version and module_epics != build_epics:
-            sure = raw_input(
-                "You are trying to release a %s module under %s without "
-                "using the -e flag. Are you sure [y/n]?" %
-                (module_epics, build_epics)).lower()
-            if sure != "y":
-                sys.exit()
+    def cat(self, filename):
+        ''' Fetch contents of particular file in remote repository '''
+        return self.client.cat(filename)
 
 
     def next_release(self, module, area):
@@ -67,7 +54,6 @@ class Svn(BaseVCS):
 
     def checkout_module(self, module, area, src_dir, rel_dir):
         ''' create release of module using mkdir and copy '''
-        # print "this should use both mkdir and copy methods"
         self.mkdir(self.client.prodModule(module, area))
         self.copy(src_dir, rel_dir)
 
