@@ -13,13 +13,13 @@ class Git(BaseVCS):
         pass
 
 
-    def check_epics_version(self, src_dir, build_epics, epics_version):
-        ''' Compare epics version on machine and requested, confirm choice '''
+    def cat(self, filename):
+        ''' Fetch contents of file in remote repository '''
         pass
 
 
-    def next_release(self, module, area):
-        ''' Work out the release number by checking source directory '''
+    def list_releases(self, module, area):
+        ''' Return list of release tags of module '''
         pass
 
 

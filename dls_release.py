@@ -35,20 +35,36 @@ def release(module, version, options):
     build.set_force(options.force)
 
     if options.git:
-        vcs = vcs_svn.Svn()
+        # vcs = vcs_svn.Svn()
+        raise NotImplementedError("git support not implemented yet, go away")
     else:
         vcs = vcs_svn.Svn()
 
     if options.next_version:
-        version = vcs.next_release(module, options.area)
+        releases = vcs.list_releases(module, options.area)
+        if len(releases) == 0:
+            version = "0-1"
+        else:
+            from dls_environment import environment
+            last_release = environment().sortReleases(releases)[-1]. \
+                split("/")[-1]
+            print "Last release for %s was %s" % (module, last_release)
+            numre = re.compile("\d+|[^\d]+")
+            tokens = numre.findall(last_release)
+            for i in range(0, len(tokens), -1):
+                if tokens[i].isdigit():
+                    tokens[i] = str(int(tokens[i]) + 1)
+                    break
+            version = "".join(tokens)
+
     vcs.set_log_message(
         (log_mess % (module, version, options.message)).strip())
 
     src_dir = vcs.get_src_dir(module, options)
     rel_dir = vcs.get_rel_dir(module, options, version)
 
-    # print "src_dir =", src_dir
-    # print "rel_dir =", rel_dir
+    print "src_dir =", src_dir
+    print "rel_dir =", rel_dir
 
     assert vcs.path_check(src_dir), \
         src_dir + ' does not exist in the repository.'
@@ -79,7 +95,9 @@ def release(module, version, options):
                 (module_epics, build_epics)).lower()
             if sure != "y":
                 sys.exit()
-    # sys.exit(0)        
+
+    print "terminating here for testing purposes, after epics version check"
+    sys.exit(0)        
 
     # If this release already exists, test from the release directory, not the
     # trunk.

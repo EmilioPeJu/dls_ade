@@ -12,39 +12,20 @@ class Svn(BaseVCS):
 
 
     def cat(self, filename):
-        ''' Fetch contents of particular file in remote repository '''
+        ''' Fetch contents of file in remote repository '''
         return self.client.cat(filename)
 
 
-    def next_release(self, module, area):
-        ''' Work out the release number by checking source directory '''
-        print module, area
-
+    def list_releases(self, module, area):
+        ''' Return list of releases of module '''
         release_paths = []
         source = self.client.prodModule(module, area)
-
         if self.client.pathcheck(source):
             for node, _ in self.client.list(
                     source,
                     depth=self.client.depth.immediates)[1:]:
                 release_paths.append(os.path.basename(node.path))
-
-        if len(release_paths) == 0:
-                version = "0-1"
-        else:
-            from dls_environment import environment
-            last_release = environment().sortReleases(release_paths)[-1]. \
-                split("/")[-1]
-            print "Last release for %s was %s" % (module, last_release)
-            numre = re.compile("\d+|[^\d]+")
-            tokens = numre.findall(last_release)
-            for i in range(0, len(tokens), -1):
-                if tokens[i].isdigit():
-                    tokens[i] = str(int(tokens[i]) + 1)
-                    break
-            version = "".join(tokens)
-
-        return version
+        return release_paths
 
 
     def path_check(self, path):

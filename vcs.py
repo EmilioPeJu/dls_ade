@@ -19,6 +19,12 @@ class BaseVCS(object):
 
 
     @abc.abstractmethod
+    def list_releases(self):
+        ''' Return list of releases/tags of module '''
+        raise NotImplementedError
+
+
+    @abc.abstractmethod
     def path_check(self, path):
         ''' search for path. '''
         raise NotImplementedError
