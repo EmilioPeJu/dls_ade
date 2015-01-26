@@ -35,18 +35,8 @@ class Svn(BaseVCS):
 
     def checkout_module(self, module, area, src_dir, rel_dir):
         ''' create release of module using mkdir and copy '''
-        self.mkdir(self.client.prodModule(module, area))
-        self.copy(src_dir, rel_dir)
-
-
-    def mkdir(self, module, area):
-        ''' svn specific; create new directory (used for creating release) '''
-        self.client.mkdir(self.client.prodModule(module, area))
-
-
-    def copy(self, src_dir, rel_dir):
-        ''' svn specific; copy dir contents (used for creating release) '''
-        self.client.copy(src_dir, rel_dir)
+        self.client.mkdir(self.client.prodModule(module,area))
+        self.client.copy(src_dir,rel_dir)
 
 
     def set_log_message(self, message):
