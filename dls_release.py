@@ -35,13 +35,16 @@ def release(module, version, options):
     build.set_force(options.force)
 
     if options.git:
-        # vcs = vcs_svn.Svn()
         raise NotImplementedError("git support not implemented yet, go away")
     else:
         vcs = vcs_svn.Svn()
 
     if options.next_version:
+        if options.git:
+            print "When git is specified, a version number must be provided."
+            sys.exit()
         releases = vcs.list_releases(module, options.area)
+        print releases
         if len(releases) == 0:
             version = "0-1"
         else:
@@ -96,8 +99,8 @@ def release(module, version, options):
             if sure != "y":
                 sys.exit()
 
-    print "terminating here for testing purposes, after epics version check"
-    sys.exit(0)        
+    print "terminating here for testing purposes, after epics version check", version
+    sys.exit(0)
 
     # If this release already exists, test from the release directory, not the
     # trunk.
