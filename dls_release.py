@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import vcs_svn
+import vcs_git
 import dlsbuild
 
 usage = """%prog [options] <module_name> <release_#>
@@ -35,7 +36,8 @@ def release(module, version, options):
     build.set_force(options.force)
 
     if options.git:
-        raise NotImplementedError("git support not implemented yet, go away")
+        vcs = vcs_git.Git(module,options.area)
+        # raise NotImplementedError("git support not implemented yet, go away")
     else:
         vcs = vcs_svn.Svn()
 

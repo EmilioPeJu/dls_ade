@@ -5,22 +5,31 @@ from vcs import BaseVCS
 from pkg_resources import require
 require('GitPython')
 import git
+import tempfile
 
 
 class Git(BaseVCS):
 
-    def __init__(self):
-        pass
+    def __init__(self, module, area):
+        # self.client = git
+        remote_base_repo = "dascgitolite@dasc-git.diamond.ac.uk/controls/"
+        remote_repo = remote_base_repo+area+"/"+module
+        repo_name = remote_repo.split("/")[-1]
+        repo_dir = tempfile.mkdtemp(suffix="_"+repo_name)
+        self.client = git.Repo.clone_from(remote_repo, repo_dir)
 
 
     def cat(self, filename):
         ''' Fetch contents of file in remote repository '''
-        pass
+        return self.client.git.cat_file('-p',filename)
 
 
     def list_releases(self, module, area):
         ''' Return list of release tags of module '''
-        pass
+        release_paths = []
+        for tag in self.client.tags:
+            release_paths.append(tag.name)
+        return release_paths
 
 
     def path_check(self, path):

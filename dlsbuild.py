@@ -20,7 +20,7 @@ build_scripts = os.path.join(
 # contains the expected directories (e.g. work/etc/build/queue).
 # Similarly defined for windows, as it replaces the root dir in the windows
 # builder method.
-root_dir = "/dls_sw"
+root_dir = "/home/xfz39520"#"/dls_sw"
 windows_root_dir = "W:/"
 
 # A list of build servers and the EPICS releases they support
