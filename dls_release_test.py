@@ -2,9 +2,9 @@
 
 import unittest
 import dls_release
-from pkg_resources import require
-require("mock")
-from mock import patch, ANY
+# from pkg_resources import require
+# require("mock")
+# from mock import patch, ANY
 
 
 class ParserTest(unittest.TestCase):
@@ -13,9 +13,94 @@ class ParserTest(unittest.TestCase):
         self.parser = dls_release.make_parser()
 
     def test_contains_branch_option(self):
-        self.assertTrue(self.parser.has_option('-b'))
-        self.assertTrue(self.parser.has_option('--branch'))
+        option = self.parser.get_option('-b')
+        self.assertEqual(option.action,"store")
+        self.assertEqual(option.type,"string")
+        self.assertEqual(option.dest,"branch")
+        self.assertEqual(option._long_opts[0],"--branch")
+        self.assertEqual(option._short_opts[0],"-b")
 
+    def test_contains_force_option(self):
+        option = self.parser.get_option('-f')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"force")
+        self.assertEqual(option._long_opts[0],"--force")
+        self.assertEqual(option._short_opts[0],"-f")
+
+    def test_contains_no_test_build_option(self):
+        option = self.parser.get_option('-t')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"skip_test")
+        self.assertEqual(option._long_opts[0],"--no-test-build")
+        self.assertEqual(option._short_opts[0],"-t")
+
+    def test_contains_local_build_option(self):
+        option = self.parser.get_option('-l')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"local_build")
+        self.assertEqual(option._long_opts[0],"--local-build-only")
+        self.assertEqual(option._short_opts[0],"-l")
+
+    def test_contains_test_build_only_option(self):
+        option = self.parser.get_option('-T')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"test_only")
+        self.assertEqual(option._long_opts[0],"--test_build-only")
+        self.assertEqual(option._short_opts[0],"-T")
+
+    def test_contains_work_build_option(self):
+        option = self.parser.get_option("-W")
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"work_build")
+        self.assertEqual(option._long_opts[0],"--work_build")
+        self.assertEqual(option._short_opts[0],"-W")
+
+    def test_contains_epics_version_option(self):
+        option = self.parser.get_option('-e')
+        self.assertEqual(option.action,"store")
+        self.assertEqual(option.type,"string")
+        self.assertEqual(option.dest,"epics_version")
+        self.assertEqual(option._long_opts[0],'--epics_version')
+        self.assertEqual(option._short_opts[0],"-e")
+
+    def test_contains_message_option(self):
+        option = self.parser.get_option('-m')
+        self.assertEqual(option.action,"store")
+        self.assertEqual(option.type,"string")
+        self.assertEqual(option.default,"")
+        self.assertEqual(option.dest,"message")
+        self.assertEqual(option._long_opts[0],'--message')
+        self.assertEqual(option._short_opts[0],"-m")
+
+    def test_contains_next_version_option(self):
+        option = self.parser.get_option('-n')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"next_version")
+        self.assertEqual(option._long_opts[0],'--next_version')
+        self.assertEqual(option._short_opts[0],"-n")
+
+    def test_contains_git_option(self):
+        option = self.parser.get_option('-g')
+        self.assertEqual(option.action,"store_true")
+        self.assertEqual(option.dest,"git")
+        self.assertEqual(option._long_opts[0],'--git')
+        self.assertEqual(option._short_opts[0],"-g")
+
+    def test_contains_rhel_version_option(self):
+        option = self.parser.get_option('-r')
+        self.assertEqual(option.action,"store")
+        self.assertEqual(option.type,"string")
+        self.assertEqual(option.dest,"rhel_version")
+        self.assertEqual(option._short_opts[0],'-r')
+        self.assertEqual(option._long_opts[0],'--rhel_version')
+
+    def test_contains_windows_option(self):
+        option = self.parser.get_option('-w')
+        self.assertEqual(option.action,"store")
+        self.assertEqual(option.type,"string")
+        self.assertEqual(option.dest,"windows")
+        self.assertEqual(option._short_opts[0],'-w')
+        self.assertEqual(option._long_opts[0],'--windows')
 
 class TestDLSRelease(unittest.TestCase):
 

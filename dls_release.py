@@ -5,6 +5,8 @@ import re
 import vcs_svn
 import vcs_git
 import dlsbuild
+from dls_environment.options import OptionParser
+from optparse import OptionGroup
 
 usage = """%prog [options] <module_name> <release_#>
 
@@ -143,8 +145,7 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    from dls_environment.options import OptionParser
-    from optparse import OptionGroup
+
     parser = OptionParser(usage)
     parser.add_option(
         "-b", "--branch", action="store", type="string", dest="branch",
@@ -212,16 +213,18 @@ def make_parser():
 
 
 def main():
+
     parser = make_parser()
     options, args = parser.parse_options()
+
     print "options: ", options, "args: ", args
 
-    # # set variables - the first is a bit of a backwards compatible hack, for
-    # # now.
-    # if len(args) < 1:
-    #     parser.error("Module name not specified")
-    # else:
-    #     module = args[0]
+    # set variables - the first is a bit of a backwards compatible hack, for
+    # now.
+    if len(args) < 1:
+        parser.error("Module name not specified")
+    else:
+        module = args[0]
 
     # if options.area == "etc" and module in ["build", "redirector"]:
     #     parser.error("Cannot release etc/build or etc/redirector as modules"
