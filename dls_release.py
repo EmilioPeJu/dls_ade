@@ -215,9 +215,9 @@ def make_parser():
 def main():
 
     parser = make_parser()
-    options, args = parser.parse_options()
+    options, args = parser.parse_args()
 
-    print "options: ", options, "args: ", args
+    # print "options: ", options, "args: ", args
 
     # set variables - the first is a bit of a backwards compatible hack, for
     # now.
@@ -226,16 +226,16 @@ def main():
     else:
         module = args[0]
 
-    # if options.area == "etc" and module in ["build", "redirector"]:
-    #     parser.error("Cannot release etc/build or etc/redirector as modules"
-    #                  " - use configure system instead")
+    if options.area == "etc" and module in ["build", "redirector"]:
+        parser.error("Cannot release etc/build or etc/redirector as modules"
+                     " - use configure system instead")
 
-    # if options.next_version:
-    #     version = None
-    # elif len(args) < 2:
-    #     parser.error("Module version not specified")
-    # else:
-    #     version = args[1].replace(".", "-")
+    if options.next_version:
+        version = None
+    elif len(args) < 2:
+        parser.error("Module version not specified")
+    else:
+        version = args[1].replace(".", "-")
 
     # release(module, version, options)
 

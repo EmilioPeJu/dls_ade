@@ -12,6 +12,9 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_release.make_parser()
 
+    def tearDown(self):
+        pass
+
     def test_contains_branch_option(self):
         option = self.parser.get_option('-b')
         self.assertEqual(option.action,"store")
@@ -102,13 +105,29 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option._short_opts[0],'-w')
         self.assertEqual(option._long_opts[0],'--windows')
 
-class TestDLSRelease(unittest.TestCase):
+
+class TestCreateBuildObject(unittest.TestCase):
 
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
+
+    @patch('dls_release.dlsbuild.default_build')
+    def test_given_default_args_then_default_build(self, mock_default):
+            something_that_would_call_it()
+
+            self.assertTrue(mock_default.called)
+            mock_default.assertCalledOnceWith("3.14.12.3") # can be 'ANY' in argument (not in quotes) 
+
+# class TestDLSRelease(unittest.TestCase):
+
+#     def setUp(self):
+#         pass
+
+#     def tearDown(self):
+#         pass
 
     # variable = 5
     # def setUp(self):
@@ -163,7 +182,9 @@ class TestDLSRelease(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main()
+
 
     # class b(object)
     #  def __init__(self)
