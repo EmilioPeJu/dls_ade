@@ -2,9 +2,9 @@
 
 import unittest
 import dls_release
-# from pkg_resources import require
-# require("mock")
-# from mock import patch, ANY
+from pkg_resources import require
+require("mock")
+from mock import patch, ANY
 
 
 class ParserTest(unittest.TestCase):
@@ -15,94 +15,86 @@ class ParserTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_contains_branch_option(self):
+    def test_branch_option_has_correct_attributes(self):
         option = self.parser.get_option('-b')
         self.assertEqual(option.action,"store")
         self.assertEqual(option.type,"string")
         self.assertEqual(option.dest,"branch")
         self.assertEqual(option._long_opts[0],"--branch")
-        self.assertEqual(option._short_opts[0],"-b")
 
-    def test_contains_force_option(self):
+    def test_force_option_has_correct_attributes(self):
         option = self.parser.get_option('-f')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"force")
         self.assertEqual(option._long_opts[0],"--force")
-        self.assertEqual(option._short_opts[0],"-f")
 
-    def test_contains_no_test_build_option(self):
+    def test_no_test_build_option_has_correct_attributes(self):
         option = self.parser.get_option('-t')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"skip_test")
         self.assertEqual(option._long_opts[0],"--no-test-build")
-        self.assertEqual(option._short_opts[0],"-t")
 
-    def test_contains_local_build_option(self):
+    def test_local_build_option_has_correct_attributes(self):
         option = self.parser.get_option('-l')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"local_build")
         self.assertEqual(option._long_opts[0],"--local-build-only")
-        self.assertEqual(option._short_opts[0],"-l")
 
-    def test_contains_test_build_only_option(self):
+    def test_test_build_only_option_has_correct_attributes(self):
         option = self.parser.get_option('-T')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"test_only")
         self.assertEqual(option._long_opts[0],"--test_build-only")
-        self.assertEqual(option._short_opts[0],"-T")
 
-    def test_contains_work_build_option(self):
+    def test_work_build_option_has_correct_attributes(self):
         option = self.parser.get_option("-W")
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"work_build")
         self.assertEqual(option._long_opts[0],"--work_build")
-        self.assertEqual(option._short_opts[0],"-W")
 
-    def test_contains_epics_version_option(self):
+    def test_epics_version_option_has_correct_attributes(self):
         option = self.parser.get_option('-e')
         self.assertEqual(option.action,"store")
         self.assertEqual(option.type,"string")
         self.assertEqual(option.dest,"epics_version")
         self.assertEqual(option._long_opts[0],'--epics_version')
-        self.assertEqual(option._short_opts[0],"-e")
 
-    def test_contains_message_option(self):
+    def test_message_option_has_correct_attributes(self):
         option = self.parser.get_option('-m')
         self.assertEqual(option.action,"store")
         self.assertEqual(option.type,"string")
         self.assertEqual(option.default,"")
         self.assertEqual(option.dest,"message")
         self.assertEqual(option._long_opts[0],'--message')
-        self.assertEqual(option._short_opts[0],"-m")
 
-    def test_contains_next_version_option(self):
+    def test_next_version_option_has_correct_attributes(self):
         option = self.parser.get_option('-n')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"next_version")
         self.assertEqual(option._long_opts[0],'--next_version')
-        self.assertEqual(option._short_opts[0],"-n")
 
-    def test_contains_git_option(self):
+    def test_git_option_has_correct_attributes(self):
         option = self.parser.get_option('-g')
         self.assertEqual(option.action,"store_true")
         self.assertEqual(option.dest,"git")
         self.assertEqual(option._long_opts[0],'--git')
-        self.assertEqual(option._short_opts[0],"-g")
 
-    def test_contains_rhel_version_option(self):
+    def test_rhel_version_option_has_correct_attributes(self):
         option = self.parser.get_option('-r')
         self.assertEqual(option.action,"store")
         self.assertEqual(option.type,"string")
         self.assertEqual(option.dest,"rhel_version")
-        self.assertEqual(option._short_opts[0],'-r')
         self.assertEqual(option._long_opts[0],'--rhel_version')
 
-    def test_contains_windows_option(self):
+    def test_windows_option_has_correct_attributes(self):
         option = self.parser.get_option('-w')
         self.assertEqual(option.action,"store")
         self.assertEqual(option.type,"string")
         self.assertEqual(option.dest,"windows")
-        self.assertEqual(option._short_opts[0],'-w')
+        
+    def test_has_windows_option_with_short_name_w_long_name_windows(self):
+        option = self.parser.get_option('-w')
+        self.assertIsNotNone(option)
         self.assertEqual(option._long_opts[0],'--windows')
 
 
@@ -115,11 +107,33 @@ class TestCreateBuildObject(unittest.TestCase):
         pass
 
     @patch('dls_release.dlsbuild.default_build')
-    def test_given_default_args_then_default_build(self, mock_default):
-            something_that_would_call_it()
+    def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
 
-            self.assertTrue(mock_default.called)
-            mock_default.assertCalledOnceWith("3.14.12.3") # can be 'ANY' in argument (not in quotes) 
+        options = FakeOptions()
+        dls_release.create_build_object(options)
+
+        self.assertTrue(mock_default.called)
+        mock_default.assert_called_once_with(None)
+
+
+    @patch('dls_release.dlsbuild.default_build')
+    def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
+        version = "R3.14.12.3"
+
+        options = FakeOptions(epics_version=version)
+
+        dls_release.create_build_object(options)
+
+        mock_default.assert_called_once_with(version)
+
+
+class FakeOptions(object):
+    def __init__(self,**kwargs):
+        self.rhel_version = kwargs.get('rhel_version',None)
+        self.epics_version = kwargs.get('epics_version',None)
+        self.windows = kwargs.get('windows',None)
+        self.area = kwargs.get('area','support')
+        self.force = kwargs.get('force',None)
 
 # class TestDLSRelease(unittest.TestCase):
 
