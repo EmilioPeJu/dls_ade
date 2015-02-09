@@ -199,29 +199,30 @@ def make_parser():
 
     return parser
 
-#     # Create build object for version
-#     if options.rhel_version:
-#         build = dlsbuild.RedhatBuild(
-#             options.rhel_version,
-#             options.epics_version)
-#     elif options.windows:
-#         build = dlsbuild.WindowsBuild(options.windows, options.epics_version)
-#     else:
-#         build = dlsbuild.default_build(options.epics_version)
-#     build.set_area(options.area)
-#     build.set_force(options.force)
 
 def create_build_object(options):
+    
+    if options.rhel_version:
+        build_object = dlsbuild.RedhatBuild(
+            options.rhel_version,
+            options.epics_version)
+    elif options.windows:
+        build_object = dlsbuild.WindowsBuild(
+            options.windows,
+            options.epics_version)
+    else:
+        build_object = dlsbuild.default_build(options.epics_version)
 
-    # return dlsbuild.default_build('R3.14.12.3')
-    return dlsbuild.default_build(options.epics_version)
+    build_object.set_area(options.area)
+    build_object.set_force(options.force)
+    
+    return build_object 
 
 
 def main():
 
     parser = make_parser()
     options, args = parser.parse_args()
-
     print "options: ", options, "args: ", args
 
     # set variables - the first is a bit of a backwards compatible hack, for
@@ -241,6 +242,8 @@ def main():
         parser.error("Module version not specified")
     else:
         version = args[1].replace(".", "-")
+
+    build_object = create_build_object(options)
 
     # release(module, version, options)
 

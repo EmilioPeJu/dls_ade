@@ -126,6 +126,74 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_default.assert_called_once_with(version)
 
+    @patch('dls_release.dlsbuild.RedhatBuild')
+    def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_default):
+        rhel_version = "25"
+
+        options = FakeOptions(rhel_version=rhel_version)
+
+        dls_release.create_build_object(options)
+
+        mock_default.assert_called_once_with(rhel_version,None)
+
+    @patch('dls_release.dlsbuild.RedhatBuild')
+    def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_build):
+        rhel_version = "25"
+        epics_version = "R3.14.12.3"
+
+        options = FakeOptions(
+            rhel_version=rhel_version,
+            epics_version=epics_version)
+
+        dls_release.create_build_object(options)
+
+        mock_build.assert_called_once_with(rhel_version,epics_version)
+
+    @patch('dls_release.dlsbuild.WindowsBuild')
+    def test_given_windows_option_without_rhel_then_WindowsBuild_called_with_windows_and_epics_version(self, mock_build):
+        windows = 'xp'
+
+        options = FakeOptions(windows=windows)
+
+        dls_release.create_build_object(options)
+
+        mock_build.assert_called_once_with(windows,None)
+
+    @patch('dls_release.dlsbuild.Builder.set_area')
+    def test_given_any_option_then_set_area_called_with_default_area_option(self, mock_set):
+        options = FakeOptions()
+
+        dls_release.create_build_object(options)
+
+        mock_set.assert_called_once_with(options.area)
+
+    @patch('dls_release.dlsbuild.Builder.set_area')
+    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set):
+        area = 'python'
+
+        options = FakeOptions(area=area)
+
+        dls_release.create_build_object(options)
+
+        mock_set.assert_called_once_with(options.area)
+
+    @patch('dls_release.dlsbuild.Builder.set_force')
+    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set):
+        options = FakeOptions()
+
+        dls_release.create_build_object(options)
+
+        mock_set.assert_called_once_with(None)
+
+    @patch('dls_release.dlsbuild.Builder.set_force')
+    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set):
+        force = True    
+        options = FakeOptions(force=force)
+
+        dls_release.create_build_object(options)
+
+        mock_set.assert_called_once_with(True)
+
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
