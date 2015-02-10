@@ -50,7 +50,7 @@ class SvnClassTest(unittest.TestCase):
         module = 'deleteme'
         options = FakeOptions(branch='feature_dev')
         url_to_be_called = svnClient().branchModule(module,options.area)+'/'+options.branch
-
+        print url_to_be_called
         vcs = vcs_svn.Svn(module,options)
 
         mock_check.assert_called_once_with(url_to_be_called)
@@ -58,14 +58,11 @@ class SvnClassTest(unittest.TestCase):
     @patch('vcs_svn.svnClient.pathcheck',return_value=False)
     def test_given_args_for_nonexistent_repo_then_class_init_should_raise_assertion_error(self, mock_check):
 
+         # simulates svnClient.pathcheck response to invalid path
         module = 'nonexistent'
         options = FakeOptions()
 
-        # vcs = vcs_svn.Svn(module,options)
-
         self.assertRaises(AssertionError,vcs_svn.Svn,module,options)
-
-
 
 
 class FakeOptions(object):

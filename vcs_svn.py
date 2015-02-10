@@ -8,6 +8,11 @@ from dls_environment.svn import svnClient
 class Svn(BaseVCS):
     
     def __init__(self,module,options): #, client=svnClient()):
+        '''
+        'module' is string with module name to release/test.
+        'options' is parse object containing options.
+        Raises 'AssertionError' is svnClient.pathcheck fails to find repo path.
+        '''
         self.client = svnClient()
         
         if options.branch:

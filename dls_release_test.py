@@ -115,7 +115,6 @@ class TestCreateBuildObject(unittest.TestCase):
         self.assertTrue(mock_default.called)
         mock_default.assert_called_once_with(None)
 
-
     @patch('dls_release.dlsbuild.default_build')
     def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
         version = "R3.14.12.3"
@@ -160,7 +159,8 @@ class TestCreateBuildObject(unittest.TestCase):
         mock_build.assert_called_once_with(windows,None)
 
     @patch('dls_release.dlsbuild.Builder.set_area')
-    def test_given_any_option_then_set_area_called_with_default_area_option(self, mock_set):
+    def test_given_any_option_then_set_area_called_with_default_area_option(
+            self, mock_set):
         options = FakeOptions()
 
         dls_release.create_build_object(options)

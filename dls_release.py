@@ -221,6 +221,7 @@ def create_build_object(options):
 
 def main():
 
+    # parse options from arguments
     parser = make_parser()
     options, args = parser.parse_args()
     print "options: ", options, "args: ", args
