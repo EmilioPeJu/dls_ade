@@ -35,8 +35,7 @@ class BaseVCS(object):
         '''
         Abstraction for callback function to return message string for log.
         '''
-        pass
-        # raise NotImplementedError
+        raise NotImplementedError
 
 
     # @abc.abstractmethod
