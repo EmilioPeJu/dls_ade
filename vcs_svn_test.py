@@ -58,7 +58,7 @@ class SvnClassTest(unittest.TestCase):
     @patch('vcs_svn.svnClient.pathcheck',return_value=False)
     def test_given_args_for_nonexistent_repo_then_class_init_should_raise_assertion_error(self, mock_check):
 
-         # simulates svnClient.pathcheck response to invalid path
+        # simulates svnClient.pathcheck response to invalid path
         module = 'nonexistent'
         options = FakeOptions()
 
