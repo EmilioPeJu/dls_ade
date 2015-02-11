@@ -160,7 +160,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
     @patch('dls_release.dlsbuild.Builder.set_area')
     def test_given_any_option_then_set_area_called_with_default_area_option(
-            self, mock_set):
+        self, mock_set):
         options = FakeOptions()
 
         dls_release.create_build_object(options)

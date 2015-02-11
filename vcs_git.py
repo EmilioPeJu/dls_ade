@@ -1,22 +1,19 @@
 import abc
-# import os
+import os
 # import re
 from vcs import BaseVCS
-# from pkg_resources import require
-# require('GitPython')
-# import git
-# import tempfile
+from pkg_resources import require
+require('GitPython')
+import git
+import tempfile
 
 
 class Git(BaseVCS):
-    pass
-    # def __init__(self, module, area):
-    #     # self.client = git
-    #     remote_base_repo = "dascgitolite@dasc-git.diamond.ac.uk/controls/"
-    #     remote_repo = remote_base_repo+area+"/"+module
-    #     repo_name = remote_repo.split("/")[-1]
-    #     repo_dir = tempfile.mkdtemp(suffix="_"+repo_name)
-    #     self.client = git.Repo.clone_from(remote_repo, repo_dir)
+    def __init__(self, module, options):
+        remote_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/"
+        remote_repo = os.path.join(remote_url,options.area,module)
+        repo_dir = tempfile.mkdtemp(suffix="_"+module)
+        self.client = git.Repo.clone_from(remote_repo,repo_dir)
 
 
     # def cat(self, filename):
@@ -41,9 +38,9 @@ class Git(BaseVCS):
     #     pass
 
 
-    # def set_log_message(self, message):
-    #     ''' Git support will not do a commit, so log message not needed. '''
-    #     return None
+    def set_log_message(self, message):
+        ''' Git support will not do a commit, so log message not needed. '''
+        return None
 
 
     # def get_src_dir(self, module, options):
