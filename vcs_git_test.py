@@ -36,6 +36,21 @@ class GitClassTest(unittest.TestCase):
         except Exception, e:
             self.fail(e)
 
+    @patch('vcs_git.subprocess.check_output',return_value=['controls/support/dummy'])
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_given_repo_exists_then_create_temp_dir_to_clone_into(self,mock_temp,mock_check):
+
+        vcs_git.Git('dummy',FakeOptions())
+
+        mock_temp.assert_called_once_with(suffix="_dummy")
+
+        # args, kwargs = mock_temp.call_args
+        # print 'args:', args
+        # print 'kwargs:', kwargs
+
+    # @patch('vcs_git.git.Repo.clone_from')
+    # def test_given_
+
     # @patch('vcs_git.git.Repo.clone_from')
     # def test_given_new_class_instance_then_clone_of_repo_created(self, mock_clone):
 

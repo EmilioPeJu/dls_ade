@@ -5,7 +5,7 @@ from vcs import BaseVCS
 from pkg_resources import require
 require('GitPython')
 import git
-# import tempfile
+import tempfile
 import subprocess
 
 
@@ -20,6 +20,7 @@ class Git(BaseVCS):
         if server_repo_path not in list_cmd_output:
             raise Exception('repo not found on gitolite server')
 
+        repo_dir = tempfile.mkdtemp(suffix="_"+module)
 
     # def cat(self, filename):
     #     ''' Fetch contents of file in remote repository '''
