@@ -1,5 +1,6 @@
 #!/bin/env dls-python
 
+import os
 import unittest
 from pkg_resources import require
 require("mock")
@@ -18,76 +19,94 @@ class GitClassTest(unittest.TestCase):
     def test_given_nonsense_module_options_args_then_class_instance_should_fail(self):
 
         with self.assertRaises(Exception):
-            vcs_git.Git(1,2)
+            vcs_git.Git(1, 2)
 
     @patch('vcs_git.subprocess.check_output')
     def test_given_any_args_then_subprocess_called_to_list_repos(self, mock_check):
 
         repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
         with self.assertRaises(Exception):
-            vcs_git.Git(1,2)
+            vcs_git.Git(1, 2)
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
-    def test_given_args_for_real_repo_then_do_not_raise_exception(self):
+    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
 
         try:
-            vcs_git.Git('dummy',FakeOptions())
+            vcs_git.Git('dummy', FakeOptions())
         except Exception, e:
             self.fail(e)
 
-    @patch('vcs_git.subprocess.check_output',return_value=['controls/support/dummy'])
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.tempfile.mkdtemp')
-    def test_given_repo_exists_then_create_temp_dir_to_clone_into(self,mock_temp,mock_check):
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_repo_exists_then_create_temp_dir_to_clone_into(self, mock_clone, mock_temp, _):
 
-        vcs_git.Git('dummy',FakeOptions())
+        module = "dummy"
+        options = FakeOptions()
+
+        vcs_git.Git(module, options)
 
         mock_temp.assert_called_once_with(suffix="_dummy")
 
-        # args, kwargs = mock_temp.call_args
-        # print 'args:', args
-        # print 'kwargs:', kwargs
+    @patch('vcs_git.subprocess.check_output', return_value=['dummy'])
+    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_repo_does_not_exist_then_git_clone_should_not_be_called(self, mock_clone, mock_temp, mock_check):
 
-    # @patch('vcs_git.git.Repo.clone_from')
-    # def test_given_
+        module = "dummy"
+        options = FakeOptions()
 
-    # @patch('vcs_git.git.Repo.clone_from')
-    # def test_given_new_class_instance_then_clone_of_repo_created(self, mock_clone):
+        with self.assertRaises(Exception):
+            vcs_git.Git(module, options)
 
-    #     vcs = vcs_git.Git('',FakeOptions())
+        n_clone_calls = mock_clone.call_count
+        n_temp_calls = mock_temp.call_count
 
-    #     mock_clone.assert_called_once_with(ANY,ANY)
+        self.assertEquals(0, n_clone_calls)
+        self.assertEquals(0, n_temp_calls)
 
-    # @patch('vcs_git.git.Repo.clone_from')
-    # def test_given_specific_module_area_args_then_clone_called_with_correct_remote_repo_url(self, mock_clone):
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_repo_exists_then_git_clone_called(self, mock_clone, _, mock_check):
 
-    #     options = FakeOptions()
-    #     module = 'module'
-    #     repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/module"
+        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
+        module = "dummy"
+        options = FakeOptions()
 
-    #     vcs = vcs_git.Git(module,options)
+        vcs = vcs_git.Git(module, options)
 
-    #     mock_clone.assert_called_once_with(repo_url,ANY)
+        n_clone_calls = mock_clone.call_count
 
-    # @patch('vcs_git.git.Repo.clone_from')
-    # def test_specific_module_area_args_then_clone_called_with_temp_dir_name(self, mock_clone):
+        self.assertEquals(1, n_clone_calls)
 
-    #     options = FakeOptions()
-    #     module = 'module'
-    #     repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/module"
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_repo_exists_then_git_clone_called_with_remote_url_and_tempdir_args(self, mock_clone, mock_check):
 
-    #     vcs = vcs_git.Git(module,options)
+        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
+        module = "dummy"
+        options = FakeOptions()
 
-    #     args, kwargs = mock_clone.call_args
-    #     target_dir = args[1]
+        vcs = vcs_git.Git(module, options)
 
-    #     self.assertTrue(target_dir.startswith("/tmp/tmp"))
-    #     self.assertTrue(target_dir.endswith("_" + module))
-    #     self.assertGreater(len(target_dir),len(module)+9)
+        args, kwargs = mock_clone.call_args
+        target_dir = args[1]
+        remote_repo_called = args[0]
+
+        os.rmdir(target_dir)
+
+        self.assertTrue(target_dir.startswith("/tmp/tmp"))
+        self.assertTrue(target_dir.endswith("_" + module))
+        self.assertGreater(len(target_dir), len(module)+9)
+
 
 class FakeOptions(object):
-    def __init__(self,**kwargs):
-        self.area = kwargs.get('area','support')
+    def __init__(self, **kwargs):
+        self.area = kwargs.get('area', 'support')
         # self.branch = kwargs.get('branch',None)
 
 
