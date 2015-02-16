@@ -1,19 +1,24 @@
-import abc
-import os
+# import abc
+# import os
 # import re
 from vcs import BaseVCS
 from pkg_resources import require
 require('GitPython')
 import git
-import tempfile
+# import tempfile
+import subprocess
 
 
 class Git(BaseVCS):
+
     def __init__(self, module, options):
-        remote_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/"
-        remote_repo = os.path.join(remote_url,options.area,module)
-        repo_dir = tempfile.mkdtemp(suffix="_"+module)
-        self.client = git.Repo.clone_from(remote_repo,repo_dir)
+
+        list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
+        list_cmd_output = subprocess.check_output(list_cmd.split())
+        
+        server_repo_path = 'controls/'+options.area+'/'+module
+        if server_repo_path not in list_cmd_output:
+            raise Exception('repo not found on gitolite server')
 
 
     # def cat(self, filename):

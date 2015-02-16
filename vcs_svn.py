@@ -1,4 +1,4 @@
-import abc
+# import abc
 import os
 # import re
 from vcs import BaseVCS
