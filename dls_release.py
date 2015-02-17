@@ -217,35 +217,34 @@ def create_vcs_object(module, options):
 
     if options.git:
         return vcs_git.Git(module, options)
-#         # raise NotImplementedError("git support not implemented yet, go away")
     else:
         return vcs_svn.Svn(module,options) # <--- check source repository exists INSIDE here
 
 
-def main():
+def check_parsed_options_valid(args, options, parser):
 
+    if len(args) < 1:
+        parser.error("Module name not specified")
+    elif len(args) < 2:
+        parser.error("Module version not specified")
+    elif options.area is 'etc' and args[0] in ['build','redirector']:
+        parser.error("Cannot release etc/build or etc/redirector as modules"
+                     " - use configure system instead")
+        
+
+def main():
     # parse options from arguments
     parser = make_parser()
     options, args = parser.parse_args()
     print "options: ", options, "args: ", args
 
-    # set variables - the first is a bit of a backwards compatible hack, for
-    # now.
-    if len(args) < 1:
-        parser.error("Module name not specified")
-    else:
-        module = args[0]
-
-    if options.area == "etc" and module in ["build", "redirector"]:
-        parser.error("Cannot release etc/build or etc/redirector as modules"
-                     " - use configure system instead")
-
+    check_parsed_options_valid(args, options, parser)
+    module = args[0]
+    
     if options.next_version:
         version = None
-    elif len(args) < 2:
-        parser.error("Module version not specified")
     else:
-        version = args[1].replace(".", "-")
+        version = args[1]#.replace(".", "-")
 
     build_object = create_build_object(options)
 

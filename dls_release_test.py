@@ -197,6 +197,83 @@ class TestCreateBuildObject(unittest.TestCase):
         mock_set.assert_called_once_with(True)
 
 
+class TestCheckParsedOptionsValid(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = dls_release.make_parser()
+
+    def tearDown(self):
+        pass
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self, mock_error):
+
+        args = []
+        options = FakeOptions()
+        expected_error_msg = 'Module name not specified'
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        mock_error.assert_called_once_with(expected_error_msg)
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_args_list_with_length_1_then_parser_error_called_specifying_no_module_version(self, mock_error):
+
+        args = ['module_name']
+        options = FakeOptions()
+        expected_error_msg = 'Module version not specified'
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+        
+        mock_error.assert_called_once_with(expected_error_msg)
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self, mock_error):
+
+        args = ['build','12']
+        options = FakeOptions(area='etc')
+        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
+        expected_error_msg += ' modules - use configure system instead'
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        mock_error.assert_called_once_with(expected_error_msg)
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self, mock_error):
+
+        args = ['redirector','12']
+        options = FakeOptions(area='etc')
+        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
+        expected_error_msg += ' modules - use configure system instead'
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        mock_error.assert_called_once_with(expected_error_msg)
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self, mock_error):
+
+        args = ['not_build','12']
+        options = FakeOptions(area='etc')
+        
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+        n_calls = mock_error.call_count
+
+        self.assertFalse(n_calls)
+
+    @patch('dls_release.OptionParser.error')
+    def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self, mock_error):
+
+        args = ['redirector',12]
+        options = FakeOptions()
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+        n_calls = mock_error.call_count
+
+        self.assertFalse(n_calls)
+
+
 class TestCreateVCSObject(unittest.TestCase):
 
     def setUp(self):
@@ -228,6 +305,16 @@ class TestCreateVCSObject(unittest.TestCase):
         self.assertTrue(isinstance(vcs, vcs_svn.Svn))
         self.assertFalse(isinstance(vcs, vcs_git.Git))
 
+
+# class TestParseVersion(unittest.TestCase):
+
+#     def setUp(self):
+#         pass
+
+#     def tearDown(self):
+#         pass
+
+    
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
@@ -261,7 +348,7 @@ class FakeOptions(object):
     #         do_somthing_that_should_commit(...)
 
     #         self.assertTrue(mock_commit.called)
-    #         mock_commit.assertCalledOnceWith('root', ANY)
+    #         mock_commit.assert_called_once_with('root', ANY)
 
 
     # def test_sanity(self):
@@ -279,7 +366,7 @@ class FakeOptions(object):
     #         do_somthing_that_should_commit(...)
 
     #         self.assertTrue(mock_commit.called)
-    #         mock_commit.assertCalledOnceWith('root', 'BRIAN')
+    #         mock_commit.assert_called_once_with('root', 'BRIAN')
 
 
 # class MockFoo(object):
