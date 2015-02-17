@@ -20,11 +20,11 @@ class Git(BaseVCS):
         if server_repo_path not in list_cmd_output:
             raise Exception('repo not found on gitolite server')
 
-        repo_dir = tempfile.mkdtemp(suffix="_"+module)
+        self.repo_dir = tempfile.mkdtemp(suffix="_"+module)
         remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
         remote_repo += server_repo_path
 
-        self.client = git.Repo.clone_from(remote_repo, repo_dir)
+        self.client = git.Repo.clone_from(remote_repo, self.repo_dir)
 
     # def cat(self, filename):
     #     ''' Fetch contents of file in remote repository '''

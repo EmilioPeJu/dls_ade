@@ -22,16 +22,6 @@ prod."""
 log_mess = "%s: Released version %s. %s"
 
 
-# def release(module, version, options):
-#     """script for releasing modules"""
-
-#     if options.git:
-#         vcs = vcs_git.Git(module,options.area)
-#         # raise NotImplementedError("git support not implemented yet, go away")
-#     else:
-#         vcs = vcs_svn.Svn() # <--- check source repository exists INSIDE here
-
-
 #     if options.next_version:
 #         if options.git:
 #             print "When git is specified, a version number must be provided."
@@ -201,7 +191,10 @@ def make_parser():
 
 
 def create_build_object(options):
-    
+    '''
+    Uses parsed options to select appropriate build architecture, default is
+    local system os.
+    '''
     if options.rhel_version:
         build_object = dlsbuild.RedhatBuild(
             options.rhel_version,
@@ -211,12 +204,22 @@ def create_build_object(options):
             options.windows,
             options.epics_version)
     else:
-        build_object = dlsbuild.default_build(options.epics_version)
+        build_object = dlsbuild.default_build(
+            options.epics_version)
 
     build_object.set_area(options.area)
     build_object.set_force(options.force)
     
     return build_object 
+
+
+def create_vcs_object(module, options):
+
+    if options.git:
+        return vcs_git.Git(module, options)
+#         # raise NotImplementedError("git support not implemented yet, go away")
+    else:
+        return vcs_svn.Svn(module,options) # <--- check source repository exists INSIDE here
 
 
 def main():
@@ -246,7 +249,8 @@ def main():
 
     build_object = create_build_object(options)
 
-    # release(module, version, options)
+    vcs = create_vcs_object(module, options)
+
 
 if __name__ == "__main__":
     main()

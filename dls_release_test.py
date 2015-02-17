@@ -5,6 +5,8 @@ import dls_release
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY
+import vcs_git
+import vcs_svn
 
 
 class ParserTest(unittest.TestCase):
@@ -195,6 +197,38 @@ class TestCreateBuildObject(unittest.TestCase):
         mock_set.assert_called_once_with(True)
 
 
+class TestCreateVCSObject(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    @patch('dls_release.vcs_git.tempfile.mkdtemp', return_value='/tmp/tmp_dummy')
+    @patch('dls_release.vcs_git.git.Repo.clone_from')
+    def test_given_git_option_then_git_vcs_object_created(self, mock_clone, mock_mkdtemp):
+
+        module = 'dummy'
+        options = FakeOptions(git=True)
+
+        vcs = dls_release.create_vcs_object(module, options)
+
+        self.assertTrue(isinstance(vcs, vcs_git.Git))
+        self.assertFalse(isinstance(vcs, vcs_svn.Svn))
+
+    @patch('dls_release.vcs_svn.svnClient.pathcheck', return_value=True)
+    def test_given_default_option_without_git_flat_then_svn_vcs_object(self, mock_check):
+
+        module = 'dummy'
+        options = FakeOptions()
+
+        vcs = dls_release.create_vcs_object(module, options)
+
+        self.assertTrue(isinstance(vcs, vcs_svn.Svn))
+        self.assertFalse(isinstance(vcs, vcs_git.Git))
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version',None)
@@ -202,6 +236,8 @@ class FakeOptions(object):
         self.windows = kwargs.get('windows',None)
         self.area = kwargs.get('area','support')
         self.force = kwargs.get('force',None)
+        self.git = kwargs.get('git',False)
+        self.branch = kwargs.get('branch',None)
 
 # class TestDLSRelease(unittest.TestCase):
 
@@ -224,7 +260,7 @@ class FakeOptions(object):
     #     with patch('vcs_svn.commit') as mock_commit:
     #         do_somthing_that_should_commit(...)
 
-    #         self.assetTrue(mock_commit.called)
+    #         self.assertTrue(mock_commit.called)
     #         mock_commit.assertCalledOnceWith('root', ANY)
 
 
@@ -242,7 +278,7 @@ class FakeOptions(object):
 
     #         do_somthing_that_should_commit(...)
 
-    #         self.assetTrue(mock_commit.called)
+    #         self.assertTrue(mock_commit.called)
     #         mock_commit.assertCalledOnceWith('root', 'BRIAN')
 
 
