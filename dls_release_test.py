@@ -306,15 +306,41 @@ class TestCreateVCSObject(unittest.TestCase):
         self.assertFalse(isinstance(vcs, vcs_git.Git))
 
 
-# class TestParseVersion(unittest.TestCase):
+class TestParseVersion(unittest.TestCase):
 
-#     def setUp(self):
-#         pass
+    def setUp(self):
+        pass
 
-#     def tearDown(self):
-#         pass
+    def tearDown(self):
+        pass
 
-    
+    def test_given_next_version_flag_then_return_None(self):
+
+        args = ['module_name','12']
+        options = FakeOptions(next_version=True)
+
+        version = dls_release.parse_version(options, args)
+
+        self.assertIsNone(version)
+
+    def test_given_no_next_version_flag_then_return_second_arg_in_args(self):
+
+        args = ['module_name','12']
+        options = FakeOptions()
+
+        version = dls_release.parse_version(options, args)
+
+        self.assertEquals(version, args[1])
+
+    def test_given_no_test_version_flag_and_second_arg_contains_dot_then_return_second_arg_with_dashes_insteaf_of_dots(self):
+
+        args = ['module_name','1.2']
+        options = FakeOptions()
+
+        version = dls_release.parse_version(options, args)
+
+        self.assertEquals(version, args[1].replace('.','-'))
+
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
@@ -325,6 +351,7 @@ class FakeOptions(object):
         self.force = kwargs.get('force',None)
         self.git = kwargs.get('git',False)
         self.branch = kwargs.get('branch',None)
+        self.next_version = kwargs.get('next_version',None)
 
 # class TestDLSRelease(unittest.TestCase):
 

@@ -230,7 +230,14 @@ def check_parsed_options_valid(args, options, parser):
     elif options.area is 'etc' and args[0] in ['build','redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
-        
+
+
+def parse_version(options, args):
+    if options.next_version:
+        return None
+    else:
+        return args[1].replace(".","-")
+
 
 def main():
     # parse options from arguments
@@ -240,11 +247,8 @@ def main():
 
     check_parsed_options_valid(args, options, parser)
     module = args[0]
-    
-    if options.next_version:
-        version = None
-    else:
-        version = args[1]#.replace(".", "-")
+
+    version = parse_version(options, args)
 
     build_object = create_build_object(options)
 
