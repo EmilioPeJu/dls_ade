@@ -123,6 +123,9 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
+    '''
+    helper method containing options and help text.
+    '''
 
     parser = OptionParser(usage)
     parser.add_option(
@@ -214,15 +217,20 @@ def create_build_object(options):
 
 
 def create_vcs_object(module, options):
-
+    '''
+    specific vcs class depends on flags in options, use module and options
+    to construct the objects
+    '''
     if options.git:
         return vcs_git.Git(module, options)
     else:
-        return vcs_svn.Svn(module,options) # <--- check source repository exists INSIDE here
+        return vcs_svn.Svn(module, options)
 
 
 def check_parsed_options_valid(args, options, parser):
-
+    '''
+    all checks that invoke parser errors
+    '''
     if len(args) < 1:
         parser.error("Module name not specified")
     elif len(args) < 2:
@@ -233,6 +241,9 @@ def check_parsed_options_valid(args, options, parser):
 
 
 def parse_version(options, args):
+    '''
+    helper method getting version from args if specified, else set to None
+    '''
     if options.next_version:
         return None
     else:
@@ -240,6 +251,7 @@ def parse_version(options, args):
 
 
 def main():
+    
     # parse options from arguments
     parser = make_parser()
     options, args = parser.parse_args()
