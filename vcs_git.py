@@ -44,9 +44,9 @@ class Git(BaseVCS):
     # def checkout_module(self, module, area, not_src_dir, rel_dir):
     #     pass
 
-    def set_log_message(self, message):
-        ''' Git support will not do a commit, so log message not needed. '''
-        return None
+    # def set_log_message(self, message):
+    #     ''' Git support will not do a commit, so log message not needed. '''
+    #     return None
 
     # def get_src_dir(self, module, options):
     #     '''

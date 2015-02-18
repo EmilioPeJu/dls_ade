@@ -273,6 +273,16 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.assertFalse(n_calls)
 
+    @patch('dls_release.OptionParser.error')
+    def test_given_next_version_and_git_flag_then_parser_error_called(self, mock_error):
+
+        args = ['module_name',12]
+        options = FakeOptions(git=True, next_version=True)
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        mock_error.assert_called_once_with(ANY)
+
 
 class TestCreateVCSObject(unittest.TestCase):
 
@@ -306,7 +316,7 @@ class TestCreateVCSObject(unittest.TestCase):
         self.assertFalse(isinstance(vcs, vcs_git.Git))
 
 
-class TestParseVersion(unittest.TestCase):
+class TestVersionNumber(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -318,8 +328,9 @@ class TestParseVersion(unittest.TestCase):
 
         args = ['module_name','12']
         options = FakeOptions(next_version=True)
+        vcs = FakeSvn()
 
-        version = dls_release.parse_version(options, args)
+        version = dls_release.version_number(options, args, 1, vcs)
 
         self.assertIsNone(version)
 
@@ -327,8 +338,9 @@ class TestParseVersion(unittest.TestCase):
 
         args = ['module_name','12']
         options = FakeOptions()
+        vcs = FakeSvn()
 
-        version = dls_release.parse_version(options, args)
+        version = dls_release.version_number(options, args, 1, vcs)
 
         self.assertEquals(version, args[1])
 
@@ -336,10 +348,39 @@ class TestParseVersion(unittest.TestCase):
 
         args = ['module_name','1.2']
         options = FakeOptions()
+        vcs = FakeSvn()
 
-        version = dls_release.parse_version(options, args)
+        version = dls_release.version_number(options, args, 1, vcs)
 
         self.assertEquals(version, args[1].replace('.','-'))
+
+    @patch('dls_release_test.FakeSvn.list_releases',return_value=[])
+    def test_given_then_vcs_svn_list_releases_called(self, mock_list):
+
+        args = ['module_name']
+        module = 'module_name'
+        options = FakeOptions(next_version=True)
+        vcs = FakeSvn()
+
+        version = dls_release.version_number(options, args, module, vcs)
+
+        mock_list.assert_called_once_with(ANY,ANY)
+
+
+#class TestVersionNumber(unittest.TestCase):
+#
+#    def setUp(self):
+#        pass
+#
+#    def tearDown(self):
+#        pass
+#
+#    def test_given_version_in_args_then_return_version_number(self):
+#
+#        args = ['dummy','1.2']
+#        options = FakeOptions()
+#
+#        version = dls_release.version_number(module,)
 
 
 class FakeOptions(object):
@@ -353,15 +394,12 @@ class FakeOptions(object):
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
 
-# class TestDLSRelease(unittest.TestCase):
+class FakeSvn():
+    def list_releases(self,module, area):
+        return []
+   
 
-#     def setUp(self):
-#         pass
 
-#     def tearDown(self):
-#         pass
-
-    # variable = 5
     # def setUp(self):
     #     with patch('moduleb.Class1') as mock_class1:
     #         self.b_to_test = b()
@@ -406,11 +444,6 @@ class FakeOptions(object):
 #         except AssertionError:
 #             return False
 #         return True
-
-    # def test(self, src_dir, module, version):
-    #     try:
-    #         assert("svn" in rel_dir.lower())
-    #         assert()
 
 
 if __name__ == '__main__':

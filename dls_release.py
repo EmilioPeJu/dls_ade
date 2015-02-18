@@ -123,8 +123,7 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    '''
-    helper method containing options and help text.
+    ''' helper method containing options and help text.
     '''
 
     parser = OptionParser(usage)
@@ -194,8 +193,7 @@ def make_parser():
 
 
 def create_build_object(options):
-    '''
-    Uses parsed options to select appropriate build architecture, default is
+    ''' Uses parsed options to select appropriate build architecture, default is
     local system os.
     '''
     if options.rhel_version:
@@ -217,8 +215,7 @@ def create_build_object(options):
 
 
 def create_vcs_object(module, options):
-    '''
-    specific vcs class depends on flags in options, use module and options
+    ''' specific vcs class depends on flags in options, use module and options
     to construct the objects
     '''
     if options.git:
@@ -228,8 +225,7 @@ def create_vcs_object(module, options):
 
 
 def check_parsed_options_valid(args, options, parser):
-    '''
-    all checks that invoke parser errors
+    ''' all checks that invoke parser errors
     '''
     if len(args) < 1:
         parser.error("Module name not specified")
@@ -238,16 +234,29 @@ def check_parsed_options_valid(args, options, parser):
     elif options.area is 'etc' and args[0] in ['build','redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
+    elif options.next_version and options.git:
+        parser.error("When git is specified, a version number must be provided")
 
 
-def parse_version(options, args):
-    '''
-    helper method getting version from args if specified, else set to None
+#def parse_version(options, args):
+#    '''
+#    helper method getting version from args if specified, else set to None
+#    '''
+#    if options.next_version:
+#        return None
+#    else:
+#        return args[1].replace(".","-")
+
+
+def version_number(options, args, module, vcs):
+    ''' helper method containing all required to calculate the version number 
     '''
     if options.next_version:
-        return None
+        version = None
     else:
-        return args[1].replace(".","-")
+        version = args[1].replace(".","-")
+    releases = vcs.list_releases(module, options.area)
+    return version
 
 
 def main():
@@ -260,11 +269,11 @@ def main():
     check_parsed_options_valid(args, options, parser)
     module = args[0]
 
-    version = parse_version(options, args)
-
     build_object = create_build_object(options)
 
     vcs = create_vcs_object(module, options)
+
+    version = version_number(options, args, module, vcs)
 
 
 if __name__ == "__main__":
