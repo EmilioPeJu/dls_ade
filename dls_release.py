@@ -21,28 +21,6 @@ prod."""
 # set default variables
 log_mess = "%s: Released version %s. %s"
 
-
-#     if options.next_version:
-#         if options.git:
-#             print "When git is specified, a version number must be provided."
-#             sys.exit()
-#         releases = vcs.list_releases(module, options.area)
-#         print releases
-#         if len(releases) == 0:
-#             version = "0-1"
-#         else:
-#             from dls_environment import environment
-#             last_release = environment().sortReleases(releases)[-1]. \
-#                 split("/")[-1]
-#             print "Last release for %s was %s" % (module, last_release)
-#             numre = re.compile("\d+|[^\d]+")
-#             tokens = numre.findall(last_release)
-#             for i in range(0, len(tokens), -1):
-#                 if tokens[i].isdigit():
-#                     tokens[i] = str(int(tokens[i]) + 1)
-#                     break
-#             version = "".join(tokens)
-
 #     vcs.set_log_message(
 #         (log_mess % (module, version, options.message)).strip())
 
@@ -278,7 +256,6 @@ def increment_version_number(last_release):
 
 def main():
 
-    # parse options from arguments
     parser = make_parser()
     options, args = parser.parse_args()
     print "options: ", options, "args: ", args
