@@ -4,7 +4,7 @@ import unittest
 import dls_release
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY
+from mock import patch, ANY, MagicMock
 import vcs_git
 import vcs_svn
 
@@ -283,6 +283,17 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         mock_error.assert_called_once_with(ANY)
 
+    @patch('dls_release.OptionParser.error')
+    def test_given_args_list_length_1_and_next_version_flat_then_parser_error_not_called(self, mock_error):
+        
+        args = ['redirector']
+        options = FakeOptions(next_version=True)
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+        n_calls = mock_error.call_count
+
+        self.assertFalse(n_calls)
+
 
 class TestCreateVCSObject(unittest.TestCase):
 
@@ -319,7 +330,8 @@ class TestCreateVCSObject(unittest.TestCase):
 class TestVersionNumber(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.svn = MagicMock()
+        self.svn.list_releases = MagicMock(return_value=[])
 
     def tearDown(self):
         pass
@@ -328,7 +340,7 @@ class TestVersionNumber(unittest.TestCase):
 
         args = ['module_name','12']
         options = FakeOptions(next_version=True)
-        vcs = FakeSvn()
+        vcs = self.svn
 
         version = dls_release.version_number(options, args, 1, vcs)
 
@@ -338,7 +350,7 @@ class TestVersionNumber(unittest.TestCase):
 
         args = ['module_name','12']
         options = FakeOptions()
-        vcs = FakeSvn()
+        vcs = self.svn
 
         version = dls_release.version_number(options, args, 1, vcs)
 
@@ -348,40 +360,32 @@ class TestVersionNumber(unittest.TestCase):
 
         args = ['module_name','1.2']
         options = FakeOptions()
-        vcs = FakeSvn()
+        vcs = self.svn
+        self.svn.list_releases.return_value = [1,2,3,4,5]
 
         version = dls_release.version_number(options, args, 1, vcs)
 
         self.assertEquals(version, args[1].replace('.','-'))
 
-    @patch('dls_release_test.FakeSvn.list_releases',return_value=[])
-    def test_given_then_vcs_svn_list_releases_called(self, mock_list):
 
-        args = ['module_name']
-        module = 'module_name'
-        options = FakeOptions(next_version=True)
-        vcs = FakeSvn()
+class TestParseArgumentVersion(unittest.TestCase):
 
-        version = dls_release.version_number(options, args, module, vcs)
+    def setUp(self):
+        pass
 
-        mock_list.assert_called_once_with(ANY,ANY)
+    def tearDown(self):
+        pass
 
+    def test_given_string_arg_with_periods_then_return_same_string_with_dashes(self):
 
-#class TestVersionNumber(unittest.TestCase):
-#
-#    def setUp(self):
-#        pass
-#
-#    def tearDown(self):
-#        pass
-#
-#    def test_given_version_in_args_then_return_version_number(self):
-#
-#        args = ['dummy','1.2']
-#        options = FakeOptions()
-#
-#        version = dls_release.version_number(module,)
+        arg_version = '1.4.3dls5'
 
+        version = dls_release.parse_argument_version(arg_version)
+
+        self.assertEqual(len(version), len(arg_version))
+        self.assertFalse('.' in version)
+        self.assertEqual(arg_version.split('.'),version.split('-'))
+        
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
@@ -393,12 +397,6 @@ class FakeOptions(object):
         self.git = kwargs.get('git',False)
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
-
-class FakeSvn():
-    def list_releases(self,module, area):
-        return []
-   
-
 
     # def setUp(self):
     #     with patch('moduleb.Class1') as mock_class1:
@@ -414,36 +412,6 @@ class FakeSvn():
 
     #         self.assertTrue(mock_commit.called)
     #         mock_commit.assert_called_once_with('root', ANY)
-
-
-    # def test_sanity(self):
-    #     self.assertTrue(self.variable==5)
-
-    # def test_release_dry_run_with_test_build(self):
-    #     assert(MockFoo().submit('1','2','3'))
-
-
-    # @patch('dls_releas.ls')
-    # @patch('vcs_svn.update')
-    # @patch('vcs_svn.commit')
-    # def  test_svn_commit_is_called_with_BRIAN(self, mock_commit, _, mock_ls):
-
-    #         do_somthing_that_should_commit(...)
-
-    #         self.assertTrue(mock_commit.called)
-    #         mock_commit.assert_called_once_with('root', 'BRIAN')
-
-
-# class MockFoo(object):
-#     def submit(self, rel_dir, module, version, test=None):
-#         try:
-#             assert("svn" in rel_dir.lower())
-#             assert(module == "dummy")
-#             assert(version[:2] == "1-")
-#             assert(test)
-#         except AssertionError:
-#             return False
-#         return True
 
 
 if __name__ == '__main__':
