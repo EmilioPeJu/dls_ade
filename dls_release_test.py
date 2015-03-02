@@ -14,9 +14,6 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_release.make_parser()
 
-    def tearDown(self):
-        pass
-
     def test_branch_option_has_correct_attributes(self):
         option = self.parser.get_option('-b')
         self.assertEqual(option.action,"store")
@@ -101,12 +98,6 @@ class ParserTest(unittest.TestCase):
 
 
 class TestCreateBuildObject(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     @patch('dls_release.dlsbuild.default_build')
     def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
@@ -202,9 +193,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
     def setUp(self):
         self.parser = dls_release.make_parser()
 
-    def tearDown(self):
-        pass
-
     @patch('dls_release.OptionParser.error')
     def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self, mock_error):
 
@@ -297,12 +285,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
 class TestCreateVCSObject(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     @patch('dls_release.vcs_git.tempfile.mkdtemp', return_value='/tmp/tmp_dummy')
     @patch('dls_release.vcs_git.git.Repo.clone_from')
     def test_given_git_option_then_git_vcs_object_created(self, mock_clone, mock_mkdtemp):
@@ -327,64 +309,89 @@ class TestCreateVCSObject(unittest.TestCase):
         self.assertFalse(isinstance(vcs, vcs_git.Git))
 
 
-class TestVersionNumber(unittest.TestCase):
+class TestNextVersionNumber(unittest.TestCase):
 
-    def setUp(self):
-        self.svn = MagicMock()
-        self.svn.list_releases = MagicMock(return_value=[])
+    def test_given_empty_list_of_releases_then_return_first_version_number(self):
 
-    def tearDown(self):
-        pass
+        releases = []
+        expected_version = "0-1"
 
-    def test_given_next_version_flag_then_return_None(self):
+        version = dls_release.next_version_number(releases)
 
-        args = ['module_name','12']
-        options = FakeOptions(next_version=True)
-        vcs = self.svn
+        self.assertEqual(version,expected_version)
 
-        version = dls_release.version_number(options, args, 1, vcs)
+    def test_given_list_of_one_release_then_return_incremented_latest_version_number(self):
+        
+        releases = ['5-5']
+        expected_version = '5-6'
 
-        self.assertIsNone(version)
+        version = dls_release.next_version_number(releases)
 
-    def test_given_no_next_version_flag_then_return_second_arg_in_args(self):
+        self.assertEqual(version, expected_version)
 
-        args = ['module_name','12']
-        options = FakeOptions()
-        vcs = self.svn
+    def test_given_list_of_complex_releases_then_return_incremented_latest_version_number(self):
 
-        version = dls_release.version_number(options, args, 1, vcs)
+        releases = ['1-3-5dls7','2-3-5dls7','2-3-4dls8','2-3-5dls8']
+        expected_version = '2-3-5dls9'
 
-        self.assertEquals(version, args[1])
+        version = dls_release.next_version_number(releases)
 
-    def test_given_no_test_version_flag_and_second_arg_contains_dot_then_return_second_arg_with_dashes_insteaf_of_dots(self):
-
-        args = ['module_name','1.2']
-        options = FakeOptions()
-        vcs = self.svn
-        self.svn.list_releases.return_value = [1,2,3,4,5]
-
-        version = dls_release.version_number(options, args, 1, vcs)
-
-        self.assertEquals(version, args[1].replace('.','-'))
+        self.assertEqual(version,expected_version)
 
 
-class TestParseArgumentVersion(unittest.TestCase):
+class TestGetLastRelease(unittest.TestCase):
 
-    def setUp(self):
-        pass
+    def test_given_list_of_one_release_number_then_return_that_number(self):
 
-    def tearDown(self):
-        pass
+        releases = ['1-5-3-4']
+        expected_version = releases[0]
+
+        version = dls_release.get_last_release(releases)
+
+        self.assertEqual(version,expected_version)
+
+    def test_given_list_of_releases_with_diff_major_number_then_return_latest_version(self):
+
+        releases = ['1-0','3-0','2-0']
+        expected_version = releases[1]
+
+        version = dls_release.get_last_release(releases)
+
+        self.assertEqual(version,expected_version)
+
+    def test_given_list_of_complex_releases_then_return_latest_version(self):
+
+        releases = ['1-3-5dls7','2-3-5dls7','2-3-4dls8','2-3-5dls8']
+        expected_version = releases[-1]
+
+        version = dls_release.get_last_release(releases)
+
+        self.assertEqual(version,expected_version)
+
+
+class TestFormatArgumentVersion(unittest.TestCase):
 
     def test_given_string_arg_with_periods_then_return_same_string_with_dashes(self):
 
         arg_version = '1.4.3dls5'
 
-        version = dls_release.parse_argument_version(arg_version)
+        version = dls_release.format_argument_version(arg_version)
 
         self.assertEqual(len(version), len(arg_version))
         self.assertFalse('.' in version)
         self.assertEqual(arg_version.split('.'),version.split('-'))
+
+    def test_given_empty_string_arg_then_return_empty_string(self):
+
+        arg_version = ''
+
+        self.assertEqual(arg_version, dls_release.format_argument_version(arg_version))
+
+    def test_given_string_arg_with_no_dots_return_same_string(self):
+
+        arg_version = '1-4'
+
+        self.assertEqual(arg_version, dls_release.format_argument_version(arg_version))
         
 
 class FakeOptions(object):
@@ -398,34 +405,7 @@ class FakeOptions(object):
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
 
-    # def setUp(self):
-    #     with patch('moduleb.Class1') as mock_class1:
-    #         self.b_to_test = b()
-    #         self.x.boo = MagicMock(return_value=10)
-    #         self..y = stub_class2()
-
-    #     self.object = 5
-
-    # def test_svn_commit_is_called(self):
-    #     with patch('vcs_svn.commit') as mock_commit:
-    #         do_somthing_that_should_commit(...)
-
-    #         self.assertTrue(mock_commit.called)
-    #         mock_commit.assert_called_once_with('root', ANY)
-
 
 if __name__ == '__main__':
 
     unittest.main()
-
-
-    # class b(object)
-    #  def __init__(self)
-    #     self.x = Class1()
-    #     self.y = Class2()
-    #     ...
-
-    # class stub_class2(object)
-    #     def thismethd():
-    #         counter++
-    #         return counter

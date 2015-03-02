@@ -122,7 +122,7 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    ''' helper method containing options and help text.
+    ''' helper method containing options and help text
     '''
 
     parser = OptionParser(usage)
@@ -193,7 +193,7 @@ def make_parser():
 
 def create_build_object(options):
     ''' Uses parsed options to select appropriate build architecture, default is
-    local system os.
+    local system os
     '''
     if options.rhel_version:
         build_object = dlsbuild.RedhatBuild(
@@ -209,8 +209,8 @@ def create_build_object(options):
 
     build_object.set_area(options.area)
     build_object.set_force(options.force)
-    
-    return build_object 
+
+    return build_object
 
 
 def create_vcs_object(module, options):
@@ -230,56 +230,54 @@ def check_parsed_options_valid(args, options, parser):
         parser.error("Module name not specified")
     elif len(args) < 2 and not options.next_version:
         parser.error("Module version not specified")
-    elif options.area is 'etc' and args[0] in ['build','redirector']:
+    elif options.area is 'etc' and args[0] in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
     elif options.next_version and options.git:
-        parser.error("When git is specified, a version number must be provided")
+        parser.error("When git is specified, version number must be provided")
 
 
-def parse_argument_version(arg_version):
-    ''' helper method formatting version taken from command line arguments.
+def format_argument_version(arg_version):
+    ''' helper method formatting version taken from command line arguments
     '''
-    return arg_version.replace(".","-")
+    return arg_version.replace(".", "-")
 
 
-def version_number(options, args, module, vcs):
-    ''' helper method containing all required to calculate the version number.
-
+def next_version_number(releases):
+    ''' return appropriate version number for an incremental release
     '''
-    if options.next_version:
-        version = get_next_version(module, options.area, vcs)
+    if len(releases) == 0:
+        version = "0-1"
     else:
-        version = args[1].replace(".","-")
+        last_release = get_last_release(releases)
+        version = increment_version_number(last_release)
     return version
 
 
-def get_next_version(modules, area, vcs):
-    version = None
-    # releases = vcs.list_releases(module, options.area)
-    
-#         print releases
-#         if len(releases) == 0:
-#             version = "0-1"
-#         else:
-#             from dls_environment import environment
-#             last_release = environment().sortReleases(releases)[-1]. \
-#                 split("/")[-1]
-#             print "Last release for %s was %s" % (module, last_release)
-#===== function block: increment version number
-#             numre = re.compile("\d+|[^\d]+")
-#             tokens = numre.findall(last_release)
-#             for i in range(0, len(tokens), -1):
-#                 if tokens[i].isdigit():
-#                     tokens[i] = str(int(tokens[i]) + 1)
-#                     break
-#=====
-#             version = "".join(tokens)
+def get_last_release(releases):
+    ''' from a list of strings, return the latest version number
+    '''
+    from dls_environment import environment
+    last_release = environment().sortReleases(releases)[-1].split("/")[-1]
+    return last_release
+
+
+def increment_version_number(last_release):
+    ''' increment the most minor non-zero part of the version number
+    '''
+    # print "Last release for %s was %s" % (module, last_release)
+    numre = re.compile("\d+|[^\d]+")
+    tokens = numre.findall(last_release)
+    for i in reversed(range(0, len(tokens))):
+        if tokens[i].isdigit():
+            tokens[i] = str(int(tokens[i]) + 1)
+            break
+    version = "".join(tokens)
     return version
 
 
 def main():
-    
+
     # parse options from arguments
     parser = make_parser()
     options, args = parser.parse_args()
@@ -292,13 +290,12 @@ def main():
 
     vcs = create_vcs_object(module, options)
 
-    # version = version_number(options, args, module, vcs)
-
     if options.next_version:
-        releases = vcs.get_releases
-        version = get_next_version(module, options.area, releases)
+        releases = vcs.get_releases()
+        version = next_version_number(module, options.area, releases)
     else:
-        version = parse_argument_version(args[1])
+        version = format_argument_version(args[1])
+
 
 if __name__ == "__main__":
     main()
