@@ -252,11 +252,15 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
 def ask_user_input(question):
     return raw_input(question)
 
-#         conf_release = vcs.cat(src_dir+"/configure/RELEASE")
-#         module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
-#                                   conf_release)
-#         if module_epics:
-#             module_epics = module_epics[0]
+
+def get_module_epics_version(vcs):
+    conf_release = vcs.cat("/configure/RELEASE")
+    module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
+                              conf_release)
+    if module_epics:
+        module_epics = module_epics[0]
+    return module_epics
+
 
 def main():
 
@@ -282,6 +286,7 @@ def main():
     print construct_info_message(module, options, version, build_object)
 
     if options.area in ["ioc", "support"]:
+        module_epics = get_module_epics_version(vcs)
         sure = check_epics_version_consistent(
             module_epics, options.epics_version, build.epics())
         if not sure:

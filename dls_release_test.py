@@ -509,6 +509,26 @@ class TestCheckEpicsVersion(unittest.TestCase):
         self.assertTrue(sure)
 
 
+class TestGetModuleEpicsVersion(unittest.TestCase):
+
+    def test_given_vcs_object_can_return_filecontents_with_epics_version_mentioned_then_return_epics_version(self):
+        
+        expected_epics = 'R3.14.12.3'
+
+        module_epics = dls_release.get_module_epics_version(FakeVcs())
+
+        self.assertEqual(module_epics, expected_epics)
+
+    # @patch('FakeVcs.cat', return_value='BLGUI = $(SUPPORT)/BLGui/3-5')
+    def test_given_vcs_object_can_return_filecontents_without_epics_version_mentioned_then_return_empty_list(self):
+
+        FakeVcs = MagicMock()
+        FakeVcs.cat.return_value = 'BLGUI = $(SUPPORT)/BLGui/3-5'
+        module_epics = dls_release.get_module_epics_version(FakeVcs)
+
+        self.assertFalse(len(module_epics))
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version',None)
@@ -520,6 +540,27 @@ class FakeOptions(object):
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
 
+
+class FakeVcs(object):
+    def cat(self,filename):
+        file_contents = '''
+            CALC            = $(SUPPORT)/calc/3-1
+            BLGUI           = $(SUPPORT)/BLGui/3-5
+
+
+            # If using the sequencer, point SNCSEQ at its top directory:
+            #SNCSEQ=$(EPICS_BASE)/../modules/soft/seq
+
+
+            # EPICS_BASE usually appears last so other apps can override stuff:
+            EPICS_BASE=/dls_sw/epics/R3.14.12.3/base
+
+
+            # Set RULES here if you want to take build rules from somewhere
+            # other than EPICS_BASE:
+            #RULES=/path/to/epics/support/module/rules/x-y
+        '''
+        return file_contents
 
 if __name__ == '__main__':
 
