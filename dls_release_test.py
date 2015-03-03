@@ -392,7 +392,72 @@ class TestFormatArgumentVersion(unittest.TestCase):
         arg_version = '1-4'
 
         self.assertEqual(arg_version, dls_release.format_argument_version(arg_version))
+
+
+class TestConstructInfoMessage(unittest.TestCase):
+
+    def test_given_default_args_then_constrcut_specific_string(self):
         
+        module = 'dummy'
+        version = '1-0'
+        options = FakeOptions()
+        build = dls_release.create_build_object(options)
+
+        expected_message = 'Releasing %s %s from trunk,' % (module, version)
+        expected_message += ' using %s build server' % build.get_server()
+        expected_message += ' and epics %s' % build.epics()
+
+        returned_message = dls_release.construct_info_message(
+            module, options, version, build)
+
+        self.assertEqual(expected_message, returned_message)
+
+    def test_given_default_args_and_branch_then_constrcut_specific_string_referencing_branch(self):
+
+        module = 'dummy'
+        version = '3-5'
+        options = FakeOptions(branch='new_feature')
+        build = dls_release.create_build_object(options)
+
+        expected_message = 'Releasing %s %s from branch %s,' % (
+            module, version, options.branch)
+        expected_message += ' using %s build server' % build.get_server()
+        expected_message += ' and epics %s' % build.epics()
+
+        returned_message = dls_release.construct_info_message(
+            module, options, version, build)
+
+        self.assertEqual(expected_message, returned_message)
+
+    def test_given_default_args_and_ioc_area_then_constrcut_specific_string(self):
+
+        module = 'dummy'
+        version = '1-0'
+        options = FakeOptions(area='ioc')
+        build = dls_release.create_build_object(options)
+
+        expected_message = 'Releasing %s %s from trunk,' % (module, version)
+        expected_message += ' using %s build server' % build.get_server()
+        expected_message += ' and epics %s' % build.epics()
+
+        returned_message = dls_release.construct_info_message(
+            module, options, version, build)
+
+        self.assertEqual(expected_message, returned_message)
+
+    def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self):
+
+        module = 'dummy'
+        version = '1-0'
+        options = FakeOptions(area='python')
+        build = dls_release.create_build_object(options)
+
+        returned_message = dls_release.construct_info_message(
+            module, options, version, build)
+
+        self.assertFalse('epics' in returned_message)
+        self.assertFalse(build.epics() in returned_message)
+
 
 class FakeOptions(object):
     def __init__(self,**kwargs):

@@ -24,22 +24,9 @@ log_mess = "%s: Released version %s. %s"
 #     src_dir = vcs.get_src_dir(module, options)
 #     rel_dir = vcs.get_rel_dir(module, options, version)
 
-#     print "src_dir =", src_dir
-#     print "rel_dir =", rel_dir
-
 #     assert vcs.path_check(src_dir), \
 #         src_dir + ' does not exist in the repository.'
 
-#     # print messages
-#     if options.branch:
-#         btext = "branch %s" % options.branch
-#     else:
-#         btext = "trunk"
-#     print 'Releasing %s %s from %s, using %s build server' % \
-#         (module, version, btext, build.get_server()),
-#     if options.area in ("ioc", "support"):
-#         print "and epics %s" % build.epics(),
-#     print
 
 #     # check if we really meant to release with this epics version
 #     if options.area in ["ioc", "support"]:
@@ -252,6 +239,21 @@ def increment_version_number(last_release):
     return version
 
 
+def construct_info_message(module, options, version, build_object):
+    ''' helper method gathering info to a string to display during release
+    '''
+    info = ''
+    if options.branch:
+        btext = "branch %s" % options.branch
+    else:
+        btext = "trunk"
+    info += ('Releasing %s %s from %s, ' % (module, version, btext))
+    info += ('using %s build server' % build_object.get_server())
+    if options.area in ("ioc", "support"):
+        info += (' and epics %s' % build_object.epics())
+    return info
+
+
 def main():
 
     parser = make_parser()
@@ -273,6 +275,8 @@ def main():
 
     vcs.set_log_message(
         (log_mess % (module, version, options.message)).strip())
+
+    print construct_info_message(module, options, version, build_object)
 
 
 if __name__ == "__main__":
