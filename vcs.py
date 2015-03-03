@@ -30,12 +30,12 @@ class BaseVCS(object):
     #     raise NotImplementedError
 
 
-    # @abc.abstractmethod
-    # def set_log_message(self, message):
-    #     '''
-    #     Abstraction for callback function to return message string for log.
-    #     '''
-    #     raise NotImplementedError
+    @abc.abstractmethod
+    def set_log_message(self, message):
+        '''
+        Abstraction for callback function to return message string for log.
+        '''
+        raise NotImplementedError
 
 
     # @abc.abstractmethod

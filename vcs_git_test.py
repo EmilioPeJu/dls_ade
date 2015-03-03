@@ -131,6 +131,25 @@ class GitListReleasesTest(unittest.TestCase):
         self.assertListEqual(['1-0', '1-0-1', '2-0'], releases)
 
 
+class GitSetLogMessageTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone, mcheck):
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+        
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    def test_given_message_arg_when_method_invoked_then_return_None(self):
+
+        result = self.vcs.set_log_message('reason for commit')
+
+        self.assertIsNone(result)
+
+
 class FakeTag(object):
     def __init__(self, name):
         self.name = name

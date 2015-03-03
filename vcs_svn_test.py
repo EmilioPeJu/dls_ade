@@ -100,6 +100,25 @@ class SvnListReleasesTest(unittest.TestCase):
             self.assertTrue(rel in releases)
 
 
+class SvnSetLogMessageTest(unittest.TestCase):
+
+    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    def setUp(self, mock_check):
+
+        self.module = 'deleteme'
+        self.options = FakeOptions()
+        self.vcs = vcs_svn.Svn(self.module, self.options)
+
+    @patch('vcs_svn.svnClient.setLogMessage')
+    def test_when_called_with_message_then_svnClient_setLogMessage_called_with_message_argument(self, mlog):
+
+        log_message = 'reason for release'
+
+        self.vcs.set_log_message(log_message)
+
+        mlog.assert_called_once_with(log_message)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.area = kwargs.get('area','support')

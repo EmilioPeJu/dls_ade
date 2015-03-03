@@ -21,9 +21,6 @@ prod."""
 # set default variables
 log_mess = "%s: Released version %s. %s"
 
-#     vcs.set_log_message(
-#         (log_mess % (module, version, options.message)).strip())
-
 #     src_dir = vcs.get_src_dir(module, options)
 #     rel_dir = vcs.get_rel_dir(module, options, version)
 
@@ -273,6 +270,9 @@ def main():
         version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args[1])
+
+    vcs.set_log_message(
+        (log_mess % (module, version, options.message)).strip())
 
 
 if __name__ == "__main__":

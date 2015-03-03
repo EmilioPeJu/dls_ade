@@ -51,9 +51,9 @@ class Svn(BaseVCS):
     #     self.client.copy(src_dir,rel_dir)
 
 
-    # def set_log_message(self, message):
-    #     ''' callback function to return message string for log '''
-    #     self.client.setLogMessage(message)
+    def set_log_message(self, message):
+        ''' callback function to return message string for log '''
+        self.client.setLogMessage(message)
 
 
     # def get_src_dir(self, module, options):
