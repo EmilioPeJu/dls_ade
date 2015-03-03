@@ -221,7 +221,7 @@ def format_argument_version(arg_version):
     return arg_version.replace(".", "-")
 
 
-def next_version_number(releases):
+def next_version_number(releases, module=None):
     ''' return appropriate version number for an incremental release
     '''
     if len(releases) == 0:
@@ -229,6 +229,8 @@ def next_version_number(releases):
     else:
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
+        if module:
+            print "Last release for %s was %s" % (module, last_release)
     return version
 
 
@@ -243,7 +245,6 @@ def get_last_release(releases):
 def increment_version_number(last_release):
     ''' increment the most minor non-zero part of the version number
     '''
-    # print "Last release for %s was %s" % (module, last_release)
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
     for i in reversed(range(0, len(tokens))):
@@ -269,7 +270,7 @@ def main():
 
     if options.next_version:
         releases = vcs.get_releases()
-        version = next_version_number(module, options.area, releases)
+        version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args[1])
 
