@@ -459,6 +459,56 @@ class TestConstructInfoMessage(unittest.TestCase):
         self.assertFalse(build.epics() in returned_message)
 
 
+class TestCheckEpicsVersion(unittest.TestCase):
+
+    def test_given_epics_option_then_return_true(self):
+        
+        e_module = 'some_epics_version'
+        e_option = 'specified_epics_version'
+        e_build = 'some_other_epics_version'
+
+        sure = dls_release.check_epics_version_consistent(
+            e_module, e_option, e_build)
+
+        self.assertTrue(sure)
+
+    @patch('dls_release.ask_user_input', return_value='n')
+    def test_given_no_epics_option_and_mismatched_module_and_build_epics_then_ask_user_for_input(self, mock_ask):
+
+        e_option = None
+        e_module = 'specified_epics_version'
+        e_build = 'some_other_epics_version'
+
+        sure = dls_release.check_epics_version_consistent(
+            e_module, e_option, e_build)
+
+        mock_ask.assert_called_once_with(ANY)
+
+    def test_given_no_epics_option_and_matching_module_and_build_epics_then_return_true(self):
+
+        e_option = None
+        e_module = 'specified_epics_version'
+        e_build = 'specified_epics_version'
+
+        sure = dls_release.check_epics_version_consistent(
+            e_module, e_option, e_build)
+
+        self.assertTrue(sure)
+
+    @patch('dls_release.ask_user_input', return_value='n')
+    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_spcificies_64bit_then_return_true(self, mock_ask):
+
+        e_option = None
+        e_module = 'R3.14.11'
+        e_build = 'R3.14.11_64'
+
+        sure = dls_release.check_epics_version_consistent(
+            e_module, e_option, e_build)
+
+        self.assertFalse(mock_ask.call_count, "shouldn't have called ask_user_input()")
+        self.assertTrue(sure)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version',None)

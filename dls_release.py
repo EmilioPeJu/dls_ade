@@ -27,23 +27,6 @@ log_mess = "%s: Released version %s. %s"
 #     assert vcs.path_check(src_dir), \
 #         src_dir + ' does not exist in the repository.'
 
-
-#     # check if we really meant to release with this epics version
-#     if options.area in ["ioc", "support"]:
-#         conf_release = vcs.cat(src_dir+"/configure/RELEASE")
-#         module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
-#                                   conf_release)
-#         if module_epics:
-#             module_epics = module_epics[0]
-#         build_epics = build.epics().replace("_64","")
-#         if not options.epics_version and module_epics != build_epics:
-#             sure = raw_input(
-#                 "You are trying to release a %s module under %s without "
-#                 "using the -e flag. Are you sure [y/n]?" %
-#                 (module_epics, build_epics)).lower()
-#             if sure != "y":
-#                 sys.exit()
-
 #     print "terminating here for testing purposes, after epics version check", version
 #     sys.exit(0)
 
@@ -254,11 +237,31 @@ def construct_info_message(module, options, version, build_object):
     return info
 
 
+def check_epics_version_consistent(module_epics, option_epics, build_epics):
+    build_epics = build_epics.replace("_64","")
+    if not option_epics and module_epics != build_epics:
+        question = ("You are trying to release a %s module under %s without "
+            "using the -e flag. Are you sure [y/n]?" %
+            (module_epics, build_epics)).lower()
+        answer = ask_user_input(question)
+        return True if answer is "y" else False
+    else:
+        return True
+
+
+def ask_user_input(question):
+    return raw_input(question)
+
+#         conf_release = vcs.cat(src_dir+"/configure/RELEASE")
+#         module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
+#                                   conf_release)
+#         if module_epics:
+#             module_epics = module_epics[0]
+
 def main():
 
     parser = make_parser()
     options, args = parser.parse_args()
-    print "options: ", options, "args: ", args
 
     check_parsed_options_valid(args, options, parser)
     module = args[0]
@@ -277,6 +280,12 @@ def main():
         (log_mess % (module, version, options.message)).strip())
 
     print construct_info_message(module, options, version, build_object)
+
+    if options.area in ["ioc", "support"]:
+        sure = check_epics_version_consistent(
+            module_epics, options.epics_version, build.epics())
+        if not sure:
+            sys.exit()
 
 
 if __name__ == "__main__":
