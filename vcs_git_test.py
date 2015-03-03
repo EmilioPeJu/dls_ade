@@ -4,17 +4,11 @@ import os
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY
+from mock import patch, ANY, MagicMock
 import vcs_git
 
 
-class GitClassTest(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class GitClassInitTest(unittest.TestCase):
 
     def test_given_nonsense_module_options_args_then_class_instance_should_fail(self):
 
@@ -104,10 +98,47 @@ class GitClassTest(unittest.TestCase):
         self.assertGreater(len(target_dir), len(module)+9)
 
 
+class GitListReleasesTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone, mcheck):
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+        
+        self.vcs = vcs_git.Git(self.module, self.options)
+        self.vcs.client.tags = [FakeTag("1-0"), FakeTag("1-0-1"), FakeTag("2-0")]
+
+    def test_given_repo_with_no_tags_then_return_empty_list(self):
+
+        self.vcs.client.tags = []
+        releases = self.vcs.list_releases(self.module, self.options.area)
+
+        self.assertListEqual([], releases)
+
+    def test_given_repo_with_some_tags_then_return_list_inc_version_1_0(self):
+
+        releases = self.vcs.list_releases(self.module, self.options.area)
+
+        self.assertTrue('1-0' in releases)
+
+    def test_given_repo_with_some_tags_then_return_all_version_tag_names(self):
+        
+        releases = self.vcs.list_releases(self.module, self.options.area)
+
+        self.assertListEqual(['1-0', '1-0-1', '2-0'], releases)
+
+
+class FakeTag(object):
+    def __init__(self, name):
+        self.name = name
+
+
 class FakeOptions(object):
     def __init__(self, **kwargs):
         self.area = kwargs.get('area', 'support')
-        # self.branch = kwargs.get('branch',None)
 
 
 if __name__ == '__main__':

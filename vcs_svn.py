@@ -1,6 +1,4 @@
-# import abc
 import os
-# import re
 from vcs import BaseVCS
 from dls_environment.svn import svnClient
 
@@ -30,16 +28,16 @@ class Svn(BaseVCS):
     #     return self.client.cat(filename)
 
 
-    # def list_releases(self, module, area):
-    #     ''' Return list of releases of module '''
-    #     release_paths = []
-    #     source = self.client.prodModule(module, area)
-    #     if self.client.pathcheck(source):
-    #         for node, _ in self.client.list(
-    #                 source,
-    #                 depth=self.client.depth.immediates)[1:]:
-    #             release_paths.append(os.path.basename(node.path))
-    #     return release_paths
+    def list_releases(self, module, area):
+        ''' Return list of releases of module '''
+        release_paths = []
+        source = self.client.prodModule(module, area)
+        if self.client.pathcheck(source):
+            for node, _ in self.client.list(
+                    source,
+                    depth=self.client.depth.immediates)[1:]:
+                release_paths.append(os.path.basename(node.path))
+        return release_paths
 
 
     # def path_check(self, path):

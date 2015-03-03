@@ -272,7 +272,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         mock_error.assert_called_once_with(ANY)
 
     @patch('dls_release.OptionParser.error')
-    def test_given_args_list_length_1_and_next_version_flat_then_parser_error_not_called(self, mock_error):
+    def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self, mock_error):
         
         args = ['redirector']
         options = FakeOptions(next_version=True)
@@ -298,7 +298,7 @@ class TestCreateVCSObject(unittest.TestCase):
         self.assertFalse(isinstance(vcs, vcs_svn.Svn))
 
     @patch('dls_release.vcs_svn.svnClient.pathcheck', return_value=True)
-    def test_given_default_option_without_git_flat_then_svn_vcs_object(self, mock_check):
+    def test_given_default_option_without_git_flag_then_svn_vcs_object(self, mock_check):
 
         module = 'dummy'
         options = FakeOptions()

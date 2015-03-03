@@ -1,6 +1,3 @@
-# import abc
-# import os
-# import re
 from vcs import BaseVCS
 from pkg_resources import require
 require('GitPython')
@@ -30,12 +27,12 @@ class Git(BaseVCS):
     #     ''' Fetch contents of file in remote repository '''
     #     return self.client.git.cat_file('-p',filename)
 
-    # def list_releases(self, module, area):
-    #     ''' Return list of release tags of module '''
-    #     release_paths = []
-    #     for tag in self.client.tags:
-    #         release_paths.append(tag.name)
-    #     return release_paths
+    def list_releases(self, module, area):
+        ''' Return list of release tags of module '''
+        release_paths = []
+        for tag in self.client.tags:
+            release_paths.append(tag.name)
+        return release_paths
 
     # def path_check(self, path):
     #     ''' search for path '''
