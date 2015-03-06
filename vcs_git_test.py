@@ -150,6 +150,18 @@ class GitSetLogMessageTest(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class ApiInterrogateTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_when_asking_object_for_vcs_type_then_return_git_in_string(self, _1, _2, _3):
+
+        vcs_type = vcs_git.Git('dummy',FakeOptions()).vcs_type
+
+        self.assertEqual(vcs_type,'git')
+
+
 class FakeTag(object):
     def __init__(self, name):
         self.name = name

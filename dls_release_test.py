@@ -519,7 +519,6 @@ class TestGetModuleEpicsVersion(unittest.TestCase):
 
         self.assertEqual(module_epics, expected_epics)
 
-    # @patch('FakeVcs.cat', return_value='BLGUI = $(SUPPORT)/BLGui/3-5')
     def test_given_vcs_object_can_return_filecontents_without_epics_version_mentioned_then_return_empty_list(self):
 
         FakeVcs = MagicMock()
@@ -542,7 +541,7 @@ class FakeOptions(object):
 
 
 class FakeVcs(object):
-    def cat(self,filename):
+    def cat(self,filename, version=None):
         file_contents = '''
             CALC            = $(SUPPORT)/calc/3-1
             BLGUI           = $(SUPPORT)/BLGui/3-5

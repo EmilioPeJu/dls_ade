@@ -27,9 +27,6 @@ log_mess = "%s: Released version %s. %s"
 #     assert vcs.path_check(src_dir), \
 #         src_dir + ' does not exist in the repository.'
 
-#     print "terminating here for testing purposes, after epics version check", version
-#     sys.exit(0)
-
 #     # If this release already exists, test from the release directory, not the
 #     # trunk.
 #     if vcs.path_check(rel_dir):
@@ -59,7 +56,6 @@ log_mess = "%s: Released version %s. %s"
 #         src_dir = rel_dir
 #         print "Created release in svn directory: " + rel_dir
 
-#     # THIS LINE, WHAT IS IT DOING???
 #     test = "work" if options.work_build else options.test_only
 
 #     # Submit the build job
@@ -253,10 +249,10 @@ def ask_user_input(question):
     return raw_input(question)
 
 
-def get_module_epics_version(vcs):
-    conf_release = vcs.cat("/configure/RELEASE")
-    module_epics = re.findall(r"/dls_sw/epics/(R\d(?:\.\d+)+)/base",
-                              conf_release)
+def get_module_epics_version(vcs, version=None):
+    conf_release = vcs.cat("/configure/RELEASE", version)
+    module_epics = re.findall(
+        r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", conf_release)
     if module_epics:
         module_epics = module_epics[0]
     return module_epics
@@ -286,7 +282,7 @@ def main():
     print construct_info_message(module, options, version, build_object)
 
     if options.area in ["ioc", "support"]:
-        module_epics = get_module_epics_version(vcs)
+        module_epics = get_module_epics_version(vcs, version)
         sure = check_epics_version_consistent(
             module_epics, options.epics_version, build.epics())
         if not sure:

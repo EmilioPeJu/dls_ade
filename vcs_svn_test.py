@@ -119,6 +119,15 @@ class SvnSetLogMessageTest(unittest.TestCase):
         mlog.assert_called_once_with(log_message)
 
 
+class ApiInterrogateTest(unittest.TestCase):
+
+    @patch('vcs_svn.svnClient.pathcheck')
+    def test_when_asking_object_for_vcs_type_then_return_svn_in_string(self, _):
+
+        vcs_type = vcs_svn.Svn('dummy',FakeOptions()).vcs_type
+
+        self.assertEqual(vcs_type,'svn')
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.area = kwargs.get('area','support')

@@ -6,28 +6,16 @@ class BaseVCS(object):
     __metaclass__ = abc.ABCMeta
 
 
-    # @abc.abstractmethod
-    # def cat(self,filename):
-    #     ''' Fetch contents of particular file in remote repository '''
-    #     raise NotImplementedError
+    @abc.abstractmethod
+    def cat(self, filename, version):
+        ''' Fetch contents of particular file in remote repository '''
+        raise NotImplementedError
 
 
     @abc.abstractmethod
     def list_releases(self):
         ''' Return list of releases/tags of module '''
         raise NotImplementedError
-
-
-    # @abc.abstractmethod
-    # def path_check(self, path):
-    #     ''' search for path. '''
-    #     raise NotImplementedError
-
-
-    # @abc.abstractmethod
-    # def checkout_module(self):
-    #     ''' Create release/tag of module. '''
-    #     raise NotImplementedError
 
 
     @abc.abstractmethod
@@ -38,17 +26,7 @@ class BaseVCS(object):
         raise NotImplementedError
 
 
-    # @abc.abstractmethod
-    # def get_src_dir(self, module, options):
-    #     '''
-    #     Find/create the source directory from which to release the module.
-    #     '''
-    #     raise NotImplementedError
-
-
-    # @abc.abstractmethod
-    # def get_rel_dir(self, module, options):
-    #     '''
-    #     Create the release directory the module will be released into.
-    #     '''
-    #     raise NotImplementedError
+    @abc.abstractmethod
+    def check_version_exists(self, version):
+        ''' True/False for existence of release/tag in repository '''
+        raise NotImplementedError
