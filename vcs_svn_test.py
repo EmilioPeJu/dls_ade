@@ -71,7 +71,7 @@ class SvnListReleasesTest(unittest.TestCase):
     @patch('vcs_svn.svnClient.pathcheck', return_value=False)
     def test_given_unreleased_module_then_return_empty_list(self, mock_check):
 
-        releases = self.vcs.list_releases(self.module, self.options.area)
+        releases = self.vcs.list_releases()
         
         self.assertEqual(0, len(releases))
 
@@ -82,7 +82,7 @@ class SvnListReleasesTest(unittest.TestCase):
         as of 3.3.15, the above svn source path was correct for module
         "deleteme" with releases 1-0, 1-0-1 and 2-0
         '''
-        releases = self.vcs.list_releases(self.module, self.options.area)
+        releases = self.vcs.list_releases()
 
         self.assertTrue('1-0' in releases)
 
@@ -93,7 +93,7 @@ class SvnListReleasesTest(unittest.TestCase):
         as of 3.3.15, the above svn source path was correct for module
         "deleteme" with releases 1-0, 1-0-1 and 2-0
         '''
-        releases = self.vcs.list_releases(self.module, self.options.area)
+        releases = self.vcs.list_releases()
         known_releases = ['1-0','1-0-1','2-0']
 
         for rel in known_releases:
@@ -127,6 +127,7 @@ class ApiInterrogateTest(unittest.TestCase):
         vcs_type = vcs_svn.Svn('dummy',FakeOptions()).vcs_type
 
         self.assertEqual(vcs_type,'svn')
+
 
 class FakeOptions(object):
     def __init__(self,**kwargs):

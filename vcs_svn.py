@@ -14,12 +14,16 @@ class Svn(BaseVCS):
         '''
         self.vcs_type = 'svn'
         self.client = svnClient()
+        self.module = module
+        self.area = options.area
+
         if options.branch:
             repo = os.path.join(
-                self.client.branchModule(module, options.area),
+                self.client.branchModule(self.module, self.area),
                 options.branch)
         else:
-            repo = self.client.devModule(module, options.area)
+            repo = self.client.devModule(self.module, self.area)
+        
         assert self.client.pathcheck(repo), "%s does not exist" % repo
 
 
@@ -28,10 +32,10 @@ class Svn(BaseVCS):
         return self.client.cat(filename)
 
 
-    def list_releases(self, module, area):
+    def list_releases(self):
         ''' Return list of releases of module '''
         releases = []
-        source = self.client.prodModule(module, area)
+        source = self.client.prodModule(self.module, self.area)
         if self.client.pathcheck(source):
             for node, _ in self.client.list(
                     source,

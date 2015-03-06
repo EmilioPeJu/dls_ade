@@ -16,11 +16,11 @@ class GitClassInitTest(unittest.TestCase):
             vcs_git.Git(1, 2)
 
     @patch('vcs_git.subprocess.check_output')
-    def test_given_any_args_then_subprocess_called_to_list_repos(self, mock_check):
+    def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
         repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
         with self.assertRaises(Exception):
-            vcs_git.Git(1, 2)
+            vcs_git.Git(1, FakeOptions())
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
@@ -107,26 +107,26 @@ class GitListReleasesTest(unittest.TestCase):
 
         self.module = 'dummy'
         self.options = FakeOptions()
-        
+
         self.vcs = vcs_git.Git(self.module, self.options)
         self.vcs.client.tags = [FakeTag("1-0"), FakeTag("1-0-1"), FakeTag("2-0")]
 
     def test_given_repo_with_no_tags_then_return_empty_list(self):
 
         self.vcs.client.tags = []
-        releases = self.vcs.list_releases(self.module, self.options.area)
+        releases = self.vcs.list_releases()
 
         self.assertListEqual([], releases)
 
     def test_given_repo_with_some_tags_then_return_list_inc_version_1_0(self):
 
-        releases = self.vcs.list_releases(self.module, self.options.area)
+        releases = self.vcs.list_releases()
 
         self.assertTrue('1-0' in releases)
 
     def test_given_repo_with_some_tags_then_return_all_version_tag_names(self):
-        
-        releases = self.vcs.list_releases(self.module, self.options.area)
+
+        releases = self.vcs.list_releases()
 
         self.assertListEqual(['1-0', '1-0-1', '2-0'], releases)
 
@@ -140,7 +140,7 @@ class GitSetLogMessageTest(unittest.TestCase):
 
         self.module = 'dummy'
         self.options = FakeOptions()
-        
+
         self.vcs = vcs_git.Git(self.module, self.options)
 
     def test_given_message_arg_when_method_invoked_then_return_None(self):
@@ -157,9 +157,9 @@ class ApiInterrogateTest(unittest.TestCase):
     @patch('vcs_git.tempfile.mkdtemp')
     def test_when_asking_object_for_vcs_type_then_return_git_in_string(self, _1, _2, _3):
 
-        vcs_type = vcs_git.Git('dummy',FakeOptions()).vcs_type
+        vcs_type = vcs_git.Git('dummy', FakeOptions()).vcs_type
 
-        self.assertEqual(vcs_type,'git')
+        self.assertEqual(vcs_type, 'git')
 
 
 class FakeTag(object):

@@ -271,7 +271,7 @@ def main():
     vcs = create_vcs_object(module, options)
 
     if options.next_version:
-        releases = vcs.get_releases()
+        releases = vcs.list_releases()
         version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args[1])

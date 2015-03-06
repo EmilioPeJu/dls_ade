@@ -12,15 +12,17 @@ class Git(BaseVCS):
     def __init__(self, module, options):
 
         self.vcs_type = 'git'
+        self.module = module
+        self.area = options.area
 
         list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
         list_cmd_output = subprocess.check_output(list_cmd.split())
 
-        server_repo_path = 'controls/'+options.area+'/'+module
+        server_repo_path = 'controls/' + self.area + '/' + self.module
         if server_repo_path not in list_cmd_output:
             raise Exception('repo not found on gitolite server')
 
-        repo_dir = tempfile.mkdtemp(suffix="_"+module)
+        repo_dir = tempfile.mkdtemp(suffix="_" + self.module)
         remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
         remote_repo += server_repo_path
 
@@ -32,7 +34,7 @@ class Git(BaseVCS):
         return self.client.git.cat_file('-p', version+':'+filename)
 
 
-    def list_releases(self, module, area):
+    def list_releases(self):
         ''' Return list of release tags of module '''
         releases = []
         for tag in self.client.tags:
