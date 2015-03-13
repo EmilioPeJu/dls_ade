@@ -150,6 +150,35 @@ class GitSetLogMessageTest(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class GitCheckVersionTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone, mcheck):
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    @patch('vcs_git.Git.list_releases')
+    def test_given_version_in_list_of_releases_then_return_true(self, mlist):
+        
+        version = '1-5'
+        mlist.return_value = ['1-4','1-5','1-6']
+
+        self.assertTrue(self.vcs.check_version_exists(version))
+
+    @patch('vcs_git.Git.list_releases')
+    def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
+        
+        version = '1-5'
+        mlist.return_value = ['1-4','2-5','1-6']
+
+        self.assertFalse(self.vcs.check_version_exists(version))
+
+
 class ApiInterrogateTest(unittest.TestCase):
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])

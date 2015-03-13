@@ -119,6 +119,32 @@ class SvnSetLogMessageTest(unittest.TestCase):
         mlog.assert_called_once_with(log_message)
 
 
+class SvnCheckVersionTest(unittest.TestCase):
+
+    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    def setUp(self, mock_check):
+
+        self.module = 'deleteme'
+        self.options = FakeOptions()
+        self.vcs = vcs_svn.Svn(self.module, self.options)
+
+    @patch('vcs_svn.Svn.list_releases')
+    def test_given_version_in_list_of_releases_then_return_true(self, mlist):
+        
+        version = '1-5'
+        mlist.return_value = ['1-4','1-5','1-6']
+
+        self.assertTrue(self.vcs.check_version_exists(version))
+
+    @patch('vcs_svn.Svn.list_releases')
+    def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
+        
+        version = '1-5'
+        mlist.return_value = ['1-4','2-5','1-6']
+
+        self.assertFalse(self.vcs.check_version_exists(version))
+
+
 class ApiInterrogateTest(unittest.TestCase):
 
     @patch('vcs_svn.svnClient.pathcheck')
