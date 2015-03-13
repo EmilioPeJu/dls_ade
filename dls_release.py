@@ -289,7 +289,10 @@ def main():
             sys.exit(0)
 
     # do test build here if specified in options
-    # exit here if local_build only with exit code 0
+
+    if options.local_build:
+        sys.exit(0)
+
     # create release version (currently only for svn)
     # submit build request
 
