@@ -286,7 +286,12 @@ def main():
         sure = check_epics_version_consistent(
             module_epics, options.epics_version, build.epics())
         if not sure:
-            sys.exit()
+            sys.exit(0)
+
+    # do test build here if specified in options
+    # exit here if local_build only with exit code 0
+    # create release version (currently only for svn)
+    # submit build request
 
 
 if __name__ == "__main__":
