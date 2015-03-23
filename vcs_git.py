@@ -55,5 +55,9 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
 
+    def source_repo(self):
+        pass
+
+
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS)

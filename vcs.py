@@ -30,3 +30,9 @@ class BaseVCS(object):
     def check_version_exists(self, version):
         ''' True/False for existence of release/tag in repository '''
         raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def source_repo(self):
+        ''' Fetch repo url for use by build server '''
+        raise NotImplementedError

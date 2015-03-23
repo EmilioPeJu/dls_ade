@@ -23,13 +23,14 @@ class Svn(BaseVCS):
         '''
         self.client = svnClient()
         if branch:
-            repo = os.path.join(
+            self.repo_url = os.path.join(
                 self.client.branchModule(self.module, self.area),
                 branch)
         else:
-            repo = self.client.devModule(self.module, self.area)
-        
-        assert self.client.pathcheck(repo), "%s does not exist" % repo
+            self.repo_url = self.client.devModule(self.module, self.area)
+
+        assert self.client.pathcheck(self.repo_url), \
+            "%s does not exist" % self.repo_url
 
 
     def cat(self, filename, _):
@@ -57,6 +58,10 @@ class Svn(BaseVCS):
 
     def check_version_exists(self, version):
         return version in self.list_releases()
+
+
+    def source_repo(self):
+        return self.repo_url.replace('svn+ssh://','http://')
 
 
 # sanity check: ensure class fully implements the interface (abc)
