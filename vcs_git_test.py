@@ -190,6 +190,20 @@ class ApiInterrogateTest(unittest.TestCase):
 
         self.assertEqual(vcs_type, 'git')
 
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self, _1, _2, _3):
+
+        module = 'dummy'
+        options = FakeOptions()
+        expected_source_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/'+options.area+'/'+module
+
+        vcs = vcs_git.Git(module, options)
+        source_repo = vcs.source_repo()
+
+        self.assertEqual(source_repo, expected_source_repo)
+
 
 class FakeTag(object):
     def __init__(self, name):

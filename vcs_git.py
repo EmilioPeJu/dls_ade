@@ -26,10 +26,10 @@ class Git(BaseVCS):
             raise Exception('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self.module)
-        remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
-        remote_repo += server_repo_path
+        self.remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
+        self.remote_repo += server_repo_path
 
-        self.client = git.Repo.clone_from(remote_repo, repo_dir)
+        self.client = git.Repo.clone_from(self.remote_repo, repo_dir)
 
 
     def cat(self, filename, version):
@@ -56,7 +56,7 @@ class Git(BaseVCS):
 
 
     def source_repo(self):
-        pass
+        return self.remote_repo
 
 
 # sanity check: ensure class fully implements the interface (abc)
