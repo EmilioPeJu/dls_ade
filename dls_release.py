@@ -21,16 +21,13 @@ prod."""
 # set default variables
 log_mess = "%s: Released version %s. %s"
 
-#     src_dir = vcs.get_src_dir(module, options)
-#     rel_dir = vcs.get_rel_dir(module, options, version)
-
-#     assert vcs.path_check(src_dir), \
-#         src_dir + ' does not exist in the repository.'
+#     src_dir = vcs.get_src_dir(module, options)          # obsolete
+#     rel_dir = vcs.get_rel_dir(module, options, version) # 
 
 #     # If this release already exists, test from the release directory, not the
 #     # trunk.
 #     if vcs.path_check(rel_dir):
-#         src_dir = rel_dir
+#         src_dir = rel_dir        # this needs dealing with, in helper method?
 
 #     # Do the test build
 #     if not options.skip_test:
@@ -256,6 +253,12 @@ def get_module_epics_version(vcs, version=None):
     if module_epics:
         module_epics = module_epics[0]
     return module_epics
+
+
+def perform_test_build(build_object, options):
+    if not options.skip_test:
+        if build_object.test() != 0:
+            sys.exit(1)
 
 
 def main():

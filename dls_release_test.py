@@ -528,6 +528,42 @@ class TestGetModuleEpicsVersion(unittest.TestCase):
         self.assertFalse(len(module_epics))
 
 
+class TestPerformTestBuild(unittest.TestCase):
+
+    def setUp(self):
+
+        self.fake_build = MagicMock()
+
+    @patch('dls_release.sys.exit')
+    def test_given_build_test_method_returns_fail_when_called_then_call_sys_exit_with_code_1(self, mexit):
+
+        self.fake_build.test.return_value = -1
+
+        dls_release.perform_test_build(self.fake_build, FakeOptions())
+
+        mexit.assert_called_once_with(1)
+
+    @patch('dls_release.sys.exit')
+    def test_given_build_test_method_returns_success_then_sys_exit_not_called(self, mexit):
+
+        self.fake_build.test.return_value = 0
+
+        dls_release.perform_test_build(self.fake_build, FakeOptions())
+
+        self.assertFalse(mexit.call_count)
+
+    @patch('dls_release.sys.exit')
+    def test_given_skip_test_option_then_neither_test_build_or_sys_exit_called(self, mexit):
+
+        self.fake_build.test = MagicMock(return_value=0)
+        options = FakeOptions(skip_test=True)
+
+        dls_release.perform_test_build(self.fake_build, options)
+
+        self.assertEquals(0, mexit.call_count)
+        self.assertEquals(0, self.fake_build.test.call_count)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version',None)
@@ -538,6 +574,7 @@ class FakeOptions(object):
         self.git = kwargs.get('git',False)
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
+        self.skip_test = kwargs.get('skip_test',False)
 
 
 class FakeVcs(object):
