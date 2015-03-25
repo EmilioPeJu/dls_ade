@@ -1,4 +1,8 @@
 #!/bin/env dls-python
+from pkg_resources import require
+require('dls_environment')
+require('python-ldap')
+
 import os
 import sys
 import re
@@ -276,6 +280,8 @@ def main():
     build_object = create_build_object(options)
 
     vcs = create_vcs_object(module, options)
+    
+    #vcs.branch(options.branch)
 
     if options.next_version:
         releases = vcs.list_releases()
@@ -302,7 +308,7 @@ def main():
 
     # create release version (currently only for svn)
     # submit build request
-
+    build_object.submit(vcs, module, version, test=True)
 
 if __name__ == "__main__":
     main()

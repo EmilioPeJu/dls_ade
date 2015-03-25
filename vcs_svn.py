@@ -11,11 +11,13 @@ class Svn(BaseVCS):
         'module' is string with module name to release/test.
         'options' is parse object containing options.
         '''
-        self.vcs_type = 'svn'
         self.module = module
         self.area = options.area
         self.init_client(options.branch)
 
+    @property
+    def vcs_type(self):
+        return 'svn'
 
     def init_client(self, branch):
         '''

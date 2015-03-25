@@ -11,11 +11,13 @@ class Git(BaseVCS):
 
     def __init__(self, module, options):
 
-        self.vcs_type = 'git'
         self.module = module
         self.area = options.area
         self.init_client()
 
+    @property
+    def vcs_type(self):
+        return 'git'
 
     def init_client(self):
         list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'

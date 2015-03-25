@@ -20,7 +20,7 @@ build_scripts = os.path.join(
 # contains the expected directories (e.g. work/etc/build/queue).
 # Similarly defined for windows, as it replaces the root dir in the windows
 # builder method.
-root_dir = "/home/xfz39520"#"/dls_sw"
+root_dir = "/tmp"#"/dls_sw"
 windows_root_dir = "W:/"
 
 # A list of build servers and the EPICS releases they support
@@ -206,12 +206,12 @@ class Builder:
             build, time.strftime("%Y%m%d-%H%M%S"),
             self.user, self.area, module.replace("/", "_"), version])
 
-    def build_params(self, build_dir, src_dir, module, version, build_name):
+    def build_params(self, build_dir, vcs, module, version, build_name):
         return {
             "email"     : self.email,
             "epics"     : self.dls_env.epicsVer(),
             "build_dir" : build_dir,
-            "svn_dir"   : src_dir.replace(svn_rw, svn_ro),
+            "%s_dir"%vcs.vcs_type   : vcs.source_repo(),
             "module"    : module,
             "version"   : version,
             "area"      : self.area,
@@ -225,7 +225,7 @@ class Builder:
         return local == remote or (
             local == "redhat5-x86_64" and remote == "redhat5-i686")
 
-    def test(self, src_dir, module, version):
+    def test(self, vcs, module, version):
         """Builds module version on the local system using the code in the
         src_dir directory of subversion."""
 
@@ -236,7 +236,7 @@ class Builder:
         print "Test build of module in "+build_dir
 
         params = self.build_params(
-            build_dir, src_dir, module, version, build_name)
+            build_dir, vcs, module, version, build_name)
 
         dirname = tempfile.mkdtemp()
         filename = os.path.join(dirname, build_name+self.exten)
@@ -256,7 +256,7 @@ class Builder:
             shutil.rmtree(build_dir)
         return status
 
-    def submit(self, src_dir, module, version, test=False):
+    def submit(self, vcs, module, version, test=False):
         """Submit a job to the build queue to build module version using the
         code in the src_dir directory of subversion. If test="work" then the
         module is built in work, if it is anything else that evaluates to True
@@ -273,7 +273,7 @@ class Builder:
             build_dir = self.dls_env.prodArea(self.area)
 
         params = self.build_params(
-            build_dir, src_dir, module, version, build_name)
+            build_dir, vcs, module, version, build_name)
 
         # generate the filename
         pathname = os.path.join(root_dir, "work", "etc", "build", "queue")

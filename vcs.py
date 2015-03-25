@@ -5,6 +5,9 @@ class BaseVCS(object):
     ''' Abstract interface to a version control system class '''
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractproperty
+    def vcs_type(self):
+        raise NotImplementedError
 
     @abc.abstractmethod
     def cat(self, filename, version):
