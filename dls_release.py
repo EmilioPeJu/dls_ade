@@ -247,7 +247,7 @@ def ask_user_input(question):
 
 
 def get_module_epics_version(vcs, version=None):
-    conf_release = vcs.cat("/configure/RELEASE", version)
+    conf_release = vcs.cat("configure/RELEASE", version)
     module_epics = re.findall(
         r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", conf_release)
     if module_epics:
@@ -257,8 +257,12 @@ def get_module_epics_version(vcs, version=None):
 
 def perform_test_build(build_object, options):
     if not options.skip_test:
-        if build_object.test() != 0:
-            sys.exit(1)
+        if not build_object.local_test_possible():
+            print "Local test build not possible since local system not " \
+                  " the same OS as build server"
+        else:
+            if build_object.test() != 0:
+                sys.exit(1)
 
 
 def main():
@@ -287,7 +291,7 @@ def main():
     if options.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs, version)
         sure = check_epics_version_consistent(
-            module_epics, options.epics_version, build.epics())
+            module_epics, options.epics_version, build_object.epics())
         if not sure:
             sys.exit(0)
 
