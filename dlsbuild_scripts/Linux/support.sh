@@ -12,7 +12,7 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir   : The directory in subversion where the module is located.
+#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -62,21 +62,26 @@ else
 fi
 
 cd $_version                                || ReportFailure "Can not cd to $_version"
-if [ ! -f configure/RELEASE.svn ] ; then
-    cp configure/RELEASE configure/RELEASE.svn
+if [ ! -f configure/RELEASE.vcs ] ; then
+    cp configure/RELEASE configure/RELEASE.vcs
 fi
 
-# Write some history (Kludging a definition of SVN_ROOT)
-SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
-   dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
+if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
+    git cat-file -p HEAD:configure/RELEASE > configure/RELEASE.vcs
+else
+    # Write some history (Kludging a definition of SVN_ROOT)
+    SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
+      dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
 
-# Modify configure/RELEASE
-svn cat configure/RELEASE > configure/RELEASE.svn
+    # Modify configure/RELEASE
+    svn cat configure/RELEASE > configure/RELEASE.vcs
+fi
+
 rm configure/RELEASE
 
 sed -e 's,^ *EPICS_BASE *=.*$,EPICS_BASE='$EPICS_BASE',' \
     -e 's,^ *SUPPORT *=.*$,SUPPORT=/dls_sw/prod/'$(echo $_epics | cut -d_ -f1)'/support,' \
-    -e 's,^ *WORK *=.*$,#WORK=commented out to prevent prod modules depending on work modules,' configure/RELEASE.svn > configure/RELEASE
+    -e 's,^ *WORK *=.*$,#WORK=commented out to prevent prod modules depending on work modules,' configure/RELEASE.vcs > configure/RELEASE
 
 cat > configure/RELEASE.${EPICS_HOST_ARCH} <<EOF
 EPICS_BASE=${EPICS_BASE}
