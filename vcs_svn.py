@@ -37,7 +37,7 @@ class Svn(BaseVCS):
 
     def cat(self, filename, _):
         ''' Fetch contents of file in remote repository '''
-        return self.client.cat(filename)
+        return self.client.cat(os.path.join(self.repo_url, filename))
 
 
     def list_releases(self):
