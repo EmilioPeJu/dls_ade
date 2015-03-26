@@ -13,35 +13,37 @@ class Svn(BaseVCS):
         '''
         self.module = module
         self.area = options.area
-        self.init_client(options.branch)
+        self.client = svnClient()
+        self.set_repository_url()
+
 
     @property
     def vcs_type(self):
         return 'svn'
 
-    def init_client(self, branch):
+
+    # @property
+    def module(self):
+        return self.module
+
+
+    def set_repository_url(self):
         '''
         Raises 'AssertionError' is svnClient.pathcheck fails to find repo path.
         '''
-        self.client = svnClient()
-        if branch:
-            self.repo_url = os.path.join(
-                self.client.branchModule(self.module, self.area),
-                branch)
-        else:
-            self.repo_url = self.client.devModule(self.module, self.area)
+        self.repo_url = self.client.devModule(self.module, self.area)
 
         assert self.client.pathcheck(self.repo_url), \
             "%s does not exist" % self.repo_url
 
 
     def cat(self, filename, _):
-        ''' Fetch contents of file in remote repository '''
+        '''Fetch contents of file in remote repository'''
         return self.client.cat(os.path.join(self.repo_url, filename))
 
 
     def list_releases(self):
-        ''' Return list of releases of module '''
+        '''Return list of releases of module'''
         if not hasattr(self, 'releases'):
             self.releases = []
             source = self.client.prodModule(self.module, self.area)
@@ -54,7 +56,7 @@ class Svn(BaseVCS):
 
 
     def set_log_message(self, message):
-        ''' callback function to return message string for log '''
+        '''callback function to return message string for log'''
         self.client.setLogMessage(message)
 
 

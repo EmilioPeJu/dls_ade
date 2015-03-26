@@ -15,9 +15,16 @@ class Git(BaseVCS):
         self.area = options.area
         self.init_client()
 
+
     @property
     def vcs_type(self):
         return 'git'
+
+
+    # @property
+    def module(self):
+        return self.module
+
 
     def init_client(self):
         list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
@@ -35,12 +42,12 @@ class Git(BaseVCS):
 
 
     def cat(self, filename, version):
-        ''' Fetch contents of file in repository, requires tag/version '''
+        '''Fetch contents of file in repository, requires tag/version'''
         return self.client.git.cat_file('-p', version+':'+filename)
 
 
     def list_releases(self):
-        ''' Return list of release tags of module '''
+        '''Return list of release tags of module'''
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
@@ -49,7 +56,7 @@ class Git(BaseVCS):
 
 
     def set_log_message(self, message):
-        ''' Git support will not do a commit, so log message not needed. '''
+        '''Git support will not do a commit, so log message not needed.'''
         return None
 
 
