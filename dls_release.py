@@ -302,7 +302,7 @@ def main():
         if not sure:
             sys.exit(0)
 
-    if not option.skip_test:
+    if not options.skip_test:
         raise NotImplementedError('test build implementation not complete')
 
     if options.local_build:
