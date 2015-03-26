@@ -38,17 +38,6 @@ class SvnClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(url_to_be_called)
 
-    @patch('vcs_svn.svnClient.pathcheck')
-    def test_given_specific_module_options_with_branch_then_pathcheck_called_with_branch_url(self,mock_check):
-
-        module = 'deleteme'
-        options = FakeOptions(branch='feature_dev')
-        url_to_be_called = svnClient().branchModule(module,options.area)+'/'+options.branch
-
-        vcs = vcs_svn.Svn(module,options)
-
-        mock_check.assert_called_once_with(url_to_be_called)
-
     @patch('vcs_svn.svnClient.pathcheck',return_value=False)
     def test_given_args_for_nonexistent_repo_then_class_init_should_raise_assertion_error(self, mock_check):
 
