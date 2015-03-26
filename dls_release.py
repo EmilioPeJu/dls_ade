@@ -59,7 +59,7 @@ log_mess = "%s: Released version %s. %s"
 
 #     test = "work" if options.work_build else options.test_only
 
-#     # Submit the build job
+#     # Submit the build job -> I WANT TO CHANGE rel_dir TO vcs OBJECT
 #     build.submit(rel_dir, module, version, test=test)
 
 
@@ -280,8 +280,9 @@ def main():
     build_object = create_build_object(options)
 
     vcs = create_vcs_object(module, options)
-    
-    #vcs.branch(options.branch)
+
+    if options.branch:
+        raise NotImplementedError('handling branches not implemented yet')
 
     if options.next_version:
         releases = vcs.list_releases()
@@ -301,14 +302,17 @@ def main():
         if not sure:
             sys.exit(0)
 
-    # do test build here if specified in options
+    if not option.skip_test:
+        raise NotImplementedError('test build implementation not complete')
 
     if options.local_build:
         sys.exit(0)
 
-    # create release version (currently only for svn)
+    if not vcs.check_version_exists(version):
+        raise NotImplementedError('creating release not implemented yet')
+
     # submit build request
-    build_object.submit(vcs, module, version, test=True)
+    build_object.submit(vcs, version, test=True)
 
 if __name__ == "__main__":
     main()
