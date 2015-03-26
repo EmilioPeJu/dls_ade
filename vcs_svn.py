@@ -11,7 +11,7 @@ class Svn(BaseVCS):
         'module' is string with module name to release/test.
         'options' is parse object containing options.
         '''
-        self.module = module
+        self._module = module
         self.area = options.area
         self.client = svnClient()
         self.set_repository_url()
@@ -22,16 +22,16 @@ class Svn(BaseVCS):
         return 'svn'
 
 
-    # @property
+    @property
     def module(self):
-        return self.module
+        return self._module
 
 
     def set_repository_url(self):
         '''
         Raises 'AssertionError' is svnClient.pathcheck fails to find repo path.
         '''
-        self.repo_url = self.client.devModule(self.module, self.area)
+        self.repo_url = self.client.devModule(self._module, self.area)
 
         assert self.client.pathcheck(self.repo_url), \
             "%s does not exist" % self.repo_url
@@ -46,7 +46,7 @@ class Svn(BaseVCS):
         '''Return list of releases of module'''
         if not hasattr(self, 'releases'):
             self.releases = []
-            source = self.client.prodModule(self.module, self.area)
+            source = self.client.prodModule(self._module, self.area)
             if self.client.pathcheck(source):
                 for node, _ in self.client.list(
                         source,

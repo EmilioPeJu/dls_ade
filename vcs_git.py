@@ -11,7 +11,7 @@ class Git(BaseVCS):
 
     def __init__(self, module, options):
 
-        self.module = module
+        self._module = module
         self.area = options.area
         self.init_client()
 
@@ -21,20 +21,20 @@ class Git(BaseVCS):
         return 'git'
 
 
-    # @property
+    @property
     def module(self):
-        return self.module
+        return self._module
 
 
     def init_client(self):
         list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
         list_cmd_output = subprocess.check_output(list_cmd.split())
 
-        server_repo_path = 'controls/' + self.area + '/' + self.module
+        server_repo_path = 'controls/' + self.area + '/' + self._module
         if server_repo_path not in list_cmd_output:
             raise Exception('repo not found on gitolite server')
 
-        repo_dir = tempfile.mkdtemp(suffix="_" + self.module)
+        repo_dir = tempfile.mkdtemp(suffix="_" + self._module)
         self.remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
         self.remote_repo += server_repo_path
 

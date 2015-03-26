@@ -11,9 +11,9 @@ class BaseVCS(object):
         raise NotImplementedError
 
 
-    # @abs.abstractproperty
-    # def module(self):
-    #     raise NotImplementedError
+    @abc.abstractproperty
+    def module(self):
+        raise NotImplementedError
 
 
     @abc.abstractmethod
