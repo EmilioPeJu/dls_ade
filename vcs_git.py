@@ -41,9 +41,9 @@ class Git(BaseVCS):
         self.client = git.Repo.clone_from(self.remote_repo, repo_dir)
 
 
-    def cat(self, filename, version):
+    def cat(self, filename):
         '''Fetch contents of file in repository, requires tag/version'''
-        return self.client.git.cat_file('-p', version+':'+filename)
+        return self.client.git.cat_file('-p', 'master:'+filename)
 
 
     def list_releases(self):

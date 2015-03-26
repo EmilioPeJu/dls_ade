@@ -37,7 +37,7 @@ class Svn(BaseVCS):
             "%s does not exist" % self.repo_url
 
 
-    def cat(self, filename, _):
+    def cat(self, filename):
         '''Fetch contents of file in remote repository'''
         return self.client.cat(os.path.join(self.repo_url, filename))
 

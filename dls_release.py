@@ -250,8 +250,8 @@ def ask_user_input(question):
     return raw_input(question)
 
 
-def get_module_epics_version(vcs, version=None):
-    conf_release = vcs.cat("configure/RELEASE", version)
+def get_module_epics_version(vcs):
+    conf_release = vcs.cat("configure/RELEASE")
     module_epics = re.findall(
         r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", conf_release)
     if module_epics:
@@ -296,7 +296,7 @@ def main():
     print construct_info_message(module, options, version, build_object)
 
     if options.area in ["ioc", "support"]:
-        module_epics = get_module_epics_version(vcs, version)
+        module_epics = get_module_epics_version(vcs)
         sure = check_epics_version_consistent(
             module_epics, options.epics_version, build_object.epics())
         if not sure:
@@ -311,7 +311,6 @@ def main():
     if not vcs.check_version_exists(version):
         raise NotImplementedError('creating release not implemented yet')
 
-    # submit build request
     build_object.submit(vcs, version, test=True)
 
 if __name__ == "__main__":

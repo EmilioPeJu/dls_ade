@@ -17,7 +17,7 @@ class BaseVCS(object):
 
 
     @abc.abstractmethod
-    def cat(self, filename, version):
+    def cat(self, filename):
         ''' Fetch contents of particular file in remote repository '''
         raise NotImplementedError
 
