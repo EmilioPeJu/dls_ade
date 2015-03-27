@@ -25,43 +25,6 @@ prod."""
 # set default variables
 log_mess = "%s: Released version %s. %s"
 
-#     src_dir = vcs.get_src_dir(module, options)          # obsolete
-#     rel_dir = vcs.get_rel_dir(module, options, version) # 
-
-#     # If this release already exists, test from the release directory, not the
-#     # trunk.
-#     if vcs.path_check(rel_dir):
-#         src_dir = rel_dir        # this needs dealing with, in helper method?
-
-#     # Do the test build
-#     if not options.skip_test:
-#         if not build.local_test_possible():
-#             print "Local test build not possible since local system not " \
-#                   "the same OS as build server"
-#         else:
-#             print "Performing test build on local system"
-
-#             if build.test(src_dir, module, version) != 0:
-#                 sys.exit(1)
-
-#             if not options.local_build:
-#                 print "Test build successful, " \
-#                       "continuing with build server submission"
-
-#     if options.local_build:
-#         sys.exit(0)
-
-#     # Copy the source to the release directory in subversion
-#     if src_dir != rel_dir and not options.test_only:
-#         vcs.checkout_module(module, options.area, src_dir, rel_dir)
-#         src_dir = rel_dir
-#         print "Created release in svn directory: " + rel_dir
-
-#     test = "work" if options.work_build else options.test_only
-
-#     # Submit the build job -> I WANT TO CHANGE rel_dir TO vcs OBJECT
-#     build.submit(rel_dir, module, version, test=test)
-
 
 def make_parser():
     ''' helper method containing options and help text
