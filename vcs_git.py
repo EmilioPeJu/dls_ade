@@ -69,5 +69,9 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
 
+    def set_branch(self, branch):
+        raise NotImplementedError('branch handling for git not implemented')
+
+
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS)

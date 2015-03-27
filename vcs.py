@@ -46,3 +46,9 @@ class BaseVCS(object):
     def check_version_exists(self, version):
         ''' True/False for existence of release/tag in repository '''
         raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def set_branch(self, branch):
+        ''' specify a branch of the repo to use '''
+        raise NotImplementedError

@@ -214,6 +214,17 @@ class ApiInterrogateTest(unittest.TestCase):
         self.assertEqual(vcs_module, 'dummy')
 
 
+class GitSetBranchTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_when_set_branch_called_then_raise_notimplementederror(self, _1, _2, _3):
+
+        with self.assertRaises(NotImplementedError):
+            vcs_git.Git('dummy', FakeOptions()).set_branch('some_branch')
+
+
 class FakeTag(object):
     def __init__(self, name):
         self.name = name

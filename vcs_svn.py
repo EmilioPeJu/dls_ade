@@ -69,5 +69,9 @@ class Svn(BaseVCS):
         return version in self.list_releases()
 
 
+    def set_branch(self, branch):
+        pass
+
+
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Svn, BaseVCS), "Svn is not a sub-class of BaseVCS"
