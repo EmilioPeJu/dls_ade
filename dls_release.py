@@ -245,7 +245,7 @@ def main():
     vcs = create_vcs_object(module, options)
 
     if options.branch:
-        raise NotImplementedError('handling branches not implemented yet')
+        vcs.set_branch(options.branch)
 
     if options.next_version:
         releases = vcs.list_releases()
