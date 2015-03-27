@@ -604,6 +604,8 @@ class TestMain(unittest.TestCase):
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
+        self.mocks['OptionParser.parse_args'].return_value = ['','']
+
     def test_nothing(self):
 
         self.assertEqual(0, self.mocks['create_build_object'].call_count)
