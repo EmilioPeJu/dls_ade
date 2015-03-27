@@ -45,7 +45,8 @@ class SvnClassInitTest(unittest.TestCase):
         module = 'nonexistent'
         options = FakeOptions()
 
-        self.assertRaises(AssertionError,vcs_svn.Svn,module,options)
+        with self.assertRaises(AssertionError):
+            vcs_svn.Svn(module, options)
 
 
 class SvnListReleasesTest(unittest.TestCase):
@@ -154,6 +155,33 @@ class ApiInterrogateTest(unittest.TestCase):
         source_repo = vcs.source_repo
 
         self.assertEqual(source_repo, expected_source_repo)
+
+
+class SvnSetBranchTest(unittest.TestCase):
+
+    def test_given_nonexistent_branch_then_raise_error(self):
+
+        vcs = vcs_svn.Svn('deleteme', FakeOptions())
+
+        with self.assertRaises(AssertionError):
+            vcs.set_branch('not_a_branch')
+
+    @patch('vcs_svn.svnClient.pathcheck', return_value = True)
+    def test_given_existing_branch_then_source_repo_changed_to_correct_url(self, _):
+
+        branch_name = 'some_branch'
+        module = 'deleteme'
+        expected_source_url = 'http://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/branches/support/'+module+'/'+branch_name
+
+        vcs = vcs_svn.Svn(module, FakeOptions())
+        try:
+            vcs.set_branch(branch_name)
+        except AssertionError:
+            self.fail('set_branch() raised AssertionError unexpectedly')
+
+        new_source_url = vcs.source_repo
+
+        self.assertEqual(expected_source_url, new_source_url)
 
 
 class FakeOptions(object):

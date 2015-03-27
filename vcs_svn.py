@@ -34,7 +34,7 @@ class Svn(BaseVCS):
 
     def set_repository_url(self):
         '''
-        Raises 'AssertionError' is svnClient.pathcheck fails to find repo path.
+        Raises 'AssertionError' if svnClient.pathcheck fails to find repo path.
         '''
         self._repo_url = self.client.devModule(self._module, self.area)
 
@@ -70,7 +70,14 @@ class Svn(BaseVCS):
 
 
     def set_branch(self, branch):
-        pass
+        '''
+        Raises 'AssertionError' if branch url not found, else sets repo url
+        '''
+        self._repo_url = os.path.join(
+            self.client.branchModule(self._module, self.area), branch)
+
+        assert self.client.pathcheck(self._repo_url), \
+            'branch %s does not exist' % branch
 
 
 # sanity check: ensure class fully implements the interface (abc)
