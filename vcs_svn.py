@@ -27,19 +27,24 @@ class Svn(BaseVCS):
         return self._module
 
 
+    @property
+    def source_repo(self):
+        return self._repo_url.replace('svn+ssh://','http://')
+
+
     def set_repository_url(self):
         '''
         Raises 'AssertionError' is svnClient.pathcheck fails to find repo path.
         '''
-        self.repo_url = self.client.devModule(self._module, self.area)
+        self._repo_url = self.client.devModule(self._module, self.area)
 
-        assert self.client.pathcheck(self.repo_url), \
-            "%s does not exist" % self.repo_url
+        assert self.client.pathcheck(self._repo_url), \
+            "%s does not exist" % self._repo_url
 
 
     def cat(self, filename):
         '''Fetch contents of file in remote repository'''
-        return self.client.cat(os.path.join(self.repo_url, filename))
+        return self.client.cat(os.path.join(self._repo_url, filename))
 
 
     def list_releases(self):
@@ -62,10 +67,6 @@ class Svn(BaseVCS):
 
     def check_version_exists(self, version):
         return version in self.list_releases()
-
-
-    def source_repo(self):
-        return self.repo_url.replace('svn+ssh://','http://')
 
 
 # sanity check: ensure class fully implements the interface (abc)

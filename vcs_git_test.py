@@ -200,7 +200,7 @@ class ApiInterrogateTest(unittest.TestCase):
         expected_source_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/'+options.area+'/'+module
 
         vcs = vcs_git.Git(module, options)
-        source_repo = vcs.source_repo()
+        source_repo = vcs.source_repo
 
         self.assertEqual(source_repo, expected_source_repo)
 

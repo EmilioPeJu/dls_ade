@@ -16,6 +16,12 @@ class BaseVCS(object):
         raise NotImplementedError
 
 
+    @abc.abstractproperty
+    def source_repo(self):
+        ''' Fetch repo url for use by build server '''
+        raise NotImplementedError
+
+
     @abc.abstractmethod
     def cat(self, filename):
         ''' Fetch contents of particular file in remote repository '''
@@ -39,10 +45,4 @@ class BaseVCS(object):
     @abc.abstractmethod
     def check_version_exists(self, version):
         ''' True/False for existence of release/tag in repository '''
-        raise NotImplementedError
-
-
-    @abc.abstractmethod
-    def source_repo(self):
-        ''' Fetch repo url for use by build server '''
         raise NotImplementedError

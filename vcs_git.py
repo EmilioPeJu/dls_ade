@@ -26,6 +26,11 @@ class Git(BaseVCS):
         return self._module
 
 
+    @property
+    def source_repo(self):
+        return self._remote_repo
+
+
     def init_client(self):
         list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
         list_cmd_output = subprocess.check_output(list_cmd.split())
@@ -35,10 +40,10 @@ class Git(BaseVCS):
             raise Exception('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self._module)
-        self.remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
-        self.remote_repo += server_repo_path
+        self._remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
+        self._remote_repo += server_repo_path
 
-        self.client = git.Repo.clone_from(self.remote_repo, repo_dir)
+        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
 
 
     def cat(self, filename):
@@ -62,10 +67,6 @@ class Git(BaseVCS):
 
     def check_version_exists(self, version):
         return version in self.list_releases()
-
-
-    def source_repo(self):
-        return self.remote_repo
 
 
 # sanity check: ensure class fully implements the interface (abc)

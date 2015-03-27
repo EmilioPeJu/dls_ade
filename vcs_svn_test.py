@@ -151,7 +151,7 @@ class ApiInterrogateTest(unittest.TestCase):
         vcs = vcs_svn.Svn(module, options)
         expected_source_repo = 'http://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/trunk/'+options.area+'/'+module
 
-        source_repo = vcs.source_repo()
+        source_repo = vcs.source_repo
 
         self.assertEqual(source_repo, expected_source_repo)
 
