@@ -306,7 +306,7 @@ def main():
         raise NotImplementedError('test build implementation not complete')
 
     if options.local_build:
-        sys.exit(0)
+        raise NotImplementedError('local test build not implemented yet')
 
     if not vcs.check_version_exists(version):
         raise NotImplementedError('creating release not implemented yet')
