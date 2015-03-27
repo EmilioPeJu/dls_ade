@@ -553,19 +553,6 @@ class TestPerformTestBuild(unittest.TestCase):
         self.assertFalse(mexit.call_count)
 
     @patch('dls_release.sys.exit')
-    def test_given_skip_test_option_then_test_build_and_sys_exit_and_local_test_possible_not_called(self, mexit):
-
-        self.fake_build.test = MagicMock(return_value=0)
-        self.fake_build.local_test_possible = MagicMock()
-        options = FakeOptions(skip_test=True)
-
-        dls_release.perform_test_build(self.fake_build, options)
-
-        self.assertEquals(0, mexit.call_count)
-        self.assertEquals(0, self.fake_build.test.call_count)
-        self.assertEquals(0, self.fake_build.local_test_possible.call_count)
-
-    @patch('dls_release.sys.exit')
     def test_given_default_options_and_local_test_not_possible_then_test_build_and_sys_exit_not_called(self, mexit):
 
         self.fake_build.test = MagicMock(return_value=0)
