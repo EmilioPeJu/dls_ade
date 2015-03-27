@@ -24,7 +24,7 @@
 ReportFailure()
 {
     { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version"         $_email
+    mail -s "Build Errors: $_area $_module $_version" $_email
     exit 2
 }
 
@@ -103,5 +103,5 @@ build_log=${_build_name}.log
 if (( $(cat ${_build_name}.sta) != 0 )) ; then
     ReportFailure $error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
-    cat $error_log | mail -s "Build Errors: $_area $_module $_version"         $_email
+    cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email
 fi

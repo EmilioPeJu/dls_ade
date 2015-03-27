@@ -50,5 +50,5 @@ class BaseVCS(object):
 
     @abc.abstractmethod
     def set_branch(self, branch):
-        ''' specify a branch of the repo to use '''
+        ''' Specify a branch of the repo to use '''
         raise NotImplementedError

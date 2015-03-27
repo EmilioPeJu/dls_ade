@@ -581,29 +581,32 @@ class TestPerformTestBuild(unittest.TestCase):
 class TestMain(unittest.TestCase):
 
     def setUp(self):
-        self.patch = []
-        self.patch.append(patch('dls_release.create_build_object'))
-        self.patch.append(patch('dls_release.create_vcs_object'))
-        self.patch.append(patch('dls_release.check_parsed_options_valid'))
-        self.patch.append(patch('dls_release.format_argument_version'))
-        self.patch.append(patch('dls_release.next_version_number'))
-        self.patch.append(patch('dls_release.get_last_release'))
-        self.patch.append(patch('dls_release.increment_version_number'))
-        self.patch.append(patch('dls_release.construct_info_message'))
-        self.patch.append(patch('dls_release.check_epics_version_consistent'))
-        self.patch.append(patch('dls_release.ask_user_input'))
-        self.patch.append(patch('dls_release.perform_test_build'))
-        self.patch.append(patch('dls_release.OptionParser.parse_args'))
 
-        self.mocks = []
+        methods_to_patch = [
+            'create_build_object',
+            'create_vcs_object',
+            'check_parsed_options_valid',
+            'format_argument_version',
+            'next_version_number',
+            'get_last_release',
+            'increment_version_number',
+            'construct_info_message',
+            'check_epics_version_consistent',
+            'ask_user_input',
+            'perform_test_build',
+            'OptionParser.parse_args',
+        ]
 
-        for patcher in self.patch:
-            self.addCleanup(patcher.stop)
-            self.mocks.append(patcher.start())
+        self.patch = {}
+        self.mocks = {}
+        for method in methods_to_patch:
+            self.patch[method] = patch('dls_release.'+method)
+            self.addCleanup(self.patch[method].stop)
+            self.mocks[method] = self.patch[method].start()
 
     def test_nothing(self):
 
-        self.assertEqual(0, self.mocks[0].call_count)
+        self.assertEqual(0, self.mocks['create_build_object'].call_count)
 
 
 class FakeOptions(object):
