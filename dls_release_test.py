@@ -578,6 +578,36 @@ class TestPerformTestBuild(unittest.TestCase):
         # self.assertEquals(0, self.)
 
 
+class TestMain(unittest.TestCase):
+
+    def setUp(self):
+        self.patch = []
+        self.patch.append(patch('dls_release.create_build_object'))
+        self.patch.append(patch('dls_release.create_vcs_object'))
+        self.patch.append(patch('dls_release.check_parsed_options_valid'))
+        self.patch.append(patch('dls_release.format_argument_version'))
+        self.patch.append(patch('dls_release.next_version_number'))
+        self.patch.append(patch('dls_release.get_last_release'))
+        self.patch.append(patch('dls_release.increment_version_number'))
+        self.patch.append(patch('dls_release.construct_info_message'))
+        self.patch.append(patch('dls_release.check_epics_version_consistent'))
+        self.patch.append(patch('dls_release.ask_user_input'))
+        self.patch.append(patch('dls_release.perform_test_build'))
+        self.patch.append(patch('dls_release.OptionParser.parse_args'))
+
+        self.mocks = []
+
+        for patcher in self.patch:
+            self.addCleanup(patcher.stop)
+            self.mocks.append(patcher.start())
+
+        self.mocks[]
+
+    def test_nothing(self):
+
+        self.assertEqual(0, self.mocks[0].call_count)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version',None)
