@@ -601,8 +601,6 @@ class TestMain(unittest.TestCase):
             self.addCleanup(patcher.stop)
             self.mocks.append(patcher.start())
 
-        self.mocks[]
-
     def test_nothing(self):
 
         self.assertEqual(0, self.mocks[0].call_count)
