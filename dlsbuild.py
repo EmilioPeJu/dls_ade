@@ -211,7 +211,7 @@ class Builder:
             "email"                 : self.email,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
-            "%s_dir"%vcs.vcs_type   : vcs.source_repo(),
+            "%s_dir"%vcs.vcs_type   : vcs.source_repo,
             "module"                : vcs.module,
             "version"               : version,
             "area"                  : self.area,

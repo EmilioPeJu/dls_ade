@@ -222,17 +222,22 @@ def get_module_epics_version(vcs):
     return module_epics
 
 
-def perform_test_build(build_object, options):
+def perform_test_build(build_object, options, vcs, version):
+
+    message = ''
+    test_fail = False
+
     if not build_object.local_test_possible():
-        print "Local test build not possible since local system not " \
-              "the same OS as build server"
+        message += "Local test build not possible since local system not the same "
+        message += "OS as build server"
     else:
-        print "Performing test build on local system"
-        if build_object.test() != 0:
-            sys.exit(1)
-        if not options.local_build:
-            print "Test build successful, " \
-                  "continuing with build server submission"
+        message += "Performing test build on local system"
+        if build_object.test(vcs, version) != 0:
+            test_fail = True
+        else:
+            message += "\nTest build successful, "
+            message += "continuing with build server submission"
+    return message, test_fail
 
 
 def main():
@@ -269,10 +274,14 @@ def main():
             sys.exit(0)
 
     if not options.skip_test:
-        raise NotImplementedError('test build implementation not complete')
+        test_build_message, test_build_fail = perform_test_build(
+            build_object, options, vcs, version)
+        print test_build_message
+        if test_build_fail:
+            sys.exit(1)
 
     if options.local_build:
-        raise NotImplementedError('local test build not implemented yet')
+        sys.exit(0)
 
     if not vcs.check_version_exists(version):
         raise NotImplementedError('creating release not implemented yet')

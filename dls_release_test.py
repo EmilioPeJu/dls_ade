@@ -534,34 +534,74 @@ class TestPerformTestBuild(unittest.TestCase):
 
         self.fake_build = MagicMock()
 
-    @patch('dls_release.sys.exit')
-    def test_given_build_test_method_returns_fail_when_called_then_call_sys_exit_with_code_1(self, mexit):
+    def test_given_any_option_when_called_then_return_string_and_test_failure_bool(self):
 
-        self.fake_build.test.return_value = -1
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), FakeVcs(), None)
 
-        dls_release.perform_test_build(self.fake_build, FakeOptions())
+        self.assertIsInstance(test_message, str)
+        self.assertIsInstance(test_fail, bool)
 
-        mexit.assert_called_once_with(1)
+    def test_given_local_test_build_not_possible_when_Called_then_return_specific_string(self):
 
-    @patch('dls_release.sys.exit')
-    def test_given_build_test_method_returns_success_then_sys_exit_not_called(self, mexit):
-
-        self.fake_build.test.return_value = 0
-
-        dls_release.perform_test_build(self.fake_build, FakeOptions())
-
-        self.assertFalse(mexit.call_count)
-
-    @patch('dls_release.sys.exit')
-    def test_given_default_options_and_local_test_not_possible_then_test_build_and_sys_exit_not_called(self, mexit):
-
-        self.fake_build.test = MagicMock(return_value=0)
+        options = FakeOptions()
         self.fake_build.local_test_possible = MagicMock(return_value=False)
+        expected_message = "Local test build not possible since local system "
+        expected_message += "not the same OS as build server"
 
-        dls_release.perform_test_build(self.fake_build, FakeOptions())
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), FakeVcs(), None)
 
-        self.assertEquals(0, mexit.call_count)
-        self.assertEquals(0, self.fake_build.test.call_count)
+        self.assertEqual(test_message, expected_message)
+
+    def test_given_local_test_build_possible_then_returned_string_begins_with_specific_string(self):
+
+        options = FakeOptions()
+        expected_message = "Performing test build on local system"
+
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), FakeVcs(), None)
+
+        self.assertTrue(
+            test_message.startswith(expected_message),
+            "returned message does not start with expected string")
+
+    def test_given_local_test_possible_and_build_fails_then_return_test_failed(self):
+
+        options = FakeOptions()
+        self.fake_build.test.return_value = 1
+
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), FakeVcs(), None)
+
+        self.assertTrue(test_fail)
+
+    def test_given_local_test_possible_then_test_build_performed_once_with_vcs_and_version_as_args(self):
+
+        options = FakeOptions()
+        version = '0-1'
+        vcs = FakeVcs()
+        self.fake_build.test.return_value = 1
+
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), vcs, version)
+
+        self.fake_build.test.assert_called_once_with(vcs, version)
+
+    def test_given_test_possible_and_build_works_then_return_test_not_failed_and_message_ends_with_specific_string(self):
+
+        options = FakeOptions()
+        self.fake_build.test.return_value = 0
+        expected_message_end = "Test build successful, continuing with build"
+        expected_message_end += " server submission"
+
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, FakeOptions(), FakeVcs(), None)
+
+        self.assertFalse(test_fail)
+        self.assertTrue(
+            test_message.endswith(expected_message_end),
+            "returned message does not end with expected string")
 
 
 class TestMain(unittest.TestCase):
