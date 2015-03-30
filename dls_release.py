@@ -185,7 +185,7 @@ def increment_version_number(last_release):
 def construct_info_message(module, options, version, build_object):
     ''' helper method gathering info to a string to display during release
     '''
-    info = ''
+    info = str()
     if options.branch:
         btext = "branch %s" % options.branch
     else:
