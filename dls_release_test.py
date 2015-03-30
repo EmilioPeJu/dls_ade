@@ -562,7 +562,6 @@ class TestPerformTestBuild(unittest.TestCase):
 
         self.assertEquals(0, mexit.call_count)
         self.assertEquals(0, self.fake_build.test.call_count)
-        # self.assertEquals(0, self.)
 
 
 class TestMain(unittest.TestCase):
@@ -609,6 +608,7 @@ class FakeOptions(object):
         self.branch = kwargs.get('branch',None)
         self.next_version = kwargs.get('next_version',None)
         self.skip_test = kwargs.get('skip_test',False)
+        self.local_build = kwargs.get('local_build',False)
 
 
 class FakeVcs(object):

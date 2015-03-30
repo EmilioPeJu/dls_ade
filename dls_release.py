@@ -225,10 +225,14 @@ def get_module_epics_version(vcs):
 def perform_test_build(build_object, options):
     if not build_object.local_test_possible():
         print "Local test build not possible since local system not " \
-              " the same OS as build server"
+              "the same OS as build server"
     else:
+        print "Performing test build on local system"
         if build_object.test() != 0:
             sys.exit(1)
+        if not options.local_build:
+            print "Test build successful, " \
+                  "continuing with build server submission"
 
 
 def main():
