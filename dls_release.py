@@ -287,7 +287,7 @@ def main():
     if not vcs.check_version_exists(version):
         raise NotImplementedError('creating release not implemented yet')
 
-    build_object.submit(vcs, version, test=True)
+    build_object.submit(vcs, test=True)
 
 
 if __name__ == "__main__":
