@@ -234,7 +234,7 @@ def perform_test_build(build_object, options, vcs, version):
         message += "Performing test build on local system"
         if build_object.test(vcs, version) != 0:
             test_fail = True
-        else:
+        elif not options.local_build:
             message += "\nTest build successful, "
             message += "continuing with build server submission"
     return message, test_fail

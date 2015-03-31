@@ -603,6 +603,17 @@ class TestPerformTestBuild(unittest.TestCase):
             test_message.endswith(expected_message_end),
             "returned message does not end with expected string")
 
+    def test_given_test_possible_and_build_works_and_local_build_option_then_message_ends_without_continuation_info(self):
+
+        options = FakeOptions(local_build=True)
+        self.fake_build.test.return_value = 0
+        expected_message = "Performing test build on local system"
+
+        test_message, test_fail = dls_release.perform_test_build(
+            self.fake_build, options, FakeVcs(), None)
+
+        self.assertEqual(test_message, expected_message)
+
 
 class TestMain(unittest.TestCase):
 
