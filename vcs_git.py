@@ -14,6 +14,7 @@ class Git(BaseVCS):
         self._module = module
         self.area = options.area
         self.init_client()
+        self._version = None
 
 
     @property
@@ -29,6 +30,13 @@ class Git(BaseVCS):
     @property
     def source_repo(self):
         return self._remote_repo
+
+
+    @property
+    def version(self):
+        if not self._version:
+            raise Exception('version not set')
+        return self._version
 
 
     def init_client(self):
@@ -71,6 +79,10 @@ class Git(BaseVCS):
 
     def set_branch(self, branch):
         raise NotImplementedError('branch handling for git not implemented')
+
+
+    def set_version(self, version):
+        self._version = version
 
 
 # sanity check: ensure class fully implements the interface (abc)

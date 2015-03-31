@@ -216,6 +216,31 @@ class GitSetBranchTest(unittest.TestCase):
             vcs_git.Git('dummy', FakeOptions()).set_branch('some_branch')
 
 
+class SetVersionTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_given_vcs_when_version_not_set_then_get_version_raise_error(self, _1, _2, _3):
+
+        vcs = vcs_git.Git('dummy', FakeOptions())
+
+        with self.assertRaises(Exception):
+            vcs.version
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def test_given_vcs_when_version_set_return_version(self, _1, _2, _3):
+
+        version = '0-2'
+        vcs = vcs_git.Git('dummy', FakeOptions())
+
+        vcs.set_version(version)
+
+        self.assertEqual(vcs.version, version)
+
+
 class FakeTag(object):
     def __init__(self, name):
         self.name = name

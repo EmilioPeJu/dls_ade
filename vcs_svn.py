@@ -15,6 +15,7 @@ class Svn(BaseVCS):
         self.area = options.area
         self.client = svnClient()
         self.set_repository_url()
+        self._version = None
 
 
     @property
@@ -30,6 +31,13 @@ class Svn(BaseVCS):
     @property
     def source_repo(self):
         return self._repo_url.replace('svn+ssh://','http://')
+
+
+    @property
+    def version(self):
+        if not self._version:
+            raise Exception('version not set')
+        return self._version
 
 
     def set_repository_url(self):
@@ -78,6 +86,13 @@ class Svn(BaseVCS):
 
         assert self.client.pathcheck(self._repo_url), \
             'branch %s does not exist' % branch
+
+
+    def set_version(self, version):
+        self._version = version
+        if self.check_version_exists(version):
+            self._repo_url = os.path.join(
+                self.client.prodModule(self._module, self.area), version)
 
 
 # sanity check: ensure class fully implements the interface (abc)

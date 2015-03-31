@@ -260,6 +260,7 @@ def main():
         version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args[1])
+    vcs.set_version(version)
 
     vcs.set_log_message(
         (log_mess % (module, version, options.message)).strip())

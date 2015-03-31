@@ -18,7 +18,13 @@ class BaseVCS(object):
 
     @abc.abstractproperty
     def source_repo(self):
-        ''' Fetch repo url for use by build server '''
+        ''' repo url for use by build server '''
+        raise NotImplementedError
+
+
+    @abc.abstractproperty
+    def version(self):
+        ''' desired version number to release under '''
         raise NotImplementedError
 
 
@@ -51,4 +57,10 @@ class BaseVCS(object):
     @abc.abstractmethod
     def set_branch(self, branch):
         ''' Specify a branch of the repo to use '''
+        raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def set_version(self, version):
+        ''' Set the desired version number to release under '''
         raise NotImplementedError

@@ -188,6 +188,50 @@ class SvnSetBranchTest(unittest.TestCase):
         self.assertEqual(expected_source_url, new_source_url)
 
 
+class SetVersionTest(unittest.TestCase):
+
+    def setUp(self):
+
+        patcher = patch('vcs_svn.svnClient.pathcheck')
+        self.addCleanup(patcher.stop)
+        self.mock_check = patcher.start()
+
+    def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
+
+        module = 'deleteme'
+
+        vcs = vcs_svn.Svn(module, FakeOptions())
+
+        with self.assertRaises(Exception):
+            vcs.version
+
+    def test_given_vcs_when_set_version_to_n_then_get_version_return_n(self):
+
+        module = 'deleteme'
+        version = '0-2'
+
+        vcs = vcs_svn.Svn(module, FakeOptions())
+        vcs.set_version(version)
+
+        self.assertEqual(vcs.version, version)
+
+    @patch('vcs_svn.Svn.list_releases', return_value=['0-2'])
+    def test_given_vcs_and_version_exists_when_set_version_called_then_repo_url_change_to_released_version(self, _):
+
+        module = 'deleteme'
+        version = '0-2'
+        options = FakeOptions()
+        expected_url = 'http://serv0002.cs.diamond.ac.uk/home/subversion/'
+        expected_url += 'repos/controls/diamond/release/' + options.area + '/'
+        expected_url += module + '/' + version
+
+        vcs = vcs_svn.Svn(module, options)
+        vcs.set_version(version)
+        source_url = vcs.source_repo
+
+        self.assertEqual(source_url, expected_url)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.area = kwargs.get('area','support')
