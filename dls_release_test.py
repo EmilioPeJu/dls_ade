@@ -537,7 +537,7 @@ class TestPerformTestBuild(unittest.TestCase):
     def test_given_any_option_when_called_then_return_string_and_test_failure_bool(self):
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs(), None)
+            self.fake_build, FakeOptions(), FakeVcs())
 
         self.assertIsInstance(test_message, str)
         self.assertIsInstance(test_fail, bool)
@@ -550,7 +550,7 @@ class TestPerformTestBuild(unittest.TestCase):
         expected_message += "not the same OS as build server"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs(), None)
+            self.fake_build, FakeOptions(), FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
@@ -560,7 +560,7 @@ class TestPerformTestBuild(unittest.TestCase):
         expected_message = "Performing test build on local system"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs(), None)
+            self.fake_build, FakeOptions(), FakeVcs())
 
         self.assertTrue(
             test_message.startswith(expected_message),
@@ -572,7 +572,7 @@ class TestPerformTestBuild(unittest.TestCase):
         self.fake_build.test.return_value = 1
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs(), None)
+            self.fake_build, FakeOptions(), FakeVcs())
 
         self.assertTrue(test_fail)
 
@@ -580,11 +580,11 @@ class TestPerformTestBuild(unittest.TestCase):
 
         options = FakeOptions()
         version = '0-1'
-        vcs = FakeVcs()
+        vcs = FakeVcs(version=version)
         self.fake_build.test.return_value = 1
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), vcs, version)
+            self.fake_build, FakeOptions(), vcs)
 
         self.fake_build.test.assert_called_once_with(vcs, version)
 
@@ -596,7 +596,7 @@ class TestPerformTestBuild(unittest.TestCase):
         expected_message_end += " server submission"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs(), None)
+            self.fake_build, FakeOptions(), FakeVcs())
 
         self.assertFalse(test_fail)
         self.assertTrue(
@@ -610,7 +610,7 @@ class TestPerformTestBuild(unittest.TestCase):
         expected_message = "Performing test build on local system"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, options, FakeVcs(), None)
+            self.fake_build, options, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
@@ -650,19 +650,22 @@ class TestMain(unittest.TestCase):
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
-        self.rhel_version = kwargs.get('rhel_version',None)
-        self.epics_version = kwargs.get('epics_version',None)
-        self.windows = kwargs.get('windows',None)
-        self.area = kwargs.get('area','support')
-        self.force = kwargs.get('force',None)
-        self.git = kwargs.get('git',False)
-        self.branch = kwargs.get('branch',None)
-        self.next_version = kwargs.get('next_version',None)
-        self.skip_test = kwargs.get('skip_test',False)
-        self.local_build = kwargs.get('local_build',False)
+        self.rhel_version = kwargs.get('rhel_version', None)
+        self.epics_version = kwargs.get('epics_version', None)
+        self.windows = kwargs.get('windows', None)
+        self.area = kwargs.get('area', 'support')
+        self.force = kwargs.get('force', None)
+        self.git = kwargs.get('git', False)
+        self.branch = kwargs.get('branch', None)
+        self.next_version = kwargs.get('next_version', None)
+        self.skip_test = kwargs.get('skip_test', False)
+        self.local_build = kwargs.get('local_build', False)
 
 
 class FakeVcs(object):
+    def __init__(self, **kwargs):
+        self.version = kwargs.get('version', None)
+
     def cat(self,filename, version=None):
         file_contents = '''
             CALC            = $(SUPPORT)/calc/3-1

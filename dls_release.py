@@ -222,7 +222,7 @@ def get_module_epics_version(vcs):
     return module_epics
 
 
-def perform_test_build(build_object, options, vcs, version):
+def perform_test_build(build_object, options, vcs):
 
     message = ''
     test_fail = False
@@ -232,7 +232,7 @@ def perform_test_build(build_object, options, vcs, version):
         message += "OS as build server"
     else:
         message += "Performing test build on local system"
-        if build_object.test(vcs, version) != 0:
+        if build_object.test(vcs, vcs.version) != 0:
             test_fail = True
         elif not options.local_build:
             message += "\nTest build successful, "
@@ -276,7 +276,7 @@ def main():
 
     if not options.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build_object, options, vcs, version)
+            build_object, options, vcs)
         print test_build_message
         if test_build_fail:
             sys.exit(1)
