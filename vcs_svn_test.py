@@ -66,8 +66,7 @@ class SvnListReleasesTest(unittest.TestCase):
         self.assertEqual(0, len(releases))
 
     @patch('vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
-    def test_given_released_module_then_return_list_inc_version_1_0(self, mock_check, mock_list):
+    def test_given_released_module_then_return_list_inc_version_1_0(self, mock_list):
         '''
         as of 3.3.15, the above svn source path was correct for module
         "deleteme" with releases 1-0, 1-0-1 and 2-0
@@ -77,8 +76,7 @@ class SvnListReleasesTest(unittest.TestCase):
         self.assertTrue('1-0' in releases)
 
     @patch('vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
-    def test_given_released_module_then_return_list_inc_all_rel_versions(self, mock_check, mock_list):
+    def test_given_released_module_then_return_list_inc_all_rel_versions(self, mock_list):
         '''
         as of 3.3.15, the above svn source path was correct for module
         "deleteme" with releases 1-0, 1-0-1 and 2-0
@@ -117,20 +115,21 @@ class SvnCheckVersionTest(unittest.TestCase):
         self.module = 'deleteme'
         self.options = FakeOptions()
         self.vcs = vcs_svn.Svn(self.module, self.options)
+        patcher = patch('vcs_svn.Svn.list_releases')
+        self.addCleanup(patcher.stop)        
+        self.mlist = patcher.start()
 
-    @patch('vcs_svn.Svn.list_releases')
-    def test_given_version_in_list_of_releases_then_return_true(self, mlist):
+    def test_given_version_in_list_of_releases_then_return_true(self):
         
         version = '1-5'
-        mlist.return_value = ['1-4','1-5','1-6']
+        self.mlist.return_value = ['1-4','1-5','1-6']
 
         self.assertTrue(self.vcs.check_version_exists(version))
 
-    @patch('vcs_svn.Svn.list_releases')
-    def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
+    def test_given_version_not_in_list_of_releases_then_return_false(self):
         
         version = '1-5'
-        mlist.return_value = ['1-4','2-5','1-6']
+        self.mlist.return_value = ['1-4','2-5','1-6']
 
         self.assertFalse(self.vcs.check_version_exists(version))
 
@@ -196,38 +195,33 @@ class SetVersionTest(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.mock_check = patcher.start()
 
+        self.module = 'deleteme'
+        self.options = FakeOptions()
+        self.vcs = vcs_svn.Svn(self.module, self.options)
+
     def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
-        module = 'deleteme'
-
-        vcs = vcs_svn.Svn(module, FakeOptions())
-
         with self.assertRaises(Exception):
-            vcs.version
+            self.vcs.version
 
     def test_given_vcs_when_set_version_to_n_then_get_version_return_n(self):
 
-        module = 'deleteme'
         version = '0-2'
 
-        vcs = vcs_svn.Svn(module, FakeOptions())
-        vcs.set_version(version)
+        self.vcs.set_version(version)
 
-        self.assertEqual(vcs.version, version)
+        self.assertEqual(self.vcs.version, version)
 
     @patch('vcs_svn.Svn.list_releases', return_value=['0-2'])
     def test_given_vcs_and_version_exists_when_set_version_called_then_repo_url_change_to_released_version(self, _):
 
-        module = 'deleteme'
         version = '0-2'
-        options = FakeOptions()
         expected_url = 'http://serv0002.cs.diamond.ac.uk/home/subversion/'
-        expected_url += 'repos/controls/diamond/release/' + options.area + '/'
-        expected_url += module + '/' + version
+        expected_url += 'repos/controls/diamond/release/' + self.options.area
+        expected_url += '/' + self.module + '/' + version
 
-        vcs = vcs_svn.Svn(module, options)
-        vcs.set_version(version)
-        source_url = vcs.source_repo
+        self.vcs.set_version(version)
+        source_url = self.vcs.source_repo
 
         self.assertEqual(source_url, expected_url)
 
