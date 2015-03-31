@@ -64,3 +64,9 @@ class BaseVCS(object):
     def set_version(self, version):
         ''' Set the desired version number to release under '''
         raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def release_version(self, version):
+        ''' Create release version/tag of module with specified version '''
+        raise NotImplementedError

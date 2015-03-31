@@ -89,5 +89,9 @@ class Git(BaseVCS):
         self._version = version
 
 
+    def release_version(self, version):
+        raise NotImplementedError('version release for git not implemented')
+
+
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS)

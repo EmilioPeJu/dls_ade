@@ -216,7 +216,7 @@ class GitSettersTest(unittest.TestCase):
         self.module = 'dummy'
         self.options = FakeOptions()
 
-        self.vcs = vcs_git.Git(self.module, self.options)        
+        self.vcs = vcs_git.Git(self.module, self.options)
 
     def test_when_set_branch_called_then_raise_notimplementederror(self):
 
@@ -235,6 +235,24 @@ class GitSettersTest(unittest.TestCase):
         self.vcs.set_version(version)
 
         self.assertEqual(self.vcs.version, version)
+
+
+class GitReleaseVersionTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from')
+    @patch('vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone, mcheck):
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    def test_method_is_not_implemented(self):
+
+        with self.assertRaises(NotImplementedError):
+            self.vcs.release_version('some-version')
 
 
 class FakeTag(object):
