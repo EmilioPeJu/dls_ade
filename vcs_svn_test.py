@@ -137,15 +137,19 @@ class SvnCheckVersionTest(unittest.TestCase):
 
 class ApiInterrogateTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck')
-    def test_when_asking_object_for_vcs_type_then_return_svn_in_string(self, _):
+    def setUp(self):
+
+        patcher = patch('vcs_svn.svnClient.pathcheck')
+        self.addCleanup(patcher.stop)
+        self.mock_check = patcher.start()
+
+    def test_when_asking_object_for_vcs_type_then_return_svn_in_string(self):
 
         vcs_type = vcs_svn.Svn('dummy', FakeOptions()).vcs_type
 
         self.assertEqual(vcs_type,'svn')
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value = True)
-    def test_when_calling_source_repo_method_then_return_url_with_http_at_start(self, _):
+    def test_when_calling_source_repo_method_then_return_url_with_http_at_start(self):
 
         module = 'dummy'
         options = FakeOptions()
