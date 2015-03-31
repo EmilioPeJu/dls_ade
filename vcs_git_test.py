@@ -184,23 +184,24 @@ class ApiInterrogateTest(unittest.TestCase):
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.git.Repo.clone_from')
     @patch('vcs_git.tempfile.mkdtemp')
-    def test_when_asking_object_for_vcs_type_then_return_git_in_string(self, _1, _2, _3):
+    def setUp(self, _1, _2, _3):
 
-        vcs_type = vcs_git.Git('dummy', FakeOptions()).vcs_type
+        self.module = 'dummy'
+        self.options = FakeOptions()
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    def test_when_asking_object_for_vcs_type_then_return_git_in_string(self):
+
+        vcs_type = self.vcs.vcs_type
 
         self.assertEqual(vcs_type, 'git')
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
-    def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self, _1, _2, _3):
+    def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self):
 
-        module = 'dummy'
-        options = FakeOptions()
-        expected_source_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/'+options.area+'/'+module
+        expected_source_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
+        expected_source_repo += 'controls/'+self.options.area+'/'+self.module
 
-        vcs = vcs_git.Git(module, options)
-        source_repo = vcs.source_repo
+        source_repo = self.vcs.source_repo
 
         self.assertEqual(source_repo, expected_source_repo)
 
