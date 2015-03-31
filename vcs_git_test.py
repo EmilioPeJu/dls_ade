@@ -204,15 +204,6 @@ class ApiInterrogateTest(unittest.TestCase):
 
         self.assertEqual(source_repo, expected_source_repo)
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
-    def test_module_is_dummy(self, _1, _2, _3):
-
-        vcs_module = vcs_git.Git('dummy', FakeOptions()).module
-
-        self.assertEqual(vcs_module, 'dummy')
-
 
 class GitSetBranchTest(unittest.TestCase):
 
