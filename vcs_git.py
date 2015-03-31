@@ -55,12 +55,16 @@ class Git(BaseVCS):
 
 
     def cat(self, filename):
-        '''Fetch contents of file in repository, requires tag/version'''
-        return self.client.git.cat_file('-p', 'master:'+filename)
+        '''
+        Fetch contents of file in repository, if version not set then uses
+        master.
+        '''
+        tag = self._version if self._version else 'master'
+        return self.client.git.cat_file('-p', tag+':'+filename)
 
 
     def list_releases(self):
-        '''Return list of release tags of module'''
+        '''Return list of release tags of module.'''
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
