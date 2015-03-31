@@ -205,40 +205,35 @@ class ApiInterrogateTest(unittest.TestCase):
         self.assertEqual(source_repo, expected_source_repo)
 
 
-class GitSetBranchTest(unittest.TestCase):
+class GitSettersTest(unittest.TestCase):
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.git.Repo.clone_from')
     @patch('vcs_git.tempfile.mkdtemp')
-    def test_when_set_branch_called_then_raise_notimplementederror(self, _1, _2, _3):
+    def setUp(self, mtemp, mclone, mcheck):
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+
+        self.vcs = vcs_git.Git(self.module, self.options)        
+
+    def test_when_set_branch_called_then_raise_notimplementederror(self):
 
         with self.assertRaises(NotImplementedError):
-            vcs_git.Git('dummy', FakeOptions()).set_branch('some_branch')
+            self.vcs.set_branch('some_branch')
 
-
-class SetVersionTest(unittest.TestCase):
-
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
-    def test_given_vcs_when_version_not_set_then_get_version_raise_error(self, _1, _2, _3):
-
-        vcs = vcs_git.Git('dummy', FakeOptions())
+    def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
         with self.assertRaises(Exception):
-            vcs.version
+            self.vcs.version
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
-    def test_given_vcs_when_version_set_return_version(self, _1, _2, _3):
+    def test_given_vcs_when_version_set_return_version(self):
 
         version = '0-2'
-        vcs = vcs_git.Git('dummy', FakeOptions())
 
-        vcs.set_version(version)
+        self.vcs.set_version(version)
 
-        self.assertEqual(vcs.version, version)
+        self.assertEqual(self.vcs.version, version)
 
 
 class FakeTag(object):
