@@ -284,7 +284,7 @@ def main():
     if options.local_build:
         sys.exit(0)
 
-    if not vcs.check_version_exists(version):
+    if not vcs.check_version_exists(version) and not options.test_only:
         raise NotImplementedError('creating release not implemented yet')
 
     build_object.submit(vcs, test=True)
