@@ -94,4 +94,4 @@ class Git(BaseVCS):
 
 
 # sanity check: ensure class fully implements the interface (abc)
-assert issubclass(Git, BaseVCS)
+assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"
