@@ -192,9 +192,11 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_release.make_parser()
+        parse_error_patch = patch('dls_release.OptionParser.error')
+        self.addCleanup(parse_error_patch.stop)
+        self.mock_error = parse_error_patch.start()
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self, mock_error):
+    def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self):
 
         args = []
         options = FakeOptions()
@@ -202,10 +204,9 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
 
-        mock_error.assert_called_once_with(expected_error_msg)
+        self.mock_error.assert_called_once_with(expected_error_msg)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_args_list_with_length_1_then_parser_error_called_specifying_no_module_version(self, mock_error):
+    def test_given_args_list_with_length_1_then_parser_error_called_specifying_no_module_version(self):
 
         args = ['module_name']
         options = FakeOptions()
@@ -213,10 +214,9 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
         
-        mock_error.assert_called_once_with(expected_error_msg)
+        self.mock_error.assert_called_once_with(expected_error_msg)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self, mock_error):
+    def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
 
         args = ['build','12']
         options = FakeOptions(area='etc')
@@ -225,10 +225,9 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
 
-        mock_error.assert_called_once_with(expected_error_msg)
+        self.mock_error.assert_called_once_with(expected_error_msg)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self, mock_error):
+    def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self):
 
         args = ['redirector','12']
         options = FakeOptions(area='etc')
@@ -237,50 +236,91 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
 
-        mock_error.assert_called_once_with(expected_error_msg)
+        self.mock_error.assert_called_once_with(expected_error_msg)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self, mock_error):
+    def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self):
 
         args = ['not_build','12']
         options = FakeOptions(area='etc')
         
         dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = mock_error.call_count
+        n_calls = self.mock_error.call_count
 
         self.assertFalse(n_calls)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self, mock_error):
+    def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self):
 
         args = ['redirector',12]
         options = FakeOptions()
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = mock_error.call_count
+        n_calls = self.mock_error.call_count
 
-        self.assertFalse(n_calls)
+        self.assertEqual(0, n_calls)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_next_version_and_git_flag_then_parser_error_called(self, mock_error):
+    def test_given_next_version_and_git_flag_then_parser_error_called(self):
 
         args = ['module_name',12]
         options = FakeOptions(git=True, next_version=True)
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
 
-        mock_error.assert_called_once_with(ANY)
+        self.mock_error.assert_called_once_with(ANY)
 
-    @patch('dls_release.OptionParser.error')
-    def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self, mock_error):
+    def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self):
         
         args = ['redirector']
         options = FakeOptions(next_version=True)
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = mock_error.call_count
+        n_calls = self.mock_error.call_count
 
-        self.assertFalse(n_calls)
+        self.assertEqual(0, n_calls)
+
+    def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
+
+        args = ['module','version']
+        options = FakeOptions(git=True, area='archive')
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        self.mock_error.assert_called_once_with(ANY)
+
+    def test_given_git_and_epics_area_else_good_options_then_raise_error(self):
+
+        args = ['module','version']
+        options = FakeOptions(git=True, area='epics')
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        self.mock_error.assert_called_once_with(ANY)
+
+    def test_given_git_and_matlab_area_else_good_options_then_raise_error(self):
+
+        args = ['module','version']
+        options = FakeOptions(git=True, area='matlab')
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        self.mock_error.assert_called_once_with(ANY)
+
+    def test_given_git_and_etc_area_else_good_options_then_raise_error(self):
+
+        args = ['module','version']
+        options = FakeOptions(git=True, area='etc')
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        self.mock_error.assert_called_once_with(ANY)
+
+    def test_given_git_and_tools_area_else_good_options_then_raise_error(self):
+
+        args = ['module','version']
+        options = FakeOptions(git=True, area='tools')
+
+        dls_release.check_parsed_options_valid(args, options, self.parser)
+
+        self.mock_error.assert_called_once_with(ANY)
 
 
 class TestCreateVCSObject(unittest.TestCase):
