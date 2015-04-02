@@ -632,7 +632,7 @@ class TestPerformTestBuild(unittest.TestCase):
 
         options = FakeOptions()
         self.fake_build.test.return_value = 0
-        expected_message_end = "Test build successful, continuing with build"
+        expected_message_end = "Test build successful. Continuing with build"
         expected_message_end += " server submission"
 
         test_message, test_fail = dls_release.perform_test_build(
@@ -648,6 +648,7 @@ class TestPerformTestBuild(unittest.TestCase):
         options = FakeOptions(local_build=True)
         self.fake_build.test.return_value = 0
         expected_message = "Performing test build on local system"
+        expected_message += '\nTest build successful.'
 
         test_message, test_fail = dls_release.perform_test_build(
             self.fake_build, options, FakeVcs())
