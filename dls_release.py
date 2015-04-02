@@ -234,7 +234,7 @@ def perform_test_build(build_object, options, vcs):
         message += "OS as build server"
     else:
         message += "Performing test build on local system"
-        if build_object.test(vcs, vcs.version) != 0:
+        if build_object.test(vcs) != 0:
             test_fail = True
         elif not options.local_build:
             message += "\nTest build successful, "
