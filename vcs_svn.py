@@ -30,7 +30,7 @@ class Svn(BaseVCS):
 
     @property
     def source_repo(self):
-        return self._repo_url.replace('svn+ssh://','http://')
+        return self._repo_url.replace('svn+ssh://','http://').replace('/home/subversion','')
 
 
     @property

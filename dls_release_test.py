@@ -626,7 +626,7 @@ class TestPerformTestBuild(unittest.TestCase):
         test_message, test_fail = dls_release.perform_test_build(
             self.fake_build, FakeOptions(), vcs)
 
-        self.fake_build.test.assert_called_once_with(vcs, version)
+        self.fake_build.test.assert_called_once_with(vcs)
 
     def test_given_test_possible_and_build_works_then_return_test_not_failed_and_message_ends_with_specific_string(self):
 

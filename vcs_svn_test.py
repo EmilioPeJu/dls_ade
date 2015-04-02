@@ -153,7 +153,9 @@ class ApiInterrogateTest(unittest.TestCase):
         module = 'dummy'
         options = FakeOptions()
         vcs = vcs_svn.Svn(module, options)
-        expected_source_repo = 'http://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/trunk/'+options.area+'/'+module
+        expected_source_repo = 'http://serv0002.cs.diamond.ac.uk/repos/'
+        expected_source_repo += 'controls/diamond/trunk/' + options.area
+        expected_source_repo += '/' + module
 
         source_repo = vcs.source_repo
 
@@ -174,7 +176,9 @@ class SvnSetBranchTest(unittest.TestCase):
 
         branch_name = 'some_branch'
         module = 'deleteme'
-        expected_source_url = 'http://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/branches/support/'+module+'/'+branch_name
+        expected_source_url = 'http://serv0002.cs.diamond.ac.uk/repos/controls'
+        expected_source_url += '/diamond/branches/support/' + module
+        expected_source_url += '/' + branch_name
 
         vcs = vcs_svn.Svn(module, FakeOptions())
         try:
@@ -216,7 +220,7 @@ class SetVersionTest(unittest.TestCase):
     def test_given_vcs_and_version_exists_when_set_version_called_then_repo_url_change_to_released_version(self, _):
 
         version = '0-2'
-        expected_url = 'http://serv0002.cs.diamond.ac.uk/home/subversion/'
+        expected_url = 'http://serv0002.cs.diamond.ac.uk/'
         expected_url += 'repos/controls/diamond/release/' + self.options.area
         expected_url += '/' + self.module + '/' + version
 
@@ -265,6 +269,7 @@ class ReleaseVersionTest(unittest.TestCase):
         self.vcs.release_version(self.version)
 
         new_source_url = self.vcs.source_repo.replace('http','svn+ssh')
+        new_source_url = new_source_url.replace('ac.uk','ac.uk/home/subversion')
 
         self.assertEqual(new_source_url, self.rel_dir)
 
@@ -277,6 +282,7 @@ class ReleaseVersionTest(unittest.TestCase):
         manager.attach_mock(self.vcs.set_version, 'set_version')
 
         old_source_url = self.vcs.source_repo.replace('http','svn+ssh')
+        old_source_url = old_source_url.replace('ac.uk','ac.uk/home/subversion')
         self.vcs.release_version(self.version)
 
         manager.assert_has_calls([call.mkdir(self.rel_dir),
