@@ -45,18 +45,17 @@ class Svn(BaseVCS):
         Raises 'AssertionError' if svnClient.pathcheck fails to find repo path.
         '''
         self._repo_url = self.client.devModule(self._module, self.area)
-
         assert self.client.pathcheck(self._repo_url), \
             "%s does not exist" % self._repo_url
 
 
     def cat(self, filename):
-        '''Fetch contents of file in remote repository'''
+        '''Fetch contents of file in remote repository.'''
         return self.client.cat(os.path.join(self._repo_url, filename))
 
 
     def list_releases(self):
-        '''Return list of releases of module'''
+        '''Return list of releases of module.'''
         releases = []
         source = self.client.prodModule(self._module, self.area)
         if self.client.pathcheck(source):
@@ -68,7 +67,7 @@ class Svn(BaseVCS):
 
 
     def set_log_message(self, message):
-        '''callback function to return message string for log'''
+        '''callback function to return message string for log.'''
         self.client.setLogMessage(message)
 
 
@@ -78,17 +77,19 @@ class Svn(BaseVCS):
 
     def set_branch(self, branch):
         '''
-        Raises 'AssertionError' if branch url not found, else sets repo url
+        Raises 'AssertionError' if branch url not found, else sets repo url.
         '''
         self._repo_url = os.path.join(
             self.client.branchModule(self._module, self.area), branch)
-
         assert self.client.pathcheck(self._repo_url), \
             'branch %s does not exist' % branch
 
 
     def set_version(self, version):
-        ''' '''
+        '''
+        Store version number to release under in vcs object.
+        If version exists, set repository url to that release vrsion.
+        '''
         self._version = version
         if self.check_version_exists(version):
             self._repo_url = os.path.join(
@@ -96,12 +97,13 @@ class Svn(BaseVCS):
 
 
     def release_version(self, version):
+        '''Create release with version number in svn repository.'''
         release_url = os.path.join(
             self.client.prodModule(self._module, self.area),
             version)
         self.client.mkdir(release_url)
         self.client.copy(self._repo_url, release_url)
-        self.set_version(version)
+        self.set_version(version) # changes repo url to release version
 
 
 # sanity check: ensure class fully implements the interface (abc)

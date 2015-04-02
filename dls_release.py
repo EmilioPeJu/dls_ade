@@ -248,8 +248,7 @@ def main():
     check_parsed_options_valid(args, options, parser)
     module = args[0]
 
-    build_object = create_build_object(options)
-
+    build = create_build_object(options)
     vcs = create_vcs_object(module, options)
 
     if options.branch:
@@ -265,18 +264,18 @@ def main():
     vcs.set_log_message(
         (log_mess % (module, version, options.message)).strip())
 
-    print construct_info_message(module, options, version, build_object)
+    print construct_info_message(module, options, version, build)
 
     if options.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
         sure = check_epics_version_consistent(
-            module_epics, options.epics_version, build_object.epics())
+            module_epics, options.epics_version, build.epics())
         if not sure:
             sys.exit(0)
 
     if not options.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build_object, options, vcs)
+            build, options, vcs)
         print test_build_message
         if test_build_fail:
             sys.exit(1)
@@ -285,9 +284,11 @@ def main():
         sys.exit(0)
 
     if not vcs.check_version_exists(version) and not options.test_only:
-        raise NotImplementedError('creating release not implemented yet')
+        vcs.release_version(version)
 
-    build_object.submit(vcs, test=True)
+    test = "work" if options.work_build else options.test_only
+
+    build.submit(vcs, test=True)
 
 
 if __name__ == "__main__":
