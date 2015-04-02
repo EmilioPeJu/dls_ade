@@ -130,7 +130,7 @@ def create_vcs_object(module, options):
 
 def check_parsed_options_valid(args, options, parser):
     '''All checks that invoke parser errors.'''
-    git_unsupported_areas = ['archive', 'epics', 'matlab', 'etc', 'tools']
+    git_supported_areas = ['support', 'ioc', 'python']
     if len(args) < 1:
         parser.error("Module name not specified")
     elif len(args) < 2 and not options.next_version:
@@ -140,7 +140,7 @@ def check_parsed_options_valid(args, options, parser):
                      " - use configure system instead")
     elif options.next_version and options.git:
         parser.error("When git is specified, version number must be provided")
-    elif options.git and options.area in git_unsupported_areas:
+    elif options.git and options.area not in git_supported_areas:
         parser.error("%s area not supported by git" % options.area)
 
 
