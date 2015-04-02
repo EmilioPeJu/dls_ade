@@ -57,15 +57,14 @@ class Svn(BaseVCS):
 
     def list_releases(self):
         '''Return list of releases of module'''
-        if not hasattr(self, 'releases'):
-            self.releases = []
-            source = self.client.prodModule(self._module, self.area)
-            if self.client.pathcheck(source):
-                for node, _ in self.client.list(
-                        source,
-                        depth=self.client.depth.immediates)[1:]:
-                    self.releases.append(os.path.basename(node.path))
-        return self.releases
+        releases = []
+        source = self.client.prodModule(self._module, self.area)
+        if self.client.pathcheck(source):
+            for node, _ in self.client.list(
+                    source,
+                    depth=self.client.depth.immediates)[1:]:
+                releases.append(os.path.basename(node.path))
+        return releases
 
 
     def set_log_message(self, message):
@@ -89,10 +88,20 @@ class Svn(BaseVCS):
 
 
     def set_version(self, version):
+        ''' '''
         self._version = version
         if self.check_version_exists(version):
             self._repo_url = os.path.join(
                 self.client.prodModule(self._module, self.area), version)
+
+
+    def release_version(self, version):
+        release_url = os.path.join(
+            self.client.prodModule(self._module, self.area),
+            version)
+        self.client.mkdir(release_url)
+        self.client.copy(self._repo_url, release_url)
+        self.set_version(version)
 
 
 # sanity check: ensure class fully implements the interface (abc)
