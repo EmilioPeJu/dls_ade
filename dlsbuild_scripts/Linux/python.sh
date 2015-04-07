@@ -10,7 +10,8 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir   : The directory in subversion where the module is located.
+#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is
+#                           located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -50,12 +51,12 @@ case "$OS_VERSION" in
 esac
 
 # Checkout module
-mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
-cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
+mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
+cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
-        git clone --depth=100 $_git_dir $_version               || ReportFailure "Can not clone  $_git_dir"
+        git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
         ( cd $_version &&  git checkout $_version ) || ReportFailure "Can not checkout $_version"        
     elif [ "$_force" == "true" ] ; then
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
@@ -67,31 +68,33 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     fi
 else
     if [ ! -d $_version ]; then
-        svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
+        svn checkout -q $_svn_dir $_version         || ReportFailure "Can not check out  $_svn_dir"
     elif [ "$_force" == "true" ] ; then
-        rm -rf $_version                        || ReportFailure "Can not rm $_version"
-        svn checkout -q $_svn_dir $_version     || ReportFailure "Can not check out  $_svn_dir"
+        rm -rf $_version                            || ReportFailure "Can not rm $_version"
+        svn checkout -q $_svn_dir $_version         || ReportFailure "Can not check out  $_svn_dir"
     elif (( $(svn status -qu $_version | wc -l) != 1 )) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
     fi
 fi
 
-cd $_version                                || ReportFailure "Can not cd to $_version"
+cd $_version                                        || ReportFailure "Can not cd to $_version"
 
-# Write some history (Kludging a definition of SVN_ROOT)
-SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
-   dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
+if [ "${_svn_dir:-undefined}" != "undefined" ]] ; then
+    # Write some history (Kludging a definition of SVN_ROOT)
+    SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
+       dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
+fi
 
 # Add Makefile.private
 case "$OS_VERSION" in
     4)
         # Modify setup.py
-        mv setup.py setup.py.svn || { echo Can not move setup.py to setup.py.svn; exit 1; }
+        mv setup.py setup.py.vcs || { echo Can not move setup.py to setup.py.vcs; exit 1; }
         cat <<EOF > setup.py
 # The following line was added by the release script
 version = $(echo ${_version} | sed 's/-/./g')
 EOF
-        cat setup.py.svn >> setup.py || { echo Can not edit setup.py; exit 1; }
+        cat setup.py.vcs >> setup.py || { echo Can not edit setup.py; exit 1; }
         ;;
     *)
         cat <<EOF > Makefile.private || { echo Cannot write to Makefile.private; exit 1; }
