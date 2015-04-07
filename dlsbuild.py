@@ -278,7 +278,6 @@ class Builder:
         # generate the filename
         pathname = os.path.join(root_dir, "work", "etc", "build", "queue")
         filename = "%s.%s" % (params["build_name"], self.server)
-        print pathname, filename
 
         # Submit the build script
         f = open(os.path.join(pathname, filename), "w")
