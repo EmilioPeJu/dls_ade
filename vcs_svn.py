@@ -104,6 +104,7 @@ class Svn(BaseVCS):
         self.client.mkdir(release_url)
         self.client.copy(self._repo_url, release_url)
         self.set_version(version) # changes repo url to release version
+        print "Created release in svn directory: " + release_url
 
 
 # sanity check: ensure class fully implements the interface (abc)
