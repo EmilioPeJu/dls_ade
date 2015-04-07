@@ -12,7 +12,8 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is located.
+#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is
+#                           located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
