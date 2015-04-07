@@ -267,4 +267,5 @@ class FakeOptions(object):
 
 if __name__ == '__main__':
 
-    unittest.main()
+    # buffer option suppresses stdout generated from tested code
+    unittest.main(buffer=True)
