@@ -27,8 +27,7 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    ''' helper method containing options and help text
-    '''
+    ''' helper method containing options and help text '''
 
     parser = OptionParser(usage)
     parser.add_option(
@@ -98,8 +97,7 @@ def make_parser():
 
 def create_build_object(options):
     ''' Uses parsed options to select appropriate build architecture, default is
-    local system os
-    '''
+    local system os '''
     if options.rhel_version:
         build_object = dlsbuild.RedhatBuild(
             options.rhel_version,
@@ -120,8 +118,7 @@ def create_build_object(options):
 
 def create_vcs_object(module, options):
     ''' specific vcs class depends on flags in options, use module and options
-    to construct the objects
-    '''
+    to construct the objects '''
     if options.git:
         return vcs_git.Git(module, options)
     else:
@@ -145,14 +142,12 @@ def check_parsed_options_valid(args, options, parser):
 
 
 def format_argument_version(arg_version):
-    ''' helper method formatting version taken from command line arguments
-    '''
+    ''' helper method formatting version taken from command line arguments '''
     return arg_version.replace(".", "-")
 
 
 def next_version_number(releases, module=None):
-    ''' return appropriate version number for an incremental release
-    '''
+    ''' return appropriate version number for an incremental release '''
     if len(releases) == 0:
         version = "0-1"
     else:
@@ -164,16 +159,14 @@ def next_version_number(releases, module=None):
 
 
 def get_last_release(releases):
-    ''' from a list of strings, return the latest version number
-    '''
+    ''' from a list of strings, return the latest version number '''
     from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
     return last_release
 
 
 def increment_version_number(last_release):
-    ''' increment the most minor non-zero part of the version number
-    '''
+    ''' increment the most minor non-zero part of the version number '''
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
     for i in reversed(range(0, len(tokens))):

@@ -434,6 +434,36 @@ class TestFormatArgumentVersion(unittest.TestCase):
         self.assertEqual(arg_version, dls_release.format_argument_version(arg_version))
 
 
+class TestIncrementVersionNumber(unittest.TestCase):
+
+    def test_given_single_digit_then_return_incremented_digit(self):
+
+        release_number = '4'
+        expected_number = '5'
+
+        incremented_number = dls_release.increment_version_number(release_number)
+
+        self.assertEqual(incremented_number, expected_number)
+
+    def test_given_two_digit_then_return_number_with_most_minor_digit_incremented(self):
+
+        release_number = '4-5'
+        expected_number = '4-6'
+
+        incremented_number = dls_release.increment_version_number(release_number)
+
+        self.assertEqual(incremented_number, expected_number)
+
+    def test_given_dls_release_number_then_return_with_incremented_most_minor_number(self):
+
+        release_number = '4-5dls12'
+        expected_number = '4-5dls13'
+
+        incremented_number = dls_release.increment_version_number(release_number)
+
+        self.assertEqual(incremented_number, expected_number)
+
+
 class TestConstructInfoMessage(unittest.TestCase):
 
     def test_given_default_args_then_constrcut_specific_string(self):
