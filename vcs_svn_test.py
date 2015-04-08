@@ -142,22 +142,23 @@ class ApiInterrogateTest(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.mock_check = patcher.start()
 
+        self.module = 'dummy'
+        self.options = FakeOptions()
+        self.vcs = vcs_svn.Svn(self.module, self.options)
+
     def test_when_asking_object_for_vcs_type_then_return_svn_in_string(self):
 
-        vcs_type = vcs_svn.Svn('dummy', FakeOptions()).vcs_type
+        vcs_type = self.vcs.vcs_type
 
         self.assertEqual(vcs_type,'svn')
 
     def test_when_calling_source_repo_method_then_return_url_with_http_at_start(self):
 
-        module = 'dummy'
-        options = FakeOptions()
-        vcs = vcs_svn.Svn(module, options)
         expected_source_repo = 'http://serv0002.cs.diamond.ac.uk/repos/'
-        expected_source_repo += 'controls/diamond/trunk/' + options.area
-        expected_source_repo += '/' + module
+        expected_source_repo += 'controls/diamond/trunk/' + self.options.area
+        expected_source_repo += '/' + self.module
 
-        source_repo = vcs.source_repo
+        source_repo = self.vcs.source_repo
 
         self.assertEqual(source_repo, expected_source_repo)
 
@@ -288,6 +289,7 @@ class ReleaseVersionTest(unittest.TestCase):
         manager.assert_has_calls([call.mkdir(self.rel_dir),
                                   call.copy(old_source_url, self.rel_dir),
                                   call.set_version(self.version)])
+
 
 class FakeOptions(object):
     def __init__(self,**kwargs):
