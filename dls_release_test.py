@@ -708,7 +708,7 @@ class TestMain(unittest.TestCase):
         self.patch = {}
         self.mocks = {}
         for method in methods_to_patch:
-            self.patch[method] = patch('dls_release.'+method)
+            self.patch[method] = patch('dls_release.' + method)
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 

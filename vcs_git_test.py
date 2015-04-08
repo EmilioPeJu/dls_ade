@@ -98,6 +98,51 @@ class GitClassInitTest(unittest.TestCase):
         self.assertGreater(len(target_dir), len(module)+9)
 
 
+class GitCatTest(unittest.TestCase):
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)
+    @patch('vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone, mcheck):
+
+        client_cat_patch = patch('vcs_git.git.Repo.git')
+        self.addCleanup(client_cat_patch.stop)
+        self.mgit = client_cat_patch.start()
+        self.mgit.cat_file = MagicMock(return_value=1)
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    def test_given_version_not_set_when_called_then_second_argument_to_catfile_starts_with_master(self):
+
+        filename = 'configure/RELEASE'
+        expected_arg = 'master:' + filename
+
+        self.vcs.cat(filename)
+
+        self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
+
+    def test_when_called_then_first_arg_is_dash_p(self):
+
+        dash_p_arg = '-p'
+
+        self.vcs.cat('file')
+
+        self.mgit.cat_file.assert_called_once_with(dash_p_arg, ANY)
+
+    def test_given_version_is_set_when_called_then_second_argument_to_catfile_starts_with_version(self):
+
+        version = '0-2'
+        filename = 'configure/RELEASE'
+        expected_arg = version + ':' + filename
+
+        self.vcs._version = version
+        self.vcs.cat(filename)
+
+        self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
+
+
 class GitListReleasesTest(unittest.TestCase):
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
@@ -268,4 +313,4 @@ class FakeOptions(object):
 if __name__ == '__main__':
 
     # buffer option suppresses stdout generated from tested code
-    unittest.main(buffer=True)
+    unittest.main(buffer=False)
