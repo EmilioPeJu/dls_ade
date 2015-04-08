@@ -59,8 +59,8 @@ class GitClassInitTest(unittest.TestCase):
         n_clone_calls = mock_clone.call_count
         n_temp_calls = mock_temp.call_count
 
-        self.assertEquals(0, n_clone_calls)
-        self.assertEquals(0, n_temp_calls)
+        self.assertEqual(0, n_clone_calls)
+        self.assertEqual(0, n_temp_calls)
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.tempfile.mkdtemp')
@@ -75,7 +75,7 @@ class GitClassInitTest(unittest.TestCase):
 
         n_clone_calls = mock_clone.call_count
 
-        self.assertEquals(1, n_clone_calls)
+        self.assertEqual(1, n_clone_calls)
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.git.Repo.clone_from')
@@ -137,7 +137,7 @@ class GitCatTest(unittest.TestCase):
         filename = 'configure/RELEASE'
         expected_arg = version + ':' + filename
 
-        self.vcs._version = version
+        self.vcs.set_version(version)
         self.vcs.cat(filename)
 
         self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
