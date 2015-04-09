@@ -1,16 +1,17 @@
-:: ******************************************************************************
+:: ****************************************************************************
 :: 
 :: Script to build a Diamond production module.in the support or ioc areas
 ::
-:: This is a partial script which builds a module in for the dls-release system.
-:: The script is prepended with a list of variables before invocation by the
-:: dls-release mechanism. These variables are:
+:: This is a partial script which builds a module in for the dls-release
+:: system. The script is prepended with a list of variables before invocation
+:: by the dls-release mechanism. These variables are:
 ::
 ::   _email     : The email address of the user who initiated the build
 ::   _epics     : The DLS_EPICS_RELEASE to use
 ::   _build_dir : The parent directory in the file system in which to build the
 ::                module. This does not include module or version directories.
-::   _svn_dir   : The directory in subversion where the module is located.
+::   _svn_dir or _git_dir : The directory in subversion where the module is
+::                          located.
 ::   _module    : The module name
 ::   _version   : The module version
 ::   _area      : The build area
@@ -36,27 +37,65 @@ if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
 cd /d "%build_dir%"
 if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
 
-if not exist %_version% (
-    svn checkout %_svn_dir% %_version%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-) else if "%_force%"=="true" (
+if not defined _svn_dir ( :: git checkout
+
+  if not exist %_version% (
+  
+    git clone --depth=100 %_git_dir% %_version%
+    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+
+    pushd %_version% && git checkout %_version% && popd
+    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+
+  ) else if "%_force%"=="true" (
+  
     rmdir /s/q %_version%
     if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
 
-    svn checkout %_svn_dir% %_version%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-) else (
-    For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
+    git clone --depth=100 %_git_dir% %_version%
+    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
 
-    if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
+    pushd %_version% && git checkout %_version% && popd
+    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+
+  ) else (
+
+    pushd %_version% && git fetch --tags && git checkout %_version% && popd
+    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Directory %build_dir%/%_version% not up to date with %_git_dir%
+
+) else (
+  if not exist %_version% (
+
+      svn checkout %_svn_dir% %_version%
+      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+
+  ) else if "%_force%"=="true" (
+
+      rmdir /s/q %_version%
+      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+
+      svn checkout %_svn_dir% %_version%
+      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+
+  ) else (
+
+      For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
+
+      if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
+  )
 )
 cd "%_version%"
 if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
 
 :: Modify configure\RELEASE
-svn cat configure\RELEASE > configure\RELEASE.svn
+if not defined _svn_dir (
+  git cat-file -p HEAD:configure\RELEASE > configure\RELEASE.vcs
+) else (
+  svn cat configure\RELEASE > configure\RELEASE.vcs
+)
+
 del configure\RELEASE
-for /f "delims=" %%i in ( configure\RELEASE.svn ) do (
+for /f "delims=" %%i in ( configure\RELEASE.vcs ) do (
    set TMP_LINE=%%i
    set TMP_LINE=!TMP_LINE: =!
 
