@@ -49,7 +49,7 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
         ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     else
         ( cd $_version && git fetch --tags && git checkout $_version ) ||
-            ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
+            ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
     fi
 else
     if [ ! -d $_version ]; then
