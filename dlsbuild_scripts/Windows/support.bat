@@ -40,7 +40,7 @@ if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
 if not defined _svn_dir ( :: git checkout
 
   if not exist %_version% (
-  
+
     git clone --depth=100 %_git_dir% %_version%
     if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
 
@@ -48,7 +48,7 @@ if not defined _svn_dir ( :: git checkout
     if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
 
   ) else if "%_force%"=="true" (
-  
+
     rmdir /s/q %_version%
     if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
 
