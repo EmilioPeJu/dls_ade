@@ -75,7 +75,7 @@ if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
 
 :: Modify configure\RELEASE
 if not defined _svn_dir (
-  git cat-file -p HEAD:configure\RELEASE > configure\RELEASE.vcs
+  git cat-file -p HEAD:configure/RELEASE > configure\RELEASE.vcs
 ) else (
   svn cat configure\RELEASE > configure\RELEASE.vcs
 )
