@@ -131,11 +131,24 @@ class GitCatTest(unittest.TestCase):
 
         self.mgit.cat_file.assert_called_once_with(dash_p_arg, ANY)
 
-    def test_given_version_is_set_when_called_then_second_argument_to_catfile_starts_with_version(self):
+    @patch('vcs_git.Git.list_releases',return_value='0-2')
+    def test_given_version_is_set_when_called_then_second_argument_to_catfile_starts_with_version(self, mlist):
 
         version = '0-2'
         filename = 'configure/RELEASE'
         expected_arg = version + ':' + filename
+
+        self.vcs.set_version(version)
+        self.vcs.cat(filename)
+
+        self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
+
+    @patch('vcs_git.Git.list_releases',return_value='0-2')
+    def test_given_version_is_set_but_non_existent_then_version_used_for_cat_is_master(self, mlist):
+
+        version = '0-3'
+        filename = 'configure/RELEASE'
+        expected_arg = 'master:' + filename
 
         self.vcs.set_version(version)
         self.vcs.cat(filename)

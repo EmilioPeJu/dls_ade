@@ -59,7 +59,13 @@ class Git(BaseVCS):
         Fetch contents of file in repository, if version not set then uses
         master.
         '''
-        tag = self._version if self._version else 'master'
+        if self._version:
+            if self.check_version_exists(self._version):
+                tag = self._version
+            else:
+                tag = 'master'
+        else:
+            tag = 'master'
         return self.client.git.cat_file('-p', tag+':'+filename)
 
 
