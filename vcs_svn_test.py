@@ -244,7 +244,7 @@ class ReleaseVersionTest(unittest.TestCase):
         self.version = '0-2'
         self.rel_dir = 'svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/'
         self.rel_dir += 'repos/controls/diamond/release/' + self.options.area
-        self.rel_dir += '/' + self.module + '/' + self.version
+        self.rel_dir += '/' + self.module 
 
     def test_given_vcs_then_call_mkdir_with_correct_release_directory_as_arg(self):
 
@@ -259,20 +259,6 @@ class ReleaseVersionTest(unittest.TestCase):
         self.vcs.release_version(self.version)
 
         self.vcs.client.copy.assert_called_once_with(source_dir, self.rel_dir)
-
-    @patch('vcs_svn.Svn.list_releases')
-    def test_given_reldir_made_and_copied_into_when_version_released_then_repo_url_should_give_rel_dir(self, mlist):
-
-        # list_releases mocked out as no new releases are made, and the method
-        # depends on the list of releases being updated
-        mlist.return_value = [self.version]
-
-        self.vcs.release_version(self.version)
-
-        new_source_url = self.vcs.source_repo.replace('http','svn+ssh')
-        new_source_url = new_source_url.replace('ac.uk','ac.uk/home/subversion')
-
-        self.assertEqual(new_source_url, self.rel_dir)
 
 
     def test_god_function_does_things_in_the_right_order(self):
