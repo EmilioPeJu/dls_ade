@@ -38,58 +38,58 @@ cd /d "%build_dir%"
 if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
 
 if not defined _svn_dir (
-  if not exist %_version% (
-    git clone --depth=100 %_git_dir% %_version%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
-    pushd %_version% && git checkout %_version% && popd
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
-  ) else if "%_force%"=="true" (
-    rmdir /s/q %_version%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
-    git clone --depth=100 %_git_dir% %_version%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
-    pushd %_version% && git checkout %_version% && popd
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
-  ) else (
-    pushd %_version% && git fetch --tags && git checkout %_version% && popd
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Directory %build_dir%/%_version% not up to date with %_git_dir%
-  )
+    if not exist %_version% (
+        git clone --depth=100 %_git_dir% %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        pushd %_version% && git checkout %_version% && popd
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+    ) else if "%_force%"=="true" (
+        rmdir /s/q %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        git clone --depth=100 %_git_dir% %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        pushd %_version% && git checkout %_version% && popd
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+    ) else (
+        pushd %_version% && git fetch --tags && git checkout %_version% && popd
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Directory %build_dir%/%_version% not up to date with %_git_dir%
+    )
 ) else if not defined _git_dir (
-  if not exist %_version% (
-      svn checkout %_svn_dir% %_version%
-      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-  ) else if "%_force%"=="true" (
-      rmdir /s/q %_version%
-      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
-      svn checkout %_svn_dir% %_version%
-      if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-  ) else (
-      For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
-      if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
-  )
+    if not exist %_version% (
+        svn checkout %_svn_dir% %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+    ) else if "%_force%"=="true" (
+        rmdir /s/q %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        svn checkout %_svn_dir% %_version%
+        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+    ) else (
+        For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
+        if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
+    )
 ) else (
-  call :ReportFailure 1 both _git_dir and _svn_dir are defined; unclear which to use
+    call :ReportFailure 1 both _git_dir and _svn_dir are defined; unclear which to use
 )
 cd "%_version%"
 if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
 
 :: Modify configure\RELEASE
 if not defined _svn_dir (
-  git cat-file -p HEAD:configure/RELEASE > configure\RELEASE.vcs
+    git cat-file -p HEAD:configure/RELEASE > configure\RELEASE.vcs
 ) else (
-  svn cat configure\RELEASE > configure\RELEASE.vcs
+    svn cat configure\RELEASE > configure\RELEASE.vcs
 )
 
 del configure\RELEASE
 for /f "delims=" %%i in ( configure\RELEASE.vcs ) do (
-   set TMP_LINE=%%i
-   set TMP_LINE=!TMP_LINE: =!
+    set TMP_LINE=%%i
+    set TMP_LINE=!TMP_LINE: =!
 
-   if "!TMP_LINE:~0,5!"=="WORK=" (
-       echo # WORK=commented out to prevent prod modules depending on work modules>> configure\RELEASE
-   ) else (
-       echo %%i>> configure\RELEASE
-   )
+    if "!TMP_LINE:~0,5!"=="WORK=" (
+        echo # WORK=commented out to prevent prod modules depending on work modules>> configure\RELEASE
+    ) else (
+        echo %%i>> configure\RELEASE
+    )
 )
 
 echo EPICS_BASE=%EPICS_BASE:\=/%>  configure\RELEASE.%EPICS_HOST_ARCH%
