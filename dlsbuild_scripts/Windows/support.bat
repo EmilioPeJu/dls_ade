@@ -39,31 +39,41 @@ if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
 
 if not defined _svn_dir (
     if not exist %_version% (
+
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
         pushd %_version% && git checkout %_version% && popd
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+
     ) else if "%_force%"=="true" (
+
         rmdir /s/q %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
         pushd %_version% && git checkout %_version% && popd
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+
     ) else (
+
         pushd %_version% && git fetch --tags && git checkout %_version% && popd
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Directory %build_dir%/%_version% not up to date with %_git_dir%
     )
 ) else if not defined _git_dir (
     if not exist %_version% (
+
         svn checkout %_svn_dir% %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+
     ) else if "%_force%"=="true" (
+
         rmdir /s/q %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
         svn checkout %_svn_dir% %_version%
         if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+
     ) else (
+
         For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
         if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
     )
