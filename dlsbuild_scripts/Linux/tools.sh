@@ -89,8 +89,8 @@ set -o xtrace
                 rm -rf $_version
                 git clone $_git_dir $_version
                 ( cd $_version && git checkout $_version )
-            else
-                ( cd $_version && git fetch --tags && git checkout $_version )
+            elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
+                ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
             fi
         else
             if [ ! -d $_version ]; then
@@ -99,8 +99,7 @@ set -o xtrace
                 rm -rf $_version
                 svn checkout -q "$_svn_dir" "$_version"
             elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
-                echo "Directory $build_dir/$_version not up to date with $_svn_dir"
-                ReportFailure
+                ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
             fi
         fi
 

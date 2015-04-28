@@ -47,22 +47,21 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
         git clone $_git_dir $_version               || ReportFailure "Can not clone  $_git_dir"
         ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-    else
-        ( cd $_version && git fetch --tags && git checkout $_version ) ||
-            ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
+    elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0 )) ; then
+        ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
     fi
 else
     if [ ! -d $_version ]; then
-        svn checkout -q $_svn_dir $_version         || ReportFailure "Can not check out  $_svn_dir"
+        svn checkout -q $_svn_dir $_version || ReportFailure "Can not check out  $_svn_dir"
     elif [ "$_force" == "true" ] ; then
-        rm -rf $_version                            || ReportFailure "Can not rm $_version"
-        svn checkout -q $_svn_dir $_version         || ReportFailure "Can not check out  $_svn_dir"
+        rm -rf $_version                    || ReportFailure "Can not rm $_version"
+        svn checkout -q $_svn_dir $_version || ReportFailure "Can not check out  $_svn_dir"
     elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
     fi
 fi
 
-cd $_version                                        || ReportFailure "Can not cd to $_version"
+cd $_version || ReportFailure "Can not cd to $_version"
 if [ ! -f configure/RELEASE.vcs ] ; then
     cp configure/RELEASE configure/RELEASE.vcs
 fi
