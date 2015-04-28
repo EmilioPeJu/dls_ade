@@ -12,7 +12,8 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir   : The directory in subversion where the module is located.
+#   _svn_dir or _git_dir    : The directory in subversion where the module is
+#                             located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -92,7 +93,7 @@ set -o xtrace
             elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
                 ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
             fi
-        else
+        elif [[ "${_git_dir:-undefined}" == "undefined" ]] ; then
             if [ ! -d $_version ]; then
                 svn checkout -q "$_svn_dir" "$_version"
             elif [ "$_force" == "true" ] ; then
@@ -101,6 +102,8 @@ set -o xtrace
             elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
                 ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
             fi
+        else 
+            ReportFailure "both _git_dir and _svn_dir are defined; unclear which to use"
         fi
 
         # Add the ROOT definition to the RELEASE file

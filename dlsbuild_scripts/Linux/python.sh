@@ -65,7 +65,7 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
     fi
-else
+elif [[ "${_git_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
         svn checkout -q $_svn_dir $_version || ReportFailure "Can not check out  $_svn_dir"
     elif [ "$_force" == "true" ] ; then
@@ -74,6 +74,8 @@ else
     elif (( $(svn status -qu $_version | wc -l) != 1 )) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
     fi
+else 
+    ReportFailure "both _git_dir and _svn_dir are defined; unclear which to use"
 fi
 
 cd $_version || ReportFailure "Can not cd to $_version"
