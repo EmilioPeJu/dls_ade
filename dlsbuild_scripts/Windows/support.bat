@@ -56,8 +56,12 @@ if not defined _svn_dir (
 
     ) else (
 
-        pushd %_version% && git fetch --tags && git checkout %_version% && popd
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Directory %build_dir%/%_version% not up to date with %_git_dir%
+        pushd %_version%
+        For /f "delims=" %%a in ('git status -uno --porcelain^| findstr /V /R /c:"^ M configure/RELEASE\..*" ^| findstr /V /R /c:"^ M configure/RELEASE" ^| find /v /c ""') do (set _nlines=%%a)
+        popd
+        if not "%_nlines%" == "0" (
+            call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_git_dir%
+        )
     )
 ) else if not defined _git_dir (
     if not exist %_version% (
