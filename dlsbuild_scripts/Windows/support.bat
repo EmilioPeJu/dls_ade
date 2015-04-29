@@ -74,8 +74,10 @@ if not defined _svn_dir (
 
     ) else (
 
-        For /f "tokens=1 delims=:" %%G in ('svn status') Do (set _line=%%G)
-        if not "%_line%"=="Status against revision" call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
+        For /f "delims=" %%a in ('svn st -q ^| findstr /V /R /c:"^M *configure\\RELEASE" ^| find /v /c ""') do (set _nlines=%%a)
+        if not "%_nlines%" == "0" (
+            call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
+        )
     )
 ) else (
     call :ReportFailure 1 both _git_dir and _svn_dir are defined; unclear which to use
