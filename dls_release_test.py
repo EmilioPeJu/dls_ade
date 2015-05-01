@@ -45,12 +45,6 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest,"test_only")
         self.assertEqual(option._long_opts[0],"--test_build-only")
 
-    def test_work_build_option_has_correct_attributes(self):
-        option = self.parser.get_option("-W")
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"work_build")
-        self.assertEqual(option._long_opts[0],"--work_build")
-
     def test_epics_version_option_has_correct_attributes(self):
         option = self.parser.get_option('-e')
         self.assertEqual(option.action,"store")
