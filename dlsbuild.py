@@ -20,21 +20,17 @@ build_scripts = os.path.join(
 # contains the expected directories (e.g. work/etc/build/queue).
 # Similarly defined for windows, as it replaces the root dir in the windows
 # builder method.
-root_dir = "/tmp"#"/dls_sw"
+root_dir = "/dls_sw"
 windows_root_dir = "W:/"
 
 # A list of build servers and the EPICS releases they support
 build_servers = {
     "Linux": {
-        "redhat4-i686"   : ["R3.14.9"],
-        "redhat5-i686"   : ["R3.14.8.2", "R3.14.11", "R3.14.10", "R3.14.12.1"],
-        "redhat5-x86_64" : ["R3.14.11_64"],
         "redhat6-x86_64" : ["R3.14.12.3"]
     },
     "Windows": {
-        "windows5-x86"   : ["R3.14.11", "R3.14.10", "R3.14.12.1"],
         "windows6-x86"   : ["R3.14.12.3"],
-        "windows6-AMD64" : ["R3.14.12.3", "R3.14.12.1"]
+        "windows6-AMD64" : ["R3.14.12.3"]
     }
 }
 
@@ -46,9 +42,6 @@ def epics_servers(os, epics):
     return servers
 
 server_shortcut = {
-    "4": "redhat5-i686",
-    "5": "redhat5-i686",
-    "5_64": "redhat5-x86_64",
     "6": "redhat6-x86_64",
     "32": "windows6-x86",
     "64": "windows6-AMD64"}
@@ -117,11 +110,6 @@ class Builder:
             if server is None:
                 # use the default server and epics from env
                 self.server = default_server()
-                # override to allow R3.14.11 to build on i686 by default
-                if self.server == "redhat5-x86_64" and \
-                        self.epics() in ["R3.14.11", "R3.14.12.1"] and \
-                        os.environ["EPICS_HOST_ARCH"] == "linux-x86":
-                    self.server = "redhat5-i686"
             else:
                 # set specified server
                 self.server = server
@@ -222,8 +210,6 @@ class Builder:
         """Returns True if a local test build is possible"""
         local = default_server()
         remote = self.get_server()
-        return local == remote or (
-            local == "redhat5-x86_64" and remote == "redhat5-i686")
 
     def test(self, vcs):
         """Builds module version on the local system using the code in the
@@ -259,15 +245,12 @@ class Builder:
 
     def submit(self, vcs, test=False):
         """Submit a job to the build queue to build module version using the
-        code in the src_dir directory of subversion. If test="work" then the
-        module is built in work, if it is anything else that evaluates to True
-        it is built in the test directory. Otherwise it is a normal production
-        build."""
+        code in the src_dir directory of subversion. If test is anything 
+        that evaluates to True it is built in the test directory. Otherwise it
+        is a normal production build."""
 
         build_name = self.build_name("build", vcs.module, vcs.version)
-        if test == "work":
-            build_dir = self.dls_env.devArea(self.area)
-        elif test:
+        if test:
             build_dir = os.path.join(
                 root_dir, "work", "etc", "build", "test", build_name)
         else:
@@ -331,7 +314,7 @@ class ArchiveBuild(Builder):
     constructor takes a single parameter which, if true, dearchives, otherwise
     the module will be archived."""
     def __init__(self, untar):
-        Builder.__init__(self, "Linux", "redhat5-i686")
+        Builder.__init__(self, "Linux")
         self.exten = ".sh"
         self.action = "unarchive" if untar else "archive"
 
@@ -347,10 +330,10 @@ if __name__ == "__main__":
     # test
     bld = WindowsBuild("64")
     bld.set_area("support")
-    bld.set_epics("R3.14.12.1")
+    bld.set_epics("R3.14.12.3")
     print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
 
     bld = ArchiveBuild(True)
     bld.set_area("archive")
-    bld.set_epics("R3.14.12.1")
+    bld.set_epics("R3.14.12.3")
     print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})

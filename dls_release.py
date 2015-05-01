@@ -49,10 +49,6 @@ def make_parser():
         "-T", "--test_build-only", action="store_true", dest="test_only",
         help="If set, this will only do a test build on the build server")
     parser.add_option(
-        "-W", "--work_build", action="store_true", dest="work_build",
-        help="If set, this will do a test build on the build server "
-             "in the modules work area")
-    parser.add_option(
         "-e", "--epics_version", action="store", type="string",
         dest="epics_version",
         help="Change the epics version. This will determine which build "
@@ -79,7 +75,7 @@ def make_parser():
         dest="rhel_version",
         help="change the rhel version of the build. This will determine which "
         "build server your job is build on for non-epics modules. Default "
-        "is from /etc/redhat-release. Can be 4,5,5_64")
+        "is from /etc/redhat-release. Can be 6")
     group.add_option(
         "-w", "--windows", action="store", dest="windows",
         help="Release the module or IOC only for the Windows version. "
@@ -89,7 +85,8 @@ def make_parser():
         "If the module has already been released with the same version "
         "the build server will rebuild that release for windows. "
         "Existing unix builds of the same module version will not be "
-        "affected. Can be 32 or 64")
+        "affected. Must specify 32 or 64 after the flag to choose 32/64-bit."
+        " Both 32 and 64 bit builds are built on the same 64-bit build server")
     parser.add_option_group(group)
 
     return parser
@@ -282,9 +279,7 @@ def main():
     if not vcs.check_version_exists(version) and not options.test_only:
         vcs.release_version(version)
 
-    test = "work" if options.work_build else options.test_only
-
-    build.submit(vcs, test=True)
+    build.submit(vcs, test=options.test_only)
 
 
 if __name__ == "__main__":
