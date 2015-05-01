@@ -98,9 +98,10 @@ class Svn(BaseVCS):
 
     def release_version(self, version):
         '''Create release with version number in svn repository.'''
-        release_url = os.path.join(
+        release_dir = os.path.join(
             self.client.prodModule(self._module, self.area))
-        self.client.mkdir(release_url)
+        release_url = release_dir + "/" + version
+        self.client.mkdir(release_dir)
         self.client.copy(self._repo_url, release_url)
         self.set_version(version) # changes repo url to release version
         print "Created release in svn directory: " + release_url

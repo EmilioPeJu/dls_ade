@@ -244,7 +244,7 @@ class ReleaseVersionTest(unittest.TestCase):
         self.version = '0-2'
         self.rel_dir = 'svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/'
         self.rel_dir += 'repos/controls/diamond/release/' + self.options.area
-        self.rel_dir += '/' + self.module 
+        self.rel_dir += '/' + self.module
 
     def test_given_vcs_then_call_mkdir_with_correct_release_directory_as_arg(self):
 
@@ -255,11 +255,11 @@ class ReleaseVersionTest(unittest.TestCase):
     def test_given_vcs_then_call_copy_with_correct_source_and_release_dirs_as_args(self):
 
         source_dir = self.vcs._repo_url
+        rel_url = self.rel_dir + '/' + self.version
 
         self.vcs.release_version(self.version)
 
-        self.vcs.client.copy.assert_called_once_with(source_dir, self.rel_dir)
-
+        self.vcs.client.copy.assert_called_once_with(source_dir, rel_url)
 
     def test_god_function_does_things_in_the_right_order(self):
         self.vcs.set_version = MagicMock()
@@ -271,9 +271,10 @@ class ReleaseVersionTest(unittest.TestCase):
         old_source_url = self.vcs.source_repo.replace('http','svn+ssh')
         old_source_url = old_source_url.replace('ac.uk','ac.uk/home/subversion')
         self.vcs.release_version(self.version)
+        rel_url = self.rel_dir + '/' + self.version
 
         manager.assert_has_calls([call.mkdir(self.rel_dir),
-                                  call.copy(old_source_url, self.rel_dir),
+                                  call.copy(old_source_url, rel_url),
                                   call.set_version(self.version)])
 
 
