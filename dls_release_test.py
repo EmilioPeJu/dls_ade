@@ -708,9 +708,15 @@ class TestMain(unittest.TestCase):
 
         self.mocks['OptionParser.parse_args'].return_value = ['','']
 
+        self.manager = MagicMock()
+
     def test_nothing(self):
 
         self.assertEqual(0, self.mocks['create_build_object'].call_count)
+
+    def test_god_function_does_things_in_the_right_order(self):
+
+        pass
 
 
 class FakeOptions(object):
