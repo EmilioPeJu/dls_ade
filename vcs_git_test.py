@@ -294,6 +294,14 @@ class GitSettersTest(unittest.TestCase):
 
         self.assertEqual(self.vcs.version, version)
 
+    @patch('vcs_git.Git.list_releases',return_value=[''])
+    def test_given_nonexistent_version_when_version_set_then_raise_error(self, mlist):
+
+        non_existent_version = '0-1'
+
+        with self.assertRaises(Exception):
+            self.vcs.set_version(non_existent_version);
+
 
 class GitReleaseVersionTest(unittest.TestCase):
 
