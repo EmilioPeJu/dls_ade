@@ -89,6 +89,8 @@ class Git(BaseVCS):
 
 
     def set_version(self, version):
+        if not self.check_version_exists(version):
+            raise Exception('version does not exist')
         self._version = version
 
 

@@ -103,7 +103,7 @@ class GitCatTest(unittest.TestCase):
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)
     @patch('vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone, mcheckout):
 
         client_cat_patch = patch('vcs_git.git.Repo.git')
         self.addCleanup(client_cat_patch.stop)
@@ -150,7 +150,7 @@ class GitCatTest(unittest.TestCase):
         filename = 'configure/RELEASE'
         expected_arg = 'master:' + filename
 
-        self.vcs.set_version(version)
+        self.vcs._version = version
         self.vcs.cat(filename)
 
         self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
@@ -286,21 +286,22 @@ class GitSettersTest(unittest.TestCase):
         with self.assertRaises(Exception):
             self.vcs.version
 
-    def test_given_vcs_when_version_set_return_version(self):
+    @patch('vcs_git.Git.check_version_exists', return_value=True)
+    def test_given_vcs_when_version_set_return_version(self, mcheck):
 
-        version = '0-2'
+        version = '0-1'
 
         self.vcs.set_version(version)
 
         self.assertEqual(self.vcs.version, version)
 
-    @patch('vcs_git.Git.list_releases',return_value=[''])
-    def test_given_nonexistent_version_when_version_set_then_raise_error(self, mlist):
+    @patch('vcs_git.Git.check_version_exists', return_value=False)
+    def test_given_nonexistent_version_when_version_set_then_raise_error(self, mcheck):
 
-        non_existent_version = '0-1'
+        version = '0-2'
 
         with self.assertRaises(Exception):
-            self.vcs.set_version(non_existent_version);
+            self.vcs.set_version(version);
 
 
 class GitReleaseVersionTest(unittest.TestCase):
@@ -334,4 +335,4 @@ class FakeOptions(object):
 if __name__ == '__main__':
 
     # buffer option suppresses stdout generated from tested code
-    unittest.main(buffer=False)
+    unittest.main(buffer=True)
