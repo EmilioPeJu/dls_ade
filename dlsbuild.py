@@ -210,6 +210,7 @@ class Builder:
         """Returns True if a local test build is possible"""
         local = default_server()
         remote = self.get_server()
+        return local==remote
 
     def test(self, vcs):
         """Builds module version on the local system using the code in the
