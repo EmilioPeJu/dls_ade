@@ -85,8 +85,8 @@ def make_parser():
         "If the module has already been released with the same version "
         "the build server will rebuild that release for windows. "
         "Existing unix builds of the same module version will not be "
-        "affected. Must specify 32 or 64 after the flag to choose 32/64-bit."
-        " Both 32 and 64 bit builds are built on the same 64-bit build server")
+        "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
+        "Both 32 and 64 bit builds are built on the same 64-bit build server")
     parser.add_option_group(group)
 
     return parser

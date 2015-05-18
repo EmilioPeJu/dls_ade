@@ -20,7 +20,7 @@ build_scripts = os.path.join(
 # contains the expected directories (e.g. work/etc/build/queue).
 # Similarly defined for windows, as it replaces the root dir in the windows
 # builder method.
-root_dir = "/dls_sw"
+root_dir = "/tmp"#"/dls_sw"
 windows_root_dir = "W:/"
 
 # A list of build servers and the EPICS releases they support
@@ -291,11 +291,7 @@ class WindowsBuild(Builder):
         for name in params.keys():
             if params[name][:1] == "/":
                 params[name] = params[name].replace(root_dir, windows_root_dir)
-
-        if self.server == "windows5-x86":
-            params["make"] = "mingw32-make"
-        else:
-            params["make"] = "make"
+        params["make"] = "make"
 
         return Builder._script(self, params, "@echo on", "set %s=%s")
 
