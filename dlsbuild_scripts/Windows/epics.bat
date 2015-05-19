@@ -28,7 +28,9 @@ if defined _profile (
     call W:\etc\profile.bat
 )
 echo on
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+)
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 if "%_module%"=="base" (
@@ -41,10 +43,14 @@ if "%_module%"=="base" (
 
 :: Checkout module
 mkdir "%build_dir%"
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+)
 
 cd /d "%build_dir%"
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
+)
 
 if "%_force%"=="true" (
     rmdir /s/q %_version%
@@ -52,12 +58,16 @@ if "%_force%"=="true" (
 
 if not exist %_module% (
     svn checkout %_svn_dir% %_module%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+    if errorlevel 1 (
+        call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+    )
     cd %_module%
 ) else (
     cd %_module%
     svn switch %_svn_dir%
-    if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not switch to %_svn_dir%
+    if errorlevel 1 (
+        call :ReportFailure %ERRORLEVEL% Can not switch to %_svn_dir%
+    )
 )
 
 :: Build
@@ -69,7 +79,9 @@ set build_log=%_build_name%.log
 %_make% 1>%build_log% 2>%error_log%
 set make_status=%ERRORLEVEL%
 echo %make_status% > %_build_name%.sta
-if NOT "%make_status%"=="0" call :ReportFailure %make_status% Build Errors for %_module% %_version%
+if NOT "%make_status%"=="0" (
+    call :ReportFailure %make_status% Build Errors for %_module% %_version%
+)
 
 goto :EOF
 

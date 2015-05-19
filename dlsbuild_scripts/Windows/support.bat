@@ -29,34 +29,50 @@ if defined _profile (
     call W:\etc\profile.bat
 )
 echo on
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+)
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 set "build_dir=%_build_dir:/=\%\%_module%"
 
 :: Checkout module
 mkdir "%build_dir%"
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+)
 
 cd /d "%build_dir%"
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
+)
 
 if not defined _svn_dir (
     if not exist %_version% (
 
         git clone --depth=100 %_git_dir% %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        )
         pushd %_version% && git checkout %_version% && popd
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+        )
 
     ) else if "%_force%"=="true" (
 
         rmdir /s/q %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        )
         git clone --depth=100 %_git_dir% %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+        )
         pushd %_version% && git checkout %_version% && popd
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
+        )
 
     ) else (
 
@@ -71,14 +87,20 @@ if not defined _svn_dir (
     if not exist %_version% (
 
         svn checkout %_svn_dir% %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        )
 
     ) else if "%_force%"=="true" (
 
         rmdir /s/q %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not remove %_version%
+        )
         svn checkout %_svn_dir% %_version%
-        if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        if errorlevel 1 (
+            call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        )
 
     ) else (
 
@@ -91,7 +113,9 @@ if not defined _svn_dir (
     call :ReportFailure 1 both _git_dir and _svn_dir are defined; unclear which to use
 )
 cd "%_version%"
-if errorlevel 1 call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
+)
 
 :: Modify configure\RELEASE
 if not defined _svn_dir (
