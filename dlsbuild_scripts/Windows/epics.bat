@@ -22,7 +22,11 @@ setlocal enabledelayedexpansion enableextensions
 
 :: Set up environment
 set DLS_EPICS_RELEASE=%_epics%
-call W:\etc\profile.bat
+if defined _profile (
+    call %_profile%
+) else (
+    call W:\etc\profile.bat
+)
 echo on
 if errorlevel 1 call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
