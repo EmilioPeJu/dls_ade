@@ -47,7 +47,7 @@ class Git(BaseVCS):
         if server_repo_path not in list_cmd_output:
             raise Exception('repo not found on gitolite server')
 
-        repo_dir = tempfile.mkdtemp(suffix="_" + self._module)
+        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/","_"))
         self._remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
         self._remote_repo += server_repo_path
 

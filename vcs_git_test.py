@@ -97,6 +97,24 @@ class GitClassInitTest(unittest.TestCase):
         self.assertTrue(target_dir.endswith("_" + module))
         self.assertGreater(len(target_dir), len(module)+9)
 
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/ioc/domain/mod'])
+    @patch('vcs_git.git.Repo.clone_from')
+    def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone, mock_check):
+
+        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/ioc/domain/mod"
+        module = "domain/mod"
+        options = FakeOptions(area="ioc")
+
+        vcs = vcs_git.Git(module, options)
+
+        args, kwargs = mock_clone.call_args
+        target_dir = args[1]
+
+        os.rmdir(target_dir)
+
+        self.assertTrue(target_dir.startswith("/tmp/tmp"))
+        self.assertTrue(target_dir.endswith("_" + module.replace("/","_")))
+
 
 class GitCatTest(unittest.TestCase):
 
