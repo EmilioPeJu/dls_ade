@@ -225,7 +225,7 @@ class Builder:
         params = self.build_params(
             build_dir, vcs, build_name)
 
-        dirname = tempfile.mkdtemp(suffix="_" + vcs.module)
+        dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/","_"))
         filename = os.path.join(dirname, build_name+self.exten)
         print "Got build file "+filename+" to build module in "+build_dir
         f = open(filename, "w")
