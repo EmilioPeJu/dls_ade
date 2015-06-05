@@ -307,14 +307,16 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(ANY)
 
-    def test_given_git_and_tools_area_else_good_options_then_raise_error(self):
+    def test_given_git_and_tools_area_else_good_options_then_error_not_raised(self):
 
         args = ['module','version']
         options = FakeOptions(git=True, area='tools')
 
         dls_release.check_parsed_options_valid(args, options, self.parser)
 
-        self.mock_error.assert_called_once_with(ANY)
+        n_calls = self.mock_error.call_count
+
+        self.assertEqual(0, n_calls)
 
 
 class TestCreateVCSObject(unittest.TestCase):

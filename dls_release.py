@@ -124,7 +124,7 @@ def create_vcs_object(module, options):
 
 def check_parsed_options_valid(args, options, parser):
     '''All checks that invoke parser errors.'''
-    git_supported_areas = ['support', 'ioc', 'python']
+    git_supported_areas = ['support', 'ioc', 'python', 'tools']
     if len(args) < 1:
         parser.error("Module name not specified")
     elif len(args) < 2 and not options.next_version:
