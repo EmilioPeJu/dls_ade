@@ -3,7 +3,6 @@ from pkg_resources import require
 require('dls_environment')
 require('python-ldap')
 
-import os
 import sys
 import re
 import vcs_svn

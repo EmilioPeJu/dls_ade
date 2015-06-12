@@ -4,7 +4,7 @@ import os
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY, MagicMock
+from mock import patch, ANY, MagicMock  # @UnresolvedImport
 import vcs_git
 
 
@@ -119,7 +119,7 @@ class GitClassInitTest(unittest.TestCase):
 class GitCatTest(unittest.TestCase):
 
     @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)
+    @patch('vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)  # @UndefinedVariable
     @patch('vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheckout):
 
