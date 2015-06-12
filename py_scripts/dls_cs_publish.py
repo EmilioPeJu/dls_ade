@@ -21,7 +21,16 @@ Note: if you are publishing a new module and not just a new release of an
 existing one, then you need to edit /dls_sw/cs-publish/<area>/header.html, 
 placing a new link and description in the table of modules."""
 
-import os, sys, shutil, glob
+import os, sys, shutil, glob, platform
+
+def get_rhel_version():
+    default_rhel_version = "6"
+    if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
+        dist , release_str , name = platform.dist()
+        release = release_str.split(".")[0]
+        return release
+    else:
+        return default_rhel_version
 
 def cs_publish():
     from dls_environment.options import OptionParser
@@ -37,7 +46,15 @@ def cs_publish():
         dest="epics_version", 
         help="Change the epics version. This will determine where the built " \
             "documentation is copied from. Default is %s " \
-            "(from your environment)" % e.epicsVer())        
+            "(from your environment)" % e.epicsVer())   
+    parser.add_option("-r", "--rhel_version", 
+                      action="store", type="int", 
+                      dest="rhel_version", 
+                      help="change the rhel version of the " + \
+                           "environment, default is " + \
+                            get_rhel_version() + \
+                           " (from your system)",
+                      default=get_rhel_version())                 
     (options, args) = parser.parse_args()
     
     if len(args)!=2:
@@ -71,7 +88,11 @@ def cs_publish():
         'Repository does not contain the "'+source+'" module'
 
     # Locate built version of module
-    prodPath = e.prodArea(options.area) + "/" + module + "/" + release
+    prodArea = e.prodArea(options.area)
+    if options.area == 'python' and options.rhel_version >= 6:
+        prodArea = os.path.join(prodArea, "RHEL%s-%s" % (
+                options.rhel_version, platform.machine()))    
+    prodPath = prodArea + "/" + module + "/" + release
     assert os.path.isdir(prodPath), "Module %s doesn't exist in prod" % prodPath
     
     # Check the release isn't on the webserver

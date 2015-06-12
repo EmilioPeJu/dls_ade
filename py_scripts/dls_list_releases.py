@@ -9,10 +9,9 @@ the epics release number from your environment to work out the area on disk to
 look for the module, this can be overridden with the -e flag.
 """
 
-import os, sys
+import os, sys, platform
 
 def get_rhel_version():
-    import platform
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
         dist , release_str , name = platform.dist()
@@ -77,10 +76,11 @@ def list_releases():
             for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
                 release_paths.append(os.path.basename(node.path))
     else:
-        release_dir = os.path.join(e.prodArea(options.area), module)
-        if options.area == 'python' and options.rhel_version == 6:
-            release_dir = os.path.join(e.prodArea(options.area), 
-                                       "RHEL6-x86_64",module)
+        prodArea = e.prodArea(options.area)
+        if options.area == 'python' and options.rhel_version >= 6:
+            prodArea = os.path.join(prodArea, "RHEL%s-%s" % (
+                    options.rhel_version, platform.machine()))   
+        release_dir = os.path.join(prodArea, module)                                       
         if os.path.isdir(release_dir):        
             for p in os.listdir(release_dir):
                 if os.path.isdir(os.path.join(release_dir, p)):
