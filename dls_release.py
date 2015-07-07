@@ -92,8 +92,8 @@ def make_parser():
 
 
 def create_build_object(options):
-    ''' Uses parsed options to select appropriate build architecture, default is
-    local system os '''
+    ''' Uses parsed options to select appropriate build architecture,
+    default is local system os '''
     if options.rhel_version:
         build_object = dlsbuild.RedhatBuild(
             options.rhel_version,
@@ -189,9 +189,10 @@ def construct_info_message(module, options, version, build_object):
 
 
 def check_epics_version_consistent(module_epics, option_epics, build_epics):
-    build_epics = build_epics.replace("_64","")
+    build_epics = build_epics.replace("_64", "")
     if not option_epics and module_epics != build_epics:
-        question = ("You are trying to release a %s module under %s without "
+        question = (
+            "You are trying to release a %s module under %s without "
             "using the -e flag. Are you sure [y/n]?" %
             (module_epics, build_epics)).lower()
         answer = ask_user_input(question)
@@ -219,8 +220,8 @@ def perform_test_build(build_object, options, vcs):
     test_fail = False
 
     if not build_object.local_test_possible():
-        message += "Local test build not possible since local system not the same "
-        message += "OS as build server"
+        message += "Local test build not possible since local system not the "
+        message += "same OS as build server"
     else:
         message += "Performing test build on local system"
         if build_object.test(vcs) != 0:
