@@ -236,7 +236,7 @@ class Builder:
         print "Created build file "+filename+" to build module in "+build_dir
         print "Performing local test build..."
         status = subprocess.call(
-            "/bin/env -i $(/bin/env | grep SSH) "+filename, shell=True)
+            "/bin/env -i \"$(/bin/env | grep SSH)\" "+filename, shell=True)
         if status != 0:
             print "Local test build failed. Results are in "+build_dir
         else:
