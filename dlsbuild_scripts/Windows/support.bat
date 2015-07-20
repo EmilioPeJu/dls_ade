@@ -31,6 +31,7 @@ if defined _profile (
 echo on
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+    exit /b %ERRORLEVEL%
 )
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
@@ -40,6 +41,7 @@ set "build_dir=%_build_dir:/=\%\%_module%"
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+    exit /b %ERRORLEVEL%
 )
 
 cd /d "%build_dir%"

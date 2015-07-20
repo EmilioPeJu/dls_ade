@@ -30,6 +30,7 @@ if defined _profile (
 echo on
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
+    exit /b %ERRORLEVEL%
 )
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
@@ -45,11 +46,13 @@ if "%_module%"=="base" (
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
+    exit /b %ERRORLEVEL%
 )
 
 cd /d "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
+    exit /b %ERRORLEVEL%
 )
 
 if "%_force%"=="true" (
@@ -60,6 +63,7 @@ if not exist %_module% (
     svn checkout %_svn_dir% %_module%
     if errorlevel 1 (
         call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        exit /b %ERRORLEVEL%
     )
     cd %_module%
 ) else (
@@ -67,6 +71,7 @@ if not exist %_module% (
     svn switch %_svn_dir%
     if errorlevel 1 (
         call :ReportFailure %ERRORLEVEL% Can not switch to %_svn_dir%
+        exit /b %ERRORLEVEL%
     )
 )
 
@@ -81,6 +86,7 @@ set make_status=%ERRORLEVEL%
 echo %make_status% > %_build_name%.sta
 if NOT "%make_status%"=="0" (
     call :ReportFailure %make_status% Build Errors for %_module% %_version%
+    exit /b %ERRORLEVEL%
 )
 
 goto :EOF
@@ -88,5 +94,7 @@ goto :EOF
 :ReportFailure
     if exist "%build_dir%\%_version%" echo %1 > "%build_dir%\%_version%\%_build_name%.sta"
     echo #### ERROR [%DATE% %TIME%] ### Error code: %*
-    exit /B %1
-    goto :EOF
+
+:: This exit code doesn't seem to work, caught by Ulrik 20-07-2015
+::    exit /B %1
+::    goto :EOF
