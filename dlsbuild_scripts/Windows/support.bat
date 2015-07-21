@@ -31,23 +31,20 @@ if defined _profile (
 echo on
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
-    exit /b %ERRORLEVEL%
 )
 set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 set "build_dir=%_build_dir:/=\%\%_module%"
 
-:: Checkout module
+:: Checkout module TODO either check if dir exists, or don't check for error
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
-    exit /b %ERRORLEVEL%
 )
 
 cd /d "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
-    exit /b %ERRORLEVEL%
 )
 
 if not defined _svn_dir (
@@ -56,12 +53,10 @@ if not defined _svn_dir (
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
-            exit /b %ERRORLEVEL%
         )
         pushd %_version% && git fetch --tags && git checkout %_version% && popd
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
-            exit /b %ERRORLEVEL%
         )
 
     ) else if "%_force%"=="true" (
@@ -69,17 +64,14 @@ if not defined _svn_dir (
         rmdir /s/q %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not remove %_version%
-            exit /b %ERRORLEVEL%
         )
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
-            exit /b %ERRORLEVEL%
         )
         pushd %_version%  && git fetch --tags && git checkout %_version% && popd
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
-            exit /b %ERRORLEVEL%
         )
 
     ) else (
@@ -89,7 +81,6 @@ if not defined _svn_dir (
         popd
         if not "%_nlines%" == "0" (
             call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_git_dir%
-            exit /b %ERRORLEVEL%
         )
     )
 ) else if not defined _git_dir (
@@ -98,7 +89,6 @@ if not defined _svn_dir (
         svn checkout %_svn_dir% %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-            exit /b %ERRORLEVEL%
         )
 
     ) else if "%_force%"=="true" (
@@ -106,12 +96,10 @@ if not defined _svn_dir (
         rmdir /s/q %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not remove %_version%
-            exit /b %ERRORLEVEL%
         )
         svn checkout %_svn_dir% %_version%
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
-            exit /b %ERRORLEVEL%
         )
 
     ) else (
@@ -119,17 +107,14 @@ if not defined _svn_dir (
         For /f "delims=" %%a in ('svn st -q ^| findstr /V /R /c:"^M *configure\\RELEASE" ^| find /v /c ""') do (set _nlines=%%a)
         if not "%_nlines%" == "0" (
             call :ReportFailure 1 Directory %build_dir%/%_version% not up to date with %_svn_dir%
-            exit /b %ERRORLEVEL%
         )
     )
 ) else (
     call :ReportFailure 1 both _git_dir and _svn_dir are defined; unclear which to use
-    exit /b %ERRORLEVEL%
 )
 cd "%_version%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not cd to %_version%
-    exit /b %ERRORLEVEL%
 )
 
 :: Modify configure\RELEASE
@@ -172,7 +157,5 @@ goto :EOF
 :ReportFailure
     if exist "%build_dir%/%_version%" echo %1 > "%build_dir%\%_version%\%_build_name%.sta"
     echo #### ERROR [%DATE% %TIME%] ### Error code: %*
-
-:: Did this ever work? It doesnt now so Im commenting it out. Ulrik 20-07-2015
-::  exit /B %1
-::  goto :EOF
+    exit /B %1
+    goto :EOF
