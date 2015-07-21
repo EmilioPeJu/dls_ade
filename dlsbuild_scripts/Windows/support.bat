@@ -36,7 +36,7 @@ set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 set "build_dir=%_build_dir:/=\%\%_module%"
 
-:: Checkout module TODO either check if dir exists, or don't check for error
+:: Checkout module
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
