@@ -50,13 +50,16 @@ def lookup(uid):
 def lookup_contacts(module,area):
     path = svn.devModule(module,area)
     contact = svn.propget("dls:contact",path)
-    if contact:
-        contact = contact.values()[0]
+    # contact is a dictionary of contacts associated with path and its files
+    # and subdirectories. We're only interested in the properties on the top
+    # directory (i.e. path).
+    if contact and path in contact.keys():
+        contact = contact[path]
     else:
         contact = ""
     cc = svn.propget("dls:cc",path)     
-    if cc:
-        cc = cc.values()[0]
+    if cc and path in cc.keys():
+        cc = cc[path]
     else:
         cc = ""
     return (contact.strip(),cc.strip())
