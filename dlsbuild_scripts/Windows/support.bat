@@ -52,7 +52,7 @@ if not defined _svn_dir (
 
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 (
-            call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+            call :ReportFailure %ERRORLEVEL% Can not clone %_git_dir%
         )
         pushd %_version% && git fetch --tags && git checkout %_version% && popd
         if errorlevel 1 (
@@ -67,7 +67,7 @@ if not defined _svn_dir (
         )
         git clone --depth=100 %_git_dir% %_version%
         if errorlevel 1 (
-            call :ReportFailure %ERRORLEVEL% Can not clone  %_git_dir%
+            call :ReportFailure %ERRORLEVEL% Can not clone %_git_dir%
         )
         pushd %_version%  && git fetch --tags && git checkout %_version% && popd
         if errorlevel 1 (
