@@ -199,7 +199,7 @@ class Builder:
             "email"                 : self.email,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
-            "%s_dir"%vcs.vcs_type   : vcs.source_repo,
+            "%s_dir" % vcs.vcs_type : vcs.source_repo,
             "module"                : vcs.module,
             "version"               : vcs.version,
             "area"                  : self.area,
@@ -210,7 +210,7 @@ class Builder:
         """Returns True if a local test build is possible"""
         local = default_server()
         remote = self.get_server()
-        return local==remote
+        return local == remote
 
     def test(self, vcs):
         """Builds module version on the local system using the code in the
@@ -225,7 +225,7 @@ class Builder:
         params = self.build_params(
             build_dir, vcs, build_name)
 
-        dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/","_"))
+        dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/", "_"))
         filename = os.path.join(dirname, build_name+self.exten)
         print "Got build file "+filename+" to build module in "+build_dir
         f = open(filename, "w")
@@ -246,7 +246,7 @@ class Builder:
 
     def submit(self, vcs, test=False):
         """Submit a job to the build queue to build module version using the
-        code in the src_dir directory of subversion. If test is anything 
+        code in the src_dir directory of subversion. If test is anything
         that evaluates to True it is built in the test directory. Otherwise it
         is a normal production build."""
 
