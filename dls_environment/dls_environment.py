@@ -19,6 +19,7 @@
 import os, shutil, re
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
+from ConfigParser import SafeConfigParser
 
 class environment:
     """A class representing the epics environment of a site. epics=version of
@@ -194,8 +195,14 @@ class environment:
         e = self
         if epicsVer != self.epicsVer:
             e = self.__class__(epicsVer)
-        # try and find the name in svn
-        module = self.svnName(path)
+        if os.path.isfile(os.path.join(path, "configure", "module.ini")):
+            # try and find name from configure/module.ini
+            parser = SafeConfigParser()
+            parser.read(os.path.join(path, "configure", "module.ini"))
+            module = parser.get("general", "name")
+        else:
+            # try and find the name in svn
+            module = self.svnName(path)
         # deal with valid domains
         if domain == "work":
             root = e.devArea(area)
