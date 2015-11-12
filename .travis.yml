@@ -1,0 +1,11 @@
+sudo: false
+language: python
+python:
+  - 2.7
+
+install:
+  - alias dls-python=python && make install
+
+script:
+  - python setup.py nosetests
+
