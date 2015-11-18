@@ -8,10 +8,10 @@ import re
 import vcs_svn
 import vcs_git
 import dlsbuild
-from dls_environment.options import OptionParser
-from optparse import OptionGroup
+from argparse import _ArgumentGroup
+from argument_parser import ArgumentParser
 
-usage = """%prog [options] <module_name> <release_#>
+usage = """%prog [arguments] <module_name> <release_#>
 
 Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
@@ -26,57 +26,62 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    ''' helper method containing options and help text '''
+    ''' helper method containing arguments and help text '''
 
-    parser = OptionParser(usage)
-    parser.add_option(
-        "-b", "--branch", action="store", type="string", dest="branch",
+    parser = ArgumentParser(usage)
+
+    parser.add_argument("module_name", type=str, default=None, help="name of module to release")
+
+    parser.add_argument("release_#", type=str, default=None, help="release number of module to release")
+
+    parser.add_argument(
+        "-b", "--branch", action="store", type=str, dest="branch",
         help="Release from a branch BRANCH")
-    parser.add_option(
-        "-f", "--force", action="store_true", dest="force",
+    parser.add_argument(
+        "-f", "--force", action="store_true", dest="force", default=None,
         help="force a release. If the release exists in prod it is removed. "
         "If the release exists in svn it is exported to prod, otherwise "
         "the release is created in svn from the trunk and exported to prod")
-    parser.add_option(
+    parser.add_argument(
         "-t", "--no-test-build", action="store_true", dest="skip_test",
         help="If set, this will skip the local test build "
         "and just do a release")
-    parser.add_option(
+    parser.add_argument(
         "-l", "--local-build-only", action="store_true", dest="local_build",
         help="If set, this will only do the local test build and no more.")
-    parser.add_option(
+    parser.add_argument(
         "-T", "--test_build-only", action="store_true", dest="test_only",
         help="If set, this will only do a test build on the build server")
-    parser.add_option(
-        "-e", "--epics_version", action="store", type="string",
+    parser.add_argument(
+        "-e", "--epics_version", action="store", type=str,
         dest="epics_version",
         help="Change the epics version. This will determine which build "
         "server your job is built on for epics modules. Default is "
         "from your environment")
-    parser.add_option(
-        "-m", "--message", action="store", type="string", dest="message",
+    parser.add_argument(
+        "-m", "--message", action="store", type=str, dest="message",
         default="",
         help="Add user message to the end of the default svn commit message. "
         "The message will be '%s'" %
         (log_mess % ("<module_name>", "<release_#>", "<message>")))
-    parser.add_option(
+    parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
-    parser.add_option(
+    parser.add_argument(
         "-g", "--git", action="store_true", dest="git",
         help="Release from a git tag from the diamond gitolite repository")
 
-    group = OptionGroup(
-        parser, "Build operating system options",
-        "Note: The following options are mutually exclusive - only use one")
-    group.add_option(
-        "-r", "--rhel_version", action="store", type="string",
+    group = _ArgumentGroup(
+        parser, "Build operating system arguments",
+        "Note: The following arguments are mutually exclusive - only use one")
+    group.add_argument(
+        "-r", "--rhel_version", action="store", type=str,
         dest="rhel_version",
         help="change the rhel version of the build. This will determine which "
         "build server your job is build on for non-epics modules. Default "
         "is from /etc/redhat-release. Can be 6")
-    group.add_option(
-        "-w", "--windows", action="store", dest="windows",
+    group.add_argument(
+        "-w", "--windows", action="store", dest="windows", type=str,
         help="Release the module or IOC only for the Windows version. "
         "Note that the windows build server can not create a test build. "
         "A configure/RELEASE.win32-x86 or configure/RELEASE.windows64 file"
@@ -86,55 +91,57 @@ def make_parser():
         "Existing unix builds of the same module version will not be "
         "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
         "Both 32 and 64 bit builds are built on the same 64-bit build server")
-    parser.add_option_group(group)
+    parser.add_argument_group(group)
+
+    #print vars(parser.parse_args())
 
     return parser
 
 
-def create_build_object(options):
-    ''' Uses parsed options to select appropriate build architecture,
+def create_build_object(args):
+    ''' Uses parsed arguments to select appropriate build architecture,
     default is local system os '''
-    if options.rhel_version:
+    if args.rhel_version:
         build_object = dlsbuild.RedhatBuild(
-            options.rhel_version,
-            options.epics_version)
-    elif options.windows:
+            args.rhel_version,
+            args.epics_version)
+    elif args.windows:
         build_object = dlsbuild.WindowsBuild(
-            options.windows,
-            options.epics_version)
+            args.windows,
+            args.epics_version)
     else:
         build_object = dlsbuild.default_build(
-            options.epics_version)
+            args.epics_version)
 
-    build_object.set_area(options.area)
-    build_object.set_force(options.force)
+    build_object.set_area(args.area)
+    build_object.set_force(args.force)
 
     return build_object
 
 
-def create_vcs_object(module, options):
-    ''' specific vcs class depends on flags in options, use module and options
-    to construct the objects '''
-    if options.git:
-        return vcs_git.Git(module, options)
+def create_vcs_object(module, args):
+    ''' specific vcs class depends on flags in args, use module and
+    arguments to construct the objects '''
+    if args.git:
+        return vcs_git.Git(module, args)
     else:
-        return vcs_svn.Svn(module, options)
+        return vcs_svn.Svn(module, args)
 
 
-def check_parsed_options_valid(args, options, parser):
+def check_parsed_arguments_valid(args,  parser):
     '''All checks that invoke parser errors.'''
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
-    if len(args) < 1:
+    if not args['module_name']:
         parser.error("Module name not specified")
-    elif len(args) < 2 and not options.next_version:
+    elif args['module_name'] and 'next_version' not in args:
         parser.error("Module version not specified")
-    elif options.area is 'etc' and args[0] in ['build', 'redirector']:
+    elif args['area'] is 'etc' and args['module_name'] in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
-    elif options.next_version and options.git:
+    elif args['next_version'] and args['git']:
         parser.error("When git is specified, version number must be provided")
-    elif options.git and options.area not in git_supported_areas:
-        parser.error("%s area not supported by git" % options.area)
+    elif args['git'] and args['area'] not in git_supported_areas:
+        parser.error("%s area not supported by git" % args['area'])
 
 
 def format_argument_version(arg_version):
@@ -173,17 +180,17 @@ def increment_version_number(last_release):
     return version
 
 
-def construct_info_message(module, options, version, build_object):
+def construct_info_message(module, args, version, build_object):
     ''' helper method gathering info to a string to display during release
     '''
     info = str()
-    if options.branch:
-        btext = "branch %s" % options.branch
+    if args.branch:
+        btext = "branch %s" % args.branch
     else:
         btext = "trunk"
     info += ('Releasing %s %s from %s, ' % (module, version, btext))
     info += ('using %s build server' % build_object.get_server())
-    if options.area in ("ioc", "support"):
+    if args.area in ("ioc", "support"):
         info += (' and epics %s' % build_object.epics())
     return info
 
@@ -214,7 +221,7 @@ def get_module_epics_version(vcs):
     return module_epics
 
 
-def perform_test_build(build_object, options, vcs):
+def perform_test_build(build_object, args, vcs):
 
     message = ''
     test_fail = False
@@ -228,7 +235,7 @@ def perform_test_build(build_object, options, vcs):
             test_fail = True
         else:
             message += "\nTest build successful."
-            if not options.local_build:
+            if not args.local_build:
                 message += " Continuing with build server submission"
     return message, test_fail
 
@@ -236,50 +243,54 @@ def perform_test_build(build_object, options, vcs):
 def main():
 
     parser = make_parser()
-    options, args = parser.parse_args()
+    # parser.parse_args is a argparse.Namespace containing module_name
+    # release_# and other args; vars() converts it to a dictionary
+    args = parser.parse_args()
 
-    check_parsed_options_valid(args, options, parser)
-    module = args[0]
+    print vars(args)
 
-    build = create_build_object(options)
-    vcs = create_vcs_object(module, options)
+    check_parsed_arguments_valid(args, parser)
+    module = vars(args)['module_name']
 
-    if options.branch:
-        vcs.set_branch(options.branch)
+    build = create_build_object(args)
+    vcs = create_vcs_object(module, args)
 
-    if options.next_version:
+    if args.branch:
+        vcs.set_branch(args.branch)
+
+    if args.next_version:
         releases = vcs.list_releases()
         version = next_version_number(releases, module=module)
     else:
-        version = format_argument_version(args[1])
+        version = format_argument_version(vars(args)['release_#'])
     vcs.set_version(version)
 
     vcs.set_log_message(
-        (log_mess % (module, version, options.message)).strip())
+        (log_mess % (module, version, args.message)).strip())
 
-    print construct_info_message(module, options, version, build)
+    print construct_info_message(module, args, version, build)
 
-    if options.area in ["ioc", "support"]:
+    if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
         sure = check_epics_version_consistent(
-            module_epics, options.epics_version, build.epics())
+            module_epics, args.epics_version, build.epics())
         if not sure:
             sys.exit(0)
 
-    if not options.skip_test:
+    if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build, options, vcs)
+            build, args, vcs)
         print test_build_message
         if test_build_fail:
             sys.exit(1)
 
-    if options.local_build:
+    if args.local_build:
         sys.exit(0)
 
-    if not vcs.check_version_exists(version) and not options.test_only:
+    if not vcs.check_version_exists(version) and not args.test_only:
         vcs.release_version(version)
 
-    build.submit(vcs, test=options.test_only)
+    build.submit(vcs, test=args.test_only)
 
 
 if __name__ == "__main__":
