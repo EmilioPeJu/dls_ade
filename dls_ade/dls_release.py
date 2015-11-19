@@ -93,7 +93,7 @@ def make_parser():
         "Both 32 and 64 bit builds are built on the same 64-bit build server")
     parser.add_argument_group(group)
 
-    #print vars(parser.parse_args())
+    # print vars(parser.parse_args())
 
     return parser
 
@@ -243,14 +243,14 @@ def perform_test_build(build_object, args, vcs):
 def main():
 
     parser = make_parser()
-    # parser.parse_args is a argparse.Namespace containing module_name
+    # parser.parse_args is an argparse.Namespace containing module_name
     # release_# and other args; vars() converts it to a dictionary
     args = parser.parse_args()
 
-    print vars(args)
+    print args
 
-    check_parsed_arguments_valid(args, parser)
-    module = vars(args)['module_name']
+    check_parsed_arguments_valid(vars(args), parser)
+    module = args.module_name
 
     build = create_build_object(args)
     vcs = create_vcs_object(module, args)
