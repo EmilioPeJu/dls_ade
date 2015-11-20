@@ -1,60 +1,76 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
+import os
+import sys
+from dls_ade.argument_parser import ArgParser
+from dls_environment import git_functions as gitf
+
 usage = """%prog [options] [<module_name>]
 
 Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
-If you do not enter a module name, the whole <area> area will be checked out."""
+If you enter "everything" as module name, the whole <area> area will be checked out."""
 
-import os, sys
 
-def checkout_module():
-    from dls_environment.options import OptionParser
-    parser = OptionParser(usage)
-    parser.add_option("-b", "--branch", action="store", type="string", dest="branch",help="Checkout from a branch rather than from the trunk")
-    parser.add_option("-f", "--force", action="store_true", dest="force", help="force the checkout, disable warnings")
-    (options, args) = parser.parse_args()
+def make_parser():
+    # parse options
+    parser = ArgParser(usage)
+
+    parser.add_argument("module_name", type=str, default="",
+                        help="name of module to checkout")
+    parser.add_argument("-b", "--branch", action="store", type=str, dest="branch",
+                        help="Checkout from a branch rather than from the trunk")
+    parser.add_argument("-f", "--force", action="store_true", dest="force",
+                        help="force the checkout, disable warnings")
+    return parser
+
+    # CHECK USE OF ARGUMENT PARSER IN ALL SCRIPTS, CORRECT IN DLS_RELEASE
+
+def main():
+
+    parser = make_parser()
+    args = parser.parse_args()
     
-    flag = False
-    if len(args)==0:
-        a=raw_input("Would you like to checkout the whole "+options.area+" area? This may take some time. Enter Y or N: ")
-        if a.upper() == "N":
+    # flag = False
+
+    if args.module_name == "everything":
+        answer = raw_input("Would you like to checkout the whole " + args.area +
+                           " area? This may take some time. Enter Y or N: ")
+        if answer.upper() != "Y":
             return
+
+    module = args.module_name
+
+    if args.area == "ioc" and module != "everything":
+        assert len(module.split('/')) > 1, 'Missing Technical Area under Beamline'
+
+    if args.branch:
+        if module == "everything":
+            source = gitf.branchArea(args.area)
+            module = source.split("/")[-1]
         else:
-            module = ""
+            source = os.path.join(gitf.branchModule(module, args.area),
+                                  args.branch)
     else:
-        if len(args)!=1:
-            parser.error("Incorrect number of arguments.")
-        module = args[0]
-    
-    # import svn client
-    from dls_environment.svn import svnClient    
+        if module == "everything":
+            source = gitf.devArea(args.area)
+            module = source.split("/")[-1]
+        else:
+            source = gitf.devModule(module, args.area)
+
+    from dls_environment.svn import svnClient
     svn = svnClient()
 
-    if options.area == "ioc" and module!="":
-        assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
-
-    if options.branch:
-        if module=="":
-            source = svn.branchArea(options.area)
-            module = source.split("/")[-1]
-        else:
-            source = os.path.join(svn.branchModule(module,options.area),options.branch)
-    else:
-        if module=="":
-            source = svn.devArea(options.area)
-            module = source.split("/")[-1]
-        else:
-            source = svn.devModule(module,options.area)
-
     # Check for existence of this module in various places in the repository
-    assert svn.pathcheck(source),'Repository does not contain the "'+source+'" module'
-    assert not os.path.isdir(module),'Path already exists: '+module
+    assert svn.pathcheck(source), 'Repository does not contain the "' + source + \
+                                  '" module'
+    assert not os.path.isdir(module), 'Path already exists: ' + module
 
     # Checkout
     print 'Checking out: '+source+'...'
-    svn.checkout(source,module)
-    
+    svn.checkout(source, module)
+
+
 if __name__ == "__main__":
-    sys.exit(checkout_module())
+    sys.exit(main())

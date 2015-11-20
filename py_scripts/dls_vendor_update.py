@@ -1,6 +1,11 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
+import os
+import sys
+from dls_ade.argument_parser import ArgParser
+from dls_environment import git_functions as gitf
+
 usage = """%prog [options] <source> <module> <old> <new>
 
 Default <area> is 'support'.
@@ -38,65 +43,85 @@ This takes into account any local Diamond changes already in trunk).
 Now check for conflicts and resolve these before commiting the changes back to the repository.
 Finally, it is possible to make a release of the new vendor code by using "dls-release.py"."""
 
-import os, sys
 
-def vendor_update():
-    from dls_environment.options import OptionParser
-    parser = OptionParser(usage)
-    parser.add_option("-f", "--force",
+def make_parser():
+    parser = ArgParser(usage)
+    parser.add_argument(
+        "source", type=str, default=None,
+        help="source to update from")
+    parser.add_argument(
+        "module_name", type=str, default=None,
+        help="name of module to update")
+    parser.add_argument(
+        "old_tag", type=str, default=None,
+        help="tag of old module")
+    parser.add_argument(
+        "new_tag", type=str, default=None,
+        help="tag of new module")
+    parser.add_argument("-f", "--force",
         action="store_true", dest="force",
-        help="force the update, disable warnings")      
-    (options, args) = parser.parse_args()
-    if len(args)!=4:
-        parser.error("Incorrect number of arguments.")
+        help="force the update, disable warnings")
+
+    return parser
+
+
+def main():
+
+    parser = make_parser()
+    args = parser.parse_args()
+
+#    if len(args) != 4:
+#        parser.error("Incorrect number of arguments.")
     
     # setup the environment
-    source = args[0]
-    module = args[1]
-    old = args[2]
-    new = args[3]
-    from dls_environment.svn import svnClient
-    svn = svnClient()
-    if options.area == "ioc":
-        assert len(module.split('/'))>1, 'Missing Technical Area under Beamline'
-    vendor = svn.vendorModule(module,options.area)
-    vendor_old = os.path.join(vendor,old)
-    vendor_new = os.path.join(vendor,new)
-    vendor_current = os.path.join(vendor,"current")
-    trunk = svn.devModule(module,options.area)
+    source = args.source
+    module = args.module_name
+    old = args.old_tag
+    new = args.new_tag
+
+    if args.area == "ioc":
+        assert len(module.split('/')) > 1, "Missing Technical Area under Beamline"
+
+    vendor = gitf.vendorModule(module, args.area)
+    vendor_old = os.path.join(vendor, old)
+    vendor_new = os.path.join(vendor, new)
+    vendor_current = os.path.join(vendor, "current")
+    trunk = gitf.devModule(module, args.area)
     disk_dir = module.split("/")[-1]
-    svn.setLogMessage('Importing vendor source from: '+source)
-    
+    svn.setLogMessage("Importing vendor source from: " + source)
 
     # The directory tree we are importing from must not contain any
     # .svn directories, otherwise "dls-svn_load_dirs" will fail with
     # a non-obvious error.
-    found = 0
     for path, subdirs, files in os.walk(args[0]):
         for tt in subdirs:
-            assert tt!='.svn', 'An .svn directory has been found in '+source+', cannot update from here!' 
+            assert tt != '.svn', "An .svn directory has been found in " + \
+                                 source + ", cannot update from here!"
 
     # Check for existence of this module in vendor and trunk in the repository
-    for dir in [vendor,trunk,vendor_old]:
+    for dir in [vendor, trunk, vendor_old]:
         assert svn.pathcheck(dir), dir + " does not exist in the repository"
-    assert not svn.pathcheck(vendor_new), vendor_new  + " already exists in the repository"
+    assert not svn.pathcheck(vendor_new), vendor_new + " already exists in the repository"
 
     # check for diffs
-    diffs = svn.diff( '/tmp',vendor_current,svn.Revision(svn.opt_revision_kind.head),
-                      vendor_old,svn.Revision(svn.opt_revision_kind.head),True, True, True)                          
-    assert options.force or not diffs, 'Vendor "current" of: '+vendor+' is not at revision: ' + old + "\nUse the -f flag if you are sure you want to do this"
+    diffs = svn.diff('/tmp', vendor_current, svn.Revision(svn.opt_revision_kind.head),
+                     vendor_old, svn.Revision(svn.opt_revision_kind.head), True, True, True)
+    assert args.force or not diffs, \
+        "Vendor 'current' of: " + vendor + " is not at revision: " + old + \
+        "\nUse the -f flag if you are sure you want to do this"
 
-    print 'Importing: '+module+' from: '+source+' to update from version: '+old+' to version: '+new
-    if os.system('dls-svn-load-dirs.pl -t '+new+" "+vendor+" current "+source):
-        print "dls-svn-load-dirs.pl command failed"
+    print("Importing: " + module + " from: " + source + " to update from version: " +
+          old + " to version: " + new)
+    if os.system('dls-svn-load-dirs.pl -t ' + new + " " + vendor + " current " + source):
+        print("dls-svn-load-dirs.pl command failed")
     else:        
-        print
-        print 'You probably now want to merge this update into the trunk.'
-        print 'Do this by issuing the following commands:'
-        print
-        print 'svn checkout ' + trunk + ' ' + disk_dir + ' > /dev/null'
-        print 'svn merge ' + vendor_old + ' ' + vendor_new + ' ' + disk_dir
-        print
+        print("")
+        print("You probably now want to merge this update into the trunk.")
+        print("Do this by issuing the following commands:")
+        print("")
+        print("svn checkout " + trunk + " " + disk_dir + " > /dev/null")
+        print("svn merge " + vendor_old + " " + vendor_new + " " + disk_dir)
+        print("")
 
 if __name__ == "__main__":
-    sys.exit(vendor_update())
+    sys.exit(main())
