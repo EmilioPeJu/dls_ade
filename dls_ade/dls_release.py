@@ -9,7 +9,7 @@ import vcs_svn
 import vcs_git
 import dlsbuild
 from argparse import _ArgumentGroup
-from argument_parser import ArgumentParser
+from dls_ade.argument_parser import ArgParser
 
 usage = """%prog [arguments] <module_name> <release_#>
 
@@ -28,12 +28,14 @@ log_mess = "%s: Released version %s. %s"
 def make_parser():
     ''' helper method containing arguments and help text '''
 
-    parser = ArgumentParser(usage)
+    parser = ArgParser(usage)
 
-    parser.add_argument("module_name", type=str, default=None, help="name of module to release")
-
-    parser.add_argument("release_#", type=str, default=None, help="release number of module to release")
-
+    parser.add_argument(
+        "module_name", type=str, default=None,
+        help="name of module to release")
+    parser.add_argument(
+        "release_#", type=str, default=None,
+        help="release number of module to release")
     parser.add_argument(
         "-b", "--branch", action="store", type=str, dest="branch",
         help="Release from a branch BRANCH")
