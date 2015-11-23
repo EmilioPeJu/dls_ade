@@ -25,7 +25,6 @@ def make_parser():
                         help="force the checkout, disable warnings")
     return parser
 
-    # CHECK USE OF ARGUMENT PARSER IN ALL SCRIPTS, CORRECT IN DLS_RELEASE
 
 def main():
 
@@ -68,7 +67,7 @@ def main():
     assert not os.path.isdir(module), 'Path already exists: ' + module
 
     # Checkout
-    print 'Checking out: '+source+'...'
+    print 'Checking out: ' + source + '...'
     svn.checkout(source, module)
 
 

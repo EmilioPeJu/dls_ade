@@ -25,7 +25,7 @@ def make_parser():
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None,
-        help="name of module to branch")
+        help="name of module")
     parser.add_argument(
         "-n", "--no_import", action="store_true", dest="no_import",
         help="Creates the module but doesn't import into svn")

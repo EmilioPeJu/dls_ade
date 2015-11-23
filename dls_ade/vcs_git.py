@@ -5,7 +5,15 @@ import git
 import tempfile
 import subprocess
 
-GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk"
+
+
+def is_in_repo(area, module):
+        list_cmd = GIT_ROOT + 'expand controls'
+        list_cmd_output = subprocess.check_output(list_cmd.split())
+
+        server_repo_path = 'controls/' + area + '/' + module
+        return server_repo_path in list_cmd_output
 
 
 class Git(BaseVCS):

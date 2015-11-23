@@ -1,4 +1,7 @@
 import os
+from pkg_resources import require
+require('GitPython')
+import git
 
 GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
