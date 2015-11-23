@@ -4,16 +4,18 @@ require('GitPython')
 import git
 import tempfile
 import subprocess
+import os
 
-GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk"
+
+GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 
 
-def is_in_repo(area, module):
-        list_cmd = GIT_ROOT + 'expand controls'
-        list_cmd_output = subprocess.check_output(list_cmd.split())
+def in_repo(server_repo_path):
 
-        server_repo_path = 'controls/' + area + '/' + module
-        return server_repo_path in list_cmd_output
+    list_cmd = 'ssh ' + GIT_ROOT + ' expand controls'
+    list_cmd_output = subprocess.check_output(list_cmd.split())
+
+    return server_repo_path in list_cmd_output
 
 
 class Git(BaseVCS):
@@ -22,7 +24,16 @@ class Git(BaseVCS):
 
         self._module = module
         self.area = options.area
-        self.init_client()
+
+        server_repo_path = 'controls/' + self.area + '/' + self._module
+
+        if not in_repo(server_repo_path):
+            raise Exception('repo not found on gitolite server')
+
+        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
+        self._remote_repo = os.path.join("ssh://" + GIT_ROOT, server_repo_path)
+
+        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
         self._version = None
 
     @property
@@ -43,19 +54,6 @@ class Git(BaseVCS):
             raise Exception('version not set')
         return self._version
 
-    def init_client(self):
-        list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
-        list_cmd_output = subprocess.check_output(list_cmd.split())
-
-        server_repo_path = 'controls/' + self.area + '/' + self._module
-        if server_repo_path not in list_cmd_output:
-            raise Exception('repo not found on gitolite server')
-
-        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
-        self._remote_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
-        self._remote_repo += server_repo_path
-
-        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
 
     def cat(self, filename):
         '''

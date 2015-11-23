@@ -7,6 +7,9 @@ require("mock")
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
 import vcs_git
 
+class IsInRepoTest(unittest.TestCase):
+    pass
+    #TODO
 
 class GitClassInitTest(unittest.TestCase):
 
@@ -19,8 +22,9 @@ class GitClassInitTest(unittest.TestCase):
     def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
         repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
+
         with self.assertRaises(Exception):
-            vcs_git.Git(1, FakeOptions())
+            vcs_git.Git("FakeModuleNumberOne", FakeOptions())
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
