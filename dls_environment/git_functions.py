@@ -3,7 +3,7 @@ from pkg_resources import require
 require('GitPython')
 import git
 
-GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 # Lots of Git functions in here /dls_sw/prod/tools/RHEL6-x86_64/defaults/lib/python2.7/site-packages/all_eggs/GitPython-0.3.2.RC1-py2.7.egg/git/refs/head.py
 # and here /dls_sw/prod/tools/RHEL6-x86_64/defaults/lib/python2.7/site-packages/all_eggs/GitPython-0.3.2.RC1-py2.7.egg/git/refs/base.py
@@ -11,7 +11,7 @@ GIT_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 def root():
     """Return the root for subversion (SVN_ROOT variable in the environment)"""
-    rootV = GIT_ROOT
+    rootV = GIT_SSH_ROOT
     # assert os.environ["SVN_ROOT"], "'SVN_ROOT' environment variable must be set"
     return rootV
 

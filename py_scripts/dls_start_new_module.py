@@ -324,6 +324,7 @@ def main():
     if not args.no_import:
         # import the module into svn
         os.chdir(cwd)
+        import_module(disk_dir, dest, args, module)
 
 
 if __name__ == "__main__":

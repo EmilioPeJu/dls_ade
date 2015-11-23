@@ -3,8 +3,12 @@
 
 import os
 import sys
+from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
+from pkg_resources import require
+require('GitPython')
+from git import Repo as Git
 
 usage = """%prog [options] [<module_name>]
 
@@ -62,13 +66,16 @@ def main():
     svn = svnClient()
 
     # Check for existence of this module in various places in the repository
-    assert svn.pathcheck(source), 'Repository does not contain the "' + source + \
-                                  '" module'
-    assert not os.path.isdir(module), 'Path already exists: ' + module
+    # assert svn.pathcheck(source), 'Repository does not contain the "' + source + \
+    #                              '" module'
+    assert vcs_git.is_in_repo(args.area, args.module_name), "Repository does not contain the '" + source + \
+                                                            "' module"
+    assert not os.path.isdir(module), "Path already exists: " + module
 
     # Checkout
     print 'Checking out: ' + source + '...'
-    svn.checkout(source, module)
+    # svn.checkout(source, module)
+    Git.clone_from(source, module)
 
 
 if __name__ == "__main__":
