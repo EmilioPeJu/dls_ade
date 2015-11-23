@@ -68,7 +68,7 @@ def main():
     # Check for existence of this module in various places in the repository
     # assert svn.pathcheck(source), 'Repository does not contain the "' + source + \
     #                              '" module'
-    assert vcs_git.is_in_repo(args.area, args.module_name), "Repository does not contain the '" + source + \
+    assert vcs_git.in_repo(args.area, args.module_name), "Repository does not contain the '" + source + \
                                                             "' module"
     assert not os.path.isdir(module), "Path already exists: " + module
 
