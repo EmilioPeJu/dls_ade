@@ -87,9 +87,11 @@ def main():
     check_source_file_path_valid(source, parser)
     check_module_file_path_valid(module, parser)
 
+    print(source)
+
     # Checkout
-    print 'Checking out: ' + source + '...'
-    Git.clone_from(source, module)
+    print("Checking out: " + source + "...")
+    Git.clone_from(os.path.join(vcs_git.GIT_SSH_ROOT, source), os.path.join("./", module))
 
 
 if __name__ == "__main__":

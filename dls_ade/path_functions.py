@@ -1,6 +1,7 @@
 import os
+import vcs_git
 
-GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
 
 
 def root():
@@ -10,22 +11,21 @@ def root():
     return root_v
 
 
-def area(type_v, area_v):
-    assert type_v in ("branches", "release", "tags", "trunk", "vendor"),\
-        "Type must be: branches, release, tags, trunk or vendor"
+def area(area_v):
+
     if area_v is "etc":
-        return os.path.join(root(), area_v, type_v, "prod")
+        return os.path.join(root(), area_v, "prod")
     elif area_v is "epics":
-        return os.path.join(root(), area_v, type_v)
+        return os.path.join(root(), area_v)
     elif area_v is "tools":
-        return os.path.join(root(), "diamond", type_v, "build_scripts")
+        return os.path.join(root(), "diamond", "build_scripts")
     else:
-        return os.path.join(root(), "diamond", type_v, area_v)
+        return os.path.join("controls", area_v)
 
 
 def devArea(area_v="support"):
     """Return the path for the trunk section of a particular area_v"""
-    return area("trunk", area_v)
+    return area(area_v)
 
 
 def devModule(module, area_v="support"):
@@ -35,7 +35,7 @@ def devModule(module, area_v="support"):
 
 def prodArea(area_v="support"):
     """Return the path for the release section of a particular area"""
-    return area("release", area_v)
+    return area(area_v)
 
 
 def prodModule(module, area_v="support"):
@@ -45,7 +45,7 @@ def prodModule(module, area_v="support"):
 
 def branchArea(area_v="support"):
     """Return the path for the branch section of a particular area"""
-    return area("branches", area_v)
+    return area(area_v)
 
 
 def branchModule(module, area_v="support"):
@@ -55,7 +55,7 @@ def branchModule(module, area_v="support"):
 
 def vendorArea(area_v="support"):
     """Return the path for the vendor section of a particular area"""
-    return area("vendor", area_v)
+    return area(area_v)
 
 
 def vendorModule(module, area_v="support"):
