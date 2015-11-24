@@ -8,7 +8,6 @@ import re
 import vcs_svn
 import vcs_git
 import dlsbuild
-from argparse import _ArgumentGroup
 from argument_parser import ArgParser
 
 usage = """%prog [arguments] <module_name> <release_#>
@@ -73,9 +72,12 @@ def make_parser():
         "-g", "--git", action="store_true", dest="git",
         help="Release from a git tag from the diamond gitolite repository")
 
-    group = _ArgumentGroup(
-        parser, "Build operating system arguments",
-        "Note: The following arguments are mutually exclusive - only use one")
+    title = "Build operating system arguments"
+    desc = "Note: The following arguments are mutually exclusive - only use one"
+
+    desc_group = parser.add_argument_group(title=title, description=desc)  # Can only add description to group, so have
+    group = desc_group.add_mutually_exclusive_group()                      # to nest inside ordinary group
+
     group.add_argument(
         "-r", "--rhel_version", action="store", type=str,
         dest="rhel_version",
@@ -93,7 +95,6 @@ def make_parser():
         "Existing unix builds of the same module version will not be "
         "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
         "Both 32 and 64 bit builds are built on the same 64-bit build server")
-    parser.add_argument_group(group)
 
     # print vars(parser.parse_args())
 
@@ -183,8 +184,7 @@ def increment_version_number(last_release):
 
 
 def construct_info_message(module, args, version, build_object):
-    ''' helper method gathering info to a string to display during release
-    '''
+    ''' helper method gathering info to a string to display during release '''
     info = str()
     if args.branch:
         btext = "branch %s" % args.branch
