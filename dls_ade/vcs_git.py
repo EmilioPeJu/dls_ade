@@ -1,13 +1,15 @@
 from vcs import BaseVCS
-from pkg_resources import require
-require('GitPython')
-import git
 import tempfile
 import subprocess
 import os
 
+from pkg_resources import require
+require('GitPython')
+import git
+
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
+GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
 def in_repo(server_repo_path):
@@ -31,7 +33,7 @@ class Git(BaseVCS):
             raise Exception('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
-        self._remote_repo = os.path.join("ssh://" + GIT_ROOT, server_repo_path)
+        self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
 
         self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
         self._version = None
@@ -53,7 +55,6 @@ class Git(BaseVCS):
         if not self._version:
             raise Exception('version not set')
         return self._version
-
 
     def cat(self, filename):
         '''

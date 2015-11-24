@@ -1,15 +1,29 @@
 #!/bin/env dls-python
 
+import vcs_git
 import os
 import unittest
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
-import vcs_git
+
+GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+
 
 class IsInRepoTest(unittest.TestCase):
-    pass
-    #TODO
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/test/path'])
+    def test_given_path_exists_then_return_true(self, mock_check):
+
+        self.assertTrue(vcs_git.in_repo("controls/test/path"))
+
+    @patch('vcs_git.subprocess.check_output', return_value=['controls/test/otherpath'])
+    def test_given_path_does_not_exist_then_return_false(self, mock_check):
+
+        self.assertFalse(vcs_git.in_repo("controls/test/path"))
+
+
+
 
 class GitClassInitTest(unittest.TestCase):
 
