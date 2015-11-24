@@ -1,14 +1,11 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-import os
 import sys
 from dls_ade.argument_parser import ArgParser
-from dls_ade import variables
 from dls_ade import vcs_git
 from dls_environment import environment
-from dls_environment.svn import svnClient
-from dls_environment import git_functions as gitf
+import path_functions as path
 
 usage = """%prog [options] <module_name>
 
@@ -26,9 +23,7 @@ def make_parser():
 
 def check_parsed_arguments_valid(args, parser):
 
-    print args
     if 'module_name' not in args:
-        print args
         parser.error("Module name required")
 
 
@@ -48,15 +43,13 @@ def main():
     check_parsed_arguments_valid(vars(args), parser)
     check_technical_area_valid(vars(args), parser)
 
-    # print vars(args)
-
     # setup the environment
     e = environment()
 
     module = args.module_name
 
-    source = gitf.devModule(module, args.area)
-    release = gitf.prodModule(module, args.area)
+    source = path.devModule(module, args.area)
+    release = path.prodModule(module, args.area)
                 
     # Check for existence of this module in various places in the repository and note revisions
     assert svn.pathcheck(source), "Repository does not contain '" + source + "'"
@@ -70,14 +63,14 @@ def main():
             e.sortReleases([x["name"] for x in svn.ls(release)])[-1].split("/")[-1]
         # print the output
         if last_trunk_rev > last_release_rev:
-            print module + " (" + last_release_num + \
+            print(module + " (" + last_release_num + \
                   "): Outstanding changes. Release = r" + \
                   str(last_release_rev) + ", Trunk = r" + \
-                  str(last_trunk_rev)
+                  str(last_trunk_rev))
         else:
-            print module + " (" + last_release_num + "): Up to date."
+            print(module + " (" + last_release_num + "): Up to date.")
     else:
-        print module + " (No release done): Outstanding changes."
+        print(module + " (No release done): Outstanding changes.")
     
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@
 
 import os
 import sys
-from dls_ade import vcs_git
-from dls_ade.argument_parser import ArgParser
-from dls_environment import git_functions as gitf
+import vcs_git
+from argument_parser import ArgParser
+import path_functions as path
 from pkg_resources import require
 require('GitPython')
 from git import Repo as Git
@@ -14,7 +14,7 @@ usage = """%prog [options] [<module_name>]
 
 Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
-If you enter "everything" as module name, the whole <area> area will be checked out."""
+If you enter "everything" as <module_name>, the whole <area> area will be checked out."""
 
 
 def make_parser():
@@ -30,12 +30,35 @@ def make_parser():
     return parser
 
 
+def check_parsed_arguments_valid(args, parser):
+
+    if 'module_name' not in args:
+        parser.error("Module name required")
+
+
+def check_technical_area(args, parser):
+    module = args['module_name']
+
+    if args['area'] == "ioc" and module != "everything" and not len(module.split('/')) > 1:
+        parser.error("Missing Technical Area under Beamline")
+
+
+def check_source_file_path_valid(source, parser):
+
+    if not vcs_git.in_repo(source):
+        parser.error("Repository does not contain the '" + source + "' module")
+
+
+def check_module_file_path_valid(module, parser):
+
+    if os.path.isdir(module):
+        parser.error("Path already exists: " + module)
+
+
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
-    
-    # flag = False
 
     if args.module_name == "everything":
         answer = raw_input("Would you like to checkout the whole " + args.area +
@@ -43,38 +66,29 @@ def main():
         if answer.upper() != "Y":
             return
 
-    module = args.module_name
+    check_technical_area(vars(args), parser)
 
-    if args.area == "ioc" and module != "everything":
-        assert len(module.split('/')) > 1, 'Missing Technical Area under Beamline'
+    module = args.module_name
 
     if args.branch:
         if module == "everything":
-            source = gitf.branchArea(args.area)
+            source = path.branchArea(args.area)
             module = source.split("/")[-1]
         else:
-            source = os.path.join(gitf.branchModule(module, args.area),
+            source = os.path.join(path.branchModule(module, args.area),
                                   args.branch)
     else:
         if module == "everything":
-            source = gitf.devArea(args.area)
+            source = path.devArea(args.area)
             module = source.split("/")[-1]
         else:
-            source = gitf.devModule(module, args.area)
+            source = path.devModule(module, args.area)
 
-    from dls_environment.svn import svnClient
-    svn = svnClient()
-
-    # Check for existence of this module in various places in the repository
-    # assert svn.pathcheck(source), 'Repository does not contain the "' + source + \
-    #                              '" module'
-    assert vcs_git.in_repo(args.area, args.module_name), "Repository does not contain the '" + source + \
-                                                            "' module"
-    assert not os.path.isdir(module), "Path already exists: " + module
+    check_source_file_path_valid(source, parser)
+    check_module_file_path_valid(module, parser)
 
     # Checkout
     print 'Checking out: ' + source + '...'
-    # svn.checkout(source, module)
     Git.clone_from(source, module)
 
 

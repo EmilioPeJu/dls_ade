@@ -1,16 +1,18 @@
 #!/bin/env dls-python
 
 import unittest
-import dls_changes_since_release
+
 from pkg_resources import require
+
+import dls_changes_since_release
+
 require("mock")
-from mock import patch, ANY, MagicMock
-from dls_ade import vcs_git
+from mock import patch
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
 
-class ParserTest(unittest.TestCase):
+class MakeParserTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_changes_since_release.make_parser()
@@ -22,12 +24,29 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "area")
         self.assertIn("--area", option.option_strings)
 
+    def test_python_argument_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-p']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "python")
+        self.assertIn("--python", option.option_strings)
 
-class CheckParsedOptionsValid(unittest.TestCase):
+    def test_ioc_argument_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-i']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "ioc")
+        self.assertIn("--ioc", option.option_strings)
+
+    def test_module_name_has_correct_attributes(self):
+        arguments = self.parser._positionals._actions[4]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'module_name')
+
+
+class CheckParsedArgumentsValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_changes_since_release.make_parser()
-        parse_error_patch = patch('dls_changes_since_release.ArgumentParser.error')
+        parse_error_patch = patch('dls_changes_since_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -47,11 +66,11 @@ class CheckParsedOptionsValid(unittest.TestCase):
         self.assertFalse(self.mock_error.call_count)
 
 
-class TestTechnicalAreaCheck(unittest.TestCase):
+class CheckTechnicalAreaTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_changes_since_release.make_parser()
-        parse_error_patch = patch('dls_changes_since_release.ArgumentParser.error')
+        parse_error_patch = patch('dls_changes_since_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -71,5 +90,5 @@ class TestTechnicalAreaCheck(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_msg)
 
 
-class TestMain(unittest.TestCase):
+class MainTest(unittest.TestCase):
     pass
