@@ -7,13 +7,11 @@ import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
 
-usage = """%prog [options] <module_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Start a new diamond module of particular type.
 Uses makeBaseApp with the dls template for a 'support' or 'ioc' module,\
  copies the example from the environment module for python.
-Creates this module and imports it into subversion.
+Creates this module and imports it into git.
 If the -i flag is used, <module_name> is expected to be of the form "Domain/Technical Area/IOC number" i.e. BL02I/VA/03
 The IOC number can be omitted, in which case, it defaults to "01".
 If the --fullname flag is used, the IOC will be imported as BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same\
@@ -331,6 +329,4 @@ def main():
 
 if __name__ == "__main__":
 # >>> This causes a UserWarning, why is it here?
-    from pkg_resources import require
-    require("dls_environment")
     sys.exit(main())

@@ -10,9 +10,7 @@ from pkg_resources import require
 require('GitPython')
 from git import Repo as Git
 
-usage = """%prog [options] [<module_name>]
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
 If you enter "everything" as <module_name>, the whole <area> area will be checked out."""
 

@@ -10,13 +10,11 @@ import vcs_git
 import dlsbuild
 from argument_parser import ArgParser
 
-usage = """%prog [arguments] <module_name> <release_#>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
-the release in svn. It will then write a build request file to the build
-server, causing it to schedule a checkout and build of the svn release in
+the release in git. It will then write a build request file to the build
+server, causing it to schedule a checkout and build of the git release in
 prod."""
 
 
