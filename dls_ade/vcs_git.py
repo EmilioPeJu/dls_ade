@@ -20,6 +20,8 @@ def in_repo(server_repo_path):
     return server_repo_path in list_cmd_output
 
 
+
+
 class Git(BaseVCS):
 
     def __init__(self, module, options):

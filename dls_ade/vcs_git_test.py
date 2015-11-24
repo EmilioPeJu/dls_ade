@@ -23,8 +23,6 @@ class IsInRepoTest(unittest.TestCase):
         self.assertFalse(vcs_git.in_repo("controls/test/path"))
 
 
-
-
 class GitClassInitTest(unittest.TestCase):
 
     def test_given_nonsense_module_options_args_then_class_instance_should_fail(self):

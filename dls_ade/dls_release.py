@@ -9,7 +9,7 @@ import vcs_svn
 import vcs_git
 import dlsbuild
 from argparse import _ArgumentGroup
-from dls_ade.argument_parser import ArgParser
+from argument_parser import ArgParser
 
 usage = """%prog [arguments] <module_name> <release_#>
 

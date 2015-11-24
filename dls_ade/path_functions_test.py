@@ -13,36 +13,36 @@ class RootTest(unittest.TestCase):
 class AreaTest(unittest.TestCase):
 
     def test_given_area_etc_then_path_to_prod(self):
-        typev = "branches"
+        type_v = "branches"
         area = "etc"
 
-        path = path_functions.area(typev, area)
+        path = path_functions.area(type_v, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + area + "/" + typev + "/prod")
+        self.assertEqual(path, GIT_SSH_ROOT + area + "/" + type_v + "/prod")
 
     def test_given_area_epics_then_path_to_type(self):
-        typev = "branches"
+        type_v = "branches"
         area = "epics"
 
-        path = path_functions.area(typev, area)
+        path = path_functions.area(type_v, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + area + "/" + typev)
+        self.assertEqual(path, GIT_SSH_ROOT + area + "/" + type_v)
 
     def test_given_area_tools_then_path_to_build_scripts(self):
-        typev = "branches"
+        type_v = "branches"
         area = "tools"
 
-        path = path_functions.area(typev, area)
+        path = path_functions.area(type_v, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + "diamond/" + typev + "/build_scripts")
+        self.assertEqual(path, GIT_SSH_ROOT + "diamond/" + type_v + "/build_scripts")
 
     def test_given_area_tools_then_path_to_area(self):
-        typev = "branches"
+        type_v = "branches"
         area = "other"
 
-        path = path_functions.area(typev, area)
+        path = path_functions.area(type_v, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + "diamond/" + typev + "/" + area)
+        self.assertEqual(path, GIT_SSH_ROOT + "diamond/" + type_v + "/" + area)
 
 
 class ModuleAreaTests(unittest.TestCase):

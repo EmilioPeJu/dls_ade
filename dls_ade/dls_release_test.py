@@ -188,7 +188,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_release.make_parser()
-        parse_error_patch = patch('dls_release.ArgumentParser.error')
+        parse_error_patch = patch('dls_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -725,7 +725,7 @@ class TestMain(unittest.TestCase):
             'check_epics_version_consistent',
             'ask_user_input',
             'perform_test_build',
-            'ArgumentParser.parse_args',
+            'ArgParser.parse_args',
         ]
 
         self.patch = {}
@@ -735,7 +735,7 @@ class TestMain(unittest.TestCase):
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
-        self.mocks['ArgumentParser.parse_args'].return_value = ['', '']
+        self.mocks['ArgParser.parse_args'].return_value = ['', '']
 
         self.manager = MagicMock()
 

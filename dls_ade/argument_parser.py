@@ -1,11 +1,11 @@
-from argparse import ArgumentParser as _Parser
+from argparse import ArgumentParser
 import variables
 
 
-class ArgParser(_Parser):
+class ArgParser(ArgumentParser):
 
     def __init__(self, usage):
-        _Parser.__init__(self, usage)
+        super(ArgParser, self).__init__(usage)
 
         self.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
@@ -18,7 +18,7 @@ class ArgParser(_Parser):
             help="set <area>='ioc'")
 
     def parse_args(self):
-        args = _Parser.parse_args(self)
+        args = super(ArgParser, self).parse_args()
         print args
         # setup area
         if args.ioc:
