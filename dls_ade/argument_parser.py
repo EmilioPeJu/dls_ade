@@ -19,7 +19,6 @@ class ArgParser(ArgumentParser):
 
     def parse_args(self):
         args = super(ArgParser, self).parse_args()
-        print args
         # setup area
         if args.ioc:
             args.area = "ioc"
