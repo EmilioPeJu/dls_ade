@@ -17,25 +17,6 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
 
-    def test_area_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-a']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, str)
-        self.assertEqual(option.dest, "area")
-        self.assertIn("--area", option.option_strings)
-
-    def test_python_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-p']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "python")
-        self.assertIn("--python", option.option_strings)
-
-    def test_ioc_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-i']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "ioc")
-        self.assertIn("--ioc", option.option_strings)
-
     def test_module_name_has_correct_attributes(self):
         arguments = self.parser._positionals._actions[4]
         self.assertEqual(arguments.type, str)
@@ -171,4 +152,6 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
 
 class TestMain(unittest.TestCase):
-    pass
+
+    # buffer option suppresses stdout generated from tested code
+    unittest.main(buffer=True)
