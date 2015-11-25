@@ -7,11 +7,10 @@ import shutil
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <module_name> <branch_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Start a new feature branch, used to create a branch from the trunk.
 The script copies the trunk of the current module into a new branch <branch_name>, reflecting the current changes."""
+
 
 def make_parser():
     parser = ArgParser(usage)

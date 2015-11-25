@@ -8,9 +8,7 @@ from dls_ade.argument_parser import ArgParser
 from dls_ade import dlsbuild
 # >>> dlsbuild doesn't run because it doesnt' know what ldap is, ldap required for this?
 
-usage = """%prog [options] <module_name> <release>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 This script removes all O.* directories from an old release of a module and
 tars it up before deleting the release directory. <module_name>/<module_release>
 will be stored as <module_name>/<module_release>.tar.gz. Running the script with

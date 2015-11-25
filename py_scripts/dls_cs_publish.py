@@ -9,9 +9,7 @@ import platform
 from dls_ade.argument_parser import ArgParser
 from dls_environment import environment
 
-usage = """%prog [options] <module> <release>
-
-Default <area> is 'support'.
+usage = """%Default <area> is 'support'.
 Publish a module <module> in the <area> area of the repository to the downloads
 page. The script takes the following steps:
 * svn export of the release

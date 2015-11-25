@@ -6,9 +6,7 @@ import sys
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <module>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 
 This script is used to determine the last tag of <module> which was imported into
 $SVN_ROOT/diamond/vendor/support/<module>/current. This tag should be used as

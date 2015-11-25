@@ -6,9 +6,7 @@ import sys
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <module_name> <release> <branch_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Start a new bug fix branch, used when a release has been made and we need to patch that release.
 The script copies the release of <module_name>/<release> into a new branch <branch_name>, and is checked out in the current directory."""
 
