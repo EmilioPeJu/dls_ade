@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
-import variables
+
+areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
 
 
 class ArgParser(ArgumentParser):
@@ -9,7 +10,7 @@ class ArgParser(ArgumentParser):
 
         self.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="set <area>=AREA, e.g. " + ", ".join(variables.areas))
+            help="set <area>=AREA, e.g. " + ", ".join(areas))
         self.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="set <area>='python'")
