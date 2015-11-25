@@ -348,8 +348,8 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
 class TestCreateVCSObject(unittest.TestCase):
 
-    @patch('dls_release.vcs_git')
-    @patch('dls_release.vcs_svn')
+    @patch('dls_release.vcs_svn.Svn')
+    @patch('dls_release.vcs_git.Git')
     def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
@@ -357,19 +357,19 @@ class TestCreateVCSObject(unittest.TestCase):
 
         vcs = dls_release.create_vcs_object(module, options)
 
-        mock_git.assert_is_called_once_with(module, options)
+        mock_git.assert_called_once_with(module, options)
         self.assertFalse(mock_svn.called)
 
-    @patch('dls_release.vcs_git')
-    @patch('dls_release.vcs_svn')
-    def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
+    @patch('dls_release.vcs_svn.Svn')
+    @patch('dls_release.vcs_git.Git')
+    def test_not_given_git_option_then_svn_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
         options = FakeOptions()
 
         vcs = dls_release.create_vcs_object(module, options)
 
-        mock_svn.assert_is_called_once_with(module, options)
+        mock_svn.assert_called_once_with(module, options)
         self.assertFalse(mock_git.called)
 
 
