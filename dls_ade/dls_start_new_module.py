@@ -84,7 +84,7 @@ def set_up_area(args, module):
 
 def make_files_python(module):
     open("setup.py", "w").write(py_files['setup.py'] % (module, os.getlogin(), os.getlogin(), module, module, module))
-    # open("Makefile", "w").write(py_files['Makefile'] % module)
+    open("Makefile", "w").write(py_files['Makefile'] % module)
     # os.mkdir(module)
     # open(os.path.join(module, module + ".py"), "w").write(py_files['module.py'] % module)
     # open(os.path.join(module, "__init__.py"), "w").write(py_files['__init__.py'])
