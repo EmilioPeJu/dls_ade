@@ -36,22 +36,22 @@ class ArgParserParseArgsTest(unittest.TestCase):
     def setUp(self):
         self.parser = ArgParser("")
 
-    def test_if_dash_i_given_in_args_then_area_is_ioc(self):
+    def test_given_dash_i_in_args_then_area_is_ioc(self):
         args = self.parser.parse_args("-i".split())
 
         self.assertEqual(args.area, "ioc")
 
-    def test_if_double_dash_ioc_given_in_args_then_area_is_ioc(self):
+    def test_given_double_dash_ioc_in_args_then_area_is_ioc(self):
         args = self.parser.parse_args("--ioc".split())
 
         self.assertEqual(args.area, "ioc")
 
-    def test_if_dash_p_given_in_args_then_area_is_python(self):
+    def test_given_dash_p_in_args_then_area_is_python(self):
         args = self.parser.parse_args("-p".split())
 
         self.assertEqual(args.area, "python")
 
-    def test_if_double_dash_python_given_in_args_then_area_is_python(self):
+    def test_given_double_dash_python_in_args_then_area_is_python(self):
         args = self.parser.parse_args("--python".split())
 
         self.assertEqual(args.area, "python")
