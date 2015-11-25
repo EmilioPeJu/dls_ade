@@ -7,9 +7,7 @@ from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
 
-usage = """%prog [options] <module_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 List the branches of a module in the <area> area of the repository."""
 
 
