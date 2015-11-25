@@ -18,8 +18,8 @@ class ArgParser(ArgumentParser):
             "-i", "--ioc", action="store_true", dest="ioc",
             help="set <area>='ioc'")
 
-    def parse_args(self):
-        args = super(ArgParser, self).parse_args()
+    def parse_args(self, args=None, namespace=None):
+        args = super(ArgParser, self).parse_args(args, namespace)
         # setup area
         if args.ioc:
             args.area = "ioc"
