@@ -4,18 +4,18 @@
 import os
 import sys
 import shutil
-from dls_ade.argument_parser import ArgParser
-from dls_environment import git_functions as gitf
+from argument_parser import ArgParser
+import path_functions as pathf
 
-usage = """%prog [options] <module_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Start a new diamond module of particular type.
-Uses makeBaseApp with the dls template for a 'support' or 'ioc' module, copies the example from the environment module for python.
-Creates this module and imports it into subversion.
+Uses makeBaseApp with the dls template for a 'support' or 'ioc' module,\
+ copies the example from the environment module for python.
+Creates this module and imports it into git.
 If the -i flag is used, <module_name> is expected to be of the form "Domain/Technical Area/IOC number" i.e. BL02I/VA/03
 The IOC number can be omitted, in which case, it defaults to "01".
-If the --fullname flag is used, the IOC will be imported as BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same technical area) and the IOC may optionally be specified as BL02I-VA-IOC-03 instead of BL02I/VA/03
+If the --fullname flag is used, the IOC will be imported as BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same\
+ technical area) and the IOC may optionally be specified as BL02I-VA-IOC-03 instead of BL02I/VA/03
 Otherwise it will be imported as BL02I/VA (old naming style)
 If the Technical area is BL then a different template is used, to create a top level module for screens and gda."""
 
@@ -266,11 +266,11 @@ def main():
 
     technical_area, BL_message = set_up_area()
 
-    dest = gitf.devModule(module, args.area)
+    dest = pathf.devModule(module, args.area)
 
     if not args.no_import:
-        dir_list = [dest, gitf.vendorModule(module, args.area),
-                    gitf.prodModule(module, args.area)]
+        dir_list = [dest, pathf.vendorModule(module, args.area),
+                    pathf.prodModule(module, args.area)]
         if args.area == "ioc":
             dir_list = [x + "/" + app_name + "App" for x in dir_list]
         for dir in dir_list:
@@ -329,6 +329,4 @@ def main():
 
 if __name__ == "__main__":
 # >>> This causes a UserWarning, why is it here?
-    from pkg_resources import require
-    require("dls_environment")
     sys.exit(main())

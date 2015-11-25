@@ -2,14 +2,14 @@
 # This script comes from the dls_scripts python module
 
 import sys
-from dls_ade.argument_parser import ArgParser
-from dls_ade import vcs_git
+from argument_parser import ArgParser
+import vcs_git
+from pkg_resources import require
+require('dls_environment')
 from dls_environment import environment
 import path_functions as path
 
-usage = """%prog [options] <module_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Check if a module in the <area> area of the repository has had changes committed since its last release."""
 
 

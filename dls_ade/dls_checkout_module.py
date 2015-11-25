@@ -7,9 +7,7 @@ import vcs_git
 from argument_parser import ArgParser
 import path_functions as path
 
-usage = """%prog [options] [<module_name>]
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
 If you enter "everything" as <module_name>, the whole <area> area will be checked out."""
 

@@ -4,8 +4,8 @@ import variables
 
 class ArgParser(ArgumentParser):
 
-    def __init__(self, usage):
-        super(ArgParser, self).__init__(usage)
+    def __init__(self, usage_v):
+        super(ArgParser, self).__init__(description=usage_v)
 
         self.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
