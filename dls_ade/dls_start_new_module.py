@@ -6,7 +6,7 @@ import sys
 import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
-from new_module_templates import py_mod_files, tools_mod_files
+from new_module_templates import py_files, tools_files
 
 usage = """Default <area> is 'support'.
 Start a new diamond module of particular type.
@@ -83,20 +83,20 @@ def set_up_area(args, module):
 
 
 def make_files_python(module):
-    open("setup.py", "w").write(py_mod_files['setup.py'] % (module, os.getlogin(), os.getlogin(), module, module, module))
-    open("Makefile", "w").write(py_mod_files['Makefile'] % module)
-    os.mkdir(module)
-    open(os.path.join(module, module + ".py"), "w").write(py_mod_files['module.py'] % module)
-    open(os.path.join(module, "__init__.py"), "w").write(py_mod_files['__init__.py'])
-    os.mkdir("documentation")
-    open("documentation/Makefile", "w").write(py_mod_files['documentation/Makefile'])
-    open("documentation/index.html", "w").write(py_mod_files['documentation/index.html'])
-    open("documentation/config.cfg", "w").write(py_mod_files['documentation/config.cfg'] % locals())
-    open("documentation/manual.src", "w").write(py_mod_files['documentation/manual.src'] % locals())
+    open("setup.py", "w").write(py_files['setup.py'] % (module, os.getlogin(), os.getlogin(), module, module, module))
+    # open("Makefile", "w").write(py_files['Makefile'] % module)
+    # os.mkdir(module)
+    # open(os.path.join(module, module + ".py"), "w").write(py_files['module.py'] % module)
+    # open(os.path.join(module, "__init__.py"), "w").write(py_files['__init__.py'])
+    # os.mkdir("documentation")
+    # open("documentation/Makefile", "w").write(py_files['documentation/Makefile'])
+    # open("documentation/index.html", "w").write(py_files['documentation/index.html'])
+    # open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'] % locals())
+    # open("documentation/manual.src", "w").write(py_files['documentation/manual.src'] % locals())
 
 
 def make_files_tools(module):
-    open("build", "w").write(tools_mod_files['build'] % module)
+    open("build", "w").write(tools_files['build'] % module)
     print("\nPlease add your patch files to the %s directory and edit "
               "%s/build script appropriately" % (module, module))
 
