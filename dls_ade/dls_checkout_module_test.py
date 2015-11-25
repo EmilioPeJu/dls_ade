@@ -106,7 +106,7 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
-    @patch('dls_checkout_module.vcs_git.in_repo', return_value=True)
+    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=True)
     def test_given_valid_source_then_no_error_raised(self, mock_in_repo):
         source = "controls/python/dls_release"
 
@@ -114,11 +114,11 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    @patch('dls_checkout_module.vcs_git.in_repo', return_value=False)
+    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=False)
     def test_given_invalid_source_then_error_raised(self, mock_in_repo):
         source = "controls/python/doesnotexist"
         expected_error_msg = \
-            "Repository does not contain the '" + source + "' module"
+            "Repository does not contain " + source
 
         dls_checkout_module.check_source_file_path_valid(source, self.parser)
 

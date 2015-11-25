@@ -6,9 +6,7 @@ import sys
 import vcs_git
 from argument_parser import ArgParser
 import path_functions as path
-from pkg_resources import require
-require('GitPython')
-from git import Repo as Git
+import git
 
 usage = """Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
@@ -43,8 +41,8 @@ def check_technical_area(args, parser):
 
 def check_source_file_path_valid(source, parser):
 
-    if not vcs_git.in_repo(source):
-        parser.error("Repository does not contain the '" + source + "' module")
+    if not vcs_git.is_repo_path(source):
+        parser.error("Repository does not contain " + source)
 
 
 def check_module_file_path_valid(module, parser):
@@ -71,25 +69,19 @@ def main():
     if args.branch:
         if module == "everything":
             source = path.branchArea(args.area)
-            module = source.split("/")[-1]
         else:
             source = os.path.join(path.branchModule(module, args.area),
                                   args.branch)
     else:
         if module == "everything":
             source = path.devArea(args.area)
-            module = source.split("/")[-1]
         else:
             source = path.devModule(module, args.area)
 
-    check_source_file_path_valid(source, parser)
-    check_module_file_path_valid(module, parser)
-
-    print(source)
-
     # Checkout
     print("Checking out: " + source + "...")
-    Git.clone_from(os.path.join(vcs_git.GIT_SSH_ROOT, source), os.path.join("./", module))
+
+    vcs_git.clone(source, module)
 
 
 if __name__ == "__main__":

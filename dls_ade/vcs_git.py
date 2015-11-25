@@ -12,14 +12,39 @@ GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
-def in_repo(server_repo_path):
+def is_repo_path(server_repo_path):
 
-    list_cmd = 'ssh ' + GIT_ROOT + ' expand controls'
+    list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
 
     return server_repo_path in list_cmd_output
 
 
+def clone(source, module):
+
+    if not is_repo_path(source):
+        raise Exception("Repository does not contain " + source)
+    elif os.path.isdir(module):
+        raise Exception(module + " already exists in current directory")
+    else:
+        if source[-1] == '/':
+            source = source[:-1]
+        if module == "everything":
+            list_cmd = "ssh " + GIT_ROOT + " expand controls"
+            list_cmd_output = subprocess.check_output(list_cmd.split())
+            for path in list_cmd_output.split():
+                if source in path:
+                    source_length = len(source) + 1
+                    target_path = path[source_length:]
+                    if target_path not in os.listdir("./"):
+                        print("Cloning: " + path + "...")
+                        git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
+                                            os.path.join("./", target_path))
+                    else:
+                        print(target_path + " already exists in current directory")
+        else:
+            git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
+                                os.path.join("./", module))
 
 
 class Git(BaseVCS):
@@ -31,7 +56,7 @@ class Git(BaseVCS):
 
         server_repo_path = 'controls/' + self.area + '/' + self._module
 
-        if not in_repo(server_repo_path):
+        if not is_repo_path(server_repo_path):
             raise Exception('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))

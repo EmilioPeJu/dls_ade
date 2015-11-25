@@ -52,6 +52,7 @@ def make_parser():
 
     return parser
 
+
 def main():
 
     e = environment()
@@ -108,17 +109,17 @@ def main():
             msg = "No releases made in git"
         else:
             msg = "No releases made for %s" % args.epics_version
-        print "%s: %s" % (module, msg)
+        print(module + ": " + msg)
         return 1
 
     # sort the releases        
     release_paths = e.sortReleases(release_paths)
 
     if args.latest:
-        print release_paths[-1].split("/")[-1]
+        print(release_paths[-1].split("/")[-1])
     else:
         for path in release_paths:
-            print path.split("/")[-1]
+            print(path.split("/")[-1])
 
 if __name__ == "__main__":
     sys.exit(main())
