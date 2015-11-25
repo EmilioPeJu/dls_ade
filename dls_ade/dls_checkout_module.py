@@ -6,9 +6,6 @@ import sys
 import vcs_git
 from argument_parser import ArgParser
 import path_functions as path
-from pkg_resources import require
-require('GitPython')
-from git import Repo as Git
 
 usage = """%prog [options] [<module_name>]
 
@@ -91,7 +88,7 @@ def main():
 
     # Checkout
     print("Checking out: " + source + "...")
-    Git.clone_from(os.path.join(vcs_git.GIT_SSH_ROOT, source), os.path.join("./", module))
+    vcs_git.clone(source, os.path.join("./", module))
 
 
 if __name__ == "__main__":

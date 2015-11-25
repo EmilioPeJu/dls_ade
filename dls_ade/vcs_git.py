@@ -20,6 +20,12 @@ def in_repo(server_repo_path):
     return server_repo_path in list_cmd_output
 
 
+def clone(source, module):
+
+    if not in_repo(source):
+        raise Exception("Repository does not contain the '" + source + "' module")
+    else:
+        git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), module)
 
 
 class Git(BaseVCS):
