@@ -1,8 +1,8 @@
 # py_mod_files: initial files for a python module
 
-py_mod_files = {}
+py_files = {}
 
-py_mod_files['setup.py'] = """from setuptools import setup
+py_files['setup.py'] = """from setuptools import setup
 
 # these lines allow the version to be specified in Makefile.private
 import os
@@ -22,7 +22,7 @@ setup(
     )
 """
 
-py_mod_files['Makefile'] = """# Specify defaults for testing
+py_files['Makefile'] = """# Specify defaults for testing
 PREFIX := $(shell pwd)/prefix
 PYTHON = dls-python
 MODULEVER=0.0
@@ -51,13 +51,13 @@ install: dist
 \t\t--prefix=$(PREFIX) dist/*.egg
 """
 
-py_mod_files['module.py'] = """def main():
+py_files['module.py'] = """def main():
     print("Hello world from %s")
 """
 
-py_mod_files['__init__.py'] = ""
+py_files['__init__.py'] = ""
 
-py_mod_files['documentation/Makefile'] = """# this is the doxygen output dir
+py_files['documentation/Makefile'] = """# this is the doxygen output dir
 DOCDIR := doxygen
 
 # this is the doxygen executable
@@ -76,7 +76,7 @@ clean:
 \trm -rf $(DOCDIR)
 """
 
-py_mod_files['documentation/index.html'] = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+py_files['documentation/index.html'] = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
 <title>Documentation</title>
@@ -86,7 +86,7 @@ py_mod_files['documentation/index.html'] = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD
 </html>
 """
 
-py_mod_files['documentation/config.cfg'] = """# info about project
+py_files['documentation/config.cfg'] = """# info about project
 PROJECT_NAME           = %(module)s
 PROJECT_NUMBER         =
 # use <module>.<func> instead of <module>::<func>
@@ -119,7 +119,7 @@ SOURCE_BROWSER         = YES
 EXTRACT_ALL            = YES
 """
 
-py_mod_files['documentation/manual.src'] = r"""/**
+py_files['documentation/manual.src'] = r"""/**
 \mainpage %(module)s Python Module
 \section intro_sec Introduction
 I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \n
@@ -137,9 +137,9 @@ I'm going to describe how to use the module here
 
 # tools_module: initial files for a tools module
 
-tools_mod_files = {}
+tools_files = {}
 
-tools_mod_files['build'] = """PROGRAM=%s
+tools_files['build'] = """PROGRAM=%s
 VERSION=<insert version here>
 # EXTENSION=<The tar or zip extension, defaults to .tar.gz.>
 # TAR_FILE=<The tar file name or list of tar files. Defaults to ${PROGRAM}-${VERSION}${EXTENSION}>

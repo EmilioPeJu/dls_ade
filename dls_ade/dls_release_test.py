@@ -5,8 +5,6 @@ import dls_release
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock
-import vcs_git
-import vcs_svn
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
