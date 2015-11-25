@@ -348,28 +348,29 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
 class TestCreateVCSObject(unittest.TestCase):
 
-    @patch('dls_release.vcs_git.tempfile.mkdtemp', return_value='/tmp/tmp_dummy')
-    @patch('dls_release.vcs_git.git.Repo.clone_from')
-    def test_given_git_option_then_git_vcs_object_created(self, mock_clone, mock_mkdtemp):
+    @patch('dls_release.vcs_git')
+    @patch('dls_release.vcs_svn')
+    def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
         options = FakeOptions(git=True)
 
         vcs = dls_release.create_vcs_object(module, options)
 
-        self.assertTrue(isinstance(vcs, vcs_git.Git))
-        self.assertFalse(isinstance(vcs, vcs_svn.Svn))
+        mock_git.assert_is_called_once_with(module, options)
+        self.assertFalse(mock_svn.called)
 
-    @patch('dls_release.vcs_svn.svnClient.pathcheck', return_value=True)
-    def test_given_default_option_without_git_flag_then_svn_vcs_object(self, mock_check):
+    @patch('dls_release.vcs_git')
+    @patch('dls_release.vcs_svn')
+    def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
         options = FakeOptions()
 
         vcs = dls_release.create_vcs_object(module, options)
 
-        self.assertTrue(isinstance(vcs, vcs_svn.Svn))
-        self.assertFalse(isinstance(vcs, vcs_git.Git))
+        mock_svn.assert_is_called_once_with(module, options)
+        self.assertFalse(mock_git.called)
 
 
 class TestNextVersionNumber(unittest.TestCase):
