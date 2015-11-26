@@ -6,9 +6,7 @@ import sys
 import shutil
 from dls_ade.argument_parser import ArgParser
 
-usage = """%prog
-
-Synchronise a working copy of a branch with the changes from the trunk.
+usage = """Synchronise a working copy of a branch with the changes from the trunk.
 No changes will be committed to the repository, the only changes made will be to the working copy."""
 
 

@@ -6,9 +6,7 @@ import sys
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <source> <module> <old> <new>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 
 This script is used to update a vendor <module> from tag <old> to tag <new> using the code from <source>.
 The updated vendor module is imported into: $SVN_ROOT/diamond/vendor/support/<module>/current" which 
@@ -58,8 +56,8 @@ def make_parser():
     parser.add_argument(
         "new_tag", type=str, default=None,
         help="tag of new module")
-    parser.add_argument("-f", "--force",
-        action="store_true", dest="force",
+    parser.add_argument(
+        "-f", "--force", action="store_true", dest="force",
         help="force the update, disable warnings")
 
     return parser

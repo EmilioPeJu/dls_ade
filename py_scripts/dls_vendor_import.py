@@ -6,9 +6,7 @@ import sys
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <source> <module> <version>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 This script is used to import, to the repository, a module given to Diamond by a vendor. 
 The script imports the code from <source> to a vendor module in svn at diamond/vendor/<area>/<module>/<version>.
 It also copies the code to the trunk and then checks the code out into the current directory."""

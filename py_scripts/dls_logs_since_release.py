@@ -7,9 +7,7 @@ import time
 from dls_ade.argument_parser import ArgParser
 # from dls_environment import environment
 
-usage = """%prog [options] [<module_name> [<earlier_release> [<later_release>]]]
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
 from one the revision number when <earlier_release> was done, to the revision
 when <later_release> was done. If not specified, <earlier_release> defaults to

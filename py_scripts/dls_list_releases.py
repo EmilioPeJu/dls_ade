@@ -8,9 +8,7 @@ from dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_environment import git_functions as gitf
 
-usage = """%prog [options] <module_name>
-
-Default <area> is 'support'.
+usage = """Default <area> is 'support'.
 List the releases of a module in the release area of <area>. By default uses
 the epics release number from your environment to work out the area on disk to
 look for the module, this can be overridden with the -e flag.
