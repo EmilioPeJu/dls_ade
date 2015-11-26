@@ -51,11 +51,11 @@ install: dist
 \t\t--prefix=$(PREFIX) dist/*.egg
 """
 
-py_files['module.py'] = """def main():
+py_files['module/module.py'] = """def main():
     print("Hello world from %s")
 """
 
-py_files['__init__.py'] = ""
+py_files['module/__init__.py'] = ""
 
 py_files['documentation/Makefile'] = """# this is the doxygen output dir
 DOCDIR := doxygen
