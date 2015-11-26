@@ -86,22 +86,26 @@ def set_up_area(args, module):
 
 
 def make_files_python(module):
-    open("setup.py", "w").write(py_files['setup.py'] % (module, os.getlogin(), os.getlogin(), module, module, module))
-    open("Makefile", "w").write(py_files['Makefile'] % module)
+    ''' Creates the files necessary for a python module '''
+    format_vars = {'module':module, 'getlogin':os.getlogin()}
+
+    open("setup.py", "w").write(py_files['setup.py'].format(**format_vars))
+    open("Makefile", "w").write(py_files['Makefile'].format(**format_vars))
     os.mkdir(module)
-    open(os.path.join(module, module + ".py"), "w").write(py_files['module/module.py'] % module)
+    open(os.path.join(module, module + ".py"), "w").write(py_files['module/module.py'].format(**format_vars))
     open(os.path.join(module, "__init__.py"), "w").write(py_files['module/__init__.py'])
     os.mkdir("documentation")
     open("documentation/Makefile", "w").write(py_files['documentation/Makefile'])
     open("documentation/index.html", "w").write(py_files['documentation/index.html'])
-    open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'] % locals())
-    open("documentation/manual.src", "w").write(py_files['documentation/manual.src'] % locals())
+    open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'].format(**format_vars))
+    open("documentation/manual.src", "w").write(py_files['documentation/manual.src'].format(**format_vars))
 
 
 def make_files_tools(module):
-    open("build", "w").write(tools_files['build'] % module)
-    print("\nPlease add your patch files to the %s directory and edit "
-              "%s/build script appropriately" % (module, module))
+    ''' Creates the files necessary for a tools module '''
+    open("build", "w").write(tools_files['build'].format(**locals()))
+    print("\nPlease add your patch files to the {module:s} directory and edit "
+        "{module:s}/build script appropriately".format(**locals()))
 
 
 def import_module(disk_dir, dest, args, module):

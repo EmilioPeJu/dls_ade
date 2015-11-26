@@ -1,4 +1,7 @@
-# py_mod_files: initial files for a python module
+# py_files: initial files for a python module
+# tools_files: initial files for a tools module
+# Escape braces { with an extra brace of the same type. This is for the 'format' string method
+# eg. "dict = {}" -> "dict = {{}}"
 
 py_files = {}
 
@@ -10,13 +13,13 @@ version = os.environ.get("MODULEVER", "0.0")
 
 setup(
 #    install_requires = ['cothread'], # require statements go here
-    name = '%s',
+    name = '{module:s}',
     version = version,
     description = 'Module',
-    author = '%s',
-    author_email = '%s@fed.cclrc.ac.uk',
-    packages = ['%s'],
-#    entry_points = {'console_scripts': ['test-python-hello-world = %s.%s:main']}, # this makes a script
+    author = '{getlogin:s}',
+    author_email = '{getlogin:s}@fed.cclrc.ac.uk',
+    packages = ['{module:s}'],
+#    entry_points = {{'console_scripts': ['test-python-hello-world = {module:s}.{module:s}:main']}}, # this makes a script
 #    include_package_data = True, # use this to include non python files
     zip_safe = False
     )
@@ -32,7 +35,7 @@ MODULEVER=0.0
 
 # This is run when we type make
 # It can depend on other targets e.g. the .py files produced by pyuic4
-dist: setup.py $(wildcard %s/*.py)
+dist: setup.py $(wildcard {module:s}/*.py)
 \tMODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
 \ttouch dist
 \t$(MAKE) -C documentation
@@ -41,7 +44,7 @@ dist: setup.py $(wildcard %s/*.py)
 clean:
 \t$(PYTHON) setup.py clean
 \t-rm -rf build dist *egg-info installed.files prefix
-\t-find -name '*.pyc' -exec rm {} \\;
+\t-find -name '*.pyc' -exec rm {{}} \\;
 \t$(MAKE) -C documentation clean
 
 # Install the built egg and keep track of what was installed
@@ -52,7 +55,7 @@ install: dist
 """
 
 py_files['module/module.py'] = """def main():
-    print("Hello world from %s")
+    print("Hello world from {module:s}")
 """
 
 py_files['module/__init__.py'] = ""
@@ -87,14 +90,14 @@ py_files['documentation/index.html'] = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTM
 """
 
 py_files['documentation/config.cfg'] = """# info about project
-PROJECT_NAME           = %(module)s
+PROJECT_NAME           = {module:s}
 PROJECT_NUMBER         =
 # use <module>.<func> instead of <module>::<func>
 OPTIMIZE_OUTPUT_JAVA   = YES
 # need this to get all function/variable docs
 SHOW_NAMESPACES        = YES
 # add the input dir
-INPUT                 += ../%(module)s .
+INPUT                 += ../{module:s} .
 # add some examples
 # EXAMPLE_PATH           = examples
 # add the extensions
@@ -120,10 +123,10 @@ EXTRACT_ALL            = YES
 """
 
 py_files['documentation/manual.src'] = r"""/**
-\mainpage %(module)s Python Module
+\mainpage {module:s} Python Module
 \section intro_sec Introduction
 I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \n
-You can also link to \ref %(module)s.py "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. %(module)s.py
+You can also link to \ref {module:s}.py "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. {module:s}.py
 
 \section Installation
 
@@ -139,16 +142,16 @@ I'm going to describe how to use the module here
 
 tools_files = {}
 
-tools_files['build'] = """PROGRAM=%s
+tools_files['build'] = """PROGRAM={module:s}
 VERSION=<insert version here>
 # EXTENSION=<The tar or zip extension, defaults to .tar.gz.>
-# TAR_FILE=<The tar file name or list of tar files. Defaults to ${PROGRAM}-${VERSION}${EXTENSION}>
+# TAR_FILE=<The tar file name or list of tar files. Defaults to ${{PROGRAM}}-${{VERSION}}${{EXTENSION}}>
 
 build()
-{
+{{
     # Insert build instructions here. For example, for a Python tool with a setupegg.py:
     # setuptools_build setupegg.py
-}
+}}
 
 # vim: set filetype=sh:
 """

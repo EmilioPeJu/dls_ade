@@ -38,8 +38,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()  # Allows us to interrogate the 'write' function
         self.open_mock.assert_any_call("setup.py", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['setup.py'] % (module, getlogin, getlogin, module, module, module))
-        file_handle_mock.write.assert_any_call(new_t.py_files['setup.py'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['setup.py'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_opens_correct_file_and_writes_makefile(self, mkdir_mock):
@@ -52,8 +51,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call("Makefile", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['Makefile'] % module)
-        file_handle_mock.write.assert_any_call(new_t.py_files['Makefile'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['Makefile'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_mkdir_module_called(self, mkdir_mock):
@@ -76,8 +74,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call(os.path.join(module, module + ".py"), "w")
 
-        file_handle_mock.write.assert_any_call(py_files['module/module.py'] % module)
-        file_handle_mock.write.assert_any_call(new_t.py_files['module/module.py'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['module/module.py'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_opens_correct_file_and_writes_module_init_py(self, mkdir_mock):
@@ -90,8 +87,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call(os.path.join(module, "__init__.py"), "w")
 
-        file_handle_mock.write.assert_any_call(py_files['module/__init__.py'])
-        file_handle_mock.write.assert_any_call(new_t.py_files['module/__init__.py'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['module/__init__.py'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_mkdir_documentation_called(self, mkdir_mock):
@@ -114,8 +110,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call("documentation/Makefile", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['documentation/Makefile'])
-        file_handle_mock.write.assert_any_call(new_t.py_files['documentation/Makefile'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['documentation/Makefile'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_opens_correct_file_and_writes_documentation_index(self, mkdir_mock):
@@ -128,8 +123,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call("documentation/index.html", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['documentation/index.html'])
-        file_handle_mock.write.assert_any_call(new_t.py_files['documentation/index.html'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['documentation/index.html'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_opens_correct_file_and_writes_documentation_config(self, mkdir_mock):
@@ -142,8 +136,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call("documentation/config.cfg", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['documentation/config.cfg'] % self.test_input)
-        file_handle_mock.write.assert_any_call(new_t.py_files['documentation/config.cfg'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['documentation/config.cfg'].format(**self.test_input))
 
     @patch('dls_start_new_module.os.mkdir')
     def test_opens_correct_file_and_writes_documentation_manual(self, mkdir_mock):
@@ -156,8 +149,7 @@ class MakeFilesPythonTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         self.open_mock.assert_any_call("documentation/manual.src", "w")
 
-        file_handle_mock.write.assert_any_call(py_files['documentation/manual.src'] % self.test_input)
-        file_handle_mock.write.assert_any_call(new_t.py_files['documentation/manual.src'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(py_files['documentation/manual.src'].format(**self.test_input))
 
 
 class MakeFilesToolsTest(unittest.TestCase):
@@ -177,8 +169,7 @@ class MakeFilesToolsTest(unittest.TestCase):
         file_handle_mock = self.open_mock()  # Allows us to interrogate the 'write' function
         self.open_mock.assert_any_call("build", "w")
 
-        file_handle_mock.write.assert_any_call(tools_files['build'] % module)
-        file_handle_mock.write.assert_any_call(new_t.tools_files['build'].format(**self.test_input))
+        file_handle_mock.write.assert_any_call(tools_files['build'].format(**self.test_input))
 
     def test_correct_print_message(self):
 
@@ -190,8 +181,6 @@ class MakeFilesToolsTest(unittest.TestCase):
             with patch.object(builtins, 'print', print_mock):
                 dls_start_new_module.make_files_tools(module)
 
-        print_mock.assert_called_once_with("\nPlease add your patch files to the %s directory and edit "
-              "%s/build script appropriately" % (module, module))
         print_mock.assert_called_once_with("\nPlease add your patch files to the {module:s} directory and edit "
               "{module:s}/build script appropriately".format(**self.test_input))
 
