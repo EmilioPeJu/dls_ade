@@ -242,6 +242,10 @@ class MakeFilesSupportIocTest(unittest.TestCase):
         file_handle_mock.write.assert_called_once_with("bin\ndata\ndb\ndbd\ninclude\nlib\n")
 
 
+class SetModuleContactTest(unittest.TestCase):
+    pass  # Function to be implemented
+
+
 if __name__ == '__main__':
 
     # buffer option suppresses stdout generated from tested code
