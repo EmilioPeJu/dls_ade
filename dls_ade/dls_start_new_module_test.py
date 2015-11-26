@@ -174,6 +174,19 @@ class MakeFilesPythonTest(unittest.TestCase):
 
         file_handle_mock.write.assert_any_call(py_files['documentation/manual.src'].format(**self.test_input))
 
+    @patch('dls_start_new_module.os.mkdir')
+    def test_opens_correct_file_and_writes_gitignore(self, mkdir_mock):
+
+        module = self.test_input['module']
+
+        with patch.object(builtins, 'open', self.open_mock):
+            dls_start_new_module.make_files_python(module)
+
+        file_handle_mock = self.open_mock()
+        self.open_mock.assert_any_call(".gitignore", "w")
+
+        file_handle_mock.write.assert_any_call(py_files['.gitignore'].format(**self.test_input))
+
 
 class MakeFilesToolsTest(unittest.TestCase):
 

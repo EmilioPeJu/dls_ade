@@ -99,6 +99,7 @@ def make_files_python(module):
     open("documentation/index.html", "w").write(py_files['documentation/index.html'])
     open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'].format(**format_vars))
     open("documentation/manual.src", "w").write(py_files['documentation/manual.src'].format(**format_vars))
+    open(".gitignore", "w").write(py_files['.gitignore'])
 
 
 def make_files_tools(module):
@@ -106,6 +107,7 @@ def make_files_tools(module):
     open("build", "w").write(tools_files['build'].format(**locals()))
     print("\nPlease add your patch files to the {module:s} directory and edit "
         "{module:s}/build script appropriately".format(**locals()))
+    # Include .gitignore file for tools module?
 
 
 def import_module(disk_dir, dest, args, module):
