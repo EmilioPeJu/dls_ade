@@ -6,7 +6,6 @@ import sys
 import vcs_git
 from argument_parser import ArgParser
 import path_functions as path
-import git
 
 usage = """Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
@@ -78,10 +77,12 @@ def main():
         else:
             source = path.devModule(module, args.area)
 
-    # Checkout
     print("Checking out: " + source + "...")
 
-    vcs_git.clone(source, module)
+    if module == "everything":
+        vcs_git.clone_multi(source, module)
+    else:
+        vcs_git.clone(source, module)
 
 
 if __name__ == "__main__":
