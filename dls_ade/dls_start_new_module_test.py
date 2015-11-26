@@ -5,7 +5,7 @@ import dls_start_new_module
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, mock_open
-from new_module_templates import py_files, tools_files
+from new_module_templates import py_files, tools_files, support_ioc_files
 import os
 from argparse import _StoreTrueAction
 
@@ -219,6 +219,27 @@ class MakeFilesToolsTest(unittest.TestCase):
 
         print_mock.assert_called_once_with("\nPlease add your patch files to the {module:s} directory and edit "
               "{module:s}/build script appropriately".format(**self.test_input))
+
+
+class MakeFilesSupportIocTest(unittest.TestCase):
+
+    def setUp(self):
+        self.test_input = {"module": "test_module_name"}
+
+        self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
+
+    def test_opens_correct_file_and_writes_gitignore(self):
+
+        module = self.test_input['module']
+
+        with patch.object(builtins, 'open', self.open_mock):
+            dls_start_new_module.make_files_support_ioc(module)
+
+        file_handle_mock = self.open_mock()
+        self.open_mock.assert_any_call(".gitignore", "w")
+
+        file_handle_mock.write.assert_any_call(support_ioc_files['.gitignore'].format(**self.test_input))
+        file_handle_mock.write.assert_called_once_with("bin\ndata\ndb\ndbd\ninclude\nlib\n")
 
 
 if __name__ == '__main__':

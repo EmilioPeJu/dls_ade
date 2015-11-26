@@ -8,7 +8,7 @@ import sys
 import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
-from new_module_templates import py_files, tools_files
+from new_module_templates import py_files, tools_files, support_ioc_files
 
 
 usage = """Default <area> is 'support'.
@@ -108,6 +108,10 @@ def make_files_tools(module):
     print("\nPlease add your patch files to the {module:s} directory and edit "
         "{module:s}/build script appropriately".format(**locals()))
     # Include .gitignore file for tools module?
+
+def make_files_support_ioc(module):
+    ''' Creates the files necessary for a support or ioc module '''
+    open(".gitignore", "w").write(support_ioc_files['.gitignore'])
 
 
 def import_module(disk_dir, dest, args, module):
