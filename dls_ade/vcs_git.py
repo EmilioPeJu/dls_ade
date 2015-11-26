@@ -20,31 +20,50 @@ def is_repo_path(server_repo_path):
     return server_repo_path in list_cmd_output
 
 
+def get_repository_list():
+
+    list_cmd = "ssh " + GIT_ROOT + " expand controls"
+    list_cmd_output = subprocess.check_output(list_cmd.split())
+    split_list = list_cmd_output.split()
+
+    return split_list
+
+
 def clone(source, module):
 
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
     elif os.path.isdir(module):
         raise Exception(module + " already exists in current directory")
-    else:
-        if source[-1] == '/':
-            source = source[:-1]
-        if module == "everything":
-            list_cmd = "ssh " + GIT_ROOT + " expand controls"
-            list_cmd_output = subprocess.check_output(list_cmd.split())
-            for path in list_cmd_output.split():
-                if source in path:
-                    source_length = len(source) + 1
-                    target_path = path[source_length:]
-                    if target_path not in os.listdir("./"):
-                        print("Cloning: " + path + "...")
-                        git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
-                                            os.path.join("./", target_path))
-                    else:
-                        print(target_path + " already exists in current directory")
-        else:
-            git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
-                                os.path.join("./", module))
+
+    if source[-1] == '/':
+        source = source[:-1]
+
+    git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
+                        os.path.join("./", module))
+
+
+def clone_multi(source, module):
+
+    if not is_repo_path(source):
+        raise Exception("Repository does not contain " + source)
+    elif os.path.isdir(module):
+        raise Exception(module + " already exists in current directory")
+
+    if source[-1] == '/':
+        source = source[:-1]
+
+    split_list = get_repository_list()
+    for path in split_list:
+        if source in path:
+            source_length = len(source) + 1
+            target_path = path[source_length:]
+            if target_path not in os.listdir("./"):
+                print("Cloning: " + path + "...")
+                git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
+                                    os.path.join("./", target_path))
+            else:
+                print(target_path + " already exists in current directory")
 
 
 class Git(BaseVCS):

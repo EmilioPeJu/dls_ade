@@ -7,8 +7,6 @@ from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
 
-GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
-
 
 class IsInRepoTest(unittest.TestCase):
 
@@ -61,29 +59,68 @@ class CloneTest(unittest.TestCase):
 
         vcs_git.clone(source, module)
 
-    @patch('vcs_git.subprocess.check_output')
-    @patch('vcs_git.is_repo_path')
+    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('vcs_git.os.path.isdir', return_value=False)
     @patch('git.Repo.clone_from')
-    def test_given_everything_then_subprocess_function_called(self, mock_clone_from,
-                                                              mock_is_repo_path, mock_subprocess):
+    def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
+                                                              mock_is_repo_path, mock_clone):
         source = "test/source"
-        module = "everything"
+        module = "test_module"
 
         vcs_git.clone(source, module)
 
-        mock_subprocess.assert_called_once_with(ANY)
+        mock_clone.assert_called_once_with(ANY)
 
-    @patch('vcs_git.subprocess.check_output')
-    @patch('vcs_git.is_repo_path')
+
+class CloneMultiTest(unittest.TestCase):
+
+    @patch('vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
-    def test_given_everything_then_subprocess_function_not_called(self, mock_clone_from,
-                                                                  mock_is_repo_path, mock_subprocess):
-        source = "test/source"
-        module = "not_everything"
+    def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
+        source = "/does/not/exist"
+        module = "test_module"
+
+        with self.assertRaises(Exception):
+            vcs_git.clone(source, module)
+
+    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('git.Repo.clone_from')
+    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
+        source = "/does/exist"
+        module = "test_module"
 
         vcs_git.clone(source, module)
 
-        self.assertFalse(mock_subprocess.call_count)
+    @patch('os.path.isdir', return_value=True)
+    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('git.Repo.clone_from')
+    def test_given_existing_module_name_then_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
+        source = "test/source"
+        module = "already_exists"
+
+        with self.assertRaises(Exception):
+            vcs_git.clone(source, module)
+
+    @patch('os.path.isdir', return_value=False)
+    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('git.Repo.clone_from')
+    def test_given_valid_module_name_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
+        source = "test/source"
+        module = "test_module"
+
+        vcs_git.clone(source, module)
+
+    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('vcs_git.os.path.isdir', return_value=False)
+    @patch('git.Repo.clone_from')
+    def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
+                                                              mock_is_repo_path, mock_clone):
+        source = "test/source"
+        module = "test_module"
+
+        vcs_git.clone(source, module)
+
+        mock_clone.assert_called_once_with(ANY)
 
 
 class GitClassInitTest(unittest.TestCase):
