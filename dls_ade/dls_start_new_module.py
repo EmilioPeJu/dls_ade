@@ -1,12 +1,15 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
+from __future__ import print_function
+
 import os
 import sys
 import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
 from new_module_templates import py_files, tools_files
+
 
 usage = """Default <area> is 'support'.
 Start a new diamond module of particular type.
@@ -107,7 +110,7 @@ def import_module(disk_dir, dest, args, module):
     svn.import_(disk_dir, dest, 'Initial structure of new ' + disk_dir, recurse=True)
     shutil.rmtree(disk_dir)
 
-    print 'Checkout ' + disk_dir + ' from ' + dest
+    print('Checkout ' + disk_dir + ' from ' + dest)
     svn.checkout(dest, disk_dir)
     user = os.getlogin()
     if args.area == "python":
@@ -191,7 +194,7 @@ def main():
 
     elif args.area == "python":
         make_files_python(module)
-        print py_message
+        print(py_message)
 
     if not args.no_import:
         # import the module into svn
