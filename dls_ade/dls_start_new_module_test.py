@@ -5,15 +5,38 @@ import dls_start_new_module
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, mock_open
-from new_module_templates import py_files, tools_files
-import new_module_format_templates as new_t
+from new_module_templates import py_files, tools_files, support_ioc_files
 import os
+from argparse import _StoreTrueAction
 
 from sys import version_info
 if version_info.major == 2:
     import __builtin__ as builtins  # Allows for Python 2/3 compatibility, 'builtins' is namespace for inbuilt functions
 else:
     import builtins
+
+
+class MakeParserTest(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = dls_start_new_module.make_parser()
+
+    def test_module_name_has_correct_attributes(self):
+        arguments = self.parser._positionals._actions[4]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'module_name')
+
+    def test_branch_argument_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-n']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "no_import")
+        self.assertIn("--no_import", option.option_strings)
+
+    def test_force_argument_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-f']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "fullname")
+        self.assertIn("--fullname", option.option_strings)
 
 
 class MakeFilesPythonTest(unittest.TestCase):
@@ -151,6 +174,19 @@ class MakeFilesPythonTest(unittest.TestCase):
 
         file_handle_mock.write.assert_any_call(py_files['documentation/manual.src'].format(**self.test_input))
 
+    @patch('dls_start_new_module.os.mkdir')
+    def test_opens_correct_file_and_writes_gitignore(self, mkdir_mock):
+
+        module = self.test_input['module']
+
+        with patch.object(builtins, 'open', self.open_mock):
+            dls_start_new_module.make_files_python(module)
+
+        file_handle_mock = self.open_mock()
+        self.open_mock.assert_any_call(".gitignore", "w")
+
+        file_handle_mock.write.assert_any_call(py_files['.gitignore'].format(**self.test_input))
+
 
 class MakeFilesToolsTest(unittest.TestCase):
 
@@ -183,6 +219,31 @@ class MakeFilesToolsTest(unittest.TestCase):
 
         print_mock.assert_called_once_with("\nPlease add your patch files to the {module:s} directory and edit "
               "{module:s}/build script appropriately".format(**self.test_input))
+
+
+class MakeFilesSupportIocTest(unittest.TestCase):
+
+    def setUp(self):
+        self.test_input = {"module": "test_module_name"}
+
+        self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
+
+    def test_opens_correct_file_and_writes_gitignore(self):
+
+        module = self.test_input['module']
+
+        with patch.object(builtins, 'open', self.open_mock):
+            dls_start_new_module.make_files_support_ioc(module)
+
+        file_handle_mock = self.open_mock()
+        self.open_mock.assert_any_call(".gitignore", "w")
+
+        file_handle_mock.write.assert_any_call(support_ioc_files['.gitignore'].format(**self.test_input))
+        file_handle_mock.write.assert_called_once_with("bin\ndata\ndb\ndbd\ninclude\nlib\n")
+
+
+class SetModuleContactTest(unittest.TestCase):
+    pass  # Function to be implemented
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ import sys
 import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
-from new_module_templates import py_files, tools_files
+from new_module_templates import py_files, tools_files, support_ioc_files
 
 
 usage = """Default <area> is 'support'.
@@ -39,11 +39,81 @@ def make_parser():
 
     return parser
 
+def make_files_python(module):
+    ''' Creates the files necessary for a python module '''
+    format_vars = {'module':module, 'getlogin':os.getlogin()}
 
-def set_up_area(args, module):
+    open("setup.py", "w").write(py_files['setup.py'].format(**format_vars))
+    open("Makefile", "w").write(py_files['Makefile'].format(**format_vars))
+    os.mkdir(module)
+    open(os.path.join(module, module + ".py"), "w").write(py_files['module/module.py'].format(**format_vars))
+    open(os.path.join(module, "__init__.py"), "w").write(py_files['module/__init__.py'])
+    os.mkdir("documentation")
+    open("documentation/Makefile", "w").write(py_files['documentation/Makefile'])
+    open("documentation/index.html", "w").write(py_files['documentation/index.html'])
+    open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'].format(**format_vars))
+    open("documentation/manual.src", "w").write(py_files['documentation/manual.src'].format(**format_vars))
+    open(".gitignore", "w").write(py_files['.gitignore'])
+
+
+def make_files_tools(module):
+    ''' Creates the files necessary for a tools module '''
+    open("build", "w").write(tools_files['build'].format(**locals()))
+    print("\nPlease add your patch files to the {module:s} directory and edit "
+        "{module:s}/build script appropriately".format(**locals()))
+    # Include .gitignore file for tools module?
+
+
+def make_files_support_ioc(module):
+    ''' Creates the files necessary for a support or ioc module '''
+    open(".gitignore", "w").write(support_ioc_files['.gitignore'])
+
+
+def set_module_contact(module_path):
+    """ Adds given contact name to module """
+    pass
+
+
+def import_module(disk_dir, dest, args, module):
+    print("Importing " + disk_dir + " into " + dest)
+
+    svn.import_(disk_dir, dest, 'Initial structure of new ' + disk_dir, recurse=True)
+    shutil.rmtree(disk_dir)
+
+    print('Checkout ' + disk_dir + ' from ' + dest)
+    svn.checkout(dest, disk_dir)
+    user = os.getlogin()
+    if args.area == "python":
+        svn.propset("svn:ignore", "dist\nbuild\ninstalled.files\n", disk_dir)
+    elif args.area in ("support", "ioc"):
+        svn.propset("svn:ignore", "bin\ndata\ndb\ndbd\ninclude\nlib\n", disk_dir)
+    svn.propset("dls:contact", user, disk_dir)
+    svn.checkin(disk_dir, module + ": changed contact and set svn:ignore")
+
+
+def main():
+
+    parser = make_parser()
+    args = parser.parse_args()
+
+#    if len(args) != 1:
+#        parser.error("Incorrect number of arguments.")
+
+    # setup the environment
+    module = args.module_name
+    disk_dir = module
+    app_name = module
+    cwd = os.getcwd()
+    from dls_environment.svn import svnClient
+    svn = svnClient()
+
+    # Check we know what to do
+    if args.area not in ("ioc", "support", "tools", "python"):
+        raise TypeError("Don't know how to make a module of type " + args.area)
+
     # setup area
     if args.area == "ioc":
-        area = "ioc"
+        area = "ioc"    # Not used!
         cols = module.split('/')
         if len(cols) > 1 and cols[1] != '':
             domain = cols[0]
@@ -82,69 +152,7 @@ def set_up_area(args, module):
         assert module.startswith("dls_") and "-" not in module and "." not in module,\
             "Python module names must start with 'dls_' and be valid python identifiers"
 
-    return technical_area, BL_message
-
-
-def make_files_python(module):
-    ''' Creates the files necessary for a python module '''
-    format_vars = {'module':module, 'getlogin':os.getlogin()}
-
-    open("setup.py", "w").write(py_files['setup.py'].format(**format_vars))
-    open("Makefile", "w").write(py_files['Makefile'].format(**format_vars))
-    os.mkdir(module)
-    open(os.path.join(module, module + ".py"), "w").write(py_files['module/module.py'].format(**format_vars))
-    open(os.path.join(module, "__init__.py"), "w").write(py_files['module/__init__.py'])
-    os.mkdir("documentation")
-    open("documentation/Makefile", "w").write(py_files['documentation/Makefile'])
-    open("documentation/index.html", "w").write(py_files['documentation/index.html'])
-    open("documentation/config.cfg", "w").write(py_files['documentation/config.cfg'].format(**format_vars))
-    open("documentation/manual.src", "w").write(py_files['documentation/manual.src'].format(**format_vars))
-
-
-def make_files_tools(module):
-    ''' Creates the files necessary for a tools module '''
-    open("build", "w").write(tools_files['build'].format(**locals()))
-    print("\nPlease add your patch files to the {module:s} directory and edit "
-        "{module:s}/build script appropriately".format(**locals()))
-
-
-def import_module(disk_dir, dest, args, module):
-    print("Importing " + disk_dir + " into " + dest)
-
-    svn.import_(disk_dir, dest, 'Initial structure of new ' + disk_dir, recurse=True)
-    shutil.rmtree(disk_dir)
-
-    print('Checkout ' + disk_dir + ' from ' + dest)
-    svn.checkout(dest, disk_dir)
-    user = os.getlogin()
-    if args.area == "python":
-        svn.propset("svn:ignore", "dist\nbuild\ninstalled.files\n", disk_dir)
-    elif args.area in ("support", "ioc"):
-        svn.propset("svn:ignore", "bin\ndata\ndb\ndbd\ninclude\nlib\n", disk_dir)
-    svn.propset("dls:contact", user, disk_dir)
-    svn.checkin(disk_dir, module + ": changed contact and set svn:ignore")
-
-
-def main():
-
-    parser = make_parser()
-    args = parser.parse_args()
-
-#    if len(args) != 1:
-#        parser.error("Incorrect number of arguments.")
-
-    # setup the environment
-    module = args.module_name
-    disk_dir = module
-    app_name = module
-    cwd = os.getcwd()
-
-    # Check we know what to do
-    if args.area not in ("ioc", "support", "tools", "python"):
-        raise TypeError("Don't know how to make a module of type " + args.area)
-
-    technical_area, BL_message = set_up_area()
-
+    # Remote repo check
     dest = pathf.devModule(module, args.area)
 
     if not args.no_import:
@@ -156,6 +164,7 @@ def main():
             assert not svn.pathcheck(dir), "The path " + dir + \
                                            " already exists in subversion, cannot continue"
 
+    # Local repo check
     assert not svn.workingCopy(), \
         "Currently in a svn working copy, please move elsewhere and try again"
     assert not os.path.isdir(disk_dir), \
@@ -165,6 +174,10 @@ def main():
 
     os.makedirs(disk_dir)
     os.chdir(disk_dir)
+
+    # message generation
+    # Only needed in ioc if not BL module
+    
     # write the message for ioc and support modules
     def_message = '\nPlease now edit ' + os.path.join(disk_dir, '/configure/RELEASE') + \
                   " to put in correct paths for dependencies."
@@ -193,6 +206,8 @@ def main():
             os.system('dls-make-etc-dir.py && make clean uninstall')
             print(def_message)
 
+        # TODO make_files_support_ioc(module)  # Adds .gitignore files
+
     elif args.area == "tools":
         make_files_tools(module)
 
@@ -200,10 +215,14 @@ def main():
         make_files_python(module)
         print(py_message)
 
+    # TODO First need to stage and commit files to local repository
+
     if not args.no_import:
         # import the module into svn
         os.chdir(cwd)
         import_module(disk_dir, dest, args, module)
+
+        # TODO Add remote origin and push repo
 
 
 if __name__ == "__main__":
