@@ -29,6 +29,36 @@ def get_repository_list():
     return split_list
 
 
+def stage_all_files_and_commit():
+    git.Repo.git.add('--all')
+    print("Committing files to repo...")
+    print(git.Repo.git.commit(m=" 'Initial commit'"))
+
+
+def temp(area, module):
+
+    # >>> adjust for technical area
+    if area == "ioc":
+        pass
+
+    path = "./"
+    # target = "git@github.com:GDYendell/git_test.git"
+    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/" + area + module
+
+    print("Initialising repo...")
+    repo = git.Repo.init(path)
+    print("Creating remote...")
+    repo.clone_from(target, path + "dummy")
+    os.rmdir(path + "dummy")
+    print("Adding remote to repo...")
+    origin = repo.create_remote("origin", target)
+    repo.git.add('--all')
+    print("Committing files to repo...")
+    print(repo.git.commit(m=" 'Initial commit'"))
+    print("Pushing repo to gitolite...")
+    origin.push('master')
+
+
 def clone(source, module):
 
     if not is_repo_path(source):

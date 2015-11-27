@@ -93,7 +93,7 @@ def main():
                 "Expected epics version like R3.14.8.2, got '%s'" % args.epics_version)
     path = "/tmp"
     docdirs = ["documentation", "docs"]
-# >>> I assume a is user input from , but I don't know what the question was supposed to be
+# >>> I assume a is user input, but I don't know what the question was supposed to be
     if args.area == "ioc" and a.upper() != "Y":
         assert len(module.split('/')) > 1, "Missing Technical Area under Beamline"
     source = svn.prodModule(module, args.area)
@@ -115,7 +115,7 @@ def main():
     if os.path.isdir(webPath+"/"+release):
         msg = "%(module)s release %(release)s already exists on webserver" % locals()
         if args.force:
-            print "Warning: " + msg + ". Overwriting"
+            print("Warning: " + msg + ". Overwriting")
             shutil.rmtree("%(webPath)s/%(release)s" % locals())
         else:
             raise AssertionError(msg)
@@ -276,18 +276,18 @@ include("../header.html");
     else:
         indexwritten = False        
     # clean up
-    print "Cleaning up..."
+    print("Cleaning up...")
     os.remove(tgz)
     shutil.rmtree("%(path)s/%(module)s-%(release)s" % locals())
     if indexwritten:
-        print "Now edit %(webPath)s/index.php to describe your module, " \
-            "and add it to the navigation bar in %(webPath)s/../header.html" % locals()
-        print "You can create an email image by running:"
-        print "  /dls_sw/work/common/scripts/email_obfusticate.sh firstname.lastname"     
-    print "Please check http://controls.diamond.ac.uk then"
-    print "  svn add %s" % webPath
-    print "  svn commit %s/.." % webPath
-    print "with a suitable comment when you are happy"
+        print("Now edit %(webPath)s/index.php to describe your module, " \
+            "and add it to the navigation bar in %(webPath)s/../header.html" % locals())
+        print("You can create an email image by running:")
+        print("  /dls_sw/work/common/scripts/email_obfusticate.sh firstname.lastname")
+    print("Please check http://controls.diamond.ac.uk then")
+    print("  svn add %s" % webPath)
+    print("  svn commit %s/.." % webPath)
+    print("with a suitable comment when you are happy")
 
 
 if __name__ == "__main__":
