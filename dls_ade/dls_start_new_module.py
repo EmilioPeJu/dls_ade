@@ -76,6 +76,9 @@ def set_module_contact(module_path):
 
 
 def import_module(disk_dir, dest, args, module):
+    from dls_environment.svn import svnClient
+    svn = svnClient()
+
     print("Importing " + disk_dir + " into " + dest)
 
     svn.import_(disk_dir, dest, 'Initial structure of new ' + disk_dir, recurse=True)
@@ -94,11 +97,9 @@ def import_module(disk_dir, dest, args, module):
 
 def main():
 
+    # Note: Positional arguments are required by ArgParse - no need for extra argument no. validation
     parser = make_parser()
     args = parser.parse_args()
-
-#    if len(args) != 1:
-#        parser.error("Incorrect number of arguments.")
 
     # setup the environment
     module = args.module_name
@@ -112,9 +113,8 @@ def main():
     if args.area not in ("ioc", "support", "tools", "python"):
         raise TypeError("Don't know how to make a module of type " + args.area)
 
-    # setup area
+    # setup area - variable initialisation
     if args.area == "ioc":
-        area = "ioc"    # Not used!
         cols = module.split('/')
         if len(cols) > 1 and cols[1] != '':
             domain = cols[0]
@@ -178,7 +178,7 @@ def main():
 
     # message generation
     # Only needed in ioc if not BL module
-    
+
     # write the message for ioc and support modules
     def_message = '\nPlease now edit ' + os.path.join(disk_dir, '/configure/RELEASE') + \
                   " to put in correct paths for dependencies."
@@ -211,6 +211,7 @@ def main():
 
     elif args.area == "tools":
         make_files_tools(module)
+        # TODO Move print message from make_files function to separate message function
 
     elif args.area == "python":
         make_files_python(module)
