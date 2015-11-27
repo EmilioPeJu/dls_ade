@@ -1,5 +1,5 @@
 
-def new_module_generator(args, cwd):
+def get_new_module_creator(args, cwd):
     # Use arguments to determine which new module creator to use, and return it
 
     # List of classes:
@@ -48,7 +48,7 @@ class NewModuleCreator:
         pass
 
     def gitignore_generation(self):
-        # Generates .gitignore file. Could be part of file_generation
+        # Generates .gitignore file. Could be part of file_generation - part of super()?
         pass
 
     def print_messages(self):
