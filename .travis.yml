@@ -4,8 +4,8 @@ python:
   - 2.7
 
 install:
-  - alias dls-python=python && make install
+  - pip install coveralls
+  - python setup.py bdist_egg
 
-script:
-  - python setup.py nosetests
+script: nosetests
 
