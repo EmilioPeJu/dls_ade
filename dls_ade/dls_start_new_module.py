@@ -39,6 +39,7 @@ def make_parser():
 
     return parser
 
+
 def make_files_python(module):
     ''' Creates the files necessary for a python module '''
     format_vars = {'module':module, 'getlogin':os.getlogin()}
