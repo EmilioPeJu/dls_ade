@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 import sys
-import subprocess
 from argument_parser import ArgParser
 import path_functions as path
 import vcs_git
@@ -23,20 +22,24 @@ def check_source_file_path_valid(source, parser):
 
 def print_module_list(source):
 
-    list_cmd = "ssh " + vcs_git.GIT_ROOT + " expand controls"
-    split_list = subprocess.check_output(list_cmd.split()).split()
+    split_list = vcs_git.get_repository_list()
     for path in split_list:
         if source in path:
             print(path)
 
 
-def main():
+def make_parser():
 
     parser = ArgParser(usage)
     parser.add_argument("-d", "--domain", action="store",
                         type=str, dest="domain_name",
                         help="domain of ioc to list")
+    return parser
 
+
+def main():
+
+    parser = make_parser()
     args = parser.parse_args()
     
     if args.area == "ioc" and args.domain_name:
@@ -47,6 +50,7 @@ def main():
     check_source_file_path_valid(source, parser)
 
     print_module_list(source)
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -7,6 +7,7 @@ if version_info.major == 2:
     import __builtin__ as builtins  # Allows for Python 2/3 compatibility, 'builtins' is namespace for inbuilt functions
 else:
     import builtins
+
 import unittest
 from argparse import _StoreAction
 from pkg_resources import require
