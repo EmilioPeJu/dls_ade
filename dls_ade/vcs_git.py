@@ -1,4 +1,4 @@
-from vcs import BaseVCS
+from dls_ade.vcs import BaseVCS
 import tempfile
 import subprocess
 import os
