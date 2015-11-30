@@ -11,6 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   dls_ade
+   dls_environment
 
 
 Indices and tables
