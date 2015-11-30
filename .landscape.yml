@@ -1,0 +1,4 @@
+ignore-paths:
+    - py_scripts
+    - dls_ade/dlsbuild_scripts
+
