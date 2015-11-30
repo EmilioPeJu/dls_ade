@@ -3,9 +3,6 @@
 
 import sys
 from argument_parser import ArgParser
-import vcs_git
-from pkg_resources import require
-require('dls_environment')
 from dls_environment import environment
 import path_functions as path
 

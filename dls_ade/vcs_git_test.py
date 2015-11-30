@@ -10,12 +10,12 @@ from mock import patch, ANY, MagicMock  # @UnresolvedImport
 
 class IsInRepoTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/test/path'])
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/path'])
     def test_given_path_exists_then_return_true(self, mock_check):
 
         self.assertTrue(vcs_git.is_repo_path("controls/test/path"))
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/test/otherpath'])
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/otherpath'])
     def test_given_path_does_not_exist_then_return_false(self, mock_check):
 
         self.assertFalse(vcs_git.is_repo_path("controls/test/path"))
@@ -23,7 +23,7 @@ class IsInRepoTest(unittest.TestCase):
 
 class CloneTest(unittest.TestCase):
 
-    @patch('vcs_git.is_repo_path', return_value=False)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
         source = "/does/not/exist"
@@ -32,7 +32,7 @@ class CloneTest(unittest.TestCase):
         with self.assertRaises(Exception):
             vcs_git.clone(source, module)
 
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
         source = "/does/exist"
@@ -41,7 +41,7 @@ class CloneTest(unittest.TestCase):
         vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=True)
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_existing_module_name_then_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
         source = "test/source"
@@ -51,7 +51,7 @@ class CloneTest(unittest.TestCase):
             vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=False)
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_module_name_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
         source = "test/source"
@@ -59,8 +59,8 @@ class CloneTest(unittest.TestCase):
 
         vcs_git.clone(source, module)
 
-    @patch('vcs_git.is_repo_path', return_value=True)
-    @patch('vcs_git.os.path.isdir', return_value=False)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.os.path.isdir', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
                                                               mock_is_repo_path, mock_clone):
@@ -74,7 +74,7 @@ class CloneTest(unittest.TestCase):
 
 class CloneMultiTest(unittest.TestCase):
 
-    @patch('vcs_git.is_repo_path', return_value=False)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
         source = "/does/not/exist"
@@ -83,7 +83,7 @@ class CloneMultiTest(unittest.TestCase):
         with self.assertRaises(Exception):
             vcs_git.clone(source, module)
 
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
         source = "/does/exist"
@@ -92,7 +92,7 @@ class CloneMultiTest(unittest.TestCase):
         vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=True)
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_existing_module_name_then_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
         source = "test/source"
@@ -102,7 +102,7 @@ class CloneMultiTest(unittest.TestCase):
             vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=False)
-    @patch('vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_module_name_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
         source = "test/source"
@@ -110,8 +110,8 @@ class CloneMultiTest(unittest.TestCase):
 
         vcs_git.clone(source, module)
 
-    @patch('vcs_git.is_repo_path', return_value=True)
-    @patch('vcs_git.os.path.isdir', return_value=False)
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.os.path.isdir', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
                                                               mock_is_repo_path, mock_clone):

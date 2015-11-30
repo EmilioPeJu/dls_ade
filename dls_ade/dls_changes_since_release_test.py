@@ -4,12 +4,10 @@ import unittest
 
 from pkg_resources import require
 
-import dls_changes_since_release
+from dls_ade import dls_changes_since_release
 
 require("mock")
 from mock import patch
-from argparse import _StoreAction
-from argparse import _StoreTrueAction
 
 
 class MakeParserTest(unittest.TestCase):
@@ -27,7 +25,7 @@ class CheckParsedArgumentsValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_changes_since_release.make_parser()
-        parse_error_patch = patch('dls_changes_since_release.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_changes_since_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -51,7 +49,7 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_changes_since_release.make_parser()
-        parse_error_patch = patch('dls_changes_since_release.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_changes_since_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 

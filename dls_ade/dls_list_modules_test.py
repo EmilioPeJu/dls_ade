@@ -31,7 +31,7 @@ class ParserTest(unittest.TestCase):
 
 class PrintModuleListTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output')
+    @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_subprocess_called_with_correct_list(self, mock_sub):
         source = "/test/source"
         list_cmd = "ssh " + dls_list_modules.vcs_git.GIT_ROOT + " expand controls"
@@ -40,7 +40,7 @@ class PrintModuleListTest(unittest.TestCase):
 
         mock_sub.assert_called_once_with(list_cmd.split())
 
-    @patch('vcs_git.subprocess.check_output', return_value="/test/source/module")
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value="/test/source/module")
     def test_print_called(self, mock_sub):
         source = "/test/source"
         mock_print = MagicMock()

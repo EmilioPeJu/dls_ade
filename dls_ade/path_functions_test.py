@@ -1,4 +1,4 @@
-import path_functions
+from dls_ade import path_functions
 import unittest
 
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
