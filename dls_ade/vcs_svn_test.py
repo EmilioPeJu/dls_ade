@@ -4,20 +4,20 @@ import unittest
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, call, MagicMock
-import vcs_svn
+from dls_ade import vcs_svn
 from dls_environment.svn import svnClient
 
 
 class SvnClassInitTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck')
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck')
     def test_pathcheck_called_at_class_init(self, mock_check):
 
         vcs = vcs_svn.Svn('',FakeOptions())
 
         mock_check.assert_called_once_with(ANY)
 
-    @patch('vcs_svn.svnClient.pathcheck')
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck')
     def test_given_fake_module_options_args_then_pathcheck_called_at_init_with_ANY(self, mock_check):
 
         module = 'meow'
@@ -27,7 +27,7 @@ class SvnClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(ANY)
 
-    @patch('vcs_svn.svnClient.pathcheck')
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck')
     def test_given_specific_module_options_then_pathcheck_called_with_valid_svn_repo(self, mock_check):
 
         module = 'deleteme'
@@ -38,7 +38,7 @@ class SvnClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(url_to_be_called)
 
-    @patch('vcs_svn.svnClient.pathcheck',return_value=False)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck',return_value=False)
     def test_given_args_for_nonexistent_repo_then_class_init_should_raise_assertion_error(self, mock_check):
 
         # simulates svnClient.pathcheck response to invalid path
@@ -51,21 +51,21 @@ class SvnClassInitTest(unittest.TestCase):
 
 class SvnListReleasesTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value=True)
     def setUp(self, mock_check):
 
         self.module = 'deleteme'
         self.options = FakeOptions()
         self.vcs = vcs_svn.Svn(self.module, self.options)
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value=False)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value=False)
     def test_given_unreleased_module_then_return_empty_list(self, mock_check):
 
         releases = self.vcs.list_releases()
         
         self.assertEqual(0, len(releases))
 
-    @patch('vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
+    @patch('dls_ade.vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
     def test_given_released_module_then_return_list_inc_version_1_0(self, mock_list):
         '''
         as of 3.3.15, the above svn source path was correct for module
@@ -75,7 +75,7 @@ class SvnListReleasesTest(unittest.TestCase):
 
         self.assertTrue('1-0' in releases)
 
-    @patch('vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
+    @patch('dls_ade.vcs_svn.svnClient.prodModule', return_value='svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond/release/support/deleteme/')
     def test_given_released_module_then_return_list_inc_all_rel_versions(self, mock_list):
         '''
         as of 3.3.15, the above svn source path was correct for module
@@ -90,14 +90,14 @@ class SvnListReleasesTest(unittest.TestCase):
 
 class SvnSetLogMessageTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value=True)
     def setUp(self, mock_check):
 
         self.module = 'deleteme'
         self.options = FakeOptions()
         self.vcs = vcs_svn.Svn(self.module, self.options)
 
-    @patch('vcs_svn.svnClient.setLogMessage')
+    @patch('dls_ade.vcs_svn.svnClient.setLogMessage')
     def test_when_called_with_message_then_svnClient_setLogMessage_called_with_message_argument(self, mlog):
 
         log_message = 'reason for release'
@@ -109,13 +109,13 @@ class SvnSetLogMessageTest(unittest.TestCase):
 
 class SvnCheckVersionTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value=True)
     def setUp(self, mock_check):
 
         self.module = 'deleteme'
         self.options = FakeOptions()
         self.vcs = vcs_svn.Svn(self.module, self.options)
-        patcher = patch('vcs_svn.Svn.list_releases')
+        patcher = patch('dls_ade.vcs_svn.Svn.list_releases')
         self.addCleanup(patcher.stop)        
         self.mlist = patcher.start()
 
@@ -138,7 +138,7 @@ class ApiInterrogateTest(unittest.TestCase):
 
     def setUp(self):
 
-        patcher = patch('vcs_svn.svnClient.pathcheck')
+        patcher = patch('dls_ade.vcs_svn.svnClient.pathcheck')
         self.addCleanup(patcher.stop)
         self.mock_check = patcher.start()
 
@@ -172,7 +172,7 @@ class SvnSetBranchTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             vcs.set_branch('not_a_branch')
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value = True)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value = True)
     def test_given_existing_branch_then_source_repo_changed_to_correct_url(self, _):
 
         branch_name = 'some_branch'
@@ -196,7 +196,7 @@ class SetVersionTest(unittest.TestCase):
 
     def setUp(self):
 
-        patcher = patch('vcs_svn.svnClient.pathcheck')
+        patcher = patch('dls_ade.vcs_svn.svnClient.pathcheck')
         self.addCleanup(patcher.stop)
         self.mock_check = patcher.start()
 
@@ -217,7 +217,7 @@ class SetVersionTest(unittest.TestCase):
 
         self.assertEqual(self.vcs.version, version)
 
-    @patch('vcs_svn.Svn.list_releases', return_value=['0-2'])
+    @patch('dls_ade.vcs_svn.Svn.list_releases', return_value=['0-2'])
     def test_given_vcs_and_version_exists_when_set_version_called_then_repo_url_change_to_released_version(self, _):
 
         version = '0-2'
@@ -233,7 +233,7 @@ class SetVersionTest(unittest.TestCase):
 
 class ReleaseVersionTest(unittest.TestCase):
 
-    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    @patch('dls_ade.vcs_svn.svnClient.pathcheck', return_value=True)
     def setUp(self, mock_check):
 
         self.module = 'meow'
