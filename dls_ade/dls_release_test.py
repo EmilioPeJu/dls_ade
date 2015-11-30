@@ -5,8 +5,8 @@ import dls_release
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock
-import vcs_git
-import vcs_svn
+from dls_ade import vcs_git
+from dls_ade import vcs_svn
 
 
 class ParserTest(unittest.TestCase):

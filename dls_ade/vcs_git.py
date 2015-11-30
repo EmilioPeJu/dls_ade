@@ -1,4 +1,4 @@
-from vcs import BaseVCS
+from dls_ade.vcs import BaseVCS
 from pkg_resources import require
 require('GitPython')
 import git
