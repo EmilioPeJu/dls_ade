@@ -5,7 +5,7 @@ import unittest
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
-import vcs_git
+from dls_ade import vcs_git
 
 
 class GitClassInitTest(unittest.TestCase):
@@ -15,7 +15,7 @@ class GitClassInitTest(unittest.TestCase):
         with self.assertRaises(Exception):
             vcs_git.Git(1, 2)
 
-    @patch('vcs_git.subprocess.check_output')
+    @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
         repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
@@ -24,8 +24,8 @@ class GitClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
-    @patch('vcs_git.tempfile.mkdtemp')
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
 
         try:
@@ -33,9 +33,9 @@ class GitClassInitTest(unittest.TestCase):
         except Exception, e:
             self.fail(e)
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.tempfile.mkdtemp')
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_exists_then_create_temp_dir_to_clone_into(self, mock_clone, mock_temp, _):
 
         module = "dummy"
@@ -45,9 +45,9 @@ class GitClassInitTest(unittest.TestCase):
 
         mock_temp.assert_called_once_with(suffix="_dummy")
 
-    @patch('vcs_git.subprocess.check_output', return_value=['dummy'])
-    @patch('vcs_git.tempfile.mkdtemp')
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['dummy'])
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_does_not_exist_then_git_clone_should_not_be_called(self, mock_clone, mock_temp, mock_check):
 
         module = "dummy"
@@ -62,9 +62,9 @@ class GitClassInitTest(unittest.TestCase):
         self.assertEqual(0, n_clone_calls)
         self.assertEqual(0, n_temp_calls)
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.tempfile.mkdtemp')
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_exists_then_git_clone_called(self, mock_clone, _, mock_check):
 
         repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
@@ -77,8 +77,8 @@ class GitClassInitTest(unittest.TestCase):
 
         self.assertEqual(1, n_clone_calls)
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_exists_then_git_clone_called_with_remote_url_and_tempdir_args(self, mock_clone, mock_check):
 
         repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
@@ -97,8 +97,8 @@ class GitClassInitTest(unittest.TestCase):
         self.assertTrue(target_dir.endswith("_" + module))
         self.assertGreater(len(target_dir), len(module)+9)
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/ioc/domain/mod'])
-    @patch('vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/ioc/domain/mod'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone, mock_check):
 
         repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/ioc/domain/mod"
@@ -118,12 +118,12 @@ class GitClassInitTest(unittest.TestCase):
 
 class GitCatTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)  # @UndefinedVariable
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)  # @UndefinedVariable
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheckout):
 
-        client_cat_patch = patch('vcs_git.git.Repo.git')
+        client_cat_patch = patch('dls_ade.vcs_git.git.Repo.git')
         self.addCleanup(client_cat_patch.stop)
         self.mgit = client_cat_patch.start()
         self.mgit.cat_file = MagicMock(return_value=1)
@@ -149,7 +149,7 @@ class GitCatTest(unittest.TestCase):
 
         self.mgit.cat_file.assert_called_once_with(dash_p_arg, ANY)
 
-    @patch('vcs_git.Git.list_releases',return_value='0-2')
+    @patch('dls_ade.vcs_git.Git.list_releases',return_value='0-2')
     def test_given_version_is_set_when_called_then_second_argument_to_catfile_starts_with_version(self, mlist):
 
         version = '0-2'
@@ -161,7 +161,7 @@ class GitCatTest(unittest.TestCase):
 
         self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
 
-    @patch('vcs_git.Git.list_releases',return_value='0-2')
+    @patch('dls_ade.vcs_git.Git.list_releases',return_value='0-2')
     def test_given_version_is_set_but_non_existent_then_version_used_for_cat_is_master(self, mlist):
 
         version = '0-3'
@@ -176,9 +176,9 @@ class GitCatTest(unittest.TestCase):
 
 class GitListReleasesTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheck):
 
         self.module = 'dummy'
@@ -209,9 +209,9 @@ class GitListReleasesTest(unittest.TestCase):
 
 class GitSetLogMessageTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheck):
 
         self.module = 'dummy'
@@ -228,9 +228,9 @@ class GitSetLogMessageTest(unittest.TestCase):
 
 class GitCheckVersionTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheck):
 
         self.module = 'dummy'
@@ -238,7 +238,7 @@ class GitCheckVersionTest(unittest.TestCase):
 
         self.vcs = vcs_git.Git(self.module, self.options)
 
-    @patch('vcs_git.Git.list_releases')
+    @patch('dls_ade.vcs_git.Git.list_releases')
     def test_given_version_in_list_of_releases_then_return_true(self, mlist):
         
         version = '1-5'
@@ -246,7 +246,7 @@ class GitCheckVersionTest(unittest.TestCase):
 
         self.assertTrue(self.vcs.check_version_exists(version))
 
-    @patch('vcs_git.Git.list_releases')
+    @patch('dls_ade.vcs_git.Git.list_releases')
     def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
         
         version = '1-5'
@@ -257,9 +257,9 @@ class GitCheckVersionTest(unittest.TestCase):
 
 class ApiInterrogateTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, _1, _2, _3):
 
         self.module = 'dummy'
@@ -284,9 +284,9 @@ class ApiInterrogateTest(unittest.TestCase):
 
 class GitSettersTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheck):
 
         self.module = 'dummy'
@@ -304,7 +304,7 @@ class GitSettersTest(unittest.TestCase):
         with self.assertRaises(Exception):
             self.vcs.version
 
-    @patch('vcs_git.Git.check_version_exists', return_value=True)
+    @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
     def test_given_vcs_when_version_set_return_version(self, mcheck):
 
         version = '0-1'
@@ -313,7 +313,7 @@ class GitSettersTest(unittest.TestCase):
 
         self.assertEqual(self.vcs.version, version)
 
-    @patch('vcs_git.Git.check_version_exists', return_value=False)
+    @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=False)
     def test_given_nonexistent_version_when_version_set_then_raise_error(self, mcheck):
 
         version = '0-2'
@@ -324,9 +324,9 @@ class GitSettersTest(unittest.TestCase):
 
 class GitReleaseVersionTest(unittest.TestCase):
 
-    @patch('vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
-    @patch('vcs_git.git.Repo.clone_from')
-    @patch('vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     def setUp(self, mtemp, mclone, mcheck):
 
         self.module = 'dummy'

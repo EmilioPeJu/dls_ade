@@ -1,13 +1,12 @@
 #!/bin/env dls-python
 from pkg_resources import require
-require('dls_environment')
 require('python-ldap')
 
 import sys
 import re
-import vcs_svn
-import vcs_git
-import dlsbuild
+from dls_ade import vcs_svn
+from dls_ade import vcs_git
+from dls_ade import dlsbuild
 from dls_environment.options import OptionParser
 from optparse import OptionGroup
 
