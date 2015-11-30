@@ -4,6 +4,14 @@ from setuptools import setup
 import os
 version = os.environ.get("MODULEVER", "0.0")
 
+# find the build scripts
+savecwd=os.getcwd()
+os.chdir("dls_ade")
+build_scripts = []
+for root, subFolders, files in os.walk("dlsbuild_scripts"):
+    build_scripts += [os.path.join(root, x) for x in files if x.endswith(".bat") or x.endswith(".sh") ]
+os.chdir(savecwd)
+
 setup(
     # name of the module
     name = "dls_ade",
@@ -19,9 +27,9 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     license='APACHE',
-    install_requires = ['GitPython==1.0.1', 'python-ldap==2.4.22', 'six'],
+    install_requires = ['GitPython>=0.3.2', 'python-ldap>=2.3.12', 'six'],
     packages = ["dls_ade","dls_environment"],
-    package_data = {},
+    package_data = {"dls_ade": build_scripts},
     # define console_scripts
     entry_points = { 'console_scripts':
                          ['dls-release.py = dls_ade.dls_release:main',] },
