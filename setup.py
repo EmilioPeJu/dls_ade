@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     license='APACHE',
-    install_requires = ['GitPython==1.0.1', 'python-ldap==2.4.22', 'six'],
+    install_requires = ['GitPython>=0.3.2', 'python-ldap>=2.3.12', 'six'],
     packages = ["dls_ade","dls_environment"],
     package_data = {"dls_ade": build_scripts},
     # define console_scripts
