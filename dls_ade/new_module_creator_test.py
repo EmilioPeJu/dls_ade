@@ -1,6 +1,7 @@
 import unittest
 import os
 
+
 import dls_ade.new_module_creator as new_c
 from dls_ade.dls_start_new_module import make_parser
 from pkg_resources import require
@@ -241,6 +242,5 @@ class NewModuleCreatorStageAndCommitTest(unittest.TestCase):
 
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
     pass
-
 
 # Add tests for all derived NewModuleCreator classes

@@ -22,7 +22,8 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    ''' helper method containing arguments and help text '''
+
+    a = ''' helper method containing arguments and help text '''
 
     parser = ArgParser(usage)
 
