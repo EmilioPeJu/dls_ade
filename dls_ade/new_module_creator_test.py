@@ -1,14 +1,14 @@
 import unittest
 import os
 
-import new_module_creator as new_c
-from dls_start_new_module import make_parser
+import dls_ade.new_module_creator as new_c
+from dls_ade.dls_start_new_module import make_parser
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, mock_open
 
 
-class GetNewModuleCreator(unittest.TestCase):
+class GetNewModulteCreator(unittest.TestCase):
 
     def setUp(self):
 
@@ -25,7 +25,7 @@ class GetNewModuleCreator(unittest.TestCase):
         self.patch = {}
         self.mocks = {}
         for method in methods_to_patch:
-            self.patch[method] = patch('new_module_creator.NewModule' + method)
+            self.patch[method] = patch('dls_ade.new_module_creator.NewModule' + method)
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
@@ -95,17 +95,15 @@ class GetNewModuleCreator(unittest.TestCase):
 
         iocbl_c_mock.assert_called_once_with(args.module_name, args.area, os.getcwd())
 
-    # def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_returned(self):
-    #
-    #     iocbl_c_mock = self.mocks['CreatorIOCBL']
-    #
-    #     args = self.parser.parse_args("test_module --area tools".split())  # Area automatically support
-    #
-    #     new_tools_creator = new_c.get_new_module_creator(args)
-    #
-    #     iocbl_c_mock.assert_called_once_with(args.module_name, args.area, os.getcwd())
+    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_returned(self):
 
-    # TODO Test if area ioc and technical area is BL then BL returned
+        iocbl_c_mock = self.mocks['CreatorIOCBL']
+
+        args = self.parser.parse_args("test-BL -i".split())  # Area automatically support
+
+        new_tools_creator = new_c.get_new_module_creator(args)
+
+        iocbl_c_mock.assert_called_once_with(args.module_name, args.area, os.getcwd())
 
 
 class NewModuleCreatorClassInitTest(unittest.TestCase):

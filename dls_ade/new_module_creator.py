@@ -1,73 +1,37 @@
 import os
+import re
+
+areas_supported = ["ioc", "support", "tools", "python"]
 
 
 def get_new_module_creator(args):
-    # Use arguments to determine which new module creator to use, and return it
+    ''' Use arguments to determine which new module creator to use, and return it '''
 
-    # Validate whether area type is supported!
-
-    # List of classes:
-        # NewModuleIOC
-        # NewModuleIOC-BL(NewModuleIOC)
-
-        # NewModulePython
-        # NewModuleSupport - very few changes
-        # NewModuleTools - very few changes
-    #
-
-    if args.area not in ("ioc", "support", "tools", "python"):
-        raise Exception("Don't know how to make a module of type " + args.area)
+    if args.area not in areas_supported:
+        raise TypeError("Don't know how to make a module of type " + args.area)
 
     module = args.module_name
     area = args.area
     cwd = os.getcwd()
 
     if args.area == "ioc":
-        area = "ioc"
-        cols = module.split('/')
-        if len(cols) > 1 and cols[1] != '':
-            domain = cols[0]
-            technical_area = cols[1]
-            if len(cols) == 3 and cols[2] != '':
-                ioc_number = cols[2]
-            else:
-                ioc_number = '01'
-            module = domain + "/" + technical_area
-            if technical_area == "BL":
-                app_name = domain
-            else:
-                app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
-                if args.fullname:
-                    module = domain + "/" + app_name
-        else:
-            # assume full IOC name is given
-            cols = module.split('-')
-            assert len(cols) > 1, "Need a name with dashes in it, got " + module
-            domain = cols[0]
-            technical_area = cols[1]
-            app_name = module
-            module = domain + "/" + app_name
-        disk_dir = module
-        # write the message for ioc BL
-        BL_message = "\nPlease now edit " + \
-                     os.path.join(disk_dir, "/configure/RELEASE") + \
-                     " and path to scripts."
-        BL_message += "\nAlso edit " + \
-                      os.path.join(disk_dir, app_name + "App/src/Makefile") + \
-                      " to add all database files from these technical areas."
-        BL_message += "\nAn example set of screens has been placed in " + \
-                      os.path.join(disk_dir, app_name + "App/opi/edl") + \
-                      " . Please modify these.\n"
 
-        return NewModuleCreatorIOC(module, area, cwd)
+        cols = re.split(r'[-/]+', module) # Similar to string.split() but works with multiple characters ('-' and '/')
+        if len(cols) > 1 and cols[1] != '':
+            if cols[1] == "BL":
+                return NewModuleCreatorIOCBL(module, area, cwd)
+        else:
+            return NewModuleCreatorIOC(module, area, cwd)
+
     elif args.area == "python":
+
         return NewModuleCreatorPython(module, area, cwd)
     elif args.area == "support":
+
         return NewModuleCreatorSupport(module, area,cwd)
     elif args.area == "tools":
-        return NewModuleCreatorTools(module, area, cwd)
 
-    # TODO Finish function
+        return NewModuleCreatorTools(module, area, cwd)
 
 
 class NewModuleCreator:
@@ -148,7 +112,7 @@ class NewModuleCreatorIOC(NewModuleCreator):
     pass
 
 
-class NewModuleCreatorIOCBL(NewModuleCreatorIOC):
+class NewModuleCreatorIOCBL(NewModuleCreator):
     pass
 
 
