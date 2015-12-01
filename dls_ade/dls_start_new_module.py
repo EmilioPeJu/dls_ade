@@ -8,7 +8,7 @@ import sys
 import shutil
 from argument_parser import ArgParser
 import path_functions as pathf
-from new_module_templates import py_files, tools_files, support_ioc_files
+from new_module_templates import py_files, tools_files, default_files
 
 
 usage = """Default <area> is 'support'.
@@ -31,7 +31,7 @@ def make_parser():
         "module_name", type=str, default=None,
         help="name of module")
     parser.add_argument(
-        "-n", "--no_import", action="store_true", dest="no_import",
+        "-n", "--no-import", action="store_true", dest="no_import",
         help="Creates the module but doesn't import into svn")
     parser.add_argument(
         "-f", "--fullname", action="store_true", dest="fullname",
@@ -42,7 +42,7 @@ def make_parser():
 
 def make_files_python(module):
     ''' Creates the files necessary for a python module '''
-    format_vars = {'module':module, 'getlogin':os.getlogin()}
+    format_vars = {'module': module, 'getlogin': os.getlogin()}
 
     open("setup.py", "w").write(py_files['setup.py'].format(**format_vars))
     open("Makefile", "w").write(py_files['Makefile'].format(**format_vars))
@@ -65,9 +65,9 @@ def make_files_tools(module):
     # Include .gitignore file for tools module?
 
 
-def make_files_support_ioc(module):
+def make_files_default(module):
     ''' Creates the files necessary for a support or ioc module '''
-    open(".gitignore", "w").write(support_ioc_files['.gitignore'])
+    open(".gitignore", "w").write(default_files['.gitignore'])
 
 
 def set_module_contact(module_path):

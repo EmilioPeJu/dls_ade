@@ -228,6 +228,6 @@ build()
 # vim: set filetype=sh:
 """
 
-support_ioc_files = {}
+default_files = {}
 
-support_ioc_files['.gitignore'] = """bin\ndata\ndb\ndbd\ninclude\nlib\n"""  # Taken from svn:ignore statements
+default_files['.gitignore'] = """bin\ndata\ndb\ndbd\ninclude\nlib\n"""  # Taken from svn:ignore statements

@@ -1,52 +1,92 @@
 import os
 import re
-
-areas_supported = ["ioc", "support", "tools", "python"]
+import path_functions as pathf
+from new_module_templates import py_files, tools_files, default_files
 
 
 def get_new_module_creator(args):
     ''' Use arguments to determine which new module creator to use, and return it '''
 
-    if args.area not in areas_supported:
-        raise TypeError("Don't know how to make a module of type " + args.area)
-
-    module = args.module_name
+    module_name = args.module_name
     area = args.area
     cwd = os.getcwd()
 
     if args.area == "ioc":
 
-        cols = re.split(r'[-/]+', module) # Similar to string.split() but works with multiple characters ('-' and '/')
+        cols = re.split(r'[-/]+', module_name) # Similar to string.split() but works with multiple characters ('-' and '/')
+
         if len(cols) > 1 and cols[1] != '':
             if cols[1] == "BL":
-                return NewModuleCreatorIOCBL(module, area, cwd)
+                return NewModuleCreatorIOCBL(module_name, args.area, cwd, args.no_import)  # BL GUI module
         else:
-            return NewModuleCreatorIOC(module, area, cwd)
+            return NewModuleCreatorIOC(module_name, args.area, cwd, args.no_import)
 
     elif args.area == "python":
+        return NewModuleCreatorPython(module_name, args.area, cwd, args.no_import)
 
-        return NewModuleCreatorPython(module, area, cwd)
     elif args.area == "support":
+        return NewModuleCreatorSupport(module_name, args.area, cwd, args.no_import)
 
-        return NewModuleCreatorSupport(module, area,cwd)
     elif args.area == "tools":
+        return NewModuleCreatorTools(module_name, args.area, cwd, args.no_import)
+    else:
+        raise Exception("Don't know how to make a module of type: " + args.area)
 
-        return NewModuleCreatorTools(module, area, cwd)
+
+def generate_template_files(area):
+    # function to generate file templates for the classes. In future will obtain from new_module_templates or file tree
+    if area in ["default", "ioc", "support"]:
+        return default_files
+    elif area == "python":
+        return py_files
+    elif area == "tools":
+        return tools_files
+    else:
+        return {}
 
 
 class NewModuleCreator:
 
-    def __init__(self, module, area, cwd):
+    def __init__(self, module_name, area, cwd, no_import = False):
         # Initialise all private variables, including:
-            # template list - include variable list for .format()?
-            # module name
-            # area
-            # disk directory - directory where module to be imported is located
-            # app name
-            # If IOC:
-                # technical area
-            # dest - location of file on server
 
+        # template list - include variable list for .format()?
+
+        # module name
+        # area
+        # disk directory - directory where module to be imported is located
+        # app name
+        # dest - location of file on server
+
+        # Sensible defaults for variable initialisation:
+
+        self.__no_import = no_import
+        self.__area = area  # needed for file templates and dest
+        self.__module_name = module_name
+        self.__cwd = cwd
+        self.__disk_dir = self.__module_name
+        self.__app_name = self.__module_name
+        self.__dest = pathf.devModule(self.__module_name, self.__area)
+
+        self.__message = ""
+
+        self.__template_files = generate_template_files(self.__area)
+        self.__template_args = self.generate_template_args()
+
+
+        #self.check_remote_repo()
+        #self.check_local_repo()
+
+        # raise NotImplementedError
+
+    def compose_message(self):
+        ''' Generates the message to print out to the user on creation of the module files '''
+        self.__message = '\nPlease now edit ' + os.path.join(self.__disk_dir, '/configure/RELEASE') + \
+            " to put in correct paths for dependencies."
+        self.__message += '\nYou can also add dependencies to ' + \
+            os.path.join(self.__disk_dir, self.__app_name+'App/src/Makefile')
+        self.__message += '\nand '+os.path.join(self.__disk_dir, self.__app_name + 'App/Db/Makefile') + \
+            " if appropriate."
         raise NotImplementedError
 
     def check_remote_repo(self):
@@ -58,9 +98,11 @@ class NewModuleCreator:
         # to be created
         raise NotImplementedError
 
-    def message_generator(self):
-        # Generates the message to print out to the user on creation of the module files
-        raise NotImplementedError
+    def generate_template_args(self):
+        ''' returns a dictionary that can be used for the .format method, used in creating files '''
+        template_args = {'module': self.__module_name, 'getlogin': os.getlogin()}
+
+        return template_args
 
     def create_files(self):
         # Creates the files (possibly in subdirectories) as part of the module creation process
@@ -68,10 +110,6 @@ class NewModuleCreator:
         # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
 
         # Likely abstract, as all classes behave slightly differently
-        raise NotImplementedError
-
-    def create_gitignore(self):
-        # Generates .gitignore file. Could be part of file_generation - part of super()?
         raise NotImplementedError
 
     def add_contact(self):
@@ -92,6 +130,10 @@ class NewModuleCreator:
         # Pushes the local repo to the remote server.
         raise NotImplementedError
 
+    @property
+    def cwd(self):
+        return self.__cwd
+
 
 class NewModuleCreatorIOC(NewModuleCreator):
 
@@ -103,8 +145,6 @@ class NewModuleCreatorIOC(NewModuleCreator):
             # area
             # disk directory - directory where module to be imported is located
             # app name
-            # If IOC:
-                # technical area
             # dest - location of file on server
 
         raise NotImplementedError
