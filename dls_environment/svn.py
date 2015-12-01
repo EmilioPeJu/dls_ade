@@ -17,7 +17,15 @@ try:
 except:
     # pysvn is not an egg on RHEL6
     pass
-import pysvn, os
+
+HAS_PYSVN=True
+
+try:
+    import pysvn
+except ImportError:
+    print("Cannot import pysvn")
+    HAS_PYSVN=False
+import os
 
 class svnClient:
     "Wrapper for pysvn Client with dls functions"
