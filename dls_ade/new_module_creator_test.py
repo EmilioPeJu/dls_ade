@@ -215,12 +215,6 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
         self.assertEqual(args, {'module': "test_module", 'getlogin': "my_login"})
 
 
-
-
-class NewModuleCreatorComposeMessageTest(unittest.TestCase):
-    pass
-
-
 class NewModuleCreatorCheckRemoteRepoTest(unittest.TestCase):
     pass
 

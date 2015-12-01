@@ -9,28 +9,29 @@ def get_new_module_creator(args):
 
     module_name = args.module_name
     area = args.area
+    no_import = args.no_import
     cwd = os.getcwd()
 
-    if args.area == "ioc":
+    if area == "ioc":
 
-        cols = re.split(r'[-/]+', module_name) # Similar to string.split() but works with multiple characters ('-' and '/')
+        cols = re.split(r'[-/]+', module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
 
         if len(cols) > 1 and cols[1] != '':
             if cols[1] == "BL":
-                return NewModuleCreatorIOCBL(module_name, args.area, cwd, args.no_import)  # BL GUI module
+                return NewModuleCreatorIOCBL(module_name, area, cwd, args.no_import)  # BL GUI module
         else:
-            return NewModuleCreatorIOC(module_name, args.area, cwd, args.no_import)
+            return NewModuleCreatorIOC(module_name, area, cwd, args.no_import)
 
-    elif args.area == "python":
-        return NewModuleCreatorPython(module_name, args.area, cwd, args.no_import)
+    elif area == "python":
+        return NewModuleCreatorPython(module_name, area, cwd, args.no_import)
 
-    elif args.area == "support":
-        return NewModuleCreatorSupport(module_name, args.area, cwd, args.no_import)
+    elif area == "support":
+        return NewModuleCreatorSupport(module_name, area, cwd, args.no_import)
 
-    elif args.area == "tools":
-        return NewModuleCreatorTools(module_name, args.area, cwd, args.no_import)
+    elif area == "tools":
+        return NewModuleCreatorTools(module_name, area, cwd, args.no_import)
     else:
-        raise Exception("Don't know how to make a module of type: " + args.area)
+        raise Exception("Don't know how to make a module of type: " + area)
 
 
 def generate_template_files(area):
@@ -68,7 +69,7 @@ class NewModuleCreator:
         self.__app_name = self.__module_name
         self.__dest = pathf.devModule(self.__module_name, self.__area)
 
-        self.__message = ""
+        self.__message = self.compose_message()
 
         self.__template_files = generate_template_files(self.__area)
         self.__template_args = self.generate_template_args()
@@ -81,13 +82,15 @@ class NewModuleCreator:
 
     def compose_message(self):
         ''' Generates the message to print out to the user on creation of the module files '''
-        self.__message = '\nPlease now edit ' + os.path.join(self.__disk_dir, '/configure/RELEASE') + \
-            " to put in correct paths for dependencies."
-        self.__message += '\nYou can also add dependencies to ' + \
-            os.path.join(self.__disk_dir, self.__app_name+'App/src/Makefile')
-        self.__message += '\nand '+os.path.join(self.__disk_dir, self.__app_name + 'App/Db/Makefile') + \
-            " if appropriate."
-        raise NotImplementedError
+
+        message_dict = {'RELEASE':os.path.join(self.__disk_dir, '/configure/RELEASE'),
+                        'srcMakefile': os.path.join(self.__disk_dir, self.__app_name+'App/src/Makefile'),
+                        'DbMakefile': os.path.join(self.__disk_dir, self.__app_name + 'App/Db/Makefile')}
+
+        message = "\nPlease now edit {RELEASE:s} to put in correct paths for dependencies."
+        message += "\nYou can also add dependencies to {srcMakefile:s}\nand {DbMakefile:s} if appropriate."
+
+        return message
 
     def check_remote_repo(self):
         # Creates and uses dir_list to check remote repository for name collisions with new module - part of init?
