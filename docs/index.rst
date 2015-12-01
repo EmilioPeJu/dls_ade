@@ -3,10 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to dls_ade's documentation!
-===================================
+DLS Application Development Environment (ADE)
+=============================================
+
+This is a collection of scripts, used by the DLS Controls group to manage the
+development environment: source code repositories, branching and release
+processes, etc.
 
 Contents:
+---------
 
 .. toctree::
    :maxdepth: 2
@@ -16,7 +21,7 @@ Contents:
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
