@@ -115,6 +115,7 @@ def main():
 
     # setup area - variable initialisation
     if args.area == "ioc":
+        area = "ioc"
         cols = module.split('/')
         if len(cols) > 1 and cols[1] != '':
             domain = cols[0]
