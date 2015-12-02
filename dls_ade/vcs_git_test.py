@@ -8,6 +8,17 @@ require("mock")
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
 
 
+class IsGitDirTest(unittest.TestCase):
+
+    def test_given_reasonable_input_then_function_called_correctly(self):
+        pass
+        # Method procedural and taken from internet - not sure how to test!
+
+class IsGitRootDirTest(unittest.TestCase):
+
+    pass
+
+
 class IsInRepoTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/path'])

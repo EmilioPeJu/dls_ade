@@ -214,7 +214,7 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
         self.assertEqual(mock_c.template_args, {'module': "test_module", 'getlogin': "my_login"})
 
 
-class NewModuleCreatorCheckRemoteRepoTest(unittest.TestCase):
+class NewModuleCreatorCheckRemoteRepoValidTest(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list', return_value = ['inrepo', 'inrepo', 'inrepo'])
     @patch('dls_ade.vcs_git.is_repo_path', return_value = True)
@@ -222,7 +222,7 @@ class NewModuleCreatorCheckRemoteRepoTest(unittest.TestCase):
 
         mock_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
-        mock_c.check_remote_repo()
+        mock_c.check_remote_repo_valid()
 
         self.assertFalse(mock_c.remote_repo_valid)
 
@@ -232,7 +232,7 @@ class NewModuleCreatorCheckRemoteRepoTest(unittest.TestCase):
 
         mock_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
-        mock_c.check_remote_repo()
+        mock_c.check_remote_repo_valid()
 
         self.assertTrue(mock_c.remote_repo_valid)
 
@@ -244,7 +244,7 @@ class NewModuleCreatorCheckRemoteRepoTest(unittest.TestCase):
 
         mock_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
-        mock_c.check_remote_repo()
+        mock_c.check_remote_repo_valid()
 
         self.assertFalse(mock_c.remote_repo_valid)
 
@@ -262,7 +262,11 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
         mock_vend.assert_called_once_with(mock_c.module_name, mock_c.area)
 
 
-class NewModuleCreatorCheckLocalRepoTest(unittest.TestCase):
+class NewModuleCreatorCheckLocalDirValidTest(unittest.TestCase):
+    pass
+
+
+class NewModuleCreatorCheckLocalRepoExistsTest(unittest.TestCase):
     pass
 
 

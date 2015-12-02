@@ -1,4 +1,5 @@
-from dls_ade.vcs import BaseVCS
+#from dls_ade.vcs import BaseVCS
+from vcs import BaseVCS
 import tempfile
 import subprocess
 import os
@@ -10,6 +11,23 @@ import git
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+
+
+def is_git_dir(path="."):
+    return subprocess.call(['git', 'status', path, ], stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
+
+
+def is_git_root_dir(path="."):
+    if is_git_dir(path):
+        git_repo = git.Repo(path)
+        top_level_path = os.path.normpath(git_repo.git.rev_parse("--show-toplevel"))
+        full_path = os.path.normpath(os.path.join(os.getcwd(), path))
+        if full_path == top_level_path:
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 def is_repo_path(server_repo_path):

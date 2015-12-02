@@ -76,9 +76,9 @@ class NewModuleCreator(object):
         self.template_args = {}
         self.generate_template_args()
 
-        self.remote_repo_valid = False   # check_remote_repo must be called in order to export module files
-        self.local_repo_valid = False    # check_local_repo must be called before creating files
-        self.local_repo_created = False  # local repo must have been created before
+        self.remote_repo_valid = False   # check_remote_repo_valid must be called in order to export module files
+        self.local_dir_valid = False     # check_local_dir_valid must be called before creating files
+        self.local_repo_created = False  # local repo must not be created before init and commit; must be before push
 
     def compose_message(self):
         ''' Generates the message to print out to the user on creation of the module files '''
@@ -98,7 +98,13 @@ class NewModuleCreator(object):
         ''' Generates the template files dictionary that can be used to create default module files '''
         self.template_files = obtain_template_files(self.area)
 
-    def check_remote_repo(self):
+    def generate_template_args(self):
+        ''' returns a dictionary that can be used for the .format method, used in creating files '''
+        template_args = {'module': self.module_name, 'getlogin': os.getlogin()}
+
+        self.template_args = template_args
+
+    def check_remote_repo_valid(self):
         # Creates and uses dir_list to check remote repository for name collisions with new module - part of init?
 
         dir_list = self.get_remote_dir_list()
@@ -119,28 +125,41 @@ class NewModuleCreator(object):
 
         return [dest, vendor_path, prod_path]
 
-    def check_local_repo(self):
+    def check_local_dir_valid(self):
         # Checks that 'we' are not currently in a git repository, and that there are no name conflictions for the files
         # to be created
 
+        mod_dir_exists = os.path.isdir(self.disk_dir)  #  move to function where creation takes place?
+
+        #dir_is_repo =
+
+        # Check if inside repository
+        # Check if local module directory exists (not necessarily git repo)
+        # If either is True, return False
+        # Otherwise, return True
+
+        #return not mod_dir_exists and not dir_is_repo
+
         raise NotImplementedError
 
-    def generate_template_args(self):
-        ''' returns a dictionary that can be used for the .format method, used in creating files '''
-        template_args = {'module': self.module_name, 'getlogin': os.getlogin()}
+    def check_local_repo_created(self):
+        pass
 
-        self.template_args = template_args
+    def create_directory_structure(self):
+        # cd's into module directory, and creates complete file hierarchy before exiting
+
+        # Likely abstract, as all classes behave slightly differently
+
+        # Need to print:     print("Making clean directory structure for " + disk_dir)
+        # Checks that local_repo_valid is True
+        raise NotImplementedError
 
     def create_files(self):
         # Creates the files (possibly in subdirectories) as part of the module creation process
         # Part of this involves chdir into the module directory, and exiting at the end of the process
         # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
 
-        # Likely abstract, as all classes behave slightly differently
-
-        # Need to print:     print("Making clean directory structure for " + disk_dir)
-        # Need to check local_repo_valid first
-        # Set local_repo_valid false after running
+        # Need to check nothing
         raise NotImplementedError
 
     def add_contact(self):
