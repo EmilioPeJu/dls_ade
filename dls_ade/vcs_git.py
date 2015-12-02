@@ -71,10 +71,6 @@ def clone(source, module):
 
     git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
                         os.path.join("./", module))
-    # os.chdir(module)
-    # g = git.Git()
-    # print(g.branch())
-    # os.chdir("..")
 
 
 def clone_multi(source, module):
@@ -96,12 +92,24 @@ def clone_multi(source, module):
                 print("Cloning: " + path + "...")
                 git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
                                     os.path.join("./", target_path))
-                # os.chdir(target_path)
-                # g = git.Git()
-                # print(g.branch("-a"))
-                # os.chdir("..")
             else:
                 print(target_path + " already exists in current directory")
+
+
+def list_branches():
+    g = git.Git()
+    branches = []
+    for entry in g.branch("-r").split():
+        if "->" not in entry and "HEAD" not in entry:
+            branches.append(entry[7:])
+    return branches
+
+
+def checkout_branch(branch):
+    g = git.Git()
+    if branch in list_branches():
+        print("Checking out " + branch + " branch.")
+        g.checkout("-b", branch, "origin/" + branch)
 
 
 class Git(BaseVCS):
