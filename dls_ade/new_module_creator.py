@@ -132,34 +132,66 @@ class NewModuleCreator(object):
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
+        if mod_dir_exists:
+            fail_message = "Directory ./{dd:s} already exists," \
+            fail_message += " please move elsewhere and try again".format(dd=self.disk_dir)
+            print(fail_message)
+            return False
+
         cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
                                             # NOTE: Does not detect if further folder is git repo - how to fix?
+        if cwd_is_repo:
+            fail_message = "Currently in a git repository, please move elsewhere and try again"
+            print(fail_message)
+            return False
 
-        return (not mod_dir_exists) and (not cwd_is_repo)
+        return True
 
     def check_local_repo_created(self):
         ''' Determines whether or not the module directory is now a git repo, ready for exporting ('git push') '''
 
         mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
 
-        return not mod_dir_is_repo
+        if not mod_dir_is_repo:
+            fail_message = "Directory ./{dd:s} is not currently a git repository,"
+            fail_message += "so the module cannot be exported".format(dd=self.disk_dir)
+            print(fail_message)
+            return False
 
-    def create_directory_structure(self):
-        # cd's into module directory, and creates complete file hierarchy before exiting
+        return True
 
-        # Likely abstract, as all classes behave slightly differently
+    # def create_module(self):
+    #     ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
+    #     # cd's into module directory, and creates complete file hierarchy before exiting
+    #
+    #     if not self.check_local_dir_valid():
+    #         self.check_local_dir_valid()
+    #         if self.local_dir_valid is False:
+    #             raise Exception("Module cannot be created as local directory is not valid")
+    #     else:
+    #         print("Making clean directory structure for " + self.disk_dir)
+    #         os.chdir(os.path.join(self.cwd,self.disk_dir))
+    #         self.create_files()
+    #         os.chdir(self.cwd)
 
-        # Need to print:     print("Making clean directory structure for " + disk_dir)
-        # Checks that local_repo_valid is True
-        raise NotImplementedError
+    # def create_files(self):
+    #     # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
+    #     # Default just sticks to template dictionary entries
+    #
+    #     # All classes behave slightly differently
+    #
+    #     # self.add_contact() # If contacts exist in the repository, they ought to be added here (or added to dict)
+    #     self.recursively_create_files()
 
-    def create_files(self):
-        # Creates the files (possibly in subdirectories) as part of the module creation process
-        # Part of this involves chdir into the module directory, and exiting at the end of the process
-        # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
-
-        # Need to check nothing
-        raise NotImplementedError
+    # def recursively_create_files(self):
+    #     ''' Iterates through the template dict and creates all necessary files and folders '''
+    #
+    #     for rel_path in self.template_files:  # dictionary keys are the relative file paths for the documents
+    #         abs_dir = os.path.dirname(os.path.abspath(rel_path))
+    #         if not os.isdir(abs_dir):
+    #             os.makedirs(abs_dir)
+    #
+    #         open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
 
     def add_contact(self):
         # Add the module contact to the contacts database

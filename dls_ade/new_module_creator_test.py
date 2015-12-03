@@ -264,15 +264,15 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
 
 class NewModuleCreatorCheckLocalDirValidTest(unittest.TestCase):
 
-    @patch('dls_ade.new_module_creator.os.path.isdir')
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir')
-    def test_functions_called_correctly(self, mock_is_git_dir, mock_is_dir):
-
-        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
-        mod_c.check_local_dir_valid()
-
-        mock_is_dir.assert_called_once_with(mod_c.disk_dir)
-        mock_is_git_dir.assert_called_once_with()
+    # @patch('dls_ade.new_module_creator.os.path.isdir')
+    # @patch('dls_ade.new_module_creator.vcs_git.is_git_dir')
+    # def test_functions_called_correctly(self, mock_is_git_dir, mock_is_dir):
+    #
+    #     mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+    #     mod_c.check_local_dir_valid()
+    #
+    #     mock_is_dir.assert_called_once_with(mod_c.disk_dir)
+    #     mock_is_git_dir.assert_called_once_with()
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value = False)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value = False)
