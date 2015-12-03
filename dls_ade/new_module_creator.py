@@ -142,8 +142,7 @@ class NewModuleCreator(object):
                 break
 
         self.remote_repo_valid = valid
-
-        return err_message
+        return valid, err_message
 
     def get_remote_dir_list(self):
         dest = self.dest
@@ -177,8 +176,7 @@ class NewModuleCreator(object):
                 valid = False
 
         self.create_module_valid = valid
-
-        return err_message
+        return valid, err_message
 
     def check_init_stage_and_commit_valid(self):
         ''' Determines whether the local directory is valid for creating and committing a new git repository '''
@@ -201,8 +199,7 @@ class NewModuleCreator(object):
                 valid = False
 
         self.init_stage_and_commit_valid = valid
-
-        return err_message
+        return valid, err_message
 
     def check_push_repo_to_remote_valid(self):
         ''' Determines whether one can push the local repository to the remote one '''
@@ -224,20 +221,18 @@ class NewModuleCreator(object):
                 err_message = err_message.format(dir=self.disk_dir)
                 valid = False
             elif not self.remote_repo_valid:
-                err_message = self.check_remote_repo_valid()
-                valid = self.remote_repo_valid
+                valid, err_message = self.check_remote_repo_valid()
 
         self.push_repo_to_remote_valid = valid
-
-        return err_message
+        return valid, err_message
 
     def create_module(self):
         ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
         # cd's into module directory, and creates complete file hierarchy before exiting
 
         if not self.create_module_valid:
-            err_message = self.check_create_module_valid()
-            if self.create_module_valid is False:
+            valid, err_message = self.check_create_module_valid()
+            if not valid:
                 raise Exception(err_message)
         else:
             print("Making clean directory structure for " + self.disk_dir)
