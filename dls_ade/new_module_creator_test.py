@@ -324,12 +324,12 @@ class NewModuleCreatorCheckLocalRepoExistsTest(unittest.TestCase):
     pass
 
     @patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir', return_value=True)
-    def test_given_disk_dir_is_repo_then_function_returns_false(self, mock_is_git_root_dir):
+    def test_given_disk_dir_is_repo_then_function_returns_true(self, mock_is_git_root_dir):
 
         mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
         return_value = mod_c.check_local_repo_created()
 
-        self.assertFalse(return_value)
+        self.assertTrue(return_value)
 
     @patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir', return_value=False)
     def test_given_disk_dir_is_not_repo_then_function_returns_false(self, mock_is_git_root_dir):
@@ -337,7 +337,7 @@ class NewModuleCreatorCheckLocalRepoExistsTest(unittest.TestCase):
         mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
         return_value = mod_c.check_local_repo_created()
 
-        self.assertTrue(return_value)
+        self.assertFalse(return_value)
 
 
 class NewModuleCreatorCreateFilesTest(unittest.TestCase):

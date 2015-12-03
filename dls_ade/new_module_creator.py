@@ -133,9 +133,9 @@ class NewModuleCreator(object):
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if mod_dir_exists:
-            fail_message = "Directory ./{dd:s} already exists," \
-            fail_message += " please move elsewhere and try again".format(dd=self.disk_dir)
-            print(fail_message)
+            fail_message = "Directory ./{dd:s} already exists,"
+            fail_message += " please move elsewhere and try again"
+            print(fail_message.format(dd=self.disk_dir))
             return False
 
         cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
@@ -154,8 +154,8 @@ class NewModuleCreator(object):
 
         if not mod_dir_is_repo:
             fail_message = "Directory ./{dd:s} is not currently a git repository,"
-            fail_message += "so the module cannot be exported".format(dd=self.disk_dir)
-            print(fail_message)
+            fail_message += "so the module cannot be exported"
+            print(fail_message.format(dd=self.disk_dir))
             return False
 
         return True
