@@ -91,6 +91,8 @@ class NewModuleCreator(object):
         self.create_module_valid = False  # call function at start
         self.init_stage_and_commit_valid = False
         self.push_repo_to_remote_valid = False
+        # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
+        # appropriate error messages
 
     def __initialise_and_verify_module_variables(self, module_name, area):
         ''' initialisation and verification of module_name, disk_dir and app_name '''
@@ -163,8 +165,8 @@ class NewModuleCreator(object):
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if mod_dir_exists:
-            err_message = "Directory ./{dd:s} already exists, please move elsewhere and try again"
-            err_message = err_message.format(dd=self.disk_dir)
+            err_message = "Directory ./{dir:s} already exists, please move elsewhere and try again"
+            err_message = err_message.format(dir=self.disk_dir)
             valid = False
         else:
             cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
@@ -188,14 +190,14 @@ class NewModuleCreator(object):
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory ./{dd:s} does not exist"
-            err_message = err_message.format(dd=self.disk_dir)
+            err_message = "Directory ./{dir:s} does not exist"
+            err_message = err_message.format(dir=self.disk_dir)
             valid = False
         else:
             mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
             if mod_dir_is_in_repo:
-                err_message = "Directory ./{dd:s} is inside git repository. Cannot initialise git repository"
-                err_message = err_message.format(dd=self.disk_dir)
+                err_message = "Directory ./{dir:s} is inside git repository. Cannot initialise git repository"
+                err_message = err_message.format(dir=self.disk_dir)
                 valid = False
 
         self.init_stage_and_commit_valid = valid
@@ -212,20 +214,20 @@ class NewModuleCreator(object):
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory ./{dd:s} does not exist"
-            err_message = err_message.format(dd=self.disk_dir)
+            err_message = "Directory ./{dir:s} does not exist"
+            err_message = err_message.format(dir=self.disk_dir)
             valid = False
         else:
             mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
             if not mod_dir_is_repo:
-                err_message = "Directory ./{dd:s} is not git repository. Unable to push to remote repository"
-                err_message = err_message.format(dd=self.disk_dir)
+                err_message = "Directory ./{dir:s} is not git repository. Unable to push to remote repository"
+                err_message = err_message.format(dir=self.disk_dir)
                 valid = False
             elif not self.remote_repo_valid:
                 err_message = self.check_remote_repo_valid()
                 valid = self.remote_repo_valid
 
-        self.init_stage_and_commit_valid = valid
+        self.push_repo_to_remote_valid = valid
 
         return err_message
 
@@ -233,7 +235,7 @@ class NewModuleCreator(object):
         ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
         # cd's into module directory, and creates complete file hierarchy before exiting
 
-        if not self.check_create_module_valid():
+        if not self.create_module_valid:
             err_message = self.check_create_module_valid()
             if self.create_module_valid is False:
                 raise Exception(err_message)
