@@ -13,15 +13,28 @@ GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
+def new_is_git_dir(path="./"):
+    if os.path.isdir(path):
+        try:
+            git.Repo(path)
+        except git.exc.InvalidGitRepositoryError:
+            return False
+        else:
+            return True
+    else:
+        raise Exception("Path is not valid")
+
+
 def is_git_dir(path="."):
-    return subprocess.call(['git', 'status', path, ], stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
+    return subprocess.call(
+        ['git', 'status', path], stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
 
 def is_git_root_dir(path="."):
     if is_git_dir(path):
         git_repo = git.Repo(path)
         top_level_path = os.path.normpath(git_repo.git.rev_parse("--show-toplevel"))
-        full_path = os.path.normpath(os.path.join(os.getcwd(), path))
+        full_path = os.path.abspath(path)
         if full_path == top_level_path:
             return True
         else:
@@ -47,34 +60,38 @@ def get_repository_list():
     return split_list
 
 
-def stage_all_files_and_commit():
-    git.Repo.git.add('--all')
-    print("Committing files to repo...")
-    print(git.Repo.git.commit(m=" 'Initial commit'"))
+def stage_all_files_and_commit(path="./"):
+
+    if os.path.isdir(path):
+        print("Initialising repo...")
+        repo = git.Repo.init(path)
+        repo.git.add('--all')
+        print("Committing files to repo...")
+        print(repo.git.commit(m="Initial commit"))
+    else:
+        raise Exception("Specified path does not exist")
 
 
-def temp(area, module):
-
-    # >>> adjust for technical area
+def create_new_remote_and_push(area, module, path="./"):
+    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/testing/" + area + "/" + module
+    # >>> Adjust for technical area?
     if area == "ioc":
         pass
 
-    path = "./"
-    # target = "git@github.com:GDYendell/git_test.git"
-    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/" + area + module
-
-    print("Initialising repo...")
-    repo = git.Repo.init(path)
-    print("Creating remote...")
-    repo.clone_from(target, path + "dummy")
-    os.rmdir(path + "dummy")
-    print("Adding remote to repo...")
-    origin = repo.create_remote("origin", target)
-    repo.git.add('--all')
-    print("Committing files to repo...")
-    print(repo.git.commit(m=" 'Initial commit'"))
-    print("Pushing repo to gitolite...")
-    origin.push('master')
+    if os.path.isdir(path):
+        repo = git.Repo(path)
+        if is_repo_path("testing/" + area + "/" + module):
+            raise Exception("testing/" + area + "/" + module + " already exists")
+        else:
+            print("Creating remote...")
+            repo.clone_from(target, path + ".dummy")
+            os.rmdir(path + ".dummy")
+            print("Adding remote to repo...")
+            origin = repo.create_remote("origin", target)
+            print("Pushing repo to gitolite...")
+            origin.push('master')
+    else:
+        raise Exception("Path is not valid")
 
 
 def clone(source, module):
