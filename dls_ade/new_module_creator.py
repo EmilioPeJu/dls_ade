@@ -62,10 +62,19 @@ class NewModuleCreator(object):
         # Sensible defaults for variable initialisation:
 
         self.area = area  # needed for file templates and dest
-        self.module_name = module_name
         self.cwd = cwd
-        self.disk_dir = self.module_name
-        self.app_name = self.module_name
+
+        # self.module_name = module_name
+        # self.disk_dir = self.module_name
+        # self.app_name = self.module_name
+        # The above declarations could be separated out into a new function, which may then be altered by new classes
+
+        self.module_name = ""
+        self.disk_dir = ""
+        self.app_name = ""
+        self.__initialise_and_verify_module_variables(module_name, area)
+        # The above declarations could be separated out into a new function, which may then be altered by new classes
+
         self.dest = pathf.devModule(self.module_name, self.area)
 
         self.message = ""
@@ -76,9 +85,21 @@ class NewModuleCreator(object):
         self.template_args = {}
         self.generate_template_args()
 
-        self.remote_repo_valid = False   # check_remote_repo_valid must be called in order to export module files
-        self.local_dir_valid = False     # check_local_dir_valid must be called before creating files
-        self.local_repo_created = False  # local repo must not be created before init and commit; must be before push
+        # This flag determines whether there are conflicting file names on the remote repository
+        self.remote_repo_valid = False  # call function at start
+        # These flags must be true before the corresponding function can be called
+        self.create_module_valid = False  # call function at start
+        self.init_stage_and_commit_valid = False
+        self.push_repo_to_remote_valid = False
+
+    def __initialise_and_verify_module_variables(self, module_name, area):
+        ''' initialisation and verification of module_name, disk_dir and app_name '''
+        # Default is straightforward, but this is more complex for IOC (BL) modules (Python also has verification)
+
+        self.module_name = module_name
+        self.disk_dir = self.module_name
+        self.app_name = self.module_name
+        pass
 
     def compose_message(self):
         ''' Generates the message to print out to the user on creation of the module files '''
@@ -99,7 +120,7 @@ class NewModuleCreator(object):
         self.template_files = obtain_template_files(self.area)
 
     def generate_template_args(self):
-        ''' returns a dictionary that can be used for the .format method, used in creating files '''
+        ''' returns a dictionary that can be used for the .format() method, used in creating files '''
         template_args = {'module': self.module_name, 'getlogin': os.getlogin()}
 
         self.template_args = template_args
@@ -108,90 +129,138 @@ class NewModuleCreator(object):
         # Creates and uses dir_list to check remote repository for name collisions with new module - part of init?
 
         dir_list = self.get_remote_dir_list()
+        err_message = ""
 
         valid = True
 
         for d in dir_list:
             if vcs_git.is_repo_path(d):
                 valid = False
+                err_message = "The path {dir:s} already exists in subversion, cannot continue".format(dir=d)
                 break
 
         self.remote_repo_valid = valid
+
+        return err_message
 
     def get_remote_dir_list(self):
         dest = self.dest
         vendor_path = pathf.vendorModule(self.module_name, self.area)
         prod_path = pathf.prodModule(self.module_name, self.area)
 
-        return [dest, vendor_path, prod_path]
+        dir_list = [dest, vendor_path, prod_path]
 
-    def check_local_dir_valid(self):
+        return dir_list
+
+    def check_create_module_valid(self):
         ''' Determines whether the local directory is a valid starting point for module file structure creation '''
         # Checks that 'we' are not currently in a git repository, and that there are no name conflicts for the files
         # to be created
 
+        err_message = ""
+        valid = True
+
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if mod_dir_exists:
-            fail_message = "Directory ./{dd:s} already exists,"
-            fail_message += " please move elsewhere and try again"
-            print(fail_message.format(dd=self.disk_dir))
-            return False
+            err_message = "Directory ./{dd:s} already exists, please move elsewhere and try again"
+            err_message = err_message.format(dd=self.disk_dir)
+            valid = False
+        else:
+            cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
+            # NOTE: Does not detect if further folder is git repo - how to fix?
 
-        cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
-                                            # NOTE: Does not detect if further folder is git repo - how to fix?
-        if cwd_is_repo:
-            fail_message = "Currently in a git repository, please move elsewhere and try again"
-            print(fail_message)
-            return False
+            if cwd_is_repo:
+                err_message = "Currently in a git repository, please move elsewhere and try again"
+                valid = False
 
-        return True
+        self.create_module_valid = valid
 
-    def check_local_repo_created(self):
-        ''' Determines whether or not the module directory is now a git repo, ready for exporting ('git push') '''
+        return err_message
 
-        mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
+    def check_init_stage_and_commit_valid(self):
+        ''' Determines whether the local directory is valid for creating and committing a new git repository '''
+        # Checks that the folder exists and is not currently inside a git repository
 
-        if not mod_dir_is_repo:
-            fail_message = "Directory ./{dd:s} is not currently a git repository,"
-            fail_message += "so the module cannot be exported"
-            print(fail_message.format(dd=self.disk_dir))
-            return False
+        err_message = ""
+        valid = True
 
-        return True
+        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
-    # def create_module(self):
-    #     ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
-    #     # cd's into module directory, and creates complete file hierarchy before exiting
-    #
-    #     if not self.check_local_dir_valid():
-    #         self.check_local_dir_valid()
-    #         if self.local_dir_valid is False:
-    #             raise Exception("Module cannot be created as local directory is not valid")
-    #     else:
-    #         print("Making clean directory structure for " + self.disk_dir)
-    #         os.chdir(os.path.join(self.cwd,self.disk_dir))
-    #         self.create_files()
-    #         os.chdir(self.cwd)
+        if not mod_dir_exists:
+            err_message = "Directory ./{dd:s} does not exist"
+            err_message = err_message.format(dd=self.disk_dir)
+            valid = False
+        else:
+            mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
+            if mod_dir_is_in_repo:
+                err_message = "Directory ./{dd:s} is inside git repository. Cannot initialise git repository"
+                err_message = err_message.format(dd=self.disk_dir)
+                valid = False
 
-    # def create_files(self):
-    #     # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
-    #     # Default just sticks to template dictionary entries
-    #
-    #     # All classes behave slightly differently
-    #
-    #     # self.add_contact() # If contacts exist in the repository, they ought to be added here (or added to dict)
-    #     self.recursively_create_files()
+        self.init_stage_and_commit_valid = valid
 
-    # def recursively_create_files(self):
-    #     ''' Iterates through the template dict and creates all necessary files and folders '''
-    #
-    #     for rel_path in self.template_files:  # dictionary keys are the relative file paths for the documents
-    #         abs_dir = os.path.dirname(os.path.abspath(rel_path))
-    #         if not os.isdir(abs_dir):
-    #             os.makedirs(abs_dir)
-    #
-    #         open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
+        return err_message
+
+    def check_push_repo_to_remote_valid(self):
+        ''' Determines whether one can push the local repository to the remote one '''
+        # Checks that the folder exists, is a git repository and there are no remote server module path clashes
+
+        err_message = ""
+        valid = True
+
+        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+
+        if not mod_dir_exists:
+            err_message = "Directory ./{dd:s} does not exist"
+            err_message = err_message.format(dd=self.disk_dir)
+            valid = False
+        else:
+            mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
+            if not mod_dir_is_repo:
+                err_message = "Directory ./{dd:s} is not git repository. Unable to push to remote repository"
+                err_message = err_message.format(dd=self.disk_dir)
+                valid = False
+            elif not self.remote_repo_valid:
+                err_message = self.check_remote_repo_valid()
+                valid = self.remote_repo_valid
+
+        self.init_stage_and_commit_valid = valid
+
+        return err_message
+
+    def create_module(self):
+        ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
+        # cd's into module directory, and creates complete file hierarchy before exiting
+
+        if not self.check_create_module_valid():
+            err_message = self.check_create_module_valid()
+            if self.create_module_valid is False:
+                raise Exception(err_message)
+        else:
+            print("Making clean directory structure for " + self.disk_dir)
+            os.chdir(os.path.join(self.cwd,self.disk_dir))
+            self.create_files()
+            os.chdir(self.cwd)
+
+    def create_files(self):
+        # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
+        # Default just sticks to template dictionary entries
+
+        # All classes behave slightly differently
+
+        # self.add_contact() # If contacts exist in the repository, they ought to be added here (or added to dict)
+        self.create_files_from_template_dict()
+
+    def create_files_from_template_dict(self):
+        ''' Iterates through the template dict and creates all necessary files and folders '''
+
+        for rel_path in self.template_files:  # dictionary keys are the relative file paths for the documents
+            abs_dir = os.path.dirname(os.path.abspath(rel_path))
+            if not os.path.isdir(abs_dir):
+                os.makedirs(abs_dir)
+
+            open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
 
     def add_contact(self):
         # Add the module contact to the contacts database
@@ -219,8 +288,8 @@ class NewModuleCreator(object):
 
 class NewModuleCreatorIOC(NewModuleCreator):
 
-    def __init__(self, module, area, cwd, technical_area):
-        super(NewModuleCreatorIOC, self).__init__(self, module, area, cwd)
+    def __init__(self, module_name, cwd):
+        super(NewModuleCreatorIOC, self).__init__(self, area)
         # Initialise all private variables, including:
             # template list - include variable list for .format()?
             # module name
