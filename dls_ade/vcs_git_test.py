@@ -14,9 +14,99 @@ class IsGitDirTest(unittest.TestCase):
         pass
         # Method procedural and taken from internet - not sure how to test!
 
+
+class NewIsGitDirTest(unittest.TestCase):
+
+    def test_given_invalid_file_path_then_error_raised(self):
+        path = "/not/a/path"
+
+        with self.assertRaises(Exception):
+            vcs_git.new_is_git_dir(path)
+
+    def test_given_not_git_dir_then_returns_false(self):
+        path = "/"
+
+        return_value = vcs_git.new_is_git_dir(path)
+
+        self.assertFalse(return_value)
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_git_dir_then_returns_true(self, mock_git):
+        path = "/"
+
+        git_inst = MagicMock()
+        mock_git.Repo.return_value = git_inst
+
+        return_value = vcs_git.new_is_git_dir(path)
+
+        self.assertTrue(return_value)
+
+
 class IsGitRootDirTest(unittest.TestCase):
 
-    pass
+    @patch('dls_ade.vcs_git.is_git_dir', return_value=True)
+    @patch('dls_ade.vcs_git.git')
+    def test_given_git_dir_then_git_repo_assigned_to_path(self, mock_git, _2):
+        path = "test/path"
+
+        git_inst = MagicMock()
+        mock_git.Repo = git_inst
+
+        vcs_git.is_git_root_dir(path)
+
+        git_inst.assert_called_once_with(path)
+
+    @patch('dls_ade.vcs_git.is_git_dir', return_value=False)
+    @patch('dls_ade.vcs_git.git')
+    def test_given_not_git_dir_then_git_repo_not_assigned(self, mock_git, _2):
+        path = "test/path"
+
+        git_inst = MagicMock()
+        mock_git.Repo = git_inst
+
+        vcs_git.is_git_root_dir(path)
+
+        self.assertFalse(git_inst.call_count)
+
+    @patch('dls_ade.vcs_git.os.getcwd', return_value="top/level/")
+    @patch('dls_ade.vcs_git.is_git_dir', return_value=True)
+    @patch('dls_ade.vcs_git.git')
+    def test_given_git_dir_and_at_top_level_then_return_true(self, mock_git, _2, _3):
+        path = "test/path"
+
+        git_inst = MagicMock()
+        mock_git.Repo.return_value = git_inst
+        git_inst.git.rev_parse.return_value = "top/level/test/path"
+
+        return_value = vcs_git.is_git_root_dir(path)
+
+        self.assertTrue(return_value)
+
+    @patch('dls_ade.vcs_git.os.getcwd', return_value="not/top/level/")
+    @patch('dls_ade.vcs_git.is_git_dir', return_value=True)
+    @patch('dls_ade.vcs_git.git')
+    def test_given_git_dir_and_at_top_level_then_return_false(self, mock_git, _2, _3):
+        path = "test/path"
+
+        git_inst = MagicMock()
+        mock_git.Repo.return_value = git_inst
+        git_inst.git.rev_parse.return_value = "top/level/test/path"
+
+        return_value = vcs_git.is_git_root_dir(path)
+
+        self.assertFalse(return_value)
+
+    @patch('dls_ade.vcs_git.is_git_dir', return_value=False)
+    @patch('dls_ade.vcs_git.git')
+    def test_given_not_git_dir_then_git_repo_return_false(self, mock_git, _2):
+        path = "/test/path"
+
+        git_inst = MagicMock()
+        mock_git.Repo = git_inst
+
+        return_value = vcs_git.is_git_root_dir(path)
+
+        self.assertFalse(return_value)
 
 
 class IsInRepoTest(unittest.TestCase):
@@ -32,12 +122,91 @@ class IsInRepoTest(unittest.TestCase):
         self.assertFalse(vcs_git.is_repo_path("controls/test/path"))
 
 
+class StageAllFilesAndCommitTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_valid_path_then_repo_initialised(self, mock_git):
+        path = "/"
+
+        git_inst = MagicMock()
+        mock_git.Repo.init = git_inst
+
+        vcs_git.stage_all_files_and_commit(path)
+
+        git_inst.assert_called_once_with(path)
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_valid_path_then_files_staged(self, mock_git):
+        path = "/"
+
+        git_inst = MagicMock()
+        mock_git.Repo.init.return_value = git_inst
+
+        vcs_git.stage_all_files_and_commit(path)
+
+        git_inst.git.add.assert_called_once_with('--all')
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_valid_path_then_files_committed(self, mock_git):
+        path = "/"
+
+        git_inst = MagicMock()
+        mock_git.Repo.init.return_value = git_inst
+
+        vcs_git.stage_all_files_and_commit(path)
+
+        git_inst.git.commit.assert_called_once_with(m="Initial commit")
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_invalid_path_then_raise_error(self, mock_git):
+        path = "does/not/exist"
+
+        git_inst = MagicMock()
+        mock_git.Repo.init = git_inst
+
+        with self.assertRaises(Exception):
+            vcs_git.stage_all_files_and_commit(path)
+
+        self.assertFalse(git_inst.call_count)
+
+
+class CreateNewRemoteAndPush(unittest.TestCase):
+
+    @patch('os.rmdir')
+    @patch('dls_ade.vcs_git.git')
+    def test_given_valid_target_path_then_create_module(self, mock_git, mock_rmdir):
+        area = "not_an_area"
+        module = "not_a_module"
+        path = "./"
+        target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/testing/" + area + "/" + module
+
+        git_inst = MagicMock()
+        mock_git.Repo.return_value = git_inst
+        origin_inst = MagicMock()
+        git_inst.create_remote.return_value = origin_inst
+
+        vcs_git.create_new_remote_and_push(area, module, path)
+
+        git_inst.clone_from.assert_called_once_with(target, path + ".dummy")
+        mock_rmdir.assert_called_once_with(path + ".dummy")
+        git_inst.create_remote.assert_called_once_with("origin", target)
+        origin_inst.push.assert_called_once_with('master')
+
+    @patch('dls_ade.vcs_git.git')
+    def test_given_existing_target_path_then_error_raised(self, mock_git):
+        area = "python"
+        module = "cothread"
+
+        with self.assertRaises(Exception):
+            vcs_git.create_new_remote_and_push(area, module)
+
+
 class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "/does/not/exist"
+        source = "does/not/exist"
         module = "test_module"
 
         with self.assertRaises(Exception):
@@ -46,7 +215,7 @@ class CloneTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "/does/exist"
+        source = "does/exist"
         module = "test_module"
 
         vcs_git.clone(source, module)
@@ -88,7 +257,7 @@ class CloneMultiTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "/does/not/exist"
+        source = "does/not/exist"
         module = "test_module"
 
         with self.assertRaises(Exception):
@@ -97,7 +266,7 @@ class CloneMultiTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "/does/exist"
+        source = "does/exist"
         module = "test_module"
 
         vcs_git.clone(source, module)
