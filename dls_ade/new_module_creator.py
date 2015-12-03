@@ -126,24 +126,23 @@ class NewModuleCreator(object):
         return [dest, vendor_path, prod_path]
 
     def check_local_dir_valid(self):
-        # Checks that 'we' are not currently in a git repository, and that there are no name conflictions for the files
+        ''' Determines whether the local directory is a valid starting point for module file structure creation '''
+        # Checks that 'we' are not currently in a git repository, and that there are no name conflicts for the files
         # to be created
 
-        mod_dir_exists = os.path.isdir(self.disk_dir)  #  move to function where creation takes place?
+        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
-        #dir_is_repo =
+        cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
+                                            # NOTE: Does not detect if further folder is git repo - how to fix?
 
-        # Check if inside repository
-        # Check if local module directory exists (not necessarily git repo)
-        # If either is True, return False
-        # Otherwise, return True
-
-        #return not mod_dir_exists and not dir_is_repo
-
-        raise NotImplementedError
+        return (not mod_dir_exists) and (not cwd_is_repo)
 
     def check_local_repo_created(self):
-        pass
+        ''' Determines whether or not the module directory is now a git repo, ready for exporting ('git push') '''
+
+        mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
+
+        return not mod_dir_is_repo
 
     def create_directory_structure(self):
         # cd's into module directory, and creates complete file hierarchy before exiting
