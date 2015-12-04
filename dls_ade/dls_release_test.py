@@ -1,7 +1,7 @@
 #!/bin/env dls-python
 
 import unittest
-import dls_release
+from dls_ade import dls_release
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock
@@ -93,7 +93,7 @@ class ParserTest(unittest.TestCase):
 
 class TestCreateBuildObject(unittest.TestCase):
 
-    @patch('dls_release.dlsbuild.default_build')
+    @patch('dls_ade.dls_release.dlsbuild.default_build')
     def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
 
         options = FakeOptions()
@@ -102,7 +102,7 @@ class TestCreateBuildObject(unittest.TestCase):
         self.assertTrue(mock_default.called)
         mock_default.assert_called_once_with(None)
 
-    @patch('dls_release.dlsbuild.default_build')
+    @patch('dls_ade.dls_release.dlsbuild.default_build')
     def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
         version = "R3.14.12.3"
 
@@ -112,7 +112,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_default.assert_called_once_with(version)
 
-    @patch('dls_release.dlsbuild.RedhatBuild')
+    @patch('dls_ade.dls_release.dlsbuild.RedhatBuild')
     def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_default):
         rhel_version = "25"
 
@@ -122,7 +122,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_default.assert_called_once_with(rhel_version, None)
 
-    @patch('dls_release.dlsbuild.RedhatBuild')
+    @patch('dls_ade.dls_release.dlsbuild.RedhatBuild')
     def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_build):
         rhel_version = "25"
         epics_version = "R3.14.12.3"
@@ -135,7 +135,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_build.assert_called_once_with(rhel_version,epics_version)
 
-    @patch('dls_release.dlsbuild.WindowsBuild')
+    @patch('dls_ade.dls_release.dlsbuild.WindowsBuild')
     def test_given_windows_option_without_rhel_then_WindowsBuild_called_with_windows_and_epics_version(self, mock_build):
         windows = 'xp'
 
@@ -145,7 +145,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_build.assert_called_once_with(windows, None)
 
-    @patch('dls_release.dlsbuild.Builder.set_area')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
     def test_given_any_option_then_set_area_called_with_default_area_option(
         self, mock_set):
         options = FakeOptions()
@@ -154,7 +154,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(options.area)
 
-    @patch('dls_release.dlsbuild.Builder.set_area')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
     def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set):
         area = 'python'
 
@@ -164,7 +164,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(options.area)
 
-    @patch('dls_release.dlsbuild.Builder.set_force')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
     def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set):
         options = FakeOptions()
 
@@ -172,7 +172,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(None)
 
-    @patch('dls_release.dlsbuild.Builder.set_force')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
     def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set):
         force = True
         options = FakeOptions(force=force)
@@ -186,7 +186,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_release.make_parser()
-        parse_error_patch = patch('dls_release.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -209,7 +209,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         expected_error_msg = 'Module version not specified'
 
         dls_release.check_parsed_arguments_valid(args, self.parser)
-        
+
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
@@ -275,7 +275,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.mock_error.assert_called_once_with(ANY)
 
     def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self):
-        
+
         # args = ['redirector']
         # options = FakeOptions(next_version=True)
         args = {'module_name': "redirector", 'release_#': "",
@@ -346,8 +346,8 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
 class TestCreateVCSObject(unittest.TestCase):
 
-    @patch('dls_release.vcs_svn.Svn')
-    @patch('dls_release.vcs_git.Git')
+    @patch('dls_ade.dls_release.vcs_svn.Svn')
+    @patch('dls_ade.dls_release.vcs_git.Git')
     def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
@@ -358,8 +358,8 @@ class TestCreateVCSObject(unittest.TestCase):
         mock_git.assert_called_once_with(module, options)
         self.assertFalse(mock_svn.called)
 
-    @patch('dls_release.vcs_svn.Svn')
-    @patch('dls_release.vcs_git.Git')
+    @patch('dls_ade.dls_release.vcs_svn.Svn')
+    @patch('dls_ade.dls_release.vcs_git.Git')
     def test_not_given_git_option_then_svn_vcs_object_created(self, mock_git, mock_svn):
 
         module = 'dummy'
@@ -554,7 +554,7 @@ class TestConstructInfoMessage(unittest.TestCase):
 class TestCheckEpicsVersion(unittest.TestCase):
 
     def test_given_epics_option_then_return_true(self):
-        
+
         e_module = 'some_epics_version'
         e_option = 'specified_epics_version'
         e_build = 'some_other_epics_version'
@@ -564,7 +564,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
 
         self.assertTrue(sure)
 
-    @patch('dls_release.ask_user_input', return_value='n')
+    @patch('dls_ade.dls_release.ask_user_input', return_value='n')
     def test_given_no_epics_option_and_mismatched_module_and_build_epics_then_ask_user_for_input(self, mock_ask):
 
         e_option = None
@@ -587,7 +587,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
 
         self.assertTrue(sure)
 
-    @patch('dls_release.ask_user_input', return_value='n')
+    @patch('dls_ade.dls_release.ask_user_input', return_value='n')
     def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_spcificies_64bit_then_return_true(self, mock_ask):
 
         e_option = None
@@ -730,7 +730,7 @@ class TestMain(unittest.TestCase):
         self.patch = {}
         self.mocks = {}
         for method in methods_to_patch:
-            self.patch[method] = patch('dls_release.' + method)
+            self.patch[method] = patch('dls_ade.dls_release.' + method)
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
