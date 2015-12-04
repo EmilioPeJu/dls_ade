@@ -12,4 +12,4 @@ install:
 
 script: nosetests --exclude=vcs_svn_test --exclude=dls_release_test
 
-after_success: coveralls
+after_script: coveralls
