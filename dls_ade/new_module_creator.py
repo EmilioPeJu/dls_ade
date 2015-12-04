@@ -169,19 +169,21 @@ class NewModuleCreator(object):
         valid = True
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+        cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
+                                            # NOTE: Does not detect if further folder is git repo - how to fix?
 
-        if mod_dir_exists:
-            err_message = "Directory ./{dir:s} already exists, please move elsewhere and try again"
-            err_message = err_message.format(dir=self.disk_dir)
+        if mod_dir_exists and cwd_is_repo:
+            err_message = "Directory {dir:s} already exists AND currently in a git repository."
+            err_message += " Please move elsewhere and try again"
             valid = False
-        else:
-            cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
-            # NOTE: Does not detect if further folder is git repo - how to fix?
+        elif mod_dir_exists:
+            err_message = "Directory {dir:s} already exists, please move elsewhere and try again"
+            valid = False
+        elif cwd_is_repo:
+            err_message = "Currently in a git repository, please move elsewhere and try again"
+            valid = False
 
-            if cwd_is_repo:
-                err_message = "Currently in a git repository, please move elsewhere and try again"
-                valid = False
-
+        err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
         self.create_module_valid = valid
         return valid, err_message
 
@@ -195,14 +197,14 @@ class NewModuleCreator(object):
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory ./{dir:s} does not exist"
-            err_message = err_message.format(dir=self.disk_dir)
+            err_message = "Directory {dir:s} does not exist"
+            err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
             valid = False
         else:
             mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
             if mod_dir_is_in_repo:
-                err_message = "Directory ./{dir:s} is inside git repository. Cannot initialise git repository"
-                err_message = err_message.format(dir=self.disk_dir)
+                err_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository"
+                err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
                 valid = False
 
         self.init_stage_and_commit_valid = valid
@@ -212,24 +214,51 @@ class NewModuleCreator(object):
         ''' Determines whether one can push the local repository to the remote one '''
         # Checks that the folder exists, is a git repository and there are no remote server module path clashes
 
+        # err_message = ""
+        # valid = True
+        #
+        # mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+        #
+        # if not mod_dir_exists:
+        #     err_message = "Directory {dir:s} does not exist"
+        #     err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+        #     valid = False
+        # else:
+        #     mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
+        #     if not mod_dir_is_repo:
+        #         err_message = "Directory {dir:s} is not git repository. Unable to push to remote repository"
+        #         err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+        #         valid = False
+        #     elif not self.remote_repo_valid:
+        #         valid, err_message = self.check_remote_repo_valid()
+        #
+        # self.push_repo_to_remote_valid = valid
+        # return valid, err_message
+
         err_message = ""
         valid = True
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory ./{dir:s} does not exist"
-            err_message = err_message.format(dir=self.disk_dir)
+            err_message = "Directory {dir:s} does not exist"
+
             valid = False
         else:
             mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
             if not mod_dir_is_repo:
-                err_message = "Directory ./{dir:s} is not git repository. Unable to push to remote repository"
-                err_message = err_message.format(dir=self.disk_dir)
+                err_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository"
                 valid = False
-            elif not self.remote_repo_valid:
-                valid, err_message = self.check_remote_repo_valid()
 
+        if not self.remote_repo_valid:  # Doing it this way allows us to retain the remote_repo_valid error message
+            repo_valid, repo_err_message = self.check_remote_repo_valid()
+            if (not repo_valid) and (not valid):
+                err_message += "\nAND: " + repo_err_message
+            else:
+                err_message = repo_err_message
+                valid = repo_valid
+
+        err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
         self.push_repo_to_remote_valid = valid
         return valid, err_message
 
