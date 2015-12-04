@@ -89,7 +89,7 @@ class NewModuleCreator(object):
         self.remote_repo_valid = False  # call function at start
         # These flags must be true before the corresponding function can be called
         self.create_module_valid = False  # call function at start
-        self.init_stage_and_commit_valid = False
+        self.create_local_repo_valid = False
         self.push_repo_to_remote_valid = False
         # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
         # appropriate error messages
@@ -180,7 +180,7 @@ class NewModuleCreator(object):
         self.create_module_valid = valid
         return valid, err_message
 
-    def check_init_stage_and_commit_valid(self):
+    def check_create_local_repo_valid(self):
         ''' Determines whether the local directory is valid for creating and committing a new git repository '''
         # Checks that the folder exists and is not currently inside a git repository
 
@@ -200,7 +200,7 @@ class NewModuleCreator(object):
                 err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
                 valid = False
 
-        self.init_stage_and_commit_valid = valid
+        self.create_local_repo_valid = valid
         return valid, err_message
 
     def check_push_repo_to_remote_valid(self):
@@ -284,18 +284,26 @@ class NewModuleCreator(object):
 
         print(self.message)
 
-    def stage_and_commit(self):
+    def create_local_repo(self):
         # Stages and commits the files to the local repository. Separate from export repo as export not always done!
         # Switch statement in export?
 
-        # Need ... to be false
-        raise NotImplementedError
+        if not self.create_local_repo_valid:
+            valid, err_message = self.check_create_local_repo_valid()
+            if not valid:
+                raise Exception(err_message)
+
+        vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def push_repo_to_remote(self):
         # Pushes the local repo to the remote server.
 
-        # Need ... to be true / false
-        raise NotImplementedError
+        if not self.push_repo_to_remote_valid:
+            valid, err_message = self.check_push_repo_to_remote_valid()
+            if not valid:
+                raise Exception(err_message)
+
+        vcs_git.create_new_remote_and_push(self.area, self.module_name, self.disk_dir)
 
 
 class NewModuleCreatorIOC(NewModuleCreator):
