@@ -134,7 +134,7 @@ class ListBranchesTest(unittest.TestCase):
         mock_git.Git.return_value = git_inst
         git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
 
-        branches = vcs_git.list_branches()
+        branches = vcs_git.list_remote_branches()
 
         self.assertNotIn('->', branches)
         self.assertNotIn('HEAD', branches)
@@ -148,7 +148,7 @@ class ListBranchesTest(unittest.TestCase):
         mock_git.Git.return_value = git_inst
         git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
 
-        branches = vcs_git.list_branches()
+        branches = vcs_git.list_remote_branches()
 
         self.assertIn('test_module', branches)
         git_inst.branch.assert_called_once_with("-r")
@@ -164,7 +164,7 @@ class CheckoutBranchTest(unittest.TestCase):
         git_inst = MagicMock()
         mock_git.Git.return_value = git_inst
 
-        vcs_git.checkout_branch(branch)
+        vcs_git.checkout_remote_branch(branch)
 
         git_inst.checkout.assert_called_once_with(ANY, ANY, ANY)
 
@@ -176,7 +176,7 @@ class CheckoutBranchTest(unittest.TestCase):
         git_inst = MagicMock()
         mock_git.Git.return_value = git_inst
 
-        vcs_git.checkout_branch(branch)
+        vcs_git.checkout_remote_branch(branch)
 
         self.assertFalse(git_inst.checkout.call_count)
 

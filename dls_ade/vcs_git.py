@@ -13,7 +13,13 @@ GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
 def is_repo_path(server_repo_path):
-
+    """
+    Checks if path exists on repository.
+    :param server_repo_path: Path to module to check for.
+    :type server_repo_path: str
+    :return: True or False if path does or does not exist, respectively.
+    :rtype: bool
+    """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
 
@@ -21,28 +27,29 @@ def is_repo_path(server_repo_path):
 
 
 def get_repository_list():
-
+    """
+    Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command.
+    :return: Reduced 'expand controls' output.
+    :rtype: list
+    """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
-    split_list = list_cmd_output.split()
+    split_list = []
+    for entry in list_cmd_output.split():
+        if '/' in entry:
+            split_list.append(entry)
 
     return split_list
 
 
-def stage_all_files_and_commit():
-    git.Repo.git.add('--all')
-    print("Committing files to repo...")
-    print(git.Repo.git.commit(m=" 'Initial commit'"))
-
-
 def temp(area, module):
+    # >>> This has been properly implemented on start-new-module branch
 
     # >>> adjust for technical area
     if area == "ioc":
         pass
 
     path = "./"
-    # target = "git@github.com:GDYendell/git_test.git"
     target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/" + area + module
 
     print("Initialising repo...")
@@ -60,7 +67,14 @@ def temp(area, module):
 
 
 def clone(source, module):
-
+    """
+    Checks if source is valid and that module doesn't already exist locally, then clones repo.
+    :param source: URL of remote repo to clone
+    :type source: str
+    :param module: Name of module to clone
+    :type module: str
+    :return: Null
+    """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
     elif os.path.isdir(module):
@@ -73,12 +87,18 @@ def clone(source, module):
                         os.path.join("./", module))
 
 
-def clone_multi(source, module):
-
+def clone_multi(source):
+    """
+    Checks if source is valid, then clones all
+    repositories in source.
+    :param source: URL of remote repo area to clone
+    :type source: str
+    :param module: Name of module to clone
+    :type module: str
+    :return: Null
+    """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
-    elif os.path.isdir(module):
-        raise Exception(module + " already exists in current directory")
 
     if source[-1] == '/':
         source = source[:-1]
@@ -96,7 +116,12 @@ def clone_multi(source, module):
                 print(target_path + " already exists in current directory")
 
 
-def list_branches():
+def list_remote_branches():
+    """
+    Lists remote branches of current git repo.
+    :return: List of branches.
+    :rtype: list
+    """
     g = git.Git()
     branches = []
     for entry in g.branch("-r").split():
@@ -105,9 +130,15 @@ def list_branches():
     return branches
 
 
-def checkout_branch(branch):
+def checkout_remote_branch(branch):
+    """
+    Creates a new local branch and links it to a remote of the current repo.
+    :param branch: Remote branch to create locally.
+    :type branch: str
+    :return: Null
+    """
     g = git.Git()
-    if branch in list_branches():
+    if branch in list_remote_branches():
         print("Checking out " + branch + " branch.")
         g.checkout("-b", branch, "origin/" + branch)
 
