@@ -156,7 +156,7 @@ class ListBranchesTest(unittest.TestCase):
 
 class CheckoutBranchTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.list_branches', return_value=['test_module'])
+    @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
     def test_given_valid_branch_then_checkout_called(self, mock_git, _2):
         branch = "test_module"
@@ -168,7 +168,7 @@ class CheckoutBranchTest(unittest.TestCase):
 
         git_inst.checkout.assert_called_once_with(ANY, ANY, ANY)
 
-    @patch('dls_ade.vcs_git.list_branches', return_value=['test_module'])
+    @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
     def test_given_invalid_branch_then_checkout_not_called(self, mock_git, _2):
         branch = "not_a_module"
