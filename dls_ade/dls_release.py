@@ -142,7 +142,14 @@ def create_vcs_object(module, args):
 
 
 def check_parsed_arguments_valid(args,  parser):
-    '''All checks that invoke parser errors.'''
+    """
+    Checks that incorrect arguments invoke parser errors.
+    :param args: Parser arguments
+    :type args: ArgumentParser Namespace
+    :param parser: Parser
+    :type parser: ArgumentParser
+    :return:
+    """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
     if not args['module_name']:
         parser.error("Module name not specified")
@@ -158,12 +165,25 @@ def check_parsed_arguments_valid(args,  parser):
 
 
 def format_argument_version(arg_version):
-    ''' helper method formatting version taken from command line arguments '''
+    """
+    Replaces '.' with '-' throughout arg_version to match formatting requirements for log message.
+    :param arg_version: Version tag to be formatted.
+    :type arg_version: str
+    :return: Formatted version tag
+    :rtype: str
+    """
     return arg_version.replace(".", "-")
 
 
 def next_version_number(releases, module=None):
-    ''' return appropriate version number for an incremental release '''
+    """
+    Generates appropriate version number for an incremental release.
+    :param releases: Previous release numbers.
+    :type releases: list
+    :param module: Name of module to be released.
+    :type module: str
+    :return: Incremented version number.
+    """
     if len(releases) == 0:
         version = "0-1"
     else:
@@ -175,14 +195,26 @@ def next_version_number(releases, module=None):
 
 
 def get_last_release(releases):
-    ''' from a list of strings, return the latest version number '''
+    """
+    Returns the most recent release number
+    :param releases: Previous release numbers
+    :type releases:
+    :return: Most recent release number
+    :rtype: str
+    """
     from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
     return last_release
 
 
 def increment_version_number(last_release):
-    ''' increment the most minor non-zero part of the version number '''
+    """
+    Increment the most minor non-zero part of the version number
+    :param last_release: Most recent previous release number
+    :type last_release: str
+    :return: Minimally incremented version number
+    :rtype: str
+    """
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
     for i in reversed(range(0, len(tokens))):
@@ -194,7 +226,19 @@ def increment_version_number(last_release):
 
 
 def construct_info_message(module, args, version, build_object):
-    ''' helper method gathering info to a string to display during release '''
+    """
+    Gathers info to display during release
+    :param module: Module to be released
+    :type module: str
+    :param args: Parser arguments
+    :type args: ArgumentParser Namespace
+    :param version: Release version
+    :type version: str
+    :param build_object: Either a Windows or RedHat build object
+    :type build_object: Builder
+    :return: Info message
+    :rtype: str
+    """
     info = str()
     if args.branch:
         btext = "branch %s" % args.branch
@@ -208,6 +252,18 @@ def construct_info_message(module, args, version, build_object):
 
 
 def check_epics_version_consistent(module_epics, option_epics, build_epics):
+    """
+    Checks if epics version is consistent between release and environment, allows user to force
+    build if not consistent
+    :param module_epics: Epics version of previous release
+    :type module_epics: str
+    :param option_epics: Epics version to change to
+    :type option_epics: str
+    :param build_epics: Epics version of environment
+    :type build_epics: str
+    :return: True or False for whether the build can continue or not, respectively
+    :rtype: bool
+    """
     build_epics = build_epics.replace("_64", "")
     if not option_epics and module_epics != build_epics:
         question = (
@@ -221,10 +277,24 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
 
 
 def ask_user_input(question):
+    """
+    Wrapper for raw_input function
+    :param question: Question to print for the user to respond to
+    :type question: str
+    :return: User input
+    :rtype: str
+    """
     return raw_input(question)
 
 
 def get_module_epics_version(vcs):
+    """
+    Get epics version of most recent release
+    :param vcs: Version control system object, Git or Svn
+    :type vcs: Git/Svn
+    :return: Epics version of most recent release
+    :rtype: str
+    """
     conf_release = vcs.cat("configure/RELEASE")
     module_epics = re.findall(
         r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", conf_release)
@@ -234,7 +304,18 @@ def get_module_epics_version(vcs):
 
 
 def perform_test_build(build_object, args, vcs):
-
+    """
+    Test build the module and return whether it was successful
+    :param build_object: Either a windows or RedHat builder
+    :type build_object: Builder
+    :param args: Parser arguments
+    :type args: ArgumentParser Namespace
+    :param vcs: Version control system object, Git or Svn
+    :type vcs: Git/Svn
+    :return: message to explaining  how the test build went and true or false for whether it failed
+    or not
+    :rtype: str and bool
+    """
     message = ''
     test_fail = False
 
