@@ -16,9 +16,16 @@ def get_new_module_creator(args):
 
         cols = re.split(r'[-/]+', module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
 
-        if len(cols) > 1 and cols[1] != '':
+        # if len(cols) > 1 and cols[1] != '':
+        #     if cols[1] == "BL":
+        #         return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
+        # else:
+        #     return NewModuleCreatorIOC(module_name, area, cwd)
+        if len(cols) > 1:
             if cols[1] == "BL":
                 return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
+            else:
+                raise Exception("Invalid module name for IOC")
         else:
             return NewModuleCreatorIOC(module_name, area, cwd)
 
@@ -236,7 +243,7 @@ class NewModuleCreator(object):
                 raise Exception(err_message)
         else:
             print("Making clean directory structure for " + self.disk_dir)
-            os.chdir(os.path.join(self.cwd,self.disk_dir))
+            os.chdir(os.path.join(self.cwd, self.disk_dir))
             self.create_files()
             os.chdir(self.cwd)
 
