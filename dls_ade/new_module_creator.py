@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import re
 import path_functions as pathf
@@ -206,27 +207,6 @@ class NewModuleCreator(object):
         ''' Determines whether one can push the local repository to the remote one '''
         # Checks that the folder exists, is a git repository and there are no remote server module path clashes
 
-        # err_message = ""
-        # valid = True
-        #
-        # mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
-        #
-        # if not mod_dir_exists:
-        #     err_message = "Directory {dir:s} does not exist"
-        #     err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
-        #     valid = False
-        # else:
-        #     mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
-        #     if not mod_dir_is_repo:
-        #         err_message = "Directory {dir:s} is not git repository. Unable to push to remote repository"
-        #         err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
-        #         valid = False
-        #     elif not self.remote_repo_valid:
-        #         valid, err_message = self.check_remote_repo_valid()
-        #
-        # self.push_repo_to_remote_valid = valid
-        # return valid, err_message
-
         err_message = ""
         valid = True
 
@@ -262,13 +242,13 @@ class NewModuleCreator(object):
             valid, err_message = self.check_create_module_valid()
             if not valid:
                 raise Exception(err_message)
-        else:
-            print("Making clean directory structure for " + self.disk_dir)
-            os.chdir(os.path.join(self.cwd, self.disk_dir))
-            self.create_files()
-            os.chdir(self.cwd)
 
-    def create_files(self):
+        print("Making clean directory structure for " + self.disk_dir)
+        os.chdir(os.path.join(self.cwd, self.disk_dir))
+        self._create_files()
+        os.chdir(self.cwd)
+
+    def _create_files(self):
         # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
         # Default just sticks to template dictionary entries
 
@@ -279,13 +259,20 @@ class NewModuleCreator(object):
 
     def create_files_from_template_dict(self):
         ''' Iterates through the template dict and creates all necessary files and folders '''
+        # As dictionaries cannot have more than one key, and the directory does not previously exist, should I
+        # error check?
 
         for rel_path in self.template_files:  # dictionary keys are the relative file paths for the documents
-            abs_dir = os.path.dirname(os.path.abspath(rel_path))
-            if not os.path.isdir(abs_dir):
-                os.makedirs(abs_dir)
+            dir_path = os.path.dirname(rel_path)
 
-            open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
+            if os.path.normpath(dir_path) == os.path.normpath(rel_path):
+                # If folder given instead of file (ie. rel_path ends with a slash or folder already exists)
+                raise Exception("{dir:s} in template dictionary is not a valid file name".format(dir=dir_path))
+            else:
+                if not os.path.isdir(dir_path):
+                    os.makedirs(dir_path)
+
+                open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
 
     def add_contact(self):
         # Add the module contact to the contacts database
