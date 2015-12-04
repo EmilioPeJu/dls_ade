@@ -9,12 +9,14 @@ from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from argument_parser import ArgParser
 
-usage = """Default <area> is 'support'.
+usage = """
+Default <area> is 'support'.
 Release <module_name> at version <release_#> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
 the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
-prod."""
+prod.
+"""
 
 
 # set default variables
@@ -22,7 +24,13 @@ log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
-    ''' helper method containing arguments and help text '''
+    """
+    Takes default parser and adds module_name, release_#, --branch, --force, --no-test-build,
+    --local-build-only, --epics_version, --message, --next_version, --git
+    and either --rhel_version or --windows arguments.
+    :return: Parser
+    :rtype: ArgumentParser
+    """
 
     parser = ArgParser(usage)
 
@@ -99,8 +107,13 @@ def make_parser():
 
 
 def create_build_object(args):
-    ''' Uses parsed arguments to select appropriate build architecture,
-    default is local system os '''
+    """
+    Uses parsed arguments to select appropriate build architecture, default is local system os
+    :param args: Parser arguments
+    :type args: ArgumentParser Namespace
+    :return: Either a Windows or RedHat build object
+    :rtype: Builder
+    """
     if args.rhel_version:
         build_object = dlsbuild.RedhatBuild(
             args.rhel_version,
