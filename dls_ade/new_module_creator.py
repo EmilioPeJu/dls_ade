@@ -15,17 +15,8 @@ def get_new_module_creator(args):
     if area == "ioc":
 
         cols = re.split(r'[-/]+', module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
-
-        # if len(cols) > 1 and cols[1] != '':
-        #     if cols[1] == "BL":
-        #         return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
-        # else:
-        #     return NewModuleCreatorIOC(module_name, area, cwd)
-        if len(cols) > 1:
-            if cols[1] == "BL":
-                return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
-            else:
-                raise Exception("Invalid module name for IOC")
+        if len(cols) > 1 and cols[1] == "BL":
+            return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
         else:
             return NewModuleCreatorIOC(module_name, area, cwd)
 
@@ -37,6 +28,7 @@ def get_new_module_creator(args):
 
     elif area == "tools":
         return NewModuleCreatorTools(module_name, area, cwd)
+
     else:
         raise Exception("Don't know how to make a module of type: " + area)
 
