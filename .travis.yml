@@ -2,12 +2,14 @@ sudo: false
 language: python
 python:
   - 2.7
+env:
+  - SVN_ROOT=https://dummy GIT_SSH_ROOT=ssh://git@dummy
 
 install:
   - pip install coveralls coverage
   - pip install -r requirements.txt
   - python setup.py bdist_egg
 
-script: nosetests
+script: nosetests --exclude=vcs_svn_test --exclude=dls_release_test
 
-after_success: coveralls
+after_script: coveralls

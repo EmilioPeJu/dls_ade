@@ -4,7 +4,7 @@ import unittest
 
 from pkg_resources import require
 
-import dls_checkout_module
+from dls_ade import dls_checkout_module
 
 require("mock")
 from mock import patch
@@ -151,7 +151,7 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_msg)
 
 
-class TestMain(unittest.TestCase):
+if __name__ == '__main__':
 
     # buffer option suppresses stdout generated from tested code
     unittest.main(buffer=True)
