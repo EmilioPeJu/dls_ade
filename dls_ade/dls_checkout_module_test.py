@@ -40,7 +40,7 @@ class CheckParsedArgumentsValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -64,7 +64,7 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
@@ -102,11 +102,11 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
-    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=True)
     def test_given_valid_source_then_no_error_raised(self, mock_in_repo):
         source = "controls/python/dls_release"
 
@@ -114,7 +114,7 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=False)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=False)
     def test_given_invalid_source_then_error_raised(self, mock_in_repo):
         source = "controls/python/doesnotexist"
         expected_error_msg = \
@@ -129,11 +129,11 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
-    @patch('dls_checkout_module.os.path.isdir', return_value=False)
+    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=False)
     def test_given_valid_module_then_no_error_raised(self, mock_isdir):
         module = "doesnotexistyet"
 
@@ -141,7 +141,7 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    @patch('dls_checkout_module.os.path.isdir', return_value=True)
+    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=True)
     def test_given_existing_module_then_error_raised(self, mock_isdir):
         module = "dls_checkout_module_test.py"
         expected_error_msg = "Path already exists: " + module
@@ -152,6 +152,5 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-
     # buffer option suppresses stdout generated from tested code
     unittest.main(buffer=True)

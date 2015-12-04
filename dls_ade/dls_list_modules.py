@@ -9,27 +9,48 @@ import vcs_git
 
 usage = """
 Default <area> is 'support'.
-List all modules in a particular area <area>.
+List all modules in a particular <area>.
 If <dom_name> and <area> = 'ioc', list the subdirectories of <dom_name>. 
-e.g. %prog -i BL18I prints MO,VA,DI,etc. """
+e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
+"""
 
 
 def check_source_file_path_valid(source, parser):
-
+    """
+    Checks if given source path exists on the repository and raises a parser error if it does not.
+    :param source: File path to test
+    :type source: str
+    :param parser: Parser
+    :type parser: ArgumentParser
+    :return: Null
+    """
     if not vcs_git.is_repo_path(source):
         parser.error("Repository does not contain " + source)
 
 
-def print_module_list(source):
-
+def print_module_list(source, area):
+    """
+    Prints the modules in the area of the repository specified by source
+    :param source: Path to area of repository
+    :type source: str
+    :param area: Area of the repository to list
+    :type area: str
+    :return: Null
+    """
     split_list = vcs_git.get_repository_list()
-    for path in split_list:
-        if source in path:
-            print(path)
+    prefix = len("controls/" + area) + 1
+    print("Modules in " + area + ":\n")
+    for module in split_list:
+        if source in module:
+            print(module[prefix:])
 
 
 def make_parser():
-
+    """
+    Takes default parser arguments and adds domain.
+    :return: Parser with relevant arguments
+    :rtype: ArgumentParser
+    """
     parser = ArgParser(usage)
     parser.add_argument("-d", "--domain", action="store",
                         type=str, dest="domain_name",
@@ -49,7 +70,7 @@ def main():
 
     check_source_file_path_valid(source, parser)
 
-    print_module_list(source)
+    print_module_list(source, args.area)
 
 
 if __name__ == "__main__":

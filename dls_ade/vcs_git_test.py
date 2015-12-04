@@ -5,6 +5,7 @@ import os
 import unittest
 from pkg_resources import require
 require("mock")
+import mock
 from mock import patch, ANY, MagicMock  # @UnresolvedImport
 
 
@@ -121,6 +122,63 @@ class CloneMultiTest(unittest.TestCase):
         vcs_git.clone(source, module)
 
         mock_clone.assert_called_once_with(ANY)
+
+
+class ListBranchesTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.os.chdir')
+    @patch('dls_ade.vcs_git.git')
+    def test_given_module_with_invalid_entries_then_removed(self, mock_git, _2):
+
+        git_inst = MagicMock()
+        mock_git.Git.return_value = git_inst
+        git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
+
+        branches = vcs_git.list_remote_branches()
+
+        self.assertNotIn('->', branches)
+        self.assertNotIn('HEAD', branches)
+        git_inst.branch.assert_called_once_with("-r")
+
+    @patch('dls_ade.vcs_git.os.chdir')
+    @patch('dls_ade.vcs_git.git')
+    def test_given_module_with_valid_entries_then_not_removed(self, mock_git, _2):
+
+        git_inst = MagicMock()
+        mock_git.Git.return_value = git_inst
+        git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
+
+        branches = vcs_git.list_remote_branches()
+
+        self.assertIn('test_module', branches)
+        git_inst.branch.assert_called_once_with("-r")
+
+
+class CheckoutBranchTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.list_branches', return_value=['test_module'])
+    @patch('dls_ade.vcs_git.git')
+    def test_given_valid_branch_then_checkout_called(self, mock_git, _2):
+        branch = "test_module"
+
+        git_inst = MagicMock()
+        mock_git.Git.return_value = git_inst
+
+        vcs_git.checkout_remote_branch(branch)
+
+        git_inst.checkout.assert_called_once_with(ANY, ANY, ANY)
+
+    @patch('dls_ade.vcs_git.list_branches', return_value=['test_module'])
+    @patch('dls_ade.vcs_git.git')
+    def test_given_invalid_branch_then_checkout_not_called(self, mock_git, _2):
+        branch = "not_a_module"
+
+        git_inst = MagicMock()
+        mock_git.Git.return_value = git_inst
+
+        vcs_git.checkout_remote_branch(branch)
+
+        self.assertFalse(git_inst.checkout.call_count)
 
 
 class GitClassInitTest(unittest.TestCase):
