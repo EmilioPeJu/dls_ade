@@ -82,14 +82,14 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_area_ioc_module_split_more_than_one_then_no_error_raised(self):
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
         args = {'module_name': "modules/test_module", 'area': "ioc"}
 
         dls_checkout_module.check_technical_area(args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_area_ioc_module_split_less_than_one_then_no_error_raised(self):
+    def test_given_area_ioc_module_split_less_than_two_then_error_raised(self):
         args = {'module_name': "test_module", 'area': "ioc"}
         expected_error_msg = "Missing Technical Area under Beamline"
 
