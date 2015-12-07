@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import re
 import path_functions as pathf
+import shutil
 from new_module_templates import py_files, tools_files, default_files
 import vcs_git
 
@@ -104,9 +105,9 @@ class NewModuleCreator(object):
     def compose_message(self):
         ''' Generates the message to print out to the user on creation of the module files '''
 
-        message_dict = {'RELEASE':os.path.join(self.disk_dir, '/configure/RELEASE'),
-                        'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
-                        'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
+        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
+                    'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
+                    'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
 
         message = "\nPlease now edit {RELEASE:s} to put in correct paths for dependencies."
         message += "\nYou can also add dependencies to {srcMakefile:s}"
@@ -318,51 +319,117 @@ class NewModuleCreatorIOC(NewModuleCreator):
         #         ioc_number = '01'
         #     self.app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
         #
-        #     if
+        #     if args.fullname:
+        #         self.module_name = domain + "/" + self.app_name
+        #     else:
+        #         self.module_name = domain + "/" + technical_area
+        # else:
+        #     cols = args.module_name.split("-")
+        #     if len(cols) > 1:
+        #         domain = cols[0]
+        #         self.app_name = args.module_name
+        #         self.module_name = domain + "/" + self.app_name
+        #     else:  # If module_name not in correct format
+        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
+        raise NotImplementedError
 
-        raise NotImplementedError
-    
-    # def get_remote_dir_list(self):
-    #     raise NotImplementedError
-    #
     def _create_files(self):
+
+        # os.system('makeBaseApp.pl -t dls ' + self.app_name)
+        # os.system('makeBaseApp.pl -i -t dls ' + self.app_name)
+        # shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
+        # print(self.message)
+        # self.create_files_from_template_dict()
         raise NotImplementedError
-    
-    def compose_message(self):
-        raise NotImplementedError
-    
+
 
 class NewModuleCreatorIOCBL(NewModuleCreator):
     
     def __initialise_and_verify_module_variables(self, args):
+
+        # cols = args.module_name.split('/')
+        #
+        # if len(cols) > 1 and cols[1] != '':
+        #     domain = cols[0]
+        #     technical_area = cols[1]
+        #     module = domain + "/" + technical_area
+        #     app_name = domain
+        # else:
+        #     cols = args.module_name.split("-")
+        #     if len(cols) < 2:
+        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
+        #
+        #     domain = cols[0]
+        #     self.app_name = args.module_name
+        #     self.module_name = domain + "/" + self.app_name
         raise NotImplementedError
-        
-    # def get_remote_dir_list(self):
-    #     raise NotImplementedError
-    #
+
     def _create_files(self):
+
+        # os.system('makeBaseApp.pl -t dlsBL ' + app_name)
+        # self.create_files_from_template_dict()
         raise NotImplementedError
 
     def compose_message(self):
+
+        # message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
+        #     'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
+        #     'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
+        # message = "\nPlease now edit {RELEASE:s} and path to scripts."
+        # message += "\nAlso edit {srcMakefile:s} to add all database files from these technical areas."
+        # message += "\nAn example set of screens has been placed in {DbMakefile:s} . Please modify these.\n"
+        #
+        # message = message.format(**message_dict)
+        #
+        # self.message = message
         raise NotImplementedError
 
 
 class NewModuleCreatorPython(NewModuleCreator):
     
     def __initialise_and_verify_module_variables(self, args):
+
+        # module_name = args.module_name
+        #
+        # if not module_name.startswith("dls_") and "-" not in module_name and "." not in module_name:
+        #     raise Exception("Python module names must start with 'dls_' and be valid python identifiers")
+        # self.module_name = args.module_name
+        # self.app_name = self.module_name
         raise NotImplementedError
 
     def compose_message(self):
+
+        # message_dict = {'module_path': os.path.join(self.disk_dir, self.module_name),
+        #                 'setup_path': os.path.join(self.disk_dir, "setup.py")}
+        #
+        # message = "\nPlease add your python files to the {module_path:s} directory"
+        # message += " and edit {setup_path} appropriately."
+        #
+        # message = message.format(message_dict)
+        #
+        # self.message = message
         raise NotImplementedError
 
 
 class NewModuleCreatorSupport(NewModuleCreator):
     
     def _create_files(self):
+
+        # os.system('makeBaseApp.pl -t dls ' + self.module_name)
+        # os.system('dls-make-etc-dir.py && make clean uninstall')
+        # self.create_files_from_template_dict()
         raise NotImplementedError
 
 
 class NewModuleCreatorTools(NewModuleCreator):
     
     def compose_message(self):
+
+        # message_dict = {"module": self.module_name}
+        #
+        # message = "\nPlease add your patch files to the {module:s} directory"
+        # message += " and edit {module:s}/build script appropriately"
+        #
+        # message = message.format(message_dict)
+        # self.message = message
         raise NotImplementedError
