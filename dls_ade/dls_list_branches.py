@@ -15,6 +15,12 @@ List the branches of a module in the <area> area of the repository.
 
 
 def make_parser():
+    """
+    Takes default parser arguments and adds domain.
+
+    :return: Parser with relevant arguments
+    :rtype: ArgumentParser
+    """
     parser = ArgParser(usage)
     parser.add_argument("module_name", type=str, default="",
                         help="name of module to checkout")
@@ -22,6 +28,16 @@ def make_parser():
 
 
 def check_technical_area(args, parser):
+    """
+    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
+     name or that the technical area is also provided. Raises parser error if not.
+     
+    :param args: Parser arguments
+    :type args: dict
+    :param parser: Parser
+    :type parser: ArgumentParser
+    :return: Null
+    """
     if args['area'] == "ioc" and len(args['module_name'].split('/')) < 2:
         parser.error("Missing Technical Area under Beamline")
 
