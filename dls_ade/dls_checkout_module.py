@@ -4,7 +4,7 @@
 import os
 import sys
 from dls_ade import vcs_git
-from argument_parser import ArgParser
+from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as path
 
 usage = """
@@ -126,7 +126,7 @@ def main():
         if args.branch in branches:
             vcs_git.checkout_remote_branch(args.branch)
         else:
-            # Print branches and ask user to re-enter the branch they want
+            # Invalid branch name, print branches and ask user to re-enter the branch they want
             print("Branch '" + args.branch + "' does not exist in " + source +
                   "\nBranch List:\n")
             for entry in branches:
