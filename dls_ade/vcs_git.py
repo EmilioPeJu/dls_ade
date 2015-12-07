@@ -15,6 +15,7 @@ GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 def is_repo_path(server_repo_path):
     """
     Checks if path exists on repository.
+
     :param server_repo_path: Path to module to check for.
     :type server_repo_path: str
     :return: True or False if path does or does not exist, respectively.
@@ -29,6 +30,7 @@ def is_repo_path(server_repo_path):
 def get_repository_list():
     """
     Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command.
+
     :return: Reduced 'expand controls' output.
     :rtype: list
     """
@@ -69,6 +71,7 @@ def temp(area, module):
 def clone(source, module):
     """
     Checks if source is valid and that module doesn't already exist locally, then clones repo.
+
     :param source: URL of remote repo to clone
     :type source: str
     :param module: Name of module to clone
@@ -89,12 +92,10 @@ def clone(source, module):
 
 def clone_multi(source):
     """
-    Checks if source is valid, then clones all
-    repositories in source.
+    Checks if source is valid, then clones all repositories in source.
+
     :param source: URL of remote repo area to clone
     :type source: str
-    :param module: Name of module to clone
-    :type module: str
     :return: Null
     """
     if not is_repo_path(source):
@@ -119,6 +120,7 @@ def clone_multi(source):
 def list_remote_branches():
     """
     Lists remote branches of current git repo.
+
     :return: List of branches.
     :rtype: list
     """
@@ -180,10 +182,13 @@ class Git(BaseVCS):
         return self._version
 
     def cat(self, filename):
-        '''
-        Fetch contents of file in repository, if version not set then uses
-        master.
-        '''
+        """
+        Fetch contents of file in repository, if version not set then uses master.
+
+        :param filename: File to fetch from
+        :return: Contents of file
+        :rtype: str
+        """
         tag = 'master'
         if self._version:
             if self.check_version_exists(self._version):
@@ -191,7 +196,12 @@ class Git(BaseVCS):
         return self.client.git.cat_file('-p', tag + ':' + filename)
 
     def list_releases(self):
-        '''Return list of release tags of module.'''
+        """
+        Return list of release tags of module.
+
+        :return: Release tags of module
+        :rtype: list
+        """
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
@@ -199,16 +209,35 @@ class Git(BaseVCS):
         return self.releases
 
     def set_log_message(self, message):
-        '''Git support will not do a commit, so log message not needed.'''
+        """
+        Git support will not do a commit, so log message not needed.
+
+        :param message:
+        :return:
+        """
         return None
 
     def check_version_exists(self, version):
+        """
+        Check if version corresponds to a previous release.
+
+        :param version: Release tag to check for
+        :return: True or False for whether the version exists or not
+        :rtype: bool
+        """
         return version in self.list_releases()
 
     def set_branch(self, branch):
         raise NotImplementedError('branch handling for git not implemented')
 
     def set_version(self, version):
+        """
+        Set version release tag.
+
+        :param version: Version release tag
+        :type version: str
+        :return: Null
+        """
         if not self.check_version_exists(version):
             raise Exception('version does not exist')
         self._version = version
