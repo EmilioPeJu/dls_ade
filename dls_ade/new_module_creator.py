@@ -75,6 +75,7 @@ class NewModuleCreator(object):
         self.__initialise_and_verify_module_variables(module_name, area)
         # The above declarations could be separated out into a new function, which may then be altered by new classes
 
+        self.disk_dir = self.module_name
         self.dest = pathf.devModule(self.module_name, self.area)
 
         self.message = ""
@@ -99,7 +100,6 @@ class NewModuleCreator(object):
         # Default is straightforward, but this is more complex for IOC (BL) modules (Python also has verification)
 
         self.module_name = module_name
-        self.disk_dir = self.module_name
         self.app_name = self.module_name
         pass
 
@@ -308,32 +308,50 @@ class NewModuleCreator(object):
 
 class NewModuleCreatorIOC(NewModuleCreator):
 
-    def __init__(self, module_name, cwd):
-        super(NewModuleCreatorIOC, self).__init__(self, area)
-        # Initialise all private variables, including:
-            # template list - include variable list for .format()?
-            # module name
-            # area
-            # disk directory - directory where module to be imported is located
-            # app name
-            # dest - location of file on server
-
+    def __initialise_and_verify_module_variables(self, module_name, area):
         raise NotImplementedError
 
-    pass
+    def get_remote_dir_list(self):
+        raise NotImplementedError
+
+    def _create_files(self):
+        raise NotImplementedError
+
+    def compose_message(self):
+        raise NotImplementedError
 
 
 class NewModuleCreatorIOCBL(NewModuleCreator):
-    pass
+
+    def __initialise_and_verify_module_variables(self, module_name, area):
+        raise NotImplementedError
+
+    def get_remote_dir_list(self):
+        raise NotImplementedError
+
+    def _create_files(self):
+        raise NotImplementedError
+
+    def compose_message(self):
+        raise NotImplementedError
 
 
 class NewModuleCreatorPython(NewModuleCreator):
-    pass
+
+    def __initialise_and_verify_module_variables(self, module_name, area):
+        raise NotImplementedError
+
+    def compose_message(self):
+        raise NotImplementedError
 
 
 class NewModuleCreatorSupport(NewModuleCreator):
-    pass
+
+    def _create_files(self):
+        raise NotImplementedError
 
 
 class NewModuleCreatorTools(NewModuleCreator):
-    pass
+
+    def compose_message(self):
+        raise NotImplementedError

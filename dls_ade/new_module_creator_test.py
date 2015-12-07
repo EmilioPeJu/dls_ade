@@ -278,15 +278,14 @@ class NewModuleCreatorCheckRemoteRepoValidTest(unittest.TestCase):
 
 class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
 
-    @patch('dls_ade.new_module_creator.pathf.vendorModule')
-    @patch('dls_ade.new_module_creator.pathf.prodModule')
-    def test_given_reasonable_args_then_correct_dir_list_returned(self, mock_prod, mock_vend):
+    @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value = 'vendor_module')
+    @patch('dls_ade.new_module_creator.pathf.prodModule', return_value = 'prod_module')
+    def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
         mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
-        mod_c.get_remote_dir_list()
+        dir_list = mod_c.get_remote_dir_list()
 
-        mock_prod.assert_called_once_with(mod_c.module_name, mod_c.area)
-        mock_vend.assert_called_once_with(mod_c.module_name, mod_c.area)
+        self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
 
 
 class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
