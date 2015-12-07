@@ -4,9 +4,9 @@
 import os
 import sys
 import shutil
-from argument_parser import ArgParser
-import path_functions as path
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as path
+from dls_ade import vcs_git
 
 usage = """
 Default <area> is 'support'.
@@ -75,6 +75,7 @@ def main():
 
     if cloned:
         shutil.rmtree(module)
+
 
 if __name__ == "__main__":
     sys.exit(main())
