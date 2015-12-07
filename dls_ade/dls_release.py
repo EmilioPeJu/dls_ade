@@ -7,7 +7,7 @@ import re
 from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
-from argument_parser import ArgParser
+from dls_ade.argument_parser import ArgParser
 
 usage = """
 Default <area> is 'support'.
