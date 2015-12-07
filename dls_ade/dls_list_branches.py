@@ -31,7 +31,7 @@ def check_technical_area(args, parser):
     """
     Checks if given area is IOC and if so, checks that either 'everything' is given as the module
      name or that the technical area is also provided. Raises parser error if not.
-     
+
     :param args: Parser arguments
     :type args: dict
     :param parser: Parser
