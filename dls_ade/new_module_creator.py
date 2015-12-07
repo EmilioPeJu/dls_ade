@@ -9,26 +9,24 @@ import vcs_git
 def get_new_module_creator(args):
     ''' Use arguments to determine which new module creator to use, and return it '''
 
-    module_name = args.module_name
     area = args.area
     cwd = os.getcwd()
 
     if area == "ioc":
-
-        cols = re.split(r'[-/]+', module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
+        cols = re.split(r'[-/]+', args.module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
         if len(cols) > 1 and cols[1] == "BL":
-            return NewModuleCreatorIOCBL(module_name, area, cwd)  # BL GUI module
+            return NewModuleCreatorIOCBL(args, cwd)  # BL GUI module
         else:
-            return NewModuleCreatorIOC(module_name, area, cwd)
+            return NewModuleCreatorIOC(args, cwd)
 
     elif area == "python":
-        return NewModuleCreatorPython(module_name, area, cwd)
+        return NewModuleCreatorPython(args, cwd)
 
     elif area == "support":
-        return NewModuleCreatorSupport(module_name, area, cwd)
+        return NewModuleCreatorSupport(args, cwd)
 
     elif area == "tools":
-        return NewModuleCreatorTools(module_name, area, cwd)
+        return NewModuleCreatorTools(args, cwd)
 
     else:
         raise Exception("Don't know how to make a module of type: " + area)
@@ -48,7 +46,7 @@ def obtain_template_files(area):
 
 class NewModuleCreator(object):
 
-    def __init__(self, module_name, area, cwd):
+    def __init__(self, args, cwd):
         # Initialise all private variables, including:
 
         # template list - include variable list for .format()?
@@ -61,7 +59,7 @@ class NewModuleCreator(object):
 
         # Sensible defaults for variable initialisation:
 
-        self.area = area  # needed for file templates and dest
+        self.area = args.area  # needed for file templates and dest
         self.cwd = cwd
 
         # self.module_name = module_name
@@ -72,7 +70,7 @@ class NewModuleCreator(object):
         self.module_name = ""
         self.disk_dir = ""
         self.app_name = ""
-        self.__initialise_and_verify_module_variables(module_name, area)
+        self.__initialise_and_verify_module_variables(args)
         # The above declarations could be separated out into a new function, which may then be altered by new classes
 
         self.disk_dir = self.module_name
@@ -95,11 +93,11 @@ class NewModuleCreator(object):
         # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
         # appropriate error messages
 
-    def __initialise_and_verify_module_variables(self, module_name, area):
+    def __initialise_and_verify_module_variables(self, args):
         ''' initialisation and verification of module_name, disk_dir and app_name '''
         # Default is straightforward, but this is more complex for IOC (BL) modules (Python also has verification)
 
-        self.module_name = module_name
+        self.module_name = args.module_name
         self.app_name = self.module_name
         pass
 
@@ -308,12 +306,25 @@ class NewModuleCreator(object):
 
 class NewModuleCreatorIOC(NewModuleCreator):
 
-    def __initialise_and_verify_module_variables(self, module_name, area):
+    def __initialise_and_verify_module_variables(self, args):
+
+        # cols = args.module_name.split("/")
+        # if len(cols) > 1 and cols[1] != '':
+        #     domain = cols[0]
+        #     technical_area = cols[1]
+        #     if len(cols) == 3 and cols[2] != '':
+        #         ioc_number = cols[2]
+        #     else:
+        #         ioc_number = '01'
+        #     self.app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
+        #
+        #     if
+
         raise NotImplementedError
     
-    def get_remote_dir_list(self):
-        raise NotImplementedError
-    
+    # def get_remote_dir_list(self):
+    #     raise NotImplementedError
+    #
     def _create_files(self):
         raise NotImplementedError
     
@@ -323,12 +334,12 @@ class NewModuleCreatorIOC(NewModuleCreator):
 
 class NewModuleCreatorIOCBL(NewModuleCreator):
     
-    def __initialise_and_verify_module_variables(self, module_name, area):
+    def __initialise_and_verify_module_variables(self, args):
         raise NotImplementedError
         
-    def get_remote_dir_list(self):
-        raise NotImplementedError
-    
+    # def get_remote_dir_list(self):
+    #     raise NotImplementedError
+    #
     def _create_files(self):
         raise NotImplementedError
 
@@ -338,7 +349,7 @@ class NewModuleCreatorIOCBL(NewModuleCreator):
 
 class NewModuleCreatorPython(NewModuleCreator):
     
-    def __initialise_and_verify_module_variables(self, module_name, area):
+    def __initialise_and_verify_module_variables(self, args):
         raise NotImplementedError
 
     def compose_message(self):

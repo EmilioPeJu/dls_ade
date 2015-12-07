@@ -59,17 +59,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator(args)
 
-        ioc_c_mock.assert_called_once_with(args.module_name, "ioc", os.getcwd())
-
-    def test_given_area_is_ioc_and_no_BL_statement_and_no_import_then_new_module_creator_ioc_no_import_returned(self):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
-
-        args = self.parser.parse_args("test_module -i --no-import".split())
-
-        new_ioc_creator = new_c.get_new_module_creator(args)
-
-        ioc_c_mock.assert_called_once_with(args.module_name, "ioc", os.getcwd())
+        ioc_c_mock.assert_called_once_with(args, os.getcwd())
 
     def test_given_area_is_python_then_new_module_creator_python_returned(self):
 
@@ -79,17 +69,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_py_creator = new_c.get_new_module_creator(args)
 
-        py_c_mock.assert_called_once_with(args.module_name, "python", os.getcwd())
-
-    def test_given_area_is_python_and_no_import_then_new_module_creator_python_no_import_returned(self):
-
-        py_c_mock = self.mocks['CreatorPython']
-
-        args = self.parser.parse_args("test_module -p --no-import".split())
-
-        new_py_creator = new_c.get_new_module_creator(args)
-
-        py_c_mock.assert_called_once_with(args.module_name, "python", os.getcwd())
+        py_c_mock.assert_called_once_with(args, os.getcwd())
 
     def test_given_area_is_support_then_new_module_creator_support_returned(self):
 
@@ -99,17 +79,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_sup_creator = new_c.get_new_module_creator(args)
 
-        sup_c_mock.assert_called_once_with(args.module_name, "support", os.getcwd())
-
-    def test_given_area_is_support_no_import_then_new_module_creator_support_no_import_returned(self):
-
-        sup_c_mock = self.mocks['CreatorSupport']
-
-        args = self.parser.parse_args("test_module --no-import".split())  # Area automatically support
-
-        new_sup_creator = new_c.get_new_module_creator(args)
-
-        sup_c_mock.assert_called_once_with(args.module_name, "support", os.getcwd())
+        sup_c_mock.assert_called_once_with(args, os.getcwd())
 
     def test_given_area_is_tools_then_new_module_creator_tools_returned(self):
 
@@ -119,17 +89,8 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator(args)
 
-        tools_c_mock.assert_called_once_with(args.module_name, "tools", os.getcwd())
+        tools_c_mock.assert_called_once_with(args, os.getcwd())
 
-    def test_given_area_is_tools_no_import_then_new_module_creator_tools_no_import_returned(self):
-
-        tools_c_mock = self.mocks['CreatorTools']
-
-        args = self.parser.parse_args("test_module --area tools --no-import".split())  # Area automatically support
-
-        new_tools_creator = new_c.get_new_module_creator(args)
-
-        tools_c_mock.assert_called_once_with(args.module_name, "tools", os.getcwd())
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_returned(self):
 
@@ -139,7 +100,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator(args)
 
-        iocbl_c_mock.assert_called_once_with(args.module_name, "ioc", os.getcwd())
+        iocbl_c_mock.assert_called_once_with(args, os.getcwd())
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_returned(self):
 
@@ -149,17 +110,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator(args)
 
-        iocbl_c_mock.assert_called_once_with(args.module_name, "ioc", os.getcwd())
-
-    def test_given_area_is_ioc_and_tech_area_is_BL_no_import_then_new_module_creator_ioc_bl_no_import_returned(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
-
-        args = self.parser.parse_args("test/BL -i --no-import".split())  # Area automatically support
-
-        new_tools_creator = new_c.get_new_module_creator(args)
-
-        iocbl_c_mock.assert_called_once_with(args.module_name, "ioc", os.getcwd())
+        iocbl_c_mock.assert_called_once_with(args, os.getcwd())
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
@@ -205,7 +156,9 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        base_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())  # non-existent module and area
+        args = MagicMock()
+
+        base_c = new_c.NewModuleCreator(args, os.getcwd())  # non-existent module and area
 
 
 class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
@@ -213,7 +166,9 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
     @patch('os.getlogin', return_value='my_login')
     def test_given_reasonable_input_then_correct_template_args_given(self, mock_getlogin):
 
-        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        args = MagicMock(module_name='test_module')
+
+        mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
         self.assertEqual(mod_c.template_args, {'module': "test_module", 'getlogin': "my_login"})
 
@@ -221,7 +176,10 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
 class NewModuleCreatorCheckRemoteRepoValidTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list', return_value=['inrepo', 'inrepo', 'inrepo'])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
@@ -282,7 +240,9 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.pathf.prodModule', return_value = 'prod_module')
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
-        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        mod_c = new_c.NewModuleCreator(args, os.getcwd())
         dir_list = mod_c.get_remote_dir_list()
 
         self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
@@ -291,7 +251,10 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
 class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
@@ -357,7 +320,10 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
 class NewModuleCreatorCheckInitStageAndCommitValidTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
@@ -411,7 +377,10 @@ class NewModuleCreatorCheckInitStageAndCommitValidTest(unittest.TestCase):
 class NewModuleCreatorCheckPushRepoToRemoteValidTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir', return_value=True)
@@ -515,7 +484,10 @@ class NewModuleCreatorCheckPushRepoToRemoteValidTest(unittest.TestCase):
 class NewModuleCreatorCreateModuleTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_module_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.os.chdir')
@@ -578,7 +550,10 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
 class NewModuleCreatorCreateFilesTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.create_files_from_template_dict')
     def test_create_files_from_template_called(self, mock_create_files_from_template):
@@ -586,6 +561,7 @@ class NewModuleCreatorCreateFilesTest(unittest.TestCase):
         self.mod_c._create_files()
 
         mock_create_files_from_template.assert_called_once_with()
+
 
 class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
@@ -598,7 +574,9 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isdir = self.patch_isdir.start()
         self.mock_makedirs = self.patch_makedirs.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
         self.mod_c.template_args = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
@@ -729,7 +707,9 @@ class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
 
     def test_given_function_called_then_message_printed_correctly(self):
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
         self.mod_c.message = "Test_Message"
 
@@ -744,7 +724,10 @@ class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
 class NewModuleCreatorInitStageAndCommitTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
@@ -781,7 +764,10 @@ class NewModuleCreatorInitStageAndCommitTest(unittest.TestCase):
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        args = MagicMock(area="test_area", module_name="test_module")
+
+        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_push_repo_to_remote_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.vcs_git.create_new_remote_and_push')
