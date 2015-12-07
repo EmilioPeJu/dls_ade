@@ -28,6 +28,7 @@ def make_parser():
     Takes default parser and adds module_name, release_#, --branch, --force, --no-test-build,
     --local-build-only, --epics_version, --message, --next_version, --git
     and either --rhel_version or --windows arguments.
+
     :return: Parser
     :rtype: ArgumentParser
     """
@@ -109,6 +110,7 @@ def make_parser():
 def create_build_object(args):
     """
     Uses parsed arguments to select appropriate build architecture, default is local system os
+
     :param args: Parser arguments
     :type args: ArgumentParser Namespace
     :return: Either a Windows or RedHat build object
@@ -133,8 +135,16 @@ def create_build_object(args):
 
 
 def create_vcs_object(module, args):
-    ''' specific vcs class depends on flags in args, use module and
-    arguments to construct the objects '''
+    """
+    Creates either a Git or Svn object depending on flags in args, use module and arguments to construct the objects
+
+    :param module: Name of module
+    :type module: str
+    :param args: Parser arguments
+    :type args: ArgumentParser Namespace
+    :return: Git or Svn object
+    :rtype: Git/Svn
+    """
     if args.git:
         return vcs_git.Git(module, args)
     else:
@@ -144,6 +154,7 @@ def create_vcs_object(module, args):
 def check_parsed_arguments_valid(args,  parser):
     """
     Checks that incorrect arguments invoke parser errors.
+
     :param args: Parser arguments
     :type args: ArgumentParser Namespace
     :param parser: Parser
@@ -167,6 +178,7 @@ def check_parsed_arguments_valid(args,  parser):
 def format_argument_version(arg_version):
     """
     Replaces '.' with '-' throughout arg_version to match formatting requirements for log message.
+
     :param arg_version: Version tag to be formatted.
     :type arg_version: str
     :return: Formatted version tag
@@ -178,6 +190,7 @@ def format_argument_version(arg_version):
 def next_version_number(releases, module=None):
     """
     Generates appropriate version number for an incremental release.
+
     :param releases: Previous release numbers.
     :type releases: list
     :param module: Name of module to be released.
@@ -197,6 +210,7 @@ def next_version_number(releases, module=None):
 def get_last_release(releases):
     """
     Returns the most recent release number
+
     :param releases: Previous release numbers
     :type releases:
     :return: Most recent release number
@@ -210,6 +224,7 @@ def get_last_release(releases):
 def increment_version_number(last_release):
     """
     Increment the most minor non-zero part of the version number
+
     :param last_release: Most recent previous release number
     :type last_release: str
     :return: Minimally incremented version number
@@ -228,6 +243,7 @@ def increment_version_number(last_release):
 def construct_info_message(module, args, version, build_object):
     """
     Gathers info to display during release
+
     :param module: Module to be released
     :type module: str
     :param args: Parser arguments
@@ -253,8 +269,8 @@ def construct_info_message(module, args, version, build_object):
 
 def check_epics_version_consistent(module_epics, option_epics, build_epics):
     """
-    Checks if epics version is consistent between release and environment, allows user to force
-    build if not consistent
+    Checks if epics version is consistent between release and environment, allows user to force build if not consistent
+
     :param module_epics: Epics version of previous release
     :type module_epics: str
     :param option_epics: Epics version to change to
@@ -279,6 +295,7 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
 def ask_user_input(question):
     """
     Wrapper for raw_input function
+
     :param question: Question to print for the user to respond to
     :type question: str
     :return: User input
@@ -290,6 +307,7 @@ def ask_user_input(question):
 def get_module_epics_version(vcs):
     """
     Get epics version of most recent release
+
     :param vcs: Version control system object, Git or Svn
     :type vcs: Git/Svn
     :return: Epics version of most recent release
@@ -306,14 +324,14 @@ def get_module_epics_version(vcs):
 def perform_test_build(build_object, args, vcs):
     """
     Test build the module and return whether it was successful
+
     :param build_object: Either a windows or RedHat builder
     :type build_object: Builder
     :param args: Parser arguments
     :type args: ArgumentParser Namespace
     :param vcs: Version control system object, Git or Svn
     :type vcs: Git/Svn
-    :return: message to explaining  how the test build went and true or false for whether it failed
-    or not
+    :return: message to explaining  how the test build went and true or false for whether it failed or not
     :rtype: str and bool
     """
     message = ''
