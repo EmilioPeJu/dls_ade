@@ -17,6 +17,7 @@ If you enter "everything" as <module_name>, the whole <area> area will be checke
 def make_parser():
     """
     Takes default parser arguments and adds module_name, --branch and --force.
+
     :return: Parser with relevant arguments
     :rtype: ArgumentParser
     """
@@ -33,6 +34,7 @@ def make_parser():
 def check_parsed_arguments_valid(args, parser):
     """
     Checks if module_name has been provided and raises a parser error if not.
+
     :param args: Parser arguments
     :type args: dict
     :param parser: Parser
@@ -45,8 +47,9 @@ def check_parsed_arguments_valid(args, parser):
 
 def check_technical_area(args, parser):
     """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
-     name or that the technical area is also provided. Raises parser error if not.
+    Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
+    or that the technical area is also provided. Raises parser error if not.
+
     :param args: Parser arguments
     :type args: dict
     :param parser: Parser
@@ -62,6 +65,7 @@ def check_technical_area(args, parser):
 def check_source_file_path_valid(source, parser):
     """
     Checks if given source path exists on the repository and raises a parser error if it does not.
+
     :param source: Path to module to be cloned
     :type source: str
     :param parser: Parser
@@ -75,6 +79,7 @@ def check_source_file_path_valid(source, parser):
 def check_module_file_path_valid(module, parser):
     """
     Checks if the given module already exists in the current directory. Raises error if so.
+
     :param module: Name of module to clone
     :type module: str
     :param parser: Parser
@@ -101,8 +106,10 @@ def main():
     module = args.module_name
 
     if module == "everything":
+        # Set source to area folder
         source = path.devArea(args.area)
     else:
+        # Set source to module in area folder
         source = path.devModule(module, args.area)
 
     if module == "everything":
@@ -113,11 +120,13 @@ def main():
         vcs_git.clone(source, module)
 
     if args.branch:
+        # cd into new module and get remote branches
         os.chdir(args.module_name)
         branches = vcs_git.list_remote_branches()
         if args.branch in branches:
             vcs_git.checkout_remote_branch(args.branch)
         else:
+            # Print branches and ask user to re-enter the branch they want
             print("Branch '" + args.branch + "' does not exist in " + source +
                   "\nBranch List:\n")
             for entry in branches:

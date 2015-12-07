@@ -18,6 +18,7 @@ e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 def check_source_file_path_valid(source, parser):
     """
     Checks if given source path exists on the repository and raises a parser error if it does not.
+
     :param source: File path to test
     :type source: str
     :param parser: Parser
@@ -31,6 +32,7 @@ def check_source_file_path_valid(source, parser):
 def print_module_list(source, area):
     """
     Prints the modules in the area of the repository specified by source
+
     :param source: Path to area of repository
     :type source: str
     :param area: Area of the repository to list
@@ -48,6 +50,7 @@ def print_module_list(source, area):
 def make_parser():
     """
     Takes default parser arguments and adds domain.
+
     :return: Parser with relevant arguments
     :rtype: ArgumentParser
     """
