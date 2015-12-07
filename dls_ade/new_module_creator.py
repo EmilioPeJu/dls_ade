@@ -131,18 +131,18 @@ class NewModuleCreator(object):
         # Creates and uses dir_list to check remote repository for name collisions with new module - part of init?
 
         dir_list = self.get_remote_dir_list()
-        err_message = ""
+        return_message = ""
 
         valid = True
 
         for d in dir_list:
             if vcs_git.is_repo_path(d):
                 valid = False
-                err_message = "The path {dir:s} already exists in subversion, cannot continue".format(dir=d)
+                return_message = "The path {dir:s} already exists in subversion, cannot continue".format(dir=d)
                 break
 
         self.remote_repo_valid = valid
-        return valid, err_message
+        return valid, return_message
 
     def get_remote_dir_list(self):
         dest = self.dest
@@ -158,7 +158,7 @@ class NewModuleCreator(object):
         # Checks that 'we' are not currently in a git repository, and that there are no name conflicts for the files
         # to be created
 
-        err_message = ""
+        return_message = ""
         valid = True
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
@@ -166,82 +166,82 @@ class NewModuleCreator(object):
                                             # NOTE: Does not detect if further folder is git repo - how to fix?
 
         if mod_dir_exists and cwd_is_repo:
-            err_message = "Directory {dir:s} already exists AND currently in a git repository."
-            err_message += " Please move elsewhere and try again"
+            return_message = "Directory {dir:s} already exists AND currently in a git repository."
+            return_message += " Please move elsewhere and try again"
             valid = False
         elif mod_dir_exists:
-            err_message = "Directory {dir:s} already exists, please move elsewhere and try again"
+            return_message = "Directory {dir:s} already exists, please move elsewhere and try again"
             valid = False
         elif cwd_is_repo:
-            err_message = "Currently in a git repository, please move elsewhere and try again"
+            return_message = "Currently in a git repository, please move elsewhere and try again"
             valid = False
 
-        err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+        return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
         self.create_module_valid = valid
-        return valid, err_message
+        return valid, return_message
 
     def check_create_local_repo_valid(self):
         ''' Determines whether the local directory is valid for creating and committing a new git repository '''
         # Checks that the folder exists and is not currently inside a git repository
 
-        err_message = ""
+        return_message = ""
         valid = True
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory {dir:s} does not exist"
-            err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+            return_message = "Directory {dir:s} does not exist"
+            return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
             valid = False
         else:
             mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
             if mod_dir_is_in_repo:
-                err_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository"
-                err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+                return_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository"
+                return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
                 valid = False
 
         self.create_local_repo_valid = valid
-        return valid, err_message
+        return valid, return_message
 
     def check_push_repo_to_remote_valid(self):
         ''' Determines whether one can push the local repository to the remote one '''
         # Checks that the folder exists, is a git repository and there are no remote server module path clashes
 
-        err_message = ""
+        return_message = ""
         valid = True
 
         mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
-            err_message = "Directory {dir:s} does not exist"
+            return_message = "Directory {dir:s} does not exist"
 
             valid = False
         else:
             mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
             if not mod_dir_is_repo:
-                err_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository"
+                return_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository"
                 valid = False
 
         if not self.remote_repo_valid:  # Doing it this way allows us to retain the remote_repo_valid error message
-            repo_valid, repo_err_message = self.check_remote_repo_valid()
+            repo_valid, repo_return_message = self.check_remote_repo_valid()
             if (not repo_valid) and (not valid):
-                err_message += "\nAND: " + repo_err_message
+                return_message += "\nAND: " + repo_return_message
             else:
-                err_message = repo_err_message
+                return_message = repo_return_message
                 valid = repo_valid
 
-        err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+        return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
         self.push_repo_to_remote_valid = valid
-        return valid, err_message
+        return valid, return_message
 
     def create_module(self):
         ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
         # cd's into module directory, and creates complete file hierarchy before exiting
 
         if not self.create_module_valid:
-            valid, err_message = self.check_create_module_valid()
+            valid, return_message = self.check_create_module_valid()
             if not valid:
-                raise Exception(err_message)
+                raise Exception(return_message)
 
         print("Making clean directory structure for " + self.disk_dir)
         os.chdir(os.path.join(self.cwd, self.disk_dir))
@@ -289,9 +289,9 @@ class NewModuleCreator(object):
         # Switch statement in export?
 
         if not self.create_local_repo_valid:
-            valid, err_message = self.check_create_local_repo_valid()
+            valid, return_message = self.check_create_local_repo_valid()
             if not valid:
-                raise Exception(err_message)
+                raise Exception(return_message)
 
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
@@ -299,9 +299,9 @@ class NewModuleCreator(object):
         # Pushes the local repo to the remote server.
 
         if not self.push_repo_to_remote_valid:
-            valid, err_message = self.check_push_repo_to_remote_valid()
+            valid, return_message = self.check_push_repo_to_remote_valid()
             if not valid:
-                raise Exception(err_message)
+                raise Exception(return_message)
 
         vcs_git.create_new_remote_and_push(self.area, self.module_name, self.disk_dir)
 
@@ -310,25 +310,25 @@ class NewModuleCreatorIOC(NewModuleCreator):
 
     def __initialise_and_verify_module_variables(self, module_name, area):
         raise NotImplementedError
-
+    
     def get_remote_dir_list(self):
         raise NotImplementedError
-
+    
     def _create_files(self):
         raise NotImplementedError
-
+    
     def compose_message(self):
         raise NotImplementedError
-
+    
 
 class NewModuleCreatorIOCBL(NewModuleCreator):
-
+    
     def __initialise_and_verify_module_variables(self, module_name, area):
         raise NotImplementedError
-
+        
     def get_remote_dir_list(self):
         raise NotImplementedError
-
+    
     def _create_files(self):
         raise NotImplementedError
 
@@ -337,7 +337,7 @@ class NewModuleCreatorIOCBL(NewModuleCreator):
 
 
 class NewModuleCreatorPython(NewModuleCreator):
-
+    
     def __initialise_and_verify_module_variables(self, module_name, area):
         raise NotImplementedError
 
@@ -346,12 +346,12 @@ class NewModuleCreatorPython(NewModuleCreator):
 
 
 class NewModuleCreatorSupport(NewModuleCreator):
-
+    
     def _create_files(self):
         raise NotImplementedError
 
 
 class NewModuleCreatorTools(NewModuleCreator):
-
+    
     def compose_message(self):
         raise NotImplementedError
