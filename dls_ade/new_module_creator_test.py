@@ -20,10 +20,9 @@ class GetNewModuleCreator(unittest.TestCase):
 
     def setUp(self):
 
-        self.parser = make_parser()
-
         methods_to_patch = [
             'CreatorIOC',
+            'CreatorIOCOldNaming',
             'CreatorIOCBL',
             'CreatorPython',
             'CreatorSupport',
@@ -37,80 +36,95 @@ class GetNewModuleCreator(unittest.TestCase):
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
-        # self.mocks['CreatorTools'].return_value = "Example
+        # self.mocks['CreatorTools'].return_value = "Example"
 
     def test_given_unsupported_area_then_exception_raised(self):
 
-        args = self.parser.parse_args("test_module --area fake_area".split())
         with self.assertRaises(Exception):
-            new_c.get_new_module_creator(args)
+            new_c.get_new_module_creator("test_module", "fake_area")
 
-    def test_given_supported_area_then_no_error_raised(self):
-
-        args = self.parser.parse_args("test_module --area python".split())
-
-        new_c.get_new_module_creator(args)  # Just testing that no errors are raised
-
-    def test_given_area_is_ioc_and_no_BL_statement_then_new_module_creator_ioc_returned(self):
+    def test_given_area_is_ioc_and_no_BL_statement_and_dash_separated_then_new_module_creator_ioc_called_with_correct_args(self):
 
         ioc_c_mock = self.mocks['CreatorIOC']
 
-        args = self.parser.parse_args("test_module -i".split())
+        new_ioc_creator = new_c.get_new_module_creator("test-module-IOC-01", "ioc")
 
-        new_ioc_creator = new_c.get_new_module_creator(args)
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc", os.getcwd())
 
-        ioc_c_mock.assert_called_once_with(args, os.getcwd())
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_true_then_new_module_creator_ioc_called_with_correct_args(self):
 
-    def test_given_area_is_python_then_new_module_creator_python_returned(self):
+        ioc_c_mock = self.mocks['CreatorIOC']
+
+        new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc", fullname=True)
+
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc", os.getcwd())
+
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_then_new_module_creator_ioc_old_naming_called_with_correct_args(self):
+
+        ioc_c_mock = self.mocks['CreatorIOCOldNaming']
+
+        new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc")
+
+        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc", os.getcwd())
+
+    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
+
+        iocbl_c_mock = self.mocks['CreatorIOCBL']
+
+        new_tools_creator = new_c.get_new_module_creator("test/BL", "ioc")
+
+        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc", os.getcwd())
+
+    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
+
+        iocbl_c_mock = self.mocks['CreatorIOCBL']
+
+        new_tools_creator = new_c.get_new_module_creator("test-BL-IOC-01", "ioc")
+
+        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc", os.getcwd())
+
+    def test_given_area_is_python_with_invalid_name_then_new_module_creator_python_not_returned(self):
 
         py_c_mock = self.mocks['CreatorPython']
 
-        args = self.parser.parse_args("test_module -p".split())
+        with self.assertRaises(Exception):
+            new_py_creator = new_c.get_new_module_creator("test_module", "python")
 
-        new_py_creator = new_c.get_new_module_creator(args)
+        self.assertFalse(py_c_mock.called)
 
-        py_c_mock.assert_called_once_with(args, os.getcwd())
+        with self.assertRaises(Exception):
+            new_py_creator = new_c.get_new_module_creator("dls_test-module", "python")
+
+        self.assertFalse(py_c_mock.called)
+
+        with self.assertRaises(Exception):
+            new_py_creator = new_c.get_new_module_creator("dls_test.module", "python")
+
+        self.assertFalse(py_c_mock.called)
+
+    def test_given_area_is_python_with_valid_name_then_new_module_creator_python_called_with_correct_args(self):
+
+        py_c_mock = self.mocks['CreatorPython']
+
+        new_py_creator = new_c.get_new_module_creator("dls_test_module", "python")
+
+        py_c_mock.assert_called_once_with("dls_test_module", "python", os.getcwd())
 
     def test_given_area_is_support_then_new_module_creator_support_returned(self):
 
         sup_c_mock = self.mocks['CreatorSupport']
 
-        args = self.parser.parse_args("test_module".split())  # Area automatically support
+        new_sup_creator = new_c.get_new_module_creator("test_module")  # Area automatically support
 
-        new_sup_creator = new_c.get_new_module_creator(args)
-
-        sup_c_mock.assert_called_once_with(args, os.getcwd())
+        sup_c_mock.assert_called_once_with("test_module", "support", os.getcwd())
 
     def test_given_area_is_tools_then_new_module_creator_tools_returned(self):
 
         tools_c_mock = self.mocks['CreatorTools']
 
-        args = self.parser.parse_args("test_module --area tools".split())  # Area automatically support
+        new_tools_creator = new_c.get_new_module_creator("test_module", "tools")
 
-        new_tools_creator = new_c.get_new_module_creator(args)
-
-        tools_c_mock.assert_called_once_with(args, os.getcwd())
-
-
-    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_returned(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
-
-        args = self.parser.parse_args("test/BL -i".split())  # Area automatically support
-
-        new_tools_creator = new_c.get_new_module_creator(args)
-
-        iocbl_c_mock.assert_called_once_with(args, os.getcwd())
-
-    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_returned(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
-
-        args = self.parser.parse_args("test-BL -i".split())  # Area automatically support
-
-        new_tools_creator = new_c.get_new_module_creator(args)
-
-        iocbl_c_mock.assert_called_once_with(args, os.getcwd())
+        tools_c_mock.assert_called_once_with("test_module", "tools", os.getcwd())
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
@@ -156,9 +170,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        args = MagicMock()
-
-        base_c = new_c.NewModuleCreator(args, os.getcwd())  # non-existent module and area
+        base_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())  # non-existent module and area
 
 
 class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
@@ -166,9 +178,7 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
     @patch('os.getlogin', return_value='my_login')
     def test_given_reasonable_input_then_correct_template_args_given(self, mock_getlogin):
 
-        args = MagicMock(module_name='test_module')
-
-        mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
         self.assertEqual(mod_c.template_args, {'module': "test_module", 'getlogin': "my_login"})
 
@@ -177,9 +187,7 @@ class NewModuleCreatorCheckRemoteRepoValidTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list', return_value=['inrepo', 'inrepo', 'inrepo'])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
@@ -240,9 +248,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.pathf.prodModule', return_value = 'prod_module')
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
         dir_list = mod_c.get_remote_dir_list()
 
         self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
@@ -252,9 +258,7 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
@@ -317,70 +321,66 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
         self.assertEqual(valid, self.mod_c.create_module_valid)
 
 
-class NewModuleCreatorCheckInitStageAndCommitValidTest(unittest.TestCase):
-
-    def setUp(self):
-
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
-
-    @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
-    def test_given_module_folder_exists_and_is_not_in_repo_then_flag_set_true_and_error_returned_is_blank(self, mock_is_git_dir, mock_is_dir):
-
-        valid, return_message = self.mod_c.check_create_local_repo_valid()
-        comp_message = ""
-
-        self.assertTrue(valid)
-        self.assertEqual(return_message, comp_message)
-
-    @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
-    def test_given_module_folder_does_not_exist_then_flag_set_false_and_error_returned_is_correct(self, mock_is_git_dir, mock_is_dir):
-
-        valid, return_message = self.mod_c.check_create_local_repo_valid()
-        comp_message = "Directory {dir:s} does not exist".format(dir=os.path.join("./", self.mod_c.disk_dir))
-
-        self.assertFalse(valid)
-        self.assertEqual(return_message, comp_message)
-
-    @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=True)
-    def test_given_module_folder_is_in_repo_then_flag_set_false_and_error_returned_is_correct(self, mock_is_git_dir, mock_is_dir):
-
-        valid, return_message = self.mod_c.check_create_local_repo_valid()
-        comp_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository".format(dir=os.path.join("./", self.mod_c.disk_dir))
-
-        self.assertFalse(valid)
-        self.assertEqual(return_message, comp_message)
-
-    @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
-    def test_given_final_flag_is_true_then_returned_flag_and_object_flag_match(self, mock_is_git_dir, mock_is_dir):
-
-        valid, return_message = self.mod_c.check_create_local_repo_valid()
-
-        self.assertTrue(valid)
-        self.assertEqual(valid, self.mod_c.create_local_repo_valid)
-
-    @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
-    def test_given_final_flag_is_false_then_returned_flag_and_object_flag_match(self, mock_is_git_dir, mock_is_dir):
-
-        valid, return_message = self.mod_c.check_create_local_repo_valid()
-
-        self.assertFalse(valid)
-        self.assertEqual(valid, self.mod_c.create_local_repo_valid)
+# class NewModuleCreatorCheckInitStageAndCommitValidTest(unittest.TestCase):
+#
+#     def setUp(self):
+#
+#         self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+#
+#     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
+#     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
+#     def test_given_module_folder_exists_and_is_not_in_repo_then_flag_set_true_and_error_returned_is_blank(self, mock_is_git_dir, mock_is_dir):
+#
+#         valid, return_message = self.mod_c.check_create_local_repo_valid()
+#         comp_message = ""
+#
+#         self.assertTrue(valid)
+#         self.assertEqual(return_message, comp_message)
+#
+#     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
+#     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
+#     def test_given_module_folder_does_not_exist_then_flag_set_false_and_error_returned_is_correct(self, mock_is_git_dir, mock_is_dir):
+#
+#         valid, return_message = self.mod_c.check_create_local_repo_valid()
+#         comp_message = "Directory {dir:s} does not exist".format(dir=os.path.join("./", self.mod_c.disk_dir))
+#
+#         self.assertFalse(valid)
+#         self.assertEqual(return_message, comp_message)
+#
+#     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
+#     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=True)
+#     def test_given_module_folder_is_in_repo_then_flag_set_false_and_error_returned_is_correct(self, mock_is_git_dir, mock_is_dir):
+#
+#         valid, return_message = self.mod_c.check_create_local_repo_valid()
+#         comp_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository".format(dir=os.path.join("./", self.mod_c.disk_dir))
+#
+#         self.assertFalse(valid)
+#         self.assertEqual(return_message, comp_message)
+#
+#     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
+#     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
+#     def test_given_final_flag_is_true_then_returned_flag_and_object_flag_match(self, mock_is_git_dir, mock_is_dir):
+#
+#         valid, return_message = self.mod_c.check_create_local_repo_valid()
+#
+#         self.assertTrue(valid)
+#         self.assertEqual(valid, self.mod_c.create_local_repo_valid)
+#
+#     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=False)
+#     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=False)
+#     def test_given_final_flag_is_false_then_returned_flag_and_object_flag_match(self, mock_is_git_dir, mock_is_dir):
+#
+#         valid, return_message = self.mod_c.check_create_local_repo_valid()
+#
+#         self.assertFalse(valid)
+#         self.assertEqual(valid, self.mod_c.create_local_repo_valid)
 
 
 class NewModuleCreatorCheckPushRepoToRemoteValidTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir', return_value=True)
@@ -485,14 +485,37 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
+        # external_methods_to_patch = [
+        #     'os.makedirs',
+        #     'vcs_git.init_repo',
+        #     'os.chdir',
+        #     'os.isdir',
+        #     'vcs_git.stage_all_files_and_commit'
+        # ]
+        #
+        # class_methods_to_patch = [
+        #     'check_create_module_valid',
+        #     '_create_files'
+        # ]
+        #
+        # self.patch = {}
+        # self.mocks = {}
+        # for method in methods_to_patch:
+        #     self.patch[method] = patch('dls_ade.new_module_creator.NewModule' + method)
+        #     self.addCleanup(self.patch[method].stop)
+        #     self.mocks[method] = self.patch[method].start()
 
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        # self.mocks['CreatorTools'].return_value = "Example"
 
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+    @patch('dls_ade.new_module_creator.os.makedirs')
+    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+    @patch('dls_ade.new_module_creator.vcs_git.init_repo')
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_module_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.os.chdir')
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
-    def test_given_create_module_valid_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid):
+    def test_given_create_module_valid_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
         self.mod_c.create_module_valid = True
 
@@ -512,10 +535,13 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
         call(os.path.join(self.mod_c.cwd, self.mod_c.disk_dir))
         mock_chdir.assert_has_calls(chdir_call_list)
 
+    @patch('dls_ade.new_module_creator.os.makedirs')
+    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+    @patch('dls_ade.new_module_creator.vcs_git.init_repo')
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_module_valid', return_value=(False, "return_message"))
     @patch('dls_ade.new_module_creator.os.chdir')
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
-    def test_given_create_module_valid_false_then_exception_raised_with_correct_message(self, mock_create_files, mock_chdir, mock_check_valid):
+    def test_given_create_module_valid_false_then_exception_raised_with_correct_message(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
         self.mod_c.create_module_valid = False
 
@@ -524,10 +550,13 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), "return_message")
 
+    @patch('dls_ade.new_module_creator.os.makedirs')
+    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+    @patch('dls_ade.new_module_creator.vcs_git.init_repo')
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_module_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.os.chdir')
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
-    def test_given_create_module_valid_original_false_but_check_function_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid):
+    def test_given_create_module_valid_original_false_but_check_function_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
         self.mod_c.create_module_valid = False
 
@@ -551,9 +580,7 @@ class NewModuleCreatorCreateFilesTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.create_files_from_template_dict')
     def test_create_files_from_template_called(self, mock_create_files_from_template):
@@ -574,9 +601,7 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isdir = self.patch_isdir.start()
         self.mock_makedirs = self.patch_makedirs.start()
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
         self.mod_c.template_args = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
@@ -707,9 +732,7 @@ class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
 
     def test_given_function_called_then_message_printed_correctly(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
         self.mod_c.message = "Test_Message"
 
@@ -721,53 +744,49 @@ class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
         print_mock.assert_called_once_with("Test_Message")
 
 
-class NewModuleCreatorInitStageAndCommitTest(unittest.TestCase):
-
-    def setUp(self):
-
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
-
-    @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(True, ""))
-    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
-    def test_given_create_local_repo_true_then_init_and_commit_called(self, mock_init_and_commit, mock_check_valid):
-
-        self.mod_c.create_local_repo_valid = True
-
-        self.mod_c.create_local_repo()
-
-        mock_init_and_commit.assert_called_with(self.mod_c.disk_dir)
-
-    @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(False, "return_message"))
-    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
-    def test_given_create_local_repo_valid_false_then_exception_raised_with_correct_message(self, mock_init_and_commit, mock_check_valid):
-    
-        self.mod_c.create_local_repo_valid = False
-    
-        with self.assertRaises(Exception) as e:
-            self.mod_c.create_local_repo()
-    
-        self.assertEqual(str(e.exception), "return_message")
-    
-    @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(True, ""))
-    @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
-    def test_given_create_local_repo_original_false_but_check_function_true_then_init_and_commit_called(self, mock_init_and_commit, mock_check_valid):
-
-        self.mod_c.create_local_repo_valid = False
-
-        self.mod_c.create_local_repo()
-
-        mock_init_and_commit.assert_called_with(self.mod_c.disk_dir)
+# class NewModuleCreatorCommitToLocalRepoTest(unittest.TestCase):
+#
+#     def setUp(self):
+#
+#         self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+#
+#     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(True, ""))
+#     @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+#     def test_given_create_local_repo_true_then_init_and_commit_called(self, mock_init_and_commit, mock_check_valid):
+#
+#         self.mod_c.create_local_repo_valid = True
+#
+#         self.mod_c.commit_to_local_repo()
+#
+#         mock_init_and_commit.assert_called_with(self.mod_c.disk_dir)
+#
+#     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(False, "return_message"))
+#     @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+#     def test_given_create_local_repo_valid_false_then_exception_raised_with_correct_message(self, mock_init_and_commit, mock_check_valid):
+#
+#         self.mod_c.create_local_repo_valid = False
+#
+#         with self.assertRaises(Exception) as e:
+#             self.mod_c.commit_to_local_repo()
+#
+#         self.assertEqual(str(e.exception), "return_message")
+#
+#     @patch('dls_ade.new_module_creator.NewModuleCreator.check_create_local_repo_valid', return_value=(True, ""))
+#     @patch('dls_ade.new_module_creator.vcs_git.stage_all_files_and_commit')
+#     def test_given_create_local_repo_original_false_but_check_function_true_then_init_and_commit_called(self, mock_init_and_commit, mock_check_valid):
+#
+#         self.mod_c.create_local_repo_valid = False
+#
+#         self.mod_c.commit_to_local_repo()
+#
+#         mock_init_and_commit.assert_called_with(self.mod_c.disk_dir)
 
 
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
 
-        args = MagicMock(area="test_area", module_name="test_module")
-
-        self.mod_c = new_c.NewModuleCreator(args, os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_push_repo_to_remote_valid', return_value=(True, ""))
     @patch('dls_ade.new_module_creator.vcs_git.create_new_remote_and_push')
@@ -777,7 +796,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c.push_repo_to_remote()
 
-        mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_name, self.mod_c.disk_dir)
+        mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_path, self.mod_c.disk_dir)
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.check_push_repo_to_remote_valid', return_value=(False, "return_message"))
     @patch('dls_ade.new_module_creator.vcs_git.create_new_remote_and_push')
@@ -798,6 +817,6 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c.push_repo_to_remote()
 
-        mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_name, self.mod_c.disk_dir)
+        mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_path, self.mod_c.disk_dir)
 
 # Add tests for all derived NewModuleCreator classes

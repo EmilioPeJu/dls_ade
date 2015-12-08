@@ -7,27 +7,61 @@ from new_module_templates import py_files, tools_files, default_files
 import vcs_git
 
 
-def get_new_module_creator(args):
+def get_new_module_creator(module_name, area="support", fullname=False):
     ''' Use arguments to determine which new module creator to use, and return it '''
 
-    area = args.area
     cwd = os.getcwd()
 
-    if area == "ioc":
-        cols = re.split(r'[-/]+', args.module_name) # Similar to s.split() but works with multiple characters ('-' and '/')
-        if len(cols) > 1 and cols[1] == "BL":
-            return NewModuleCreatorIOCBL(args, cwd)  # BL GUI module
+    if area == "ioc":  # This section of code is ugly because it has to mimic the behaviour of the original script
+        cols = module_name.split('/')  # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
+        if len(cols) > 1 and cols[1] != '':
+            domain = cols[0]
+            technical_area = cols[1]
+
+            if technical_area == "BL":
+                module_path = domain + "/" + technical_area
+                app_name = domain
+                return NewModuleCreatorIOCBL(module_path, app_name, area, cwd)
+
+            if len(cols) == 3 and cols[2] != '':
+                ioc_number = cols[2]
+            else:
+                ioc_number = '01'
+
+            app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+            if fullname:
+                module_path = domain + "/" + app_name
+                return NewModuleCreatorIOC(module_path, app_name, area, cwd)
+            else:
+                module_path = domain + "/" + technical_area
+                return NewModuleCreatorIOCOldNaming(module_path, app_name, area, cwd)
         else:
-            return NewModuleCreatorIOC(args, cwd)
+            # assume full IOC name is given
+            cols = module_name.split('-')
+            if len(cols) <= 1:
+                raise Exception("Need a name with dashes in it, got " + module_name)
+            domain = cols[0]
+            technical_area = cols[1]
+            app_name = module_name
+            module_path = domain + "/" + app_name
+
+            if technical_area == "BL":
+                return NewModuleCreatorIOCBL(module_path, app_name, area, cwd)
+            else:
+                return NewModuleCreatorIOC(module_path, app_name, area, cwd)
 
     elif area == "python":
-        return NewModuleCreatorPython(args, cwd)
+        valid_name = module_name.startswith("dls_") and ("-" not in module_name) and ("." not in module_name)
+        if not valid_name:
+            raise Exception("Python module names must start with 'dls_' and be valid python identifiers")
+
+        return NewModuleCreatorPython(module_name, area, cwd)
 
     elif area == "support":
-        return NewModuleCreatorSupport(args, cwd)
+        return NewModuleCreatorSupport(module_name, area, cwd)
 
     elif area == "tools":
-        return NewModuleCreatorTools(args, cwd)
+        return NewModuleCreatorTools(module_name, area, cwd)
 
     else:
         raise Exception("Don't know how to make a module of type: " + area)
@@ -47,8 +81,9 @@ def obtain_template_files(area):
 
 class NewModuleCreator(object):
 
-    def __init__(self, args, cwd):
-        # Initialise all private variables, including:
+    def __init__(self, module_path, area, cwd):
+        # Initialise all private variables.
+        # This one is used for testing purposes, although it is also used by support, tools and python
 
         # template list - include variable list for .format()?
 
@@ -60,25 +95,25 @@ class NewModuleCreator(object):
 
         # Sensible defaults for variable initialisation:
 
-        self.area = args.area  # needed for file templates and dest
+        self.area = area  # needed for file templates and dest
         self.cwd = cwd
 
-        # self.module_name = module_name
-        # self.disk_dir = self.module_name
-        # self.app_name = self.module_name
-        # The above declarations could be separated out into a new function, which may then be altered by new classes
-
+        self.module_path = ""
         self.module_name = ""
-        self.disk_dir = ""
         self.app_name = ""
-        self.__initialise_and_verify_module_variables(args)
+        self.module_path = module_path  # module_path has module_name at end, and folder is to contain "<app_name>App"
+
+        self.module_name = os.path.basename(os.path.normpath(self.module_path))  # Last part of module_path
+        self.app_name = self.module_name
+
         # The above declarations could be separated out into a new function, which may then be altered by new classes
 
-        self.disk_dir = self.module_name
-        self.dest = pathf.devModule(self.module_name, self.area)
+        self.disk_dir = ""
+        self.disk_dir = self.module_path
+        self.dest = pathf.devModule(self.module_path, self.area)
 
         self.message = ""
-        self.compose_message()
+        # self.compose_message()
 
         self.template_files = {}
         self.generate_template_files()
@@ -89,18 +124,10 @@ class NewModuleCreator(object):
         self.remote_repo_valid = False  # call function at start
         # These flags must be true before the corresponding function can be called
         self.create_module_valid = False  # call function at start
-        self.create_local_repo_valid = False
+        # self.create_local_repo_valid = False
         self.push_repo_to_remote_valid = False
         # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
         # appropriate error messages
-
-    def __initialise_and_verify_module_variables(self, args):
-        ''' initialisation and verification of module_name, disk_dir and app_name '''
-        # Default is straightforward, but this is more complex for IOC (BL) modules (Python also has verification)
-
-        self.module_name = args.module_name
-        self.app_name = self.module_name
-        pass
 
     def compose_message(self):
         ''' Generates the message to print out to the user on creation of the module files '''
@@ -122,7 +149,7 @@ class NewModuleCreator(object):
 
     def generate_template_args(self):
         ''' returns a dictionary that can be used for the .format() method, used in creating files '''
-        template_args = {'module': self.module_name, 'getlogin': os.getlogin()}
+        template_args = {'module': self.module_path, 'getlogin': os.getlogin()}
 
         self.template_args = template_args
 
@@ -145,8 +172,8 @@ class NewModuleCreator(object):
 
     def get_remote_dir_list(self):
         dest = self.dest
-        vendor_path = pathf.vendorModule(self.module_name, self.area)
-        prod_path = pathf.prodModule(self.module_name, self.area)
+        vendor_path = pathf.vendorModule(self.module_path, self.area)
+        prod_path = pathf.prodModule(self.module_path, self.area)
 
         dir_list = [dest, vendor_path, prod_path]
 
@@ -179,28 +206,28 @@ class NewModuleCreator(object):
         self.create_module_valid = valid
         return valid, return_message
 
-    def check_create_local_repo_valid(self):
-        ''' Determines whether the local directory is valid for creating and committing a new git repository '''
-        # Checks that the folder exists and is not currently inside a git repository
-
-        return_message = ""
-        valid = True
-
-        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
-
-        if not mod_dir_exists:
-            return_message = "Directory {dir:s} does not exist"
-            return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
-            valid = False
-        else:
-            mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
-            if mod_dir_is_in_repo:
-                return_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository"
-                return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
-                valid = False
-
-        self.create_local_repo_valid = valid
-        return valid, return_message
+    # def check_create_local_repo_valid(self):
+    #     ''' Determines whether the local directory is valid for creating and committing a new git repository '''
+    #     # Checks that the folder exists and is not currently inside a git repository
+    #
+    #     return_message = ""
+    #     valid = True
+    #
+    #     mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+    #
+    #     if not mod_dir_exists:
+    #         return_message = "Directory {dir:s} does not exist"
+    #         return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
+    #         valid = False
+    #     else:
+    #         mod_dir_is_in_repo = vcs_git.is_git_dir(self.disk_dir)  # true if folder currently inside git repository
+    #         if mod_dir_is_in_repo:
+    #             return_message = "Directory {dir:s} is inside git repository. Cannot initialise git repository"
+    #             return_message = return_message.format(dir=os.path.join("./", self.disk_dir))
+    #             valid = False
+    #
+    #     self.create_local_repo_valid = valid
+    #     return valid, return_message
 
     def check_push_repo_to_remote_valid(self):
         ''' Determines whether one can push the local repository to the remote one '''
@@ -242,10 +269,21 @@ class NewModuleCreator(object):
             if not valid:
                 raise Exception(return_message)
 
+        self.create_module_valid = False
+
         print("Making clean directory structure for " + self.disk_dir)
+
+        if not os.path.isdir(self.disk_dir):
+            os.makedirs(self.disk_dir)
+
+        vcs_git.init_repo(self.disk_dir)
+
         os.chdir(os.path.join(self.cwd, self.disk_dir))
         self._create_files()
         os.chdir(self.cwd)
+
+        # self.commit_to_local_repo()  # No longer needed
+        vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def _create_files(self):
         # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
@@ -283,16 +321,17 @@ class NewModuleCreator(object):
 
         print(self.message)
 
-    def create_local_repo(self):
-        # Stages and commits the files to the local repository. Separate from export repo as export not always done!
-        # Switch statement in export?
-
-        if not self.create_local_repo_valid:
-            valid, return_message = self.check_create_local_repo_valid()
-            if not valid:
-                raise Exception(return_message)
-
-        vcs_git.stage_all_files_and_commit(self.disk_dir)
+    # def commit_to_local_repo(self):
+    #     # Stages and commits the files to the local repository.
+    #
+    #     if not self.create_local_repo_valid:
+    #         valid, return_message = self.check_create_local_repo_valid()
+    #         if not valid:
+    #             raise Exception(return_message)
+    #
+    #     self.create_local_repo_valid = False
+    #
+    #     vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def push_repo_to_remote(self):
         # Pushes the local repo to the remote server.
@@ -302,7 +341,9 @@ class NewModuleCreator(object):
             if not valid:
                 raise Exception(return_message)
 
-        vcs_git.create_new_remote_and_push(self.area, self.module_name, self.disk_dir)
+        self.push_repo_to_remote_valid = False
+
+        vcs_git.create_new_remote_and_push(self.area, self.module_path, self.disk_dir)
 
 
 class NewModuleCreatorIOC(NewModuleCreator):
@@ -343,7 +384,49 @@ class NewModuleCreatorIOC(NewModuleCreator):
         raise NotImplementedError
 
 
-class NewModuleCreatorIOCBL(NewModuleCreator):
+class NewModuleCreatorIOCOldNaming(NewModuleCreatorIOC):
+    # Also need:
+    # check_remote_repo_valid to look inside module if it exists
+    # create_module
+    # create_local_repo
+
+    def __initialise_and_verify_module_variables(self, args):
+
+        # cols = args.module_name.split("/")
+        # if len(cols) > 1 and cols[1] != '':
+        #     domain = cols[0]
+        #     technical_area = cols[1]
+        #     if len(cols) == 3 and cols[2] != '':
+        #         ioc_number = cols[2]
+        #     else:
+        #         ioc_number = '01'
+        #     self.app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
+        #
+        #     if args.fullname:
+        #         self.module_name = domain + "/" + self.app_name
+        #     else:
+        #         self.module_name = domain + "/" + technical_area
+        # else:
+        #     cols = args.module_name.split("-")
+        #     if len(cols) > 1:
+        #         domain = cols[0]
+        #         self.app_name = args.module_name
+        #         self.module_name = domain + "/" + self.app_name
+        #     else:  # If module_name not in correct format
+        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
+        raise NotImplementedError
+
+    def _create_files(self):
+
+        # os.system('makeBaseApp.pl -t dls ' + self.app_name)
+        # os.system('makeBaseApp.pl -i -t dls ' + self.app_name)
+        # shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
+        # print(self.message)
+        # self.create_files_from_template_dict()
+        raise NotImplementedError
+
+
+class NewModuleCreatorIOCBL(NewModuleCreator):  # Note: does NOT inherit from NewModuleCreatorIOC (no shared code)
     
     def __initialise_and_verify_module_variables(self, args):
 
@@ -399,7 +482,7 @@ class NewModuleCreatorPython(NewModuleCreator):
 
     def compose_message(self):
 
-        # message_dict = {'module_path': os.path.join(self.disk_dir, self.module_name),
+        # message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path),
         #                 'setup_path': os.path.join(self.disk_dir, "setup.py")}
         #
         # message = "\nPlease add your python files to the {module_path:s} directory"
@@ -415,7 +498,7 @@ class NewModuleCreatorSupport(NewModuleCreator):
     
     def _create_files(self):
 
-        # os.system('makeBaseApp.pl -t dls ' + self.module_name)
+        # os.system('makeBaseApp.pl -t dls ' + self.module_path)
         # os.system('dls-make-etc-dir.py && make clean uninstall')
         # self.create_files_from_template_dict()
         raise NotImplementedError
@@ -425,7 +508,7 @@ class NewModuleCreatorTools(NewModuleCreator):
     
     def compose_message(self):
 
-        # message_dict = {"module": self.module_name}
+        # message_dict = {"module": self.module_path}
         #
         # message = "\nPlease add your patch files to the {module:s} directory"
         # message += " and edit {module:s}/build script appropriately"

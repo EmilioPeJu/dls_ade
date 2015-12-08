@@ -60,11 +60,21 @@ def get_repository_list():
     return split_list
 
 
-def stage_all_files_and_commit(path="./"):
+def init_repo(path="./"):
 
     if os.path.isdir(path):
         print("Initialising repo...")
         repo = git.Repo.init(path)
+        print("Repository created.")
+    else:
+        raise Exception("Specified path does not exist")
+
+
+def stage_all_files_and_commit(path="./"):
+
+    if os.path.isdir(path):
+        repo = git.Repo(path)
+        print("Staging files...")
         repo.git.add('--all')
         print("Committing files to repo...")
         print(repo.git.commit(m="Initial commit"))
