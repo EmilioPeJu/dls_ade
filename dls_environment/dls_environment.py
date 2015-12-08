@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, shutil, re
-from optparse import OptionParser
+import os
+import re
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import SafeConfigParser
+
 
 class environment:
     """A class representing the epics environment of a site. epics=version of
@@ -39,15 +40,19 @@ class environment:
     areas: the areas that can be passed to devArea() or prodArea()
     """
 
-    def __init__(self,epics = None):
+    def __init__(self, epics=None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
-        self.areas = ["support", "ioc", "matlab", "python","etc","tools","epics"]
+        self.areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
         if epics:
             self.setEpics(epics)
 
     def setEpicsFromEnv(self):
-        """Try to get epics version from the environment, and set self.epics"""
+        """
+        Try to get epics version from the environment, and set self.epics
+
+        :return:
+        """
         try:
             self.epics = os.environ['DLS_EPICS_RELEASE']
         except KeyError:
@@ -57,72 +62,107 @@ class environment:
                 self.epics = 'R3.14.8.2'
 
     def copy(self):
-        """Return a copy of self"""
+        """
+        Return a copy of self
+
+        :return:
+        """
         return environment(self.epicsVer())
 
-    def setEpics(self,epics):
-        """Force the version of epics in self"""
+    def setEpics(self, epics):
+        """
+        Force the version of epics in self
+
+        :param epics:
+        :return:
+        """
         self.epics = epics
 
     def epicsDir(self):
-        """Return the root directory of the epics installation"""
-        if self.epicsVer()<"R3.14":
-            return os.path.join("/home","epics",self.epicsVerDir())
+        """
+        Return the root directory of the epics installation
+
+        :return:
+        """
+        if self.epicsVer() < "R3.14":
+            return os.path.join("/home", "epics", self.epicsVerDir())
         else:
-            return os.path.join("/dls_sw","epics",self.epicsVerDir())
+            return os.path.join("/dls_sw", "epics", self.epicsVerDir())
 
     def epicsVer(self):
-        """Return the version of epics from self. If it not set, try and get it
-        from the environment. This may have a _64 suffix for 64 bit architectures"""
+        """
+        Return the version of epics from self. If it not set, try and get it
+        from the environment. This may have a _64 suffix for 64 bit architectures
+
+        :return:
+        """
         if not self.epics:
             self.setEpicsFromEnv()
         return self.epics
 
     def epicsVerDir(self):
-        """Return the directory version of epics from self. If it not set, try and get it
-        from the environment. This will not have a _64 suffix for 64 bit architectures"""
+        """
+        Return the directory version of epics from self. If it not set, try and get it from the environment.
+        This will not have a _64 suffix for 64 bit architectures
+
+        :return:
+        """
         if not self.epics:
             self.setEpicsFromEnv()
         return self.epics.split("_")[0]
 
-    def devArea(self,area = "support"):
-        """Return the development directory for a particular area"""
-        assert area in self.areas, "Only the following areas are supported: "+\
-               ",".join(self.areas)
-        if self.epicsVer()<"R3.14":
-            if area in ["support","ioc"]:
-                return os.path.join("/home","diamond",self.epicsVerDir(),"work",\
-                                    area)
-            elif area in ["epics","etc", "tools"]:
-                return os.path.join("/home","work",area)
-            else:
-                return os.path.join("/home","diamond","common","work",area)
-        else:
-            if area in ["support","ioc"]:
-                return os.path.join("/dls_sw","work",self.epicsVerDir(),area)
-            elif area in ["epics", "etc", "tools"]:
-                return os.path.join("/dls_sw","work",area)
-            else:
-                return os.path.join("/dls_sw","work","common",area)
+    def devArea(self, area="support"):
+        """
+        Return the development directory for a particular area
 
-    def prodArea(self,area = "support"):
-        """Return the production directory for a particular area"""
-        if area in ["epics"]:
-            return os.path.join("/dls_sw",area)
+        :param area:
+        :return:
+        """
+        assert area in self.areas, "Only the following areas are supported: " + \
+                                   ",".join(self.areas)
+        if self.epicsVer() < "R3.14":
+            if area in ["support", "ioc"]:
+                return os.path.join("/home", "diamond", self.epicsVerDir(), "work", area)
+            elif area in ["epics", "etc", "tools"]:
+                return os.path.join("/home", "work", area)
+            else:
+                return os.path.join("/home", "diamond", "common", "work", area)
         else:
-            return self.devArea(area).replace("work","prod")
+            if area in ["support", "ioc"]:
+                return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
+            elif area in ["epics", "etc", "tools"]:
+                return os.path.join("/dls_sw", "work", area)
+            else:
+                return os.path.join("/dls_sw", "work", "common", area)
+
+    def prodArea(self, area="support"):
+        """
+        Return the production directory for a particular area
+
+        :param area:
+        :return:
+        """
+        if area in ["epics"]:
+            return os.path.join("/dls_sw", area)
+        else:
+            return self.devArea(area).replace("work", "prod")
 
     def normaliseRelease(self, release):
-        """This function takes a release number, and returns a list of
-        component parts that are then sortable by python's inbuild sort function
+        """
+        This function takes a release number, and returns a list of
+        component parts that are then sortable by python's inbuilt sort function
         E.g. 4-5beta2dls1-3 => [4,'z',5,'beta2z',0,'',1,'z',3,'z',0,'']
         The z allows us to sort alpha, beta and release candidates before
-        release numbers without a text suffix"""
+        release numbers without a text suffix
+
+        :param release:
+        :return:
+        """
         components = []
         # first split by dls
         for part in release.split("dls", 1):
             # rejig separators
-            part = part.replace(".","-").replace("_","-")
+            part = part.replace(".", "-").replace("_", "-")
             # allow up to 3 -'s
             for subpart in part.split("-", 3):
                 match = re.match("\d+", subpart)
@@ -141,8 +181,13 @@ class environment:
         return components
             
     def sortReleases(self, paths):
-        """Sort a list of paths by their release numbers. Assume that the
-        paths end in a release number"""
+        """
+        Sort a list of paths by their release numbers. Assume that the
+        paths end in a release number
+
+        :param paths:
+        :return:
+        """
         releases = []
         istuple = paths and type(paths[0]) == tuple
         for path in paths:
@@ -154,7 +199,12 @@ class environment:
         return [x[1] for x in sorted(releases)]
         
     def svnName(self, path):
-        """Find the name that the module is under in svn. Very dls specific"""
+        """
+        Find the name that the module is under in svn. Very dls specific
+
+        :param path:
+        :return:
+        """
         output = Popen(["svn", "info", path], stdout=PIPE, stderr=STDOUT).communicate()[0]
         for line in output.splitlines():
             if line.startswith("URL:"):
@@ -171,13 +221,17 @@ class environment:
                         return split[-1].strip()    
 
     def classifyArea(self, path):
-        """Classify the area of a path, returning
-        (area, work/prod/invalid, epicsVer)"""
+        """
+        Classify the area of a path, returning (area, work/prod/invalid, epicsVer)
+
+        :param path:
+        :return:
+        """
         for a in self.areas:
             if path.startswith(self.devArea(a)):
-                return (a, "work", self.epicsVer())
+                return a, "work", self.epicsVer()
             elif path.startswith(self.prodArea(a)):
-                return (a, "prod", self.epicsVer())
+                return a, "prod", self.epicsVer()
             elif a in path:
                 area = a
         # not found, so strip epicsVer out and try again
@@ -185,13 +239,18 @@ class environment:
         if match and match.group() != self.epicsVer():
             return self.__class__(match.group()).classifyArea(path)
         else:
-            return ("invalid", "invalid", self.epicsVer())
+            return "invalid", "invalid", self.epicsVer()
 
     def classifyPath(self, path):
-        """Return a (module, version) tuple for the path, where 
-        version is "invalid", "work", or a version number"""
+        """
+        Return a (module, version) tuple for the path, where
+        version is "invalid", "work", or a version number
+
+        :param path:
+        :return:
+        """
         # classify the area
-        (area, domain, epicsVer) = self.classifyArea(path)
+        area, domain, epicsVer = self.classifyArea(path)
         e = self
         if epicsVer != self.epicsVer:
             e = self.__class__(epicsVer)
@@ -210,24 +269,24 @@ class environment:
             root = e.prodArea(area)
         else:
             root = ""
-        assert path.startswith(root), "'%s' should start with '%s'" %(path,root)           
+        assert path.startswith(root), "'%s' should start with '%s'" % (path, root)
         sections = os.path.normpath(path[len(root):]).strip(os.sep).split(os.sep)
 
         # strip off a prefix suffix
-        if sections[-1] == "prefix" and area in [ "python", "tools" ]:
+        if sections[-1] == "prefix" and area in ["python", "tools"]:
             sections = sections[:-1]
 
         # check they are the right length
         if domain == "work":        
-            if len(sections) == 1 or area in [ "ioc", "tools", "python" ] and len(sections) == 2:
+            if len(sections) == 1 or area in ["ioc", "tools", "python"] and len(sections) == 2:
                 version = "work"
             else:
                 version = "invalid"
         elif domain == "prod":
-            if len(sections) == 2 or area in [ "ioc", "tools", "python" ] and len(sections) == 3:                
+            if len(sections) == 2 or area in ["ioc", "tools", "python"] and len(sections) == 3:
                 version = sections[-1]
                 module = os.sep.join(sections[:-1])
-                if area in [ "tools", "python"]:
+                if area in ["tools", "python"]:
                     module = sections[-2]
                 else:
                     module = os.sep.join(sections[:-1])
@@ -241,17 +300,17 @@ class environment:
                 module = os.sep.join(sections[-2:])
             elif len(sections) > 1:
                 module = sections[-1]
-        return (module, version)
+        return module, version
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     # test
     e = environment("R3.14.11")
-    print "epics:",e.epicsVer()
+    print "epics:", e.epicsVer()
 
     for area in e.areas:
-        print "Production  directory for area %s is %s"%(area,e.prodArea(area))
-        print "Development directory for area %s is %s"%(area,e.devArea(area))
+        print "Production  directory for area %s is %s" % (area, e.prodArea(area))
+        print "Development directory for area %s is %s" % (area, e.devArea(area))
         print
         
     print e.classifyPath("/dls_sw/prod/R3.14.12.3/support/asyn/4-21")
