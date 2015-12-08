@@ -4,9 +4,10 @@
 import os
 import sys
 import platform
-from dls_environment import environment
-from dls_ade.argument_parser import ArgParser
-from dls_environment import git_functions as gitf
+# from dls_environment import environment
+from argument_parser import ArgParser
+import path_functions as path
+import vcs_git
 
 usage = """Default <area> is 'support'.
 List the releases of a module in the release area of <area>. By default uses
@@ -27,7 +28,7 @@ def get_rhel_version():
 
 def make_parser():
 
-    e = environment()
+    # e = environment()
 
     parser = ArgParser(usage)
     parser.add_argument(
@@ -40,7 +41,7 @@ def make_parser():
         help="Print releases available in git")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="change the epics version, default is " + e.epicsVer() +
+        help="change the epics version, default is " + "e.epicsVer()" +
              " (from your environment)")
     parser.add_argument(
         "-r", "--rhel_version", action="store", type=int, dest="rhel_version",
@@ -53,56 +54,60 @@ def make_parser():
 
 def main():
 
-    e = environment()
+    # e = environment()
 
     parser = make_parser()
     args = parser.parse_args()
 
-#    if len(args) != 1:
-#        parser.error("Incorrect number of arguments.")
+    module = args.module_name
 
-    # setup the environment
-    module = args.module
+    # if args.epics_version:
+    #     if not args.epics_version.startswith("R"):
+    #         args.epics_version = "R%s" % args.epics_version
+    #     if e.epics_ver_re.match(args.epics_version):
+    #         e.setEpics(args.epics_version)
+    #     else:
+    #         parser.error("Expected epics version like R3.14.8.2, got: " +
+    #                      args.epics_version)
 
-    if args.epics_version:
-        if not args.epics_version.startswith("R"):
-            args.epics_version = "R%s" % args.epics_version
-        if e.epics_ver_re.match(args.epics_version):
-            e.setEpics(args.epics_version)
-        else:
-            parser.error("Expected epics version like R3.14.8.2, got: " +
-                         args.epics_version)
     if args.area == "ioc":
         assert len(module.split('/')) > 1, 'Missing Technical Area under Beamline'
 
     # Force options.svn if no releases in the file system
     if args.area in ["etc", "tools", "epics"]:
-        args.svn = True
-        
+        args.git = True
+
     # Check for the existence of releases of this module/IOC    
     release_paths = []    
-    if args.svn:
-        from dls_environment.svn import svnClient 
-        svn = svnClient()
-        import pysvn
-        source = os.path.join(gitf.prodArea(args.area), module)
-        if svn.pathcheck(source):
-            for node, _ in svn.list(source, depth=pysvn.depth.immediates)[1:]:
-                release_paths.append(os.path.basename(node.path))
-    else:
-        prodArea = e.prodArea(args.area)
-        if args.area == 'python' and args.rhel_version >= 6:
-            prodArea = os.path.join(prodArea, "RHEL%s-%s" %
-                                    (args.rhel_version, platform.machine()))
-        release_dir = os.path.join(prodArea, module)
-
-        if os.path.isdir(release_dir):        
-            for p in os.listdir(release_dir):
-                if os.path.isdir(os.path.join(release_dir, p)):
-                    release_paths.append(p)
+    if args.git:
+        # source = os.path.join(path.prodArea(args.area), module)
+        import path_functions
+        source = os.path.join(path_functions.devModule(args.module_name, args.area))
+        if vcs_git.is_repo_path(source):
+            if os.path.isdir('./' + module):
+                repo = vcs_git.git.Repo(module)
+                releases = vcs_git.list_module_releases(repo)
+                for release in releases:
+                    print(release)
+            else:
+                print("Module does not exists locally")
+            # if not repo (repo = clone(), clone = true)
+            # release_paths.append(tag in repo.tags)
+            # if clone (shutil(repo))
+    # else:
+    #     prodArea = e.prodArea(args.area)
+    #     if args.area == 'python' and args.rhel_version >= 6:
+    #         prodArea = os.path.join(prodArea, "RHEL%s-%s" %
+    #                                 (args.rhel_version, platform.machine()))
+    #     release_dir = os.path.join(prodArea, module)
+    #
+    #     if os.path.isdir(release_dir):
+    #         for p in os.listdir(release_dir):
+    #             if os.path.isdir(os.path.join(release_dir, p)):
+    #                 release_paths.append(p)
 
     # check some releases have been made
-    if len(release_paths) == 0:
+    if len(releases) == 0:
         if args.git:
             msg = "No releases made in git"
         else:
@@ -111,7 +116,7 @@ def main():
         return 1
 
     # sort the releases        
-    release_paths = e.sortReleases(release_paths)
+    # release_paths = e.sortReleases(release_paths)
 
     if args.latest:
         print(release_paths[-1].split("/")[-1])
