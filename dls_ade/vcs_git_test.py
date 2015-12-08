@@ -198,9 +198,10 @@ class GitClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
+    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2, mock_is_repo):
 
         try:
             vcs_git.Git('dummy', FakeOptions())

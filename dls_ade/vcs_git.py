@@ -72,7 +72,7 @@ def clone(source, module):
     """
     Checks if source is valid and that module doesn't already exist locally, then clones repo.
 
-    :param source: URL of remote repo to clone
+    :param source: Suffix of URL for remote repo to clone
     :type source: str
     :param module: Name of module to clone
     :type module: str
@@ -94,7 +94,7 @@ def clone_multi(source):
     """
     Checks if source is valid, then clones all repositories in source.
 
-    :param source: URL of remote repo area to clone
+    :param source: Suffix of URL for remote repo area to clone
     :type source: str
     :return: Null
     """
@@ -135,6 +135,7 @@ def list_remote_branches():
 def checkout_remote_branch(branch):
     """
     Creates a new local branch and links it to a remote of the current repo.
+
     :param branch: Remote branch to create locally.
     :type branch: str
     :return: Null
