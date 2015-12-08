@@ -116,6 +116,21 @@ def clone_multi(source):
                 print(target_path + " already exists in current directory")
 
 
+def list_module_releases(repo):
+    """
+    Return list of release tags of module.
+
+    :param repo: Git repository instance
+    :type repo: git.Repo
+    :return: Releases of module corresponding to repo
+    :rtype: list
+    """
+    releases = []
+    for tag in repo.tags:
+        releases.append(tag.name)
+    return releases
+
+
 def list_remote_branches():
     """
     Lists remote branches of current git repo.
