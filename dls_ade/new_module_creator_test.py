@@ -183,6 +183,58 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
         self.assertEqual(mod_c.template_args, {'module': "test_module", 'getlogin': "my_login"})
 
 
+class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
+    def setUp(self):
+
+        self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list')
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+
+        self.addCleanup(self.patch_get_remote_dir_list.stop)
+        self.addCleanup(self.patch_is_repo_path.stop)
+
+        self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+    def test_given_dir_list_exists_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_get_remote_dir_list.return_value = ['inrepo', 'inrepo', 'inrepo']
+        self.mock_is_repo_path.return_value = True
+
+        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="inrepo")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_remote_repo()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+        self.assertFalse(self.mod_c.remote_repo_valid)
+
+    def test_given_dir_list_does_not_exist_then_flag_set_true(self):
+
+        self.mock_get_remote_dir_list.return_value = ['notinrepo', 'notinrepo', 'notinrepo']
+        self.mock_is_repo_path.return_value = False
+
+        self.mod_c.verify_remote_repo()
+
+        self.assertTrue(self.mod_c.remote_repo_valid)
+
+    def test_given_one_dir_does_exist_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_get_remote_dir_list.return_value = ['notinrepo', 'inrepo', 'notinrepo']
+        self.mock_is_repo_path.side_effect = [False, True, False]  # return value iterates through this list
+
+        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="inrepo")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_remote_repo()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+        self.assertFalse(self.mod_c.remote_repo_valid)
+
+
 class NewModuleCreatorCheckRemoteRepoValidTest(unittest.TestCase):
 
     def setUp(self):
@@ -254,6 +306,75 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
         self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
 
 
+class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_is_dir = patch('dls_ade.new_module_creator.os.path.isdir')
+        self.patch_is_git_dir = patch('dls_ade.new_module_creator.vcs_git.is_git_dir')
+
+        self.addCleanup(self.patch_is_dir.stop)
+        self.addCleanup(self.patch_is_git_dir.stop)
+
+        self.mock_is_dir = self.patch_is_dir.start()
+        self.mock_is_git_dir = self.patch_is_git_dir.start()
+
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+    def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
+
+        self.mock_is_dir.return_value = False
+        self.mock_is_git_dir.return_value = False
+
+        self.mod_c.verify_can_create_local_module()
+
+        self.assertTrue(self.mod_c.create_local_module_valid)
+
+    def test_given_module_folder_exists_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_dir.return_value = False
+
+        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_create_local_module()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+        self.assertFalse(self.mod_c.remote_repo_valid)
+
+    def test_given_module_folder_is_in_git_repo_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_is_dir.return_value = False
+        self.mock_is_git_dir.return_value = True
+
+        comp_message = "Currently in a git repository, please move elsewhere and try again.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_create_local_module()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+        self.assertFalse(self.mod_c.remote_repo_valid)
+
+    def test_given_module_folder_exists_and_is_in_repo_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_dir.return_value = True
+
+        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.\n"
+        comp_message += "Currently in a git repository, please move elsewhere and try again."
+        comp_message = comp_message.format(dir=os.path.join("./", self.mod_c.disk_dir))
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_create_local_module()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+        self.assertFalse(self.mod_c.remote_repo_valid)
+
+
 class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
 
     def setUp(self):
@@ -309,7 +430,7 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
         valid, return_message = self.mod_c.check_create_module_valid()
 
         self.assertTrue(valid)
-        self.assertEqual(valid, self.mod_c.create_module_valid)
+        self.assertEqual(valid, self.mod_c.create_local_module_valid)
 
     @patch('dls_ade.new_module_creator.os.path.isdir', return_value=True)
     @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value=True)
@@ -318,7 +439,7 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
         valid, return_message = self.mod_c.check_create_module_valid()
 
         self.assertFalse(valid)
-        self.assertEqual(valid, self.mod_c.create_module_valid)
+        self.assertEqual(valid, self.mod_c.create_local_module_valid)
 
 
 # class NewModuleCreatorCheckInitStageAndCommitValidTest(unittest.TestCase):
@@ -374,6 +495,147 @@ class NewModuleCreatorCheckCreateModuleValidTest(unittest.TestCase):
 #
 #         self.assertFalse(valid)
 #         self.assertEqual(valid, self.mod_c.create_local_repo_valid)
+
+# def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
+#
+#     self.mock_is_dir.return_value = False
+#         self.mock_is_git_dir.return_value = False
+#
+#         self.mod_c.verify_can_create_local_module()
+#
+#         self.assertTrue(self.mod_c.create_local_module_valid)
+#
+# def test_given_module_folder_exists_then_flag_set_false_and_error_returned_is_correct(self):
+#
+#     self.mock_is_dir.return_value = True
+#         self.mock_is_git_dir.return_value = False
+#
+#         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+#
+#         with self.assertRaises(new_c.VerificationError) as e:
+#             self.mod_c.verify_can_create_local_module()
+#
+#         self.assertEqual(str(e.exception), comp_message)
+#
+#         self.assertFalse(self.mod_c.remote_repo_valid)
+#
+
+class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_is_dir = patch('dls_ade.new_module_creator.os.path.isdir')
+        self.patch_is_git_root_dir = patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir')
+        self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list')
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+
+        self.addCleanup(self.patch_is_dir.stop)
+        self.addCleanup(self.patch_is_git_root_dir.stop)
+        self.addCleanup(self.patch_get_remote_dir_list.stop)
+        self.addCleanup(self.patch_is_repo_path.stop)
+
+        self.mock_is_dir = self.patch_is_dir.start()
+        self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
+        self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.repo_comp_message = ""
+
+        self.mock_get_remote_dir_list.return_value = ["inrepo"]
+        self.mock_is_repo_path.return_value = True
+
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+
+        try:
+            self.mod_c.verify_remote_repo()  # Don't want to constrain return message of check_remote_repo_valid()
+        except new_c.VerificationError as e:
+            self.repo_comp_message = str(e)
+        else:
+            self.fail("Cannot access error message for verify_remote_repo()")
+
+    def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_root_dir.return_value = True
+
+        self.mod_c.remote_repo_valid = True
+        self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertTrue(self.mod_c.push_repo_to_remote_valid)
+
+    def test_given_remote_repo_valid_not_previously_set_but_true_then_flag_set_true(self):
+
+        self.mock_get_remote_dir_list.return_value = ['notinrepo', 'notinrepo', 'notinrepo']
+        self.mock_is_repo_path.return_value = False
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_root_dir.return_value = True
+
+        self.mod_c.push_repo_to_remote_valid = False
+
+        self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertTrue(self.mod_c.push_repo_to_remote_valid)
+
+    def test_given_remote_repo_valid_false_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_get_remote_dir_list.return_value = ['inrepo', 'inrepo', 'inrepo']
+        self.mock_is_repo_path.return_value = True
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_root_dir.return_value = True
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertEqual(str(e.exception), self.repo_comp_message)
+        self.assertFalse(self.mod_c.push_repo_to_remote_valid)
+
+    def test_given_module_folder_does_not_exist_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_is_dir.return_value = False
+        self.mock_is_git_root_dir.return_value = False
+
+        self.mod_c.remote_repo_valid = True
+
+        comp_message = "Directory {dir:s} does not exist.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertEqual(str(e.exception), comp_message)
+        self.assertFalse(self.mod_c.push_repo_to_remote_valid)
+
+    def test_given_module_folder_is_not_repo_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_root_dir.return_value = False
+
+        self.mod_c.remote_repo_valid = True
+
+        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertEqual(str(e.exception), comp_message)
+        self.assertFalse(self.mod_c.push_repo_to_remote_valid)
+
+    def test_given_module_folder_is_not_repo_and_remote_repo_false_then_flag_set_false_and_error_returned_is_correct(self):
+
+        self.mock_get_remote_dir_list.return_value = ['inrepo', 'inrepo', 'inrepo']
+        self.mock_is_repo_path.return_value = True
+        self.mock_is_dir.return_value = True
+        self.mock_is_git_root_dir.return_value = False
+
+        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.\n"
+        comp_message = comp_message.format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message += self.repo_comp_message
+        comp_message = comp_message.rstrip()
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_can_push_repo_to_remote()
+
+        self.assertEqual(str(e.exception), comp_message)
+        self.assertFalse(self.mod_c.push_repo_to_remote_valid)
 
 
 class NewModuleCreatorCheckPushRepoToRemoteValidTest(unittest.TestCase):
@@ -517,7 +779,7 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
     def test_given_create_module_valid_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
-        self.mod_c.create_module_valid = True
+        self.mod_c.create_local_module_valid = True
 
         chdir_call_list = []  # Using call list to aid readability
 
@@ -543,7 +805,7 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
     def test_given_create_module_valid_false_then_exception_raised_with_correct_message(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
-        self.mod_c.create_module_valid = False
+        self.mod_c.create_local_module_valid = False
 
         with self.assertRaises(Exception) as e:
             self.mod_c.create_module()
@@ -558,7 +820,7 @@ class NewModuleCreatorCreateModuleTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
     def test_given_create_module_valid_original_false_but_check_function_true_then_create_files_called(self, mock_create_files, mock_chdir, mock_check_valid, mock_init_repo, mock_stage_and_commit, mock_makedirs):
 
-        self.mod_c.create_module_valid = False
+        self.mod_c.create_local_module_valid = False
 
         chdir_call_list = []  # Using call list to aid readability
 
