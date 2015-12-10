@@ -5,7 +5,7 @@ import os
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY, MagicMock  # @UnresolvedImport
+from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 
 class IsGitDirTest(unittest.TestCase):
@@ -170,35 +170,113 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         self.assertFalse(git_inst.call_count)
 
 
-class CreateNewRemoteAndPush(unittest.TestCase):
+class AddNewRemoteAndPushTest(unittest.TestCase):
 
-    @patch('os.rmdir')
-    @patch('dls_ade.vcs_git.git')
-    def test_given_valid_target_path_then_create_module(self, mock_git, mock_rmdir):
-        area = "not_an_area"
-        module = "not_a_module"
-        path = "./"
-        target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/testing/" + area + "/" + module
+    def setUp(self):
+        self.patch_is_git_root_dir = patch('dls_ade.vcs_git.is_git_root_dir')
+        self.patch_create_remote_repo = patch('dls_ade.vcs_git.create_remote_repo')
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.patch_git = patch('dls_ade.vcs_git.git')
 
-        git_inst = MagicMock()
-        mock_git.Repo.return_value = git_inst
-        origin_inst = MagicMock()
-        git_inst.create_remote.return_value = origin_inst
+        self.addCleanup(self.patch_is_git_root_dir.stop)
+        self.addCleanup(self.patch_create_remote_repo.stop)
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.addCleanup(self.patch_git.stop)
 
-        vcs_git.create_new_remote_and_push(area, module, path)
+        self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
+        self.mock_create_remote_repo = self.patch_create_remote_repo.start()
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+        self.mock_git = self.patch_git.start()
 
-        git_inst.clone_from.assert_called_once_with(target, path + ".dummy")
-        mock_rmdir.assert_called_once_with(path + ".dummy")
-        git_inst.create_remote.assert_called_once_with("origin", target)
-        origin_inst.push.assert_called_once_with('master')
+        self.mock_repo = MagicMock()  # This code here allows us to interrogate the objects created from git.Repo()
+        self.mock_remotes_property = PropertyMock()
+        type(self.mock_repo).remotes = self.mock_remotes_property
 
-    @patch('dls_ade.vcs_git.git')
-    def test_given_existing_target_path_then_error_raised(self, mock_git):
-        area = "python"
-        module = "cothread"
+        self.mock_remote = MagicMock()
+        self.mock_repo.create_remote.return_value = self.mock_remote
 
-        with self.assertRaises(Exception):
-            vcs_git.create_new_remote_and_push(area, module)
+        self.mock_git.Repo.return_value = self.mock_repo
+
+        # The mocks below allow us to test the list comprehension
+        self.mock_property_not_in_repo = PropertyMock(return_value = "notinrepo")
+        self.mock_property_in_repo = PropertyMock(return_value = "inrepo")
+
+        self.mock_not_in_repo = MagicMock()
+        type(self.mock_not_in_repo).name = self.mock_property_not_in_repo
+
+        self.mock_in_repo = MagicMock()
+        type(self.mock_in_repo).name = self.mock_property_in_repo
+
+        # Need to set:
+        # self.mock_remotes_property.return_value = [...]
+
+    def test_given_is_git_root_dir_false_then_exception_raised_with_correct_message(self):
+
+        self.mock_is_git_root_dir.return_value = False
+
+        comp_message = "Path {path:s} is not a git repository"
+        comp_message = comp_message.format(path="test_path")
+
+        with self.assertRaises(Exception) as e:
+            vcs_git.add_new_remote_and_push("test_destination", path="test_path")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_is_git_root_dir_true_then_git_repo_init_called_with_correct_arguments(self):
+
+        self.mock_is_git_root_dir.return_value = True
+
+        try:
+            vcs_git.add_new_remote_and_push("test_destination", path="test_path")
+        except:
+            pass
+
+        self.mock_git.Repo.assert_called_once_with("test_path")
+
+    def test_given_remote_name_in_repo_remotes_then_exception_raised_with_correct_message(self):
+
+        self.mock_is_git_root_dir.return_value = True
+        self.mock_remotes_property.return_value = [self.mock_not_in_repo, self.mock_in_repo, self.mock_not_in_repo]
+
+        comp_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
+        comp_message = comp_message.format(remote="inrepo")
+
+        with self.assertRaises(Exception) as e:
+            vcs_git.add_new_remote_and_push("test_destination", remote_name="inrepo")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_is_repo_path_true_then_exception_raised_with_correct_message(self):
+
+        self.mock_is_git_root_dir.return_value = True
+        self.mock_remotes_property.return_value = [self.mock_not_in_repo, self.mock_not_in_repo, self.mock_not_in_repo]
+
+        comp_message = "{dest:s} already exists".format(dest="test_destination")
+
+        with self.assertRaises(Exception) as e:
+            vcs_git.add_new_remote_and_push("test_destination")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_all_checks_pass_then_function_runs_correctly(self):
+
+        self.mock_is_git_root_dir.return_value = True
+        self.mock_remotes_property.return_value = [self.mock_not_in_repo, self.mock_not_in_repo, self.mock_not_in_repo]
+        self.mock_is_repo_path.return_value = False
+
+        vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
+
+        self.mock_create_remote_repo.assert_called_once_with("test_destination")
+        self.mock_repo.create_remote.assert_called_once_with("test_remote", "test_destination")
+        self.mock_remote.push.assert_called_once_with("test_branch")
+
+
+class CreateRemoteRepoTest(unittest.TestCase):
+    pass
+
+
+class PushToRemoteTest(unittest.TestCase):
+    pass
 
 
 class CloneTest(unittest.TestCase):

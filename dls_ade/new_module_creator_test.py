@@ -22,7 +22,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         methods_to_patch = [
             'CreatorIOC',
-            'CreatorIOCOldNaming',
+            'CreatorIOCOldStyleAddToModule',
             'CreatorIOCBL',
             'CreatorPython',
             'CreatorSupport',
@@ -49,7 +49,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator("test-module-IOC-01", "ioc")
 
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc", os.getcwd())
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
 
     def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_true_then_new_module_creator_ioc_called_with_correct_args(self):
 
@@ -57,15 +57,27 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc", fullname=True)
 
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc", os.getcwd())
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
 
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_then_new_module_creator_ioc_old_naming_called_with_correct_args(self):
+    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value = False)
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_git_dir):
 
-        ioc_c_mock = self.mocks['CreatorIOCOldNaming']
+        ioc_c_mock = self.mocks['CreatorIOC']
 
         new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc")
 
-        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc", os.getcwd())
+        mock_is_git_dir.assert_called_once_with("test/module")
+        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
+
+    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value = True)
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_old_style_add_to_module_called_with_correct_args(self, mock_is_git_dir):
+
+        ioc_os_c_mock = self.mocks['CreatorIOCOldStyleAddToModule']
+
+        new_ioc_creator = new_c.get_new_module_creator("test/module/02", "ioc")
+
+        mock_is_git_dir.assert_called_once_with("test/module")
+        ioc_os_c_mock.assert_called_once_with("test/module", "test-module-IOC-02", "ioc")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
 
@@ -73,7 +85,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator("test/BL", "ioc")
 
-        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc", os.getcwd())
+        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
 
@@ -81,7 +93,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator("test-BL-IOC-01", "ioc")
 
-        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc", os.getcwd())
+        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc")
 
     def test_given_area_is_python_with_invalid_name_then_new_module_creator_python_not_returned(self):
 
@@ -108,7 +120,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_py_creator = new_c.get_new_module_creator("dls_test_module", "python")
 
-        py_c_mock.assert_called_once_with("dls_test_module", "python", os.getcwd())
+        py_c_mock.assert_called_once_with("dls_test_module", "python")
 
     def test_given_area_is_support_then_new_module_creator_support_returned(self):
 
@@ -116,7 +128,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_sup_creator = new_c.get_new_module_creator("test_module")  # Area automatically support
 
-        sup_c_mock.assert_called_once_with("test_module", "support", os.getcwd())
+        sup_c_mock.assert_called_once_with("test_module", "support")
 
     def test_given_area_is_tools_then_new_module_creator_tools_returned(self):
 
@@ -124,7 +136,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         new_tools_creator = new_c.get_new_module_creator("test_module", "tools")
 
-        tools_c_mock.assert_called_once_with("test_module", "tools", os.getcwd())
+        tools_c_mock.assert_called_once_with("test_module", "tools")
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
@@ -170,7 +182,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        base_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())  # non-existent module and area
+        base_c = new_c.NewModuleCreator("test_module", "test_area")  # non-existent module and area
 
 
 class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
@@ -178,7 +190,7 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
     @patch('os.getlogin', return_value='my_login')
     def test_given_reasonable_input_then_correct_template_args_given(self, mock_getlogin):
 
-        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
         self.assertEqual(mod_c.template_args, {'module': "test_module", 'getlogin': "my_login"})
 
@@ -195,7 +207,7 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
         self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
         self.mock_is_repo_path = self.patch_is_repo_path.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     def test_given_dir_list_exists_then_flag_set_false_and_error_returned_is_correct(self):
 
@@ -241,7 +253,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.pathf.prodModule', return_value = 'prod_module')
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
-        mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        mod_c = new_c.NewModuleCreator("test_module", "test_area")
         dir_list = mod_c.get_remote_dir_list()
 
         self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
@@ -260,7 +272,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_is_dir = self.patch_is_dir.start()
         self.mock_is_git_dir = self.patch_is_git_dir.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
 
@@ -332,7 +344,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
         self.mock_verify_remote_repo = self.patch_verify_remote_repo.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
 
@@ -439,7 +451,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         # self.mock_os.return_value = "Example"
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -511,7 +523,7 @@ class NewModuleCreatorCreateFilesTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     @patch('dls_ade.new_module_creator.NewModuleCreator.create_files_from_template_dict')
     def test_create_files_from_template_called(self, mock_create_files_from_template):
@@ -532,7 +544,7 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isdir = self.patch_isdir.start()
         self.mock_makedirs = self.patch_makedirs.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
         self.mod_c.template_args = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
@@ -663,7 +675,7 @@ class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
 
     def test_given_function_called_then_message_printed_correctly(self):
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
         self.mod_c.message = "Test_Message"
 
@@ -680,15 +692,15 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
     def setUp(self):
 
         self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_push_repo_to_remote')
-        self.patch_create_new_remote_and_push = patch('dls_ade.new_module_creator.vcs_git.create_new_remote_and_push')
+        self.patch_add_new_remote_and_push = patch('dls_ade.new_module_creator.vcs_git.add_new_remote_and_push')
 
         self.addCleanup(self.patch_verify_can_push_repo_to_remote.stop)
-        self.addCleanup(self.patch_create_new_remote_and_push.stop)
+        self.addCleanup(self.patch_add_new_remote_and_push.stop)
 
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
-        self.mock_create_new_remote_and_push = self.patch_create_new_remote_and_push.start()
+        self.mock_add_new_remote_and_push = self.patch_add_new_remote_and_push.start()
 
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area", os.getcwd())
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -698,13 +710,13 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.assertFalse(self.mod_c.can_push_repo_to_remote)
 
-    def test_given_can_push_repo_to_remote_true_then_create_new_remote_and_push_called(self):
+    def test_given_can_push_repo_to_remote_true_then_add_new_remote_and_push_called(self):
 
         self.mod_c.can_push_repo_to_remote = True
 
         self.mod_c.push_repo_to_remote()
 
-        self.mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_path, self.mod_c.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.dest, self.mod_c.disk_dir)
 
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
@@ -714,15 +726,15 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             self.mod_c.push_repo_to_remote()
 
-        self.assertFalse(self.mock_create_new_remote_and_push.called)
+        self.assertFalse(self.mock_add_new_remote_and_push.called)
         self.assertEqual(str(e.exception), "error")
 
-    def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_create_new_remote_and_push_called(self):
+    def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_add_new_remote_and_push_called(self):
 
         self.mod_c.can_push_repo_to_remote = False
 
         self.mod_c.push_repo_to_remote()
 
-        self.mock_create_new_remote_and_push.assert_called_with(self.mod_c.area, self.mod_c.module_path, self.mod_c.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.dest, self.mod_c.disk_dir)
 
 # Add tests for all derived NewModuleCreator classes

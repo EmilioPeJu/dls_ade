@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import re
 import path_functions as pathf
 import shutil
 from new_module_templates import py_files, tools_files, default_files
@@ -9,8 +8,6 @@ import vcs_git
 
 def get_new_module_creator(module_name, area="support", fullname=False):
     ''' Use arguments to determine which new module creator to use, and return it '''
-
-    cwd = os.getcwd()
 
     if area == "ioc":  # This section of code is ugly because it has to mimic the behaviour of the original script
         cols = module_name.split('/')  # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
@@ -21,20 +18,37 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             if technical_area == "BL":
                 module_path = domain + "/" + technical_area
                 app_name = domain
-                return NewModuleCreatorIOCBL(module_path, app_name, area, cwd)
+                return NewModuleCreatorIOCBL(module_path, app_name, area)
 
             if len(cols) == 3 and cols[2] != '':
                 ioc_number = cols[2]
+
             else:
                 ioc_number = '01'
 
             app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+
             if fullname:
                 module_path = domain + "/" + app_name
-                return NewModuleCreatorIOC(module_path, app_name, area, cwd)
+                return NewModuleCreatorIOC(module_path, app_name, area)
+
             else:
                 module_path = domain + "/" + technical_area
-                return NewModuleCreatorIOCOldNaming(module_path, app_name, area, cwd)
+                # This part is here to retain compatibility with "old-style" modules, in which a single module named
+                # "domain/technical_area" contains multiple domain-technical_area-IOC-xxApp's. This involves cloning
+                # from the remote repository, a different method for checking whether or not the App will conflict with
+                # one on the server and not having to "git remote add origin" to the local repository. I have therefore
+                # moved this code into a separate class. However, if the module does not previously exist, the process
+                # is exactly the same as that described by NewModuleCreatorIOC.
+                if vcs_git.is_git_dir(module_path):
+                    # Adding new App to old style "domain/tech_area" module that already exists on the remote server
+                    return NewModuleCreatorIOCOldStyleAddToModule(module_path, app_name, area)
+
+                else:
+                    # Otherwise, the behaviour is exactly the same as that given by the ordinary IOC class
+                    # as module_path is the only thing that varies
+                    return NewModuleCreatorIOC(module_path, app_name, area)
+
         else:
             # assume full IOC name is given
             cols = module_name.split('-')
@@ -46,22 +60,22 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             module_path = domain + "/" + app_name
 
             if technical_area == "BL":
-                return NewModuleCreatorIOCBL(module_path, app_name, area, cwd)
+                return NewModuleCreatorIOCBL(module_path, app_name, area)
             else:
-                return NewModuleCreatorIOC(module_path, app_name, area, cwd)
+                return NewModuleCreatorIOC(module_path, app_name, area)
 
     elif area == "python":
         valid_name = module_name.startswith("dls_") and ("-" not in module_name) and ("." not in module_name)
         if not valid_name:
             raise Exception("Python module names must start with 'dls_' and be valid python identifiers")
 
-        return NewModuleCreatorPython(module_name, area, cwd)
+        return NewModuleCreatorPython(module_name, area)
 
     elif area == "support":
-        return NewModuleCreatorSupport(module_name, area, cwd)
+        return NewModuleCreatorSupport(module_name, area)
 
     elif area == "tools":
-        return NewModuleCreatorTools(module_name, area, cwd)
+        return NewModuleCreatorTools(module_name, area)
 
     else:
         raise Exception("Don't know how to make a module of type: " + area)
@@ -85,7 +99,7 @@ class VerificationError(Exception):
 
 class NewModuleCreator(object):
 
-    def __init__(self, module_path, area, cwd):
+    def __init__(self, module_path, area):
         # Initialise all private variables.
         # This one is used for testing purposes, although it is also used by support, tools and python
 
@@ -100,7 +114,7 @@ class NewModuleCreator(object):
         # Sensible defaults for variable initialisation:
 
         self.area = area  # needed for file templates and dest
-        self.cwd = cwd
+        self.cwd = os.getcwd()
 
         self.module_path = ""
         self.module_name = ""
@@ -308,7 +322,7 @@ class NewModuleCreator(object):
 
         self.can_push_repo_to_remote = False
 
-        vcs_git.create_new_remote_and_push(self.area, self.module_path, self.disk_dir)
+        vcs_git.add_new_remote_and_push(self.dest, self.disk_dir)
 
 
 class NewModuleCreatorIOC(NewModuleCreator):
@@ -349,7 +363,7 @@ class NewModuleCreatorIOC(NewModuleCreator):
         raise NotImplementedError
 
 
-class NewModuleCreatorIOCOldNaming(NewModuleCreatorIOC):
+class NewModuleCreatorIOCOldStyleAddToModule(NewModuleCreatorIOC):
     # Also need:
     # check_remote_repo_valid to look inside module if it exists
     # create_module

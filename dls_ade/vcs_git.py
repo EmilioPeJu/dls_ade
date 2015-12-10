@@ -1,8 +1,9 @@
 #from dls_ade.vcs import BaseVCS
 from vcs import BaseVCS
-import tempfile
 import subprocess
 import os
+import tempfile
+import shutil
 
 from pkg_resources import require
 require('GitPython')
@@ -26,6 +27,11 @@ def new_is_git_dir(path="./"):
 
 
 def is_git_dir(path="."):
+    if not os.path.isdir(path):
+        # Check if local folder actually exists - below command will return True for non-existent folder that is a
+        # subdirectory of a git repository (eg. git_repo/fake_name)
+        return False
+
     return subprocess.call(
         ['git', 'status', path], stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
@@ -82,26 +88,67 @@ def stage_all_files_and_commit(path="./"):
         raise Exception("Specified path does not exist")
 
 
-def create_new_remote_and_push(area, module, path="./"):
-    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/testing/" + area + "/" + module
-    # >>> Adjust for technical area?
-    if area == "ioc":
-        pass
+def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="master", ):
+    '''
+    This will push the given repository to the URL given by dest. If the repository already has a remote called
+    <remote_name>, then it will return an exception - use push_to_remote_repo. Pushes only branch <branch_name>.
+    '''
 
-    if os.path.isdir(path):
-        repo = git.Repo(path)
-        if is_repo_path("testing/" + area + "/" + module):
-            raise Exception("testing/" + area + "/" + module + " already exists")
-        else:
-            print("Creating remote...")
-            repo.clone_from(target, path + ".dummy")
-            os.rmdir(path + ".dummy")
-            print("Adding remote to repo...")
-            origin = repo.create_remote("origin", target)
-            print("Pushing repo to gitolite...")
-            origin.push('master')
-    else:
-        raise Exception("Path is not valid")
+    if not is_git_root_dir(path):
+        raise Exception("Path {path:s} is not a git repository".format(path=path))
+
+    repo = git.Repo(path)
+
+    if remote_name in [x.name for x in repo.remotes]:
+        # <remote_name> remote already exists - use push_to_remote_repo instead!
+        err_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
+        raise Exception(err_message.format(remote=remote_name))
+
+    if is_repo_path(dest):
+        raise Exception("{dest:s} already exists".format(dest=dest))
+
+    create_remote_repo(dest)
+    print("Adding remote to repo...")
+    remote = repo.create_remote(remote_name, dest)
+    print("Pushing repo to destination...")
+    remote.push(branch_name)
+
+
+def create_remote_repo(dest):
+    pass
+    # Change to make use of temporary directories
+    # print("Creating remote...")
+    # temp_dir = tempfile.mkdtemp()
+
+    # try:
+    #     #git.Repo.clone_from(dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
+    # finally:
+    #     shutil.rmtree(temp_dir)
+
+
+def push_to_remote(path="./", remote_name="origin", branch_name="master"):
+    '''
+    This will push the given local repository to its remote <remote_name> on branch <branch_name>. If this remote does
+    not exist, the program will exit
+    '''
+
+    if not is_git_root_dir(path):
+        raise Exception("Path given is not a git repository")
+
+    repo = git.Repo(path)
+
+    if remote_name not in [x.name for x in repo.remotes]:  # Remote "origin" does not already exists
+        raise Exception("Local repository does not have remote " + remote_name)
+
+    remote = repo.remotes[remote_name]
+    if not is_repo_path(remote.url):
+        raise Exception("Remote repository URL " + remote.url + " does not currently exist")
+
+    if branch_name not in [x.name for x in repo.branches]:
+        raise Exception("Local repository branch " + branch_name + " does not currently exist.")
+
+    print("Pushing repo to destination...")
+    remote.push(branch_name)
 
 
 def clone(source, module):
