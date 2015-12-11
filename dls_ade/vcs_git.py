@@ -68,24 +68,31 @@ def get_repository_list():
 
 def init_repo(path="./"):
 
-    if os.path.isdir(path):
-        print("Initialising repo...")
-        repo = git.Repo.init(path)
-        print("Repository created.")
-    else:
-        raise Exception("Specified path does not exist")
+    if not os.path.isdir(path):
+        raise Exception("Path {path:s} is not a directory".format(path=path))
+
+    if is_git_root_dir(path):
+            raise Exception("Path {path:s} is already a git repository".format(path=path))
+
+    print("Initialising repo...")
+    git.Repo.init(path)
+    print("Repository created.")
 
 
 def stage_all_files_and_commit(path="./"):
 
-    if os.path.isdir(path):
-        repo = git.Repo(path)
-        print("Staging files...")
-        repo.git.add('--all')
-        print("Committing files to repo...")
-        print(repo.git.commit(m="Initial commit"))
-    else:
-        raise Exception("Specified path does not exist")
+    if not os.path.isdir(path):
+        raise Exception("Path {path:s} is not a directory".format(path=path))
+
+    if not is_git_root_dir(path):
+        raise Exception("Path {path:s} is not a git repository".format(path=path))
+
+    repo = git.Repo(path)
+    print("Staging files...")
+    repo.git.add('--all')
+    print("Committing files to repo...")
+    msg = repo.git.commit(m="Initial commit")
+    print(msg)
 
 
 def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="master", ):
@@ -98,6 +105,10 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="
         raise Exception("Path {path:s} is not a git repository".format(path=path))
 
     repo = git.Repo(path)
+
+    if branch_name not in [x.name for x in repo.branches]:
+        err_message = "Local repository branch {branch:s} does not currently exist.".format(branch=branch_name)
+        raise Exception(err_message)
 
     if remote_name in [x.name for x in repo.remotes]:
         # <remote_name> remote already exists - use push_to_remote_repo instead!
@@ -115,37 +126,35 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="
 
 
 def create_remote_repo(dest):
-    pass
     # Change to make use of temporary directories
-    # print("Creating remote...")
-    # temp_dir = tempfile.mkdtemp()
+    print("Creating remote...")
+    temp_dir = tempfile.mkdtemp()
 
-    # try:
-    #     #git.Repo.clone_from(dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
-    # finally:
-    #     shutil.rmtree(temp_dir)
+    try:
+        git.Repo.clone_from(dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 def push_to_remote(path="./", remote_name="origin", branch_name="master"):
     '''
-    This will push the given local repository to its remote <remote_name> on branch <branch_name>. If this remote does
-    not exist, the program will exit
+    This will push the given local repository to its remote <remote_name> on branch <branch_name>.
     '''
 
     if not is_git_root_dir(path):
-        raise Exception("Path given is not a git repository")
+        raise Exception("Path {path:s} is not a git repository".format(path=path))
 
     repo = git.Repo(path)
 
-    if remote_name not in [x.name for x in repo.remotes]:  # Remote "origin" does not already exists
-        raise Exception("Local repository does not have remote " + remote_name)
-
-    remote = repo.remotes[remote_name]
-    if not is_repo_path(remote.url):
-        raise Exception("Remote repository URL " + remote.url + " does not currently exist")
-
     if branch_name not in [x.name for x in repo.branches]:
-        raise Exception("Local repository branch " + branch_name + " does not currently exist.")
+        raise Exception("Local repository branch {branch:s} does not currently exist.".format(branch=branch_name))
+
+    if remote_name not in [x.name for x in repo.remotes]:  # Remote "origin" does not already exist
+        raise Exception("Local repository does not have remote {remote:s}".format(remote=remote_name))
+
+    remote = repo.remotes[remote_name]  # They have overloaded the dictionary lookup to compare string given with .name
+    if not is_repo_path(remote.url):
+        raise Exception("Remote repository URL {remoteURL:s} does not currently exist".format(remoteURL=remote.url))
 
     print("Pushing repo to destination...")
     remote.push(branch_name)
