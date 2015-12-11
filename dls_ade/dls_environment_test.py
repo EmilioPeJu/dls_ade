@@ -432,7 +432,7 @@ class NormaliseReleaseTest(unittest.TestCase):
     def test_normalises_1_2_3_4_5_6_7(self):
         env = dls_environment.environment()
         self.assertEqual(env.normaliseRelease("1-2-3-4-5-6-7"),
-                         [1, 'z', 2, 'z', 3, 'z', 4, '-5-6-7z', 0, '', 0, ''])
+                         [1, 'z', 2, 'z', 3, 'z', 4, '-5-6-7', 0, '', 0, ''])
 
     def test_normalises_3_dls_12(self):
         env = dls_environment.environment()
@@ -462,7 +462,7 @@ class NormaliseReleaseTest(unittest.TestCase):
     def test_normalises_4_5_beta2_dls_1_3(self):
         env = dls_environment.environment()
         self.assertEqual(env.normaliseRelease("4-5beta2dls1-3"),
-                         [4, 'z', 5, 'beta2z', 0, '', 1, 'z', 3, 'z', 0, ''])
+                         [4, 'z', 5, 'beta2', 0, '', 1, 'z', 3, 'z', 0, ''])
 
     def test_normalises_1_7_12_beta1dls16_2_13_2(self):
         env = dls_environment.environment()
@@ -472,59 +472,26 @@ class NormaliseReleaseTest(unittest.TestCase):
     def test_normalises_1_7_12beta1dls16_2_13_2(self):
         env = dls_environment.environment()
         self.assertEqual(env.normaliseRelease("1-7-12beta1dls16-2-13"),
-                         [1, 'z', 7, 'z', 12, 'beta1z', 16, 'z', 2, 'z', 13, 'z'])
-
-    # def test_mock(self):
-    #     env = dls_environment.environment()
-    #     self.assertEqual(env.normaliseRelease("1-7-12beta1dls16-2-13-1"),
-    #                      [''])
+                         [1, 'z', 7, 'z', 12, 'beta1', 16, 'z', 2, 'z', 13, 'z'])
 
 
 class SortReleasesTest(unittest.TestCase):
 
-    def test_sorts(self):
-        unsorted = ['1-0', '1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7',
-                    '1-8', '2-0', '2-1', '2-10', '2-11', '2-12', '2-14', '2-2',
-                    '2-2revbranch1', '2-3', '2-4', '2-5', '2-6', '2-6-1', '2-7',
-                    '2-8', '2-9', '3-0', '3-1']
-        sorted = ['1-0', '1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7',
-                  '1-8', '2-0', '2-1', '2-2revbranch1', '2-2', '2-3', '2-4',
-                  '2-5', '2-6', '2-6-1',  '2-7', '2-8', '2-9', '2-10', '2-11',
-                  '2-12', '2-14', '3-0', '3-1']
-        env = dls_environment.environment()
-
-        self.assertEqual(env.sortReleases(unsorted), sorted)
-
-    # @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    # def test_sorts_singles(self, _1):
-    #     env = dls_environment.environment()
-    #     a = '2'
-    #     a_norm = [2, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-    #     b = '3'
-    #     b_norm = [3, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-    #     c = '1'
-    #     c_norm = [1, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-    #
-    #     env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
-    #
-    #     self.assertEqual(env.sortReleases([a, b, c]), ['1', '2', '3'])
-
     def test_sorts_singles(self):
         env = dls_environment.environment()
         a = '2'
+        a_norm = [2, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
         b = '3'
+        b_norm = [3, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
         c = '1'
+        c_norm = [1, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
+
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['1', '2', '3'])
 
-    # @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    # def test_sorts_singles_with_mock(self, _1):
-    #     super(SortReleasesTest, self).__init__(methodName='test_sorts_singles')
-    #     test = 'mock'
-
-
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_doubles(self, _1):
+    def test_sorts_doubles(self):
         env = dls_environment.environment()
         a = '1-2'
         a_norm = [1, 'z', 2, 'z', 0, '', 0, '', 0, '', 0, '']
@@ -533,12 +500,12 @@ class SortReleasesTest(unittest.TestCase):
         c = '1-1'
         c_norm = [1, 'z', 1, 'z', 0, '', 0, '', 0, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['1-1', '1-2', '1-3'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_triples(self, _1):
+    def test_sorts_triples(self):
         env = dls_environment.environment()
         a = '1-2-3'
         a_norm = [1, 'z', 2, 'z', 3, '', 0, '', 0, '', 0, '']
@@ -547,12 +514,12 @@ class SortReleasesTest(unittest.TestCase):
         c = '1-2-1'
         c_norm = [1, 'z', 2, 'z', 1, '', 0, '', 0, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['1-2-1', '1-2-3', '1-3-2'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_x_dls_y(self, _1):
+    def test_sorts_x_dls_y(self):
         env = dls_environment.environment()
         a = '3dls12'
         a_norm = [3, 'z', 0, '', 0, '', 12, 'z', 0, '', 0, '']
@@ -561,12 +528,12 @@ class SortReleasesTest(unittest.TestCase):
         c = '3dls10'
         c_norm = [3, 'z', 0, '', 0, '', 10, 'z', 0, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['2dls12', '3dls10', '3dls12'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_x_x_dls_y(self, _1):
+    def test_sorts_x_x_dls_y(self):
         env = dls_environment.environment()
         a = '3-10dls12'
         a_norm = [3, 'z', 10, 'z', 0, '', 12, 'z', 0, '', 0, '']
@@ -575,42 +542,87 @@ class SortReleasesTest(unittest.TestCase):
         c = '3-10dls15'
         c_norm = [3, 'z', 10, 'z', 0, '', 15, 'z', 0, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['3-8dls12', '3-10dls12', '3-10dls15'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_x_x_beta_dls_y(self, _1):
+    def test_sorts_x_x_beta_dls_y(self):
         env = dls_environment.environment()
         a = '4-5beta2dls1-3'
-        a_norm = [4, 'z', 5, 'beta2z', 0, '', 1, 'z', 3, 'z', 0, '']
+        a_norm = [4, 'z', 5, 'beta2', 0, '', 1, 'z', 3, 'z', 0, '']
         b = '4-5beta1dls1-3'
-        b_norm = [4, 'z', 5, 'beta1z', 0, '', 1, 'z', 3, 'z', 0, '']
+        b_norm = [4, 'z', 5, 'beta1', 0, '', 1, 'z', 3, 'z', 0, '']
         c = '4-5beta2dls2-3'
-        c_norm = [4, 'z', 5, 'beta2z', 0, '', 2, 'z', 3, 'z', 0, '']
+        c_norm = [4, 'z', 5, 'beta2', 0, '', 2, 'z', 3, 'z', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]),
                          ['4-5beta1dls1-3', '4-5beta2dls1-3', '4-5beta2dls2-3'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_x_x_beta_dls_y(self, _1):
+    def test_sorts_x_x_x_beta_dls_y(self):
         env = dls_environment.environment()
         a = '1-7-12beta1dls16-2-13-1'
-        a_norm = [1, 'z', 7, 'z', 12, 'beta1z', 16, 'z', 2, 'z', 13, 'z', 1, 'z']
+        a_norm = [1, 'z', 7, 'z', 12, 'beta1', 16, 'z', 2, 'z', 13, 'z', 1, 'z']
         b = '1-7-12beta1dls17'
-        b_norm = [1, 'z', 7, 'z', 12, 'beta1z', 1, 'z', 0, '', 0, '']
-        c = '4-5beta2dls2-3'
-        c_norm = [4, 'z', 5, 'beta2z', 0, '', 2, 'z', 3, 'z', 0, '']
+        b_norm = [1, 'z', 7, 'z', 12, 'beta1', 17, 'z', 0, '', 0, '']
+        c = '1-7-12beta2dls2-3'
+        c_norm = [1, 'z', 7, 'z', 12, 'beta2', 2, 'z', 3, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]),
-                         ['1-7-12beta1dls17', '1-7-12beta1dls16-2-13-1', '4-5beta2dls2-3'])
+                         ['1-7-12beta1dls16-2-13-1', '1-7-12beta1dls17', '1-7-12beta2dls2-3'])
 
-    @patch('dls_ade.dls_environment.environment.normaliseRelease')
-    def test_sorts_dash_doubles(self, _1):
+    def test_sorts_x_x_x_x_dls_y(self):
+        env = dls_environment.environment()
+        a = '1-7-12-3dls16-2-13-1'
+        a_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'z', 16, 'z', 2, 'z', 13, 'z', 1, 'z']
+        b = '1-7-12-2dls16-2-13-1'
+        b_norm = [1, 'z', 7, 'z', 12, 'z', 2, 'z', 16, 'z', 2, 'z', 13, 'z', 1, 'z']
+        c = '1-7-12-3dls16-2-14-1'
+        c_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'z', 16, 'z', 2, 'z', 14, 'z', 1, 'z']
+
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+
+        self.assertEqual(env.sortReleases([a, b, c]),
+                         ['1-7-12-2dls16-2-13-1', '1-7-12-3dls16-2-13-1', '1-7-12-3dls16-2-14-1'])
+
+    def test_sorts_x_x_x_x_beta_dls_y(self):
+        env = dls_environment.environment()
+        a = '1-7-12-3alpha1dls16'
+        a_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'alpha1', 16, 'z', 0, '', 0, '', 0, '']
+        b = '1-7-12-3alpha2dls16'
+        b_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'alpha2', 16, 'z', 0, '', 0, '', 0, '']
+        c = '1-7-12-3dls16'
+        c_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'z', 16, 'z', 0, '', 0, '', 0, '']
+
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+
+        self.assertEqual(env.sortReleases([a, b, c]),
+                         ['1-7-12-3alpha1dls16', '1-7-12-3alpha2dls16', '1-7-12-3dls16'])
+
+    def test_sorts_x_x_x_x_alpha_alpha2_dls_y(self):
+        env = dls_environment.environment()
+        a = '1-7-12-3alpha1dls16'
+        a_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'alpha1', 16, 'z', 0, '', 0, '', 0, '']
+        b = '1-7-12-3alpha2dls16'
+        b_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'alpha2', 16, 'z', 0, '', 0, '', 0, '']
+        c = '1-7-12-3dls16'
+        c_norm = [1, 'z', 7, 'z', 12, 'z', 3, 'z', 16, 'z', 0, '', 0, '', 0, '']
+
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+
+        self.assertEqual(env.sortReleases([a, b, c]),
+                         ['1-7-12-3alpha1dls16', '1-7-12-3alpha2dls16', '1-7-12-3dls16'])
+
+    def test_sorts_dash_doubles(self):
         env = dls_environment.environment()
         a = '-1-3'
         a_norm = [0, '', 1, 'z', 3, 'z', 0, '', 0, '', 0, '']
@@ -619,30 +631,65 @@ class SortReleasesTest(unittest.TestCase):
         c = '-1-2'
         c_norm = [0, '', 1, 'z', 2, 'z', 0, '', 0, '', 0, '']
 
-        env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
 
         self.assertEqual(env.sortReleases([a, b, c]), ['-1-2', '-1-3', '1-3'])
 
+    def test_sorts_letters(self):
+        env = dls_environment.environment()
+        a = '1-f'
+        a_norm = [1, 'z', 0, 'fz', 0, '', 0, '', 0, '', 0, '']
+        b = '1-a'
+        b_norm = [1, 'z', 0, 'az', 0, '', 0, '', 0, '', 0, '']
+        c = '1-1'
+        c_norm = [1, 'z', 1, 'z', 0, '', 0, '', 0, '', 0, '']
 
-# class SortReleasesTestWithMock(SortReleasesTest):
-#
-#     @patch('dls_ade.dls_environment.environment.normaliseRelease')
-#     def test_sorts_singles(self, _1):
-#         env = dls_environment.environment()
-#         a = '2'
-#         a_norm = [2, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-#         b = '3'
-#         b_norm = [3, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-#         c = '1'
-#         c_norm = [1, 'z', 0, 'z', 0, '', 0, '', 0, '', 0, '']
-#
-#         env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
-#
-#         self.assertEqual(env.sortReleases([a, b, c]), ['1', '2', '3'])
-#
-#     @patch('dls_ade.dls_environment.environment.normaliseRelease')
-#     def test_sorts_singles2(self, _1):
-#         super(SortReleasesTestWithMock, self).test_sorts_singles()
-#
-#     def __init__(self, *args, **kwargs):
-#         super(SortReleasesTestWithMock, self).__init__("test_sorts_singles")
+        if isinstance(env.normaliseRelease, MagicMock):
+            env.normaliseRelease.side_effect = [a_norm, b_norm, c_norm]
+
+        self.assertEqual(env.sortReleases([a, b, c]), ['1-a', '1-f', '1-1'])
+
+
+class SortReleasesTestWithPatch(SortReleasesTest):
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_singles(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_singles()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_doubles(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_doubles()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_dash_doubles(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_dash_doubles()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_triples(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_triples()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_x_dls_y(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_x_dls_y()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_x_x_beta_dls_y(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_x_x_beta_dls_y()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_x_x_x_beta_dls_y(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_x_x_x_beta_dls_y()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_x_x_x_x_dls_y(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_x_x_x_x_dls_y()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_x_x_x_x_beta_dls_y(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_x_x_x_x_beta_dls_y()
+
+    @patch('dls_ade.dls_environment.environment.normaliseRelease')
+    def test_sorts_letters(self, _1):
+        super(SortReleasesTestWithPatch, self).test_sorts_letters()
+
