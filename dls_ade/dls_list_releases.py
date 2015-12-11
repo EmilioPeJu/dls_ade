@@ -1,18 +1,22 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
-
 import os
 import sys
 import shutil
 import platform
 from dls_environment import environment
+import logging
 from argument_parser import ArgParser
 import path_functions as pathf
 import vcs_git
 
 e = environment()
+logging.basicConfig(filename='./list_releases.log', level=logging.DEBUG)
 
-usage = """Default <area> is 'support'.
+
+usage = """
+Default <area> is 'support'.
+
 List the releases of a module in the release area of <area>. By default uses
 the epics release number from your environment to work out the area on disk to
 look for the module, this can be overridden with the -e flag.
@@ -20,6 +24,10 @@ look for the module, this can be overridden with the -e flag.
 
 
 def get_rhel_version():
+    """
+
+    :return:
+    """
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
         dist, release_str, name = platform.dist()
@@ -30,7 +38,10 @@ def get_rhel_version():
 
 
 def make_parser():
+    """
 
+    :return:
+    """
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None, help="name of module to release")
@@ -54,7 +65,12 @@ def make_parser():
 
 
 def check_epics_version(args, parser):
+    """
 
+    :param args:
+    :param parser:
+    :return:
+    """
     if args.epics_version:
         if not args.epics_version.startswith("R"):
             args.epics_version = "R{0}".format(args.epics_version)
@@ -67,10 +83,10 @@ def check_epics_version(args, parser):
 
 def check_technical_area(args, parser):
     """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
-     name or that the technical area is also provided. Raises parser error if not.
+    Checks if given area is IOC and if so, checks that the technical area is also provided.
+    Raises parser error if not.
     :param args: Parser arguments
-    :type args: dict
+    :type args: ArgumentParser Namespace
     :param parser: Parser
     :type parser: ArgumentParser
     :return: Null
@@ -84,7 +100,7 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
-    
+
     check_epics_version(args, parser)
     check_technical_area(args, parser)
 
@@ -130,11 +146,12 @@ def main():
         if args.git:
             msg = "No releases made in git"
         else:
+            # >>> Prints "No releases made for None" if epics_version not set
             msg = "No releases made for %s" % args.epics_version
         print(module + ": " + msg)
         return 1
 
-    # sort the releases        
+    # sort the releases
     releases = e.sortReleases(releases)
 
     if args.latest:
