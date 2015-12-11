@@ -16,10 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import re
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import SafeConfigParser
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class environment:
@@ -54,9 +57,11 @@ class environment:
         :return:
         """
         try:
+            logging.debug(os.environ['DLS_EPICS_RELEASE'])
             self.epics = os.environ['DLS_EPICS_RELEASE']
         except KeyError:
             try:
+                logging.debug(os.environ['EPICS_RELEASE'])
                 self.epics = os.environ['EPICS_RELEASE']
             except KeyError:
                 self.epics = 'R3.14.8.2'
@@ -118,14 +123,16 @@ class environment:
         :param area:
         :return:
         """
-        assert area in self.areas, "Only the following areas are supported: " + \
-                                   ",".join(self.areas)
+        if area not in self.areas:
+            raise Exception("Only the following areas are supported: " + ", ".join(self.areas))
+
         if self.epicsVer() < "R3.14":
             if area in ["support", "ioc"]:
                 return os.path.join("/home", "diamond", self.epicsVerDir(), "work", area)
             elif area in ["epics", "etc", "tools"]:
                 return os.path.join("/home", "work", area)
             else:
+                # matlab or python
                 return os.path.join("/home", "diamond", "common", "work", area)
         else:
             if area in ["support", "ioc"]:
@@ -133,6 +140,7 @@ class environment:
             elif area in ["epics", "etc", "tools"]:
                 return os.path.join("/dls_sw", "work", area)
             else:
+                # matlab or python
                 return os.path.join("/dls_sw", "work", "common", area)
 
     def prodArea(self, area="support"):
@@ -169,17 +177,18 @@ class environment:
                 if match:
                     # turn the digit to an int so it sorts properly
                     components.append(int(match.group()))
-                    components.append(subpart[match.start()+1:] + "z")
+                    components.append(subpart[match.start() + len(match.group()):] + "z")
                 else:
                     # just add the string part
                     components.append(0)
                     components.append(subpart)
             # pad to 6 elements
-            components += [0, '']*(6-len(components))
+            components += [0, '']*((6-len(components))/2)
         # pad to 12 elements
-        components += [0, '']*(12-len(components))
+        components += [0, '']*((12-len(components))/2)
+        logging.debug(components)
         return components
-            
+
     def sortReleases(self, paths):
         """
         Sort a list of paths by their release numbers. Assume that the
@@ -189,15 +198,17 @@ class environment:
         :return:
         """
         releases = []
-        istuple = paths and type(paths[0]) == tuple
         for path in paths:
-            if type(path) == tuple:
-                release = os.path.split(os.path.normpath(path[0]))[1]
-            else:
-                release = os.path.split(os.path.normpath(path))[1]
+            release = os.path.split(os.path.normpath(path))[1]
             releases.append((self.normaliseRelease(release), path))
-        return [x[1] for x in sorted(releases)]
-        
+
+        sorted_releases = []
+        for entry in sorted(releases):
+            sorted_releases.append(entry[1])
+        logging.debug(sorted_releases)
+
+        return sorted_releases
+
     def svnName(self, path):
         """
         Find the name that the module is under in svn. Very dls specific
@@ -320,4 +331,3 @@ if __name__ == "__main__":
     print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/boost/1-48-0/prefix")
     print e.classifyPath("/dls_sw/work/tools/RHEL6-x86_64/boost")
     print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/dls_environment/4-6")
-
