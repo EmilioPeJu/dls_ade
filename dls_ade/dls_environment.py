@@ -184,17 +184,21 @@ class environment:
             list: Component parts of release tag
         """
         components = []
-        # first split by dls
+        # first split by dls: 4-5beta2dls1-3 --> 4-5beta2 and 1-3
         for part in release.split("dls", 1):
             # rejig separators
             part = part.replace(".", "-").replace("_", "-")
-            # allow up to 3 -'s
+            # allow up to 3 -'s: 4-5beta2 --> 4, 5 and beta2
             for subpart in part.split("-", 3):
                 match = re.match("\d+", subpart)
                 if match:
                     # turn the digit to an int so it sorts properly
                     components.append(int(match.group()))
-                    components.append(subpart[match.start() + len(match.group()):] + "z")
+                    suffix = subpart[match.start() + len(match.group()):]
+                    if suffix == '':
+                        components.append('z')
+                    else:
+                        components.append(suffix)
                 else:
                     # just add the string part
                     components.append(0)
