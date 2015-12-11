@@ -26,21 +26,20 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class environment:
-    """A class representing the epics environment of a site. epics=version of
-    epics, e.g R3.14.8.2 If you modify this to suit your site environment, you
-    will be able to use any of the dls modules without modification. This module
-    has the idea of areas. An area is simply an argument that can be passed to
-    devArea or prodArea. support and ioc must exist to use modules like the
-    dependency checker, others may be added. For example the dls support devArea
-    contains all support modules, and is located at
-    /dls_sw/work/R3.14.8.2/support. This is the area for testing modules. There
-    is a similar prodArea at /dls_sw/prod/R3.14.8.2/support for releases. These
-    are then used to locate the root of a particular module.
+    """
+    A class representing the epics environment of a site.
+
+    If you modify this to suit your site environment, you will be able to use any of the dls modules without
+    modification. This module has the idea of areas. An area is simply an  argument that can be passed to devArea
+    or prodArea. support and ioc must exist to use modules like the  dependency checker, others may be added. For
+    example the dls support devArea contains all support modules, and is located at /dls_sw/work/R3.14.8.2/support.
+    This is the area for testing modules. There is a similar prodArea at /dls_sw/prod/R3.14.8.2/support for
+    releases. These are then used to locate the root of a particular module.
 
     Variables
-    epics: the version of epics
-    epics_ver_re: a useful regex for matching the version of epics
-    areas: the areas that can be passed to devArea() or prodArea()
+        epics: the version of epics - e.g R3.14.8.2
+        epics_ver_re: a useful regex for matching the version of epics
+        areas: the areas that can be passed to devArea() or prodArea()
     """
 
     def __init__(self, epics=None):
@@ -52,9 +51,9 @@ class environment:
 
     def setEpicsFromEnv(self):
         """
-        Try to get epics version from the environment, and set self.epics
+        Get epics version from the environment, and set self.epics. Set default 'R3.14.8.2' if environment
+        epics version is inaccessible
 
-        :return:
         """
         try:
             logging.debug(os.environ['DLS_EPICS_RELEASE'])
@@ -70,7 +69,8 @@ class environment:
         """
         Return a copy of self
 
-        :return:
+        Returns:
+            environment: A copy of the environment instance
         """
         return environment(self.epicsVer())
 
@@ -78,8 +78,8 @@ class environment:
         """
         Force the version of epics in self
 
-        :param epics:
-        :return:
+        Args:
+            epics: Epics version
         """
         self.epics = epics
 
@@ -87,7 +87,9 @@ class environment:
         """
         Return the root directory of the epics installation
 
-        :return:
+        Returns:
+            str: Path to root of home - if epics version lower than R3.14
+            str: Path to root of dls_sw - if epics version higher than R3.14
         """
         if self.epicsVer() < "R3.14":
             return os.path.join("/home", "epics", self.epicsVerDir())
@@ -96,10 +98,10 @@ class environment:
 
     def epicsVer(self):
         """
-        Return the version of epics from self. If it not set, try and get it
-        from the environment. This may have a _64 suffix for 64 bit architectures
-
-        :return:
+        Return the version of epics from self. If it not set, try and get it from the environment.
+        This may have a _64 suffix for 64 bit architectures
+        Returns:
+            str: Epics version
         """
         if not self.epics:
             self.setEpicsFromEnv()
@@ -109,8 +111,8 @@ class environment:
         """
         Return the directory version of epics from self. If it not set, try and get it from the environment.
         This will not have a _64 suffix for 64 bit architectures
-
-        :return:
+        Returns:
+            str: Epics directory version
         """
         if not self.epics:
             self.setEpicsFromEnv()
@@ -118,10 +120,18 @@ class environment:
 
     def devArea(self, area="support"):
         """
-        Return the development directory for a particular area
+        Return the development directory for a particular area and epics version
 
-        :param area:
-        :return:
+        Args:
+            area(str): Area to generate path for
+
+        Returns:
+            str: Path to home ... dir/work/<area> - if epics version < R3.14 and <area> is support or ioc
+            str: Path to home/work/<area> - if epics version < R3.14 and <area> is epics, etc, or tools
+            str: Path to home ... common/work/<area> - if epics version < R3.14 and <area> is matlab or python
+            str: Path to dls_sw ... work/dir/<area> - if epics version > R3.14 and <area> is support or ioc
+            str: Path to dls_sw/work/<area> - if epics version > R3.14 and <area> is epics, etc, or tools
+            str: Path to dls_sw ... work/common/<area> - if epics version > R3.14 and <area> is matlab or python
         """
         if area not in self.areas:
             raise Exception("Only the following areas are supported: " + ", ".join(self.areas))
@@ -147,8 +157,12 @@ class environment:
         """
         Return the production directory for a particular area
 
-        :param area:
-        :return:
+        Args:
+            area(str): Area to generate path for
+
+        Returns:
+            str: Path to dls_sw/<area> - if area is epics
+            str: Path to devArea(area) with 'work' replaced by 'prod' - see devArea() doc string
         """
         if area in ["epics"]:
             return os.path.join("/dls_sw", area)
@@ -157,14 +171,17 @@ class environment:
 
     def normaliseRelease(self, release):
         """
-        This function takes a release number, and returns a list of
-        component parts that are then sortable by python's inbuilt sort function
-        E.g. 4-5beta2dls1-3 => [4,'z',5,'beta2z',0,'',1,'z',3,'z',0,'']
-        The z allows us to sort alpha, beta and release candidates before
+        Format release tag into a sortable list of components
+
+        Example: 4-5beta2dls1-3 => [4,'z',5,'beta2z',0,'',1,'z',3,'z',0,'']
+        Note: The z allows us to sort alpha, beta and release candidates before
         release numbers without a text suffix
 
-        :param release:
-        :return:
+        Args:
+            release(str): Area to generate path for
+
+        Returns:
+            list: Component parts of release tag
         """
         components = []
         # first split by dls
@@ -194,8 +211,11 @@ class environment:
         Sort a list of paths by their release numbers. Assume that the
         paths end in a release number
 
-        :param paths:
-        :return:
+        Args:
+            paths(list): Paths to sort
+
+        Returns:
+            list: Sorted list of release tags
         """
         releases = []
         for path in paths:
@@ -212,9 +232,6 @@ class environment:
     def svnName(self, path):
         """
         Find the name that the module is under in svn. Very dls specific
-
-        :param path:
-        :return:
         """
         output = Popen(["svn", "info", path], stdout=PIPE, stderr=STDOUT).communicate()[0]
         for line in output.splitlines():
@@ -233,10 +250,7 @@ class environment:
 
     def classifyArea(self, path):
         """
-        Classify the area of a path, returning (area, work/prod/invalid, epicsVer)
-
-        :param path:
-        :return:
+        Classify the area of a path, returning (area, work/prod/invalid, epicsVer)n:
         """
         for a in self.areas:
             if path.startswith(self.devArea(a)):
@@ -256,9 +270,6 @@ class environment:
         """
         Return a (module, version) tuple for the path, where
         version is "invalid", "work", or a version number
-
-        :param path:
-        :return:
         """
         # classify the area
         area, domain, epicsVer = self.classifyArea(path)
