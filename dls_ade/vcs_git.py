@@ -14,12 +14,13 @@ GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 def is_repo_path(server_repo_path):
     """
-    Checks if path exists on repository.
+    Checks if path exists on repository
 
-    :param server_repo_path: Path to module to check for.
-    :type server_repo_path: str
-    :return: True or False if path does or does not exist, respectively.
-    :rtype: bool
+    Args:
+        server_repo_path(str): Path to module to check for
+
+    Returns:
+        bool: True if path does exist False if not
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
@@ -29,10 +30,10 @@ def is_repo_path(server_repo_path):
 
 def get_repository_list():
     """
-    Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command.
+    Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command
 
-    :return: Reduced 'expand controls' output.
-    :rtype: list
+    Returns:
+        list: Reduced 'expand controls' output
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
@@ -70,13 +71,15 @@ def temp(area, module):
 
 def clone(source, module):
     """
-    Checks if source is valid and that module doesn't already exist locally, then clones repo.
+    Checks if source is valid and that module doesn't already exist locally, then clones repo
 
-    :param source: Suffix of URL for remote repo to clone
-    :type source: str
-    :param module: Name of module to clone
-    :type module: str
-    :return: Null
+    Args:
+        source(str): Suffix of URL for remote repo to clone
+        module(str): Name of module to clone
+
+    Raises:
+        Exception: Repository does not contain <source>
+        Exception: <module> already exists in current directory
     """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
@@ -92,11 +95,13 @@ def clone(source, module):
 
 def clone_multi(source):
     """
-    Checks if source is valid, then clones all repositories in source.
+    Checks if source is valid, then clones all repositories in source
 
-    :param source: Suffix of URL for remote repo area to clone
-    :type source: str
-    :return: Null
+    Args:
+        source(str): Suffix of URL for remote repo area to clone
+
+    Raises:
+        Exception: Repository does not contain <source>
     """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
@@ -119,10 +124,10 @@ def clone_multi(source):
 
 def list_remote_branches():
     """
-    Lists remote branches of current git repo.
+    Lists remote branches of current git repository
 
-    :return: List of branches.
-    :rtype: list
+    Returns:
+        list: Branches of current git repository
     """
     g = git.Git()
     branches = []
@@ -134,11 +139,10 @@ def list_remote_branches():
 
 def checkout_remote_branch(branch):
     """
-    Creates a new local branch and links it to a remote of the current repo.
+    Creates a new local branch and links it to a remote of the current repo
 
-    :param branch: Remote branch to create locally.
-    :type branch: str
-    :return: Null
+    Args:
+        branch(str): Remote branch to create locally
     """
     g = git.Git()
     if branch in list_remote_branches():
