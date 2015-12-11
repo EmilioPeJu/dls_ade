@@ -16,10 +16,12 @@ If you enter "everything" as <module_name>, the whole <area> area will be checke
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name, --branch and --force.
+    Creates default parser and adds module_name, --branch and --force arguments
 
-    :return: Parser with relevant arguments
-    :rtype: ArgumentParser
+    Args:
+
+    Returns:
+        An ArgumentParser instance with relevant arguments
     """
     parser = ArgParser(usage)
     parser.add_argument("module_name", type=str, default="",
@@ -33,13 +35,14 @@ def make_parser():
 
 def check_parsed_arguments_valid(args, parser):
     """
-    Checks if module_name has been provided and raises a parser error if not.
+    Checks if module_name has been provided
 
-    :param args: Parser arguments
-    :type args: dict
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Args:
+        args(dict): Parser Arguments
+        parser(parser): ArgumentParser instance
+
+    Raises:
+        Parser Error - Module name required
     """
     if 'module_name' not in args:
         parser.error("Module name required")
@@ -48,13 +51,14 @@ def check_parsed_arguments_valid(args, parser):
 def check_technical_area(args, parser):
     """
     Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
-    or that the technical area is also provided. Raises parser error if not.
+    or that the technical area is also provided
 
-    :param args: Parser arguments
-    :type args: dict
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Args:
+        args(dict): Parser arguments
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Missing Technical Area under Beamline
     """
     if args['area'] == "ioc" \
             and args['module_name'] != "everything" \
@@ -64,27 +68,29 @@ def check_technical_area(args, parser):
 
 def check_source_file_path_valid(source, parser):
     """
-    Checks if given source path exists on the repository and raises a parser error if it does not.
+    Checks if given source path exists on the repository
 
-    :param source: Path to module to be cloned
-    :type source: str
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Args:
+        source(str): Path to module to be cloned
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Repository does not contain <source>
     """
     if not vcs_git.is_repo_path(source):
-        parser.error("Repository does not contain " + source)
+        parser.error()
 
 
 def check_module_file_path_valid(module, parser):
     """
-    Checks if the given module already exists in the current directory. Raises error if so.
+    Checks if the given module already exists in the current directory
 
-    :param module: Name of module to clone
-    :type module: str
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Args:
+        module(str): Name of module to clone
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Path already exists: <module>
     """
     if os.path.isdir(module):
         parser.error("Path already exists: " + module)
