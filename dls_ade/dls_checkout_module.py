@@ -3,9 +3,9 @@
 # new branch
 import os
 import sys
-from dls_ade import vcs_git
-from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
+import vcs_git
+from argument_parser import ArgParser
+import path_functions as path
 
 usage = """
 Default <area> is 'support'.
@@ -33,21 +33,6 @@ def make_parser():
     return parser
 
 
-def check_parsed_arguments_valid(args, parser):
-    """
-    Checks if module_name has been provided
-
-    Args:
-        args(dict): Parser Arguments
-        parser(parser): ArgumentParser instance
-
-    Raises:
-        Parser Error - Module name required
-    """
-    if 'module_name' not in args:
-        parser.error("Module name required")
-
-
 def check_technical_area(args, parser):
     """
     Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
@@ -60,9 +45,9 @@ def check_technical_area(args, parser):
     Raises:
         error: Missing Technical Area under Beamline
     """
-    if args['area'] == "ioc" \
-            and args['module_name'] != "everything" \
-            and len(args['module_name'].split('/')) < 2:
+    if args.area == "ioc" \
+            and args.module_name != "everything" \
+            and len(args.module_name.split('/')) < 2:
         parser.error("Missing Technical Area under Beamline")
 
 
@@ -107,7 +92,7 @@ def main():
         if answer.upper() != "Y":
             return
 
-    check_technical_area(vars(args), parser)
+    check_technical_area(args, parser)
 
     module = args.module_name
 
