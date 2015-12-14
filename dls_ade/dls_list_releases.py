@@ -144,8 +144,9 @@ def main():
         target = "prod"
         prodArea = e.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
-            prodArea = os.path.join(prodArea, "RHEL%s-%s" %
-                                    (args.rhel_version, platform.machine()))
+            prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
+                                                                   platform.machine()))
+            logging.debug(prodArea)
         release_dir = os.path.join(prodArea, module)
 
         if os.path.isdir(release_dir):
