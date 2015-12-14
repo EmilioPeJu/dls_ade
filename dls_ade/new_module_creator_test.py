@@ -1,7 +1,6 @@
 import unittest
 import os
 
-
 import dls_ade.new_module_creator as new_c
 from dls_ade.dls_start_new_module import make_parser
 from pkg_resources import require
@@ -22,7 +21,7 @@ class GetNewModuleCreator(unittest.TestCase):
 
         methods_to_patch = [
             'CreatorIOC',
-            'CreatorIOCOldStyleAddToModule',
+            'CreatorIOCAddToModule',
             'CreatorIOCBL',
             'CreatorPython',
             'CreatorSupport',
@@ -59,24 +58,24 @@ class GetNewModuleCreator(unittest.TestCase):
 
         ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value = False)
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_git_dir):
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = False)
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_repo_path):
 
         ioc_c_mock = self.mocks['CreatorIOC']
 
         new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc")
 
-        mock_is_git_dir.assert_called_once_with("test/module")
+        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
         ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_git_dir', return_value = True)
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_old_style_add_to_module_called_with_correct_args(self, mock_is_git_dir):
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = True)
+    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_add_to_module_called_with_correct_args(self, mock_is_repo_path):
 
-        ioc_os_c_mock = self.mocks['CreatorIOCOldStyleAddToModule']
+        ioc_os_c_mock = self.mocks['CreatorIOCAddToModule']
 
         new_ioc_creator = new_c.get_new_module_creator("test/module/02", "ioc")
 
-        mock_is_git_dir.assert_called_once_with("test/module")
+        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
         ioc_os_c_mock.assert_called_once_with("test/module", "test-module-IOC-02", "ioc")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
@@ -196,6 +195,38 @@ class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
 
 
 class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_check_if_remote_repo_exists = patch('dls_ade.new_module_creator.NewModuleCreator._check_if_remote_repo_exists')
+
+        self.addCleanup(self.patch_check_if_remote_repo_exists.stop)
+
+        self.mock_check_if_remote_repo_exists = self.patch_check_if_remote_repo_exists.start()
+
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
+
+    def test_given_exists_true_then_exception_raised_with_correct_message_including_directory(self):
+
+        self.mock_check_if_remote_repo_exists.return_value = (True, "test_directory")
+        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="test_directory")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_remote_repo()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_exists_false_then_remote_repo_valid_set_true(self):
+
+        self.mock_check_if_remote_repo_exists.return_value = (False, "")
+
+        self.mod_c.verify_remote_repo()
+
+        self.assertTrue(self.mod_c._remote_repo_valid)
+
+
+class NewModuleCreatorCheckIfRemoteRepoExistsTest(unittest.TestCase):
+
     def setUp(self):
 
         self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list')
@@ -209,42 +240,38 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
         self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
-    def test_given_dir_list_exists_then_flag_set_false_and_error_returned_is_correct(self):
+    def test_given_one_of_dir_list_exists_then_flag_set_true_and_directory_returned(self):
 
         self.mock_get_remote_dir_list.return_value = ['inrepo', 'inrepo', 'inrepo']
         self.mock_is_repo_path.return_value = True
 
-        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="inrepo")
+        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
 
-        with self.assertRaises(new_c.VerificationError) as e:
-            self.mod_c.verify_remote_repo()
+        self.assertTrue(exists)
 
-        self.assertEqual(str(e.exception), comp_message)
+        self.assertEqual(dir_path, "inrepo")
 
-        self.assertFalse(self.mod_c.remote_repo_valid)
-
-    def test_given_dir_list_does_not_exist_then_flag_set_true(self):
+    def test_given_dir_list_does_not_exist_then_flag_set_false_and_directory_returned_is_blank(self):
 
         self.mock_get_remote_dir_list.return_value = ['notinrepo', 'notinrepo', 'notinrepo']
         self.mock_is_repo_path.return_value = False
 
-        self.mod_c.verify_remote_repo()
+        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
 
-        self.assertTrue(self.mod_c.remote_repo_valid)
+        self.assertFalse(exists)
 
-    def test_given_one_dir_does_exist_then_flag_set_false_and_error_returned_is_correct(self):
+        self.assertEqual(dir_path, "")
+
+    def test_given_one_dir_does_exist_then_flag_set_true_and_directory_returned_is_correct(self):
 
         self.mock_get_remote_dir_list.return_value = ['notinrepo', 'inrepo', 'notinrepo']
-        self.mock_is_repo_path.side_effect = [False, True, False]  # return value iterates through this list
+        self.mock_is_repo_path.side_effect = [False, True, False]
 
-        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="inrepo")
+        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
 
-        with self.assertRaises(new_c.VerificationError) as e:
-            self.mod_c.verify_remote_repo()
+        self.assertTrue(exists)
 
-        self.assertEqual(str(e.exception), comp_message)
-
-        self.assertFalse(self.mod_c.remote_repo_valid)
+        self.assertEqual(dir_path, "inrepo")
 
 
 class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
@@ -281,7 +308,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         self.mod_c.verify_can_create_local_module()
 
-        self.assertTrue(self.mod_c.can_create_local_module)
+        self.assertTrue(self.mod_c._can_create_local_module)
 
     def test_given_module_folder_exists_then_flag_set_false_and_error_returned_is_correct(self):
 
@@ -295,7 +322,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-        self.assertFalse(self.mod_c.remote_repo_valid)
+        self.assertFalse(self.mod_c._remote_repo_valid)
 
     def test_given_module_folder_is_in_git_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
@@ -309,7 +336,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-        self.assertFalse(self.mod_c.remote_repo_valid)
+        self.assertFalse(self.mod_c._remote_repo_valid)
 
     def test_given_module_folder_exists_and_is_in_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
@@ -325,7 +352,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-        self.assertFalse(self.mod_c.remote_repo_valid)
+        self.assertFalse(self.mod_c._remote_repo_valid)
 
 
 class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
@@ -351,25 +378,25 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_dir.return_value = True
         self.mock_is_git_root_dir.return_value = True
 
-        self.mod_c.remote_repo_valid = True
+        self.mod_c._remote_repo_valid = True
         self.mod_c.verify_can_push_repo_to_remote()
 
-        self.assertTrue(self.mod_c.can_push_repo_to_remote)
+        self.assertTrue(self.mod_c._can_push_repo_to_remote)
 
     def test_given_remote_repo_valid_not_previously_set_but_true_then_flag_set_true(self):
 
         self.mock_is_dir.return_value = True
         self.mock_is_git_root_dir.return_value = True
 
-        self.mod_c.can_push_repo_to_remote = False
+        self.mod_c._can_push_repo_to_remote = False
 
         self.mod_c.verify_can_push_repo_to_remote()
 
-        self.assertTrue(self.mod_c.can_push_repo_to_remote)
+        self.assertTrue(self.mod_c._can_push_repo_to_remote)
 
     def test_given_remote_repo_valid_false_then_flag_set_false_and_error_returned_is_correct(self):
 
-        self.mod_c.remote_repo_valid = False
+        self.mod_c._remote_repo_valid = False
 
         self.mock_verify_remote_repo.side_effect = new_c.VerificationError("error")
 
@@ -380,14 +407,14 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
             self.mod_c.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), "error")
-        self.assertFalse(self.mod_c.can_push_repo_to_remote)
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
 
     def test_given_module_folder_does_not_exist_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_is_dir.return_value = False
         self.mock_is_git_root_dir.return_value = False
 
-        self.mod_c.remote_repo_valid = True
+        self.mod_c._remote_repo_valid = True
 
         comp_message = "Directory {dir:s} does not exist.".format(dir=os.path.join("./", self.mod_c.disk_dir))
 
@@ -395,14 +422,14 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
             self.mod_c.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
-        self.assertFalse(self.mod_c.can_push_repo_to_remote)
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
 
     def test_given_module_folder_is_not_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_is_dir.return_value = True
         self.mock_is_git_root_dir.return_value = False
 
-        self.mod_c.remote_repo_valid = True
+        self.mod_c._remote_repo_valid = True
 
         comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=os.path.join("./", self.mod_c.disk_dir))
 
@@ -410,7 +437,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
             self.mod_c.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
-        self.assertFalse(self.mod_c.can_push_repo_to_remote)
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
 
     def test_given_module_folder_is_not_repo_and_remote_repo_false_then_flag_set_false_and_error_returned_is_correct(self):
 
@@ -427,7 +454,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
             self.mod_c.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
-        self.assertFalse(self.mod_c.can_push_repo_to_remote)
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
 
 
 class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
@@ -455,15 +482,15 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
-        self.mod_c.can_create_local_module = True
+        self.mod_c._can_create_local_module = True
 
         self.mod_c.create_local_module()
 
-        self.assertFalse(self.mod_c.can_create_local_module)
+        self.assertFalse(self.mod_c._can_create_local_module)
 
     def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
 
-        self.mod_c.can_create_local_module = False
+        self.mod_c._can_create_local_module = False
         self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
@@ -474,7 +501,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_true_then_rest_of_function_is_run(self):
 
-        self.mod_c.can_create_local_module = True
+        self.mod_c._can_create_local_module = True
 
         self.mod_c.create_local_module()
 
@@ -488,7 +515,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_originally_false_but_verify_function_does_not_raise_exception_then_rest_of_function_is_run(self):
 
-        self.mod_c.can_create_local_module = False
+        self.mod_c._can_create_local_module = False
 
         self.mod_c.create_local_module()
 
@@ -502,7 +529,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_true_and_disk_dir_already_exists_then_makedirs_is_not_called(self):
 
-        self.mod_c.can_create_local_module = True
+        self.mod_c._can_create_local_module = True
         self.mock_os.path.isdir.return_value = True
 
         self.mod_c.create_local_module()
@@ -511,7 +538,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_false_and_disk_dir_does_not_exist_then_makedirs_is_called(self):
 
-        self.mod_c.can_create_local_module = True
+        self.mod_c._can_create_local_module = True
         self.mock_os.path.isdir.return_value = False
 
         self.mod_c.create_local_module()
@@ -525,7 +552,7 @@ class NewModuleCreatorCreateFilesTest(unittest.TestCase):
 
         self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
-    @patch('dls_ade.new_module_creator.NewModuleCreator.create_files_from_template_dict')
+    @patch('dls_ade.new_module_creator.NewModuleCreator._create_files_from_template_dict')
     def test_create_files_from_template_called(self, mock_create_files_from_template):
 
         self.mod_c._create_files()
@@ -539,35 +566,54 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
         self.patch_isdir = patch('dls_ade.new_module_creator.os.path.isdir')
         self.patch_makedirs = patch('dls_ade.new_module_creator.os.makedirs')
+        self.patch_isfile = patch('dls_ade.new_module_creator.os.path.isfile')
         self.addCleanup(self.patch_isdir.stop)
         self.addCleanup(self.patch_makedirs.stop)
+        self.addCleanup(self.patch_isfile.stop)
         self.mock_isdir = self.patch_isdir.start()
         self.mock_makedirs = self.patch_makedirs.start()
+        self.mock_isfile = self.patch_isfile.start()
+
+        self.mock_isdir.return_value = False
+        self.mock_isfile.return_value = False
 
         self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
         self.mod_c.template_args = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
-    def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self): #, mock_makedirs, mock_isdir):
-
-        self.mock_isdir.return_value = False
+    def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
 
         self.mod_c.template_files = {"folder_name/": "Written contents"}
+        comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
 
         with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
-            with self.assertRaises(Exception):
-                self.mod_c.create_files_from_template_dict()
+            with self.assertRaises(Exception) as e:
+                self.mod_c._create_files_from_template_dict()
 
+        self.assertEqual(str(e.exception), comp_message)
         self.assertFalse(self.open_mock.called)
         file_handle_mock = self.open_mock()
         self.assertFalse(file_handle_mock.write.called)
+
+    def test_given_single_file_that_already_exists_then_file_not_created(self):
+
+        self.mod_c.template_files = {"already_exists.txt": "Written contents"}
+        self.mock_isfile.return_value = True
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c._create_files_from_template_dict()
+
+        self.assertFalse(self.open_mock.called)
+
+        file_handle_mock = self.open_mock()
+        self.assertFalse(file_handle_mock.called)
 
     def test_given_single_file_then_file_created_and_correctly_written_to(self):
 
         self.mod_c.template_files = {"file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.open_mock.assert_called_once_with("file1.txt", "w")
 
@@ -576,12 +622,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_in_folder_that_does_not_exist_then_folder_and_file_created_and_file_correctly_written_to(self):
 
-        self.mock_isdir.return_value = False
-
         self.mod_c.template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.mock_makedirs.asset_called_once_with("test_folder")
         self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
@@ -596,7 +640,7 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mod_c.template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.assertFalse(self.mock_makedirs.called)
         self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
@@ -606,12 +650,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_two_files_in_separate_folders_then_both_folders_created_and_files_correctly_written_to(self):
 
-        self.mock_isdir.return_value = False
-
         self.mod_c.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.mock_makedirs.assert_has_calls([call("test_folder1"), call("test_folder2")], any_order=True)
 
@@ -627,7 +669,7 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mod_c.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.mock_makedirs.assert_called_once_with("test_folder")
 
@@ -636,12 +678,25 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         file_handle_mock.write.assert_has_calls([call("Written contents1"), call("Written contents2")], any_order=True)
 
+    def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
+
+        self.mod_c.template_files = {"{arg:s}.txt": "Written contents"}
+        self.mod_c.template_args = {'arg': "my_argument"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c._create_files_from_template_dict()
+
+        self.open_mock.assert_called_once_with("my_argument.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_any_call("Written contents")
+
     def test_given_args_and_template_then_arguments_are_inserted_correctly(self):
 
         self.mod_c.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.open_mock.assert_called_once_with("file1.txt", "w")
 
@@ -650,12 +705,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_nested_directory_then_folder_and_file_both_created_and_file_correctly_written_to(self):
 
-        self.mock_isdir.return_value = False
-
         self.mod_c.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.create_files_from_template_dict()
+            self.mod_c._create_files_from_template_dict()
 
         self.mock_makedirs.assert_called_once_with("test_folder/another_folder/yet_another_folder")
 
@@ -669,22 +722,6 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 class NewModuleCreatorAddContactTest(unittest.TestCase):
     pass
 # TODO -----------------------------------------------------------------------------------------------------------------
-
-
-class NewModuleCreatorPrintMessagesTest(unittest.TestCase):
-
-    def test_given_function_called_then_message_printed_correctly(self):
-
-        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
-
-        self.mod_c.message = "Test_Message"
-
-        print_mock = MagicMock()
-
-        with patch.object(builtins, 'print', print_mock):
-            self.mod_c.print_messages()
-
-        print_mock.assert_called_once_with("Test_Message")
 
 
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
@@ -704,15 +741,15 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
-        self.mod_c.can_push_repo_to_remote = True
+        self.mod_c._can_push_repo_to_remote = True
 
         self.mod_c.push_repo_to_remote()
 
-        self.assertFalse(self.mod_c.can_push_repo_to_remote)
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
 
     def test_given_can_push_repo_to_remote_true_then_add_new_remote_and_push_called(self):
 
-        self.mod_c.can_push_repo_to_remote = True
+        self.mod_c._can_push_repo_to_remote = True
 
         self.mod_c.push_repo_to_remote()
 
@@ -720,7 +757,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
-        self.mod_c.can_push_repo_to_remote = False
+        self.mod_c._can_push_repo_to_remote = False
         self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
@@ -731,10 +768,56 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_add_new_remote_and_push_called(self):
 
-        self.mod_c.can_push_repo_to_remote = False
+        self.mod_c._can_push_repo_to_remote = False
 
         self.mod_c.push_repo_to_remote()
 
         self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.dest, self.mod_c.disk_dir)
 
 # Add tests for all derived NewModuleCreator classes
+
+class NewModuleCreatorSupportCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.NewModuleCreatorSupport._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+
+        mod_c = new_c.NewModuleCreatorSupport('test_module_path', 'test_area')
+
+        mod_c._create_files()
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {mod_path:s}".format(mod_path="test_module_path")), call("dls-make-etc-dir.py && make clean uninstall")]
+
+        mock_os_system.assert_has_calls(os_system_call_list)
+        mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.shutil.rmtree')
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.NewModuleCreatorIOC._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
+
+        mod_c = new_c.NewModuleCreatorIOC('test_module_path', 'test_app_name', 'test_area')
+
+        mod_c._create_files()
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        mock_rmtree.assert_called_once_with(os.path.join("{app_name:s}App".format(app_name="test_app_name"), 'opi'))
+        mock_os_system.assert_has_calls(os_system_call_list)
+        mock_create_from_dict.assert_called_once_with()
+
+class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.NewModuleCreatorIOCBL._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+
+        mod_c = new_c.NewModuleCreatorIOCBL('test_module_path', 'test_app_name', 'test_area')
+
+        mod_c._create_files()
+
+        mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
+        mock_create_from_dict.assert_called_once_with()

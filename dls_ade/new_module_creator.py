@@ -40,9 +40,11 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 # one on the server and not having to "git remote add origin" to the local repository. I have therefore
                 # moved this code into a separate class. However, if the module does not previously exist, the process
                 # is exactly the same as that described by NewModuleCreatorIOC.
-                if vcs_git.is_git_dir(module_path):
+                # TODO Get server_repo_path from pathf; currently using vcs_git init method way!
+                server_repo_path = 'controls/' + area + '/' + module_path
+                if vcs_git.is_repo_path(server_repo_path):
                     # Adding new App to old style "domain/tech_area" module that already exists on the remote server
-                    return NewModuleCreatorIOCOldStyleAddToModule(module_path, app_name, area)
+                    return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
 
                 else:
                     # Otherwise, the behaviour is exactly the same as that given by the ordinary IOC class
@@ -93,7 +95,7 @@ def obtain_template_files(area):
         return {}
 
 
-class VerificationError(Exception):
+class VerificationError(Exception):  # To allow us to handle and concatenate internal verification errors only
     pass
 
 
@@ -118,15 +120,13 @@ class NewModuleCreator(object):
 
         self.module_path = ""
         self.module_name = ""
-        self.app_name = ""
         self.module_path = module_path  # module_path has module_name at end, and folder is to contain "<app_name>App"
-
         self.module_name = os.path.basename(os.path.normpath(self.module_path))  # Last part of module_path
-        self.app_name = self.module_name
 
         # The above declarations could be separated out into a new function, which may then be altered by new classes
 
         self.disk_dir = ""
+        self.dest = ""
         self.disk_dir = self.module_path
         self.dest = pathf.devModule(self.module_path, self.area)
 
@@ -139,27 +139,11 @@ class NewModuleCreator(object):
         self.generate_template_args()
 
         # This flag determines whether there are conflicting file names on the remote repository
-        self.remote_repo_valid = False  # call function at start
-        # These flags must be true before the corresponding function can be called
-        self.can_create_local_module = False  # call function at start
-        # self.create_local_repo_valid = False
-        self.can_push_repo_to_remote = False
+        self._remote_repo_valid = False  # call function at beginning of start_new_module script
         # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
-        # appropriate error messages
-
-    def compose_message(self):
-        ''' Generates the message to print out to the user on creation of the module files '''
-
-        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
-                    'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
-                    'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
-
-        message = "\nPlease now edit {RELEASE:s} to put in correct paths for dependencies."
-        message += "\nYou can also add dependencies to {srcMakefile:s}"
-        message += "\nand {DbMakefile:s} if appropriate."
-        message = message.format(**message_dict)
-
-        self.message = message
+        # appropriate error messages, without having to repeat checks
+        self._can_create_local_module = False  # call function at start
+        self._can_push_repo_to_remote = False
 
     def generate_template_files(self):
         ''' Generates the template files dictionary that can be used to create default module files '''
@@ -175,14 +159,22 @@ class NewModuleCreator(object):
         # Creates and uses dir_list to check remote repository for name collisions with new module
         # Raises exception if one currently exists
 
+        exists, dir_path = self._check_if_remote_repo_exists()
+
+        if exists:
+            raise VerificationError("The path {dir:s} already exists on gitolite, cannot continue".format(dir=dir_path))
+
+        self._remote_repo_valid = True
+
+    def _check_if_remote_repo_exists(self):
+
         dir_list = self.get_remote_dir_list()
 
         for d in dir_list:
             if vcs_git.is_repo_path(d):
-                self.remote_repo_valid = False
-                raise VerificationError("The path {dir:s} already exists on gitolite, cannot continue".format(dir=d))
+                return True, d
 
-        self.remote_repo_valid = True
+        return False, ""
 
     def get_remote_dir_list(self):
         dest = self.dest
@@ -214,10 +206,10 @@ class NewModuleCreator(object):
 
             err_message = err_message.format(dir=os.path.join("./", self.disk_dir)).rstrip()
 
-            self.can_create_local_module = False
+            self._can_create_local_module = False
             raise VerificationError(err_message)
 
-        self.can_create_local_module = True
+        self._can_create_local_module = True
 
     def verify_can_push_repo_to_remote(self):
         ''' Determines whether one can push the local repository to the remote one '''
@@ -240,7 +232,7 @@ class NewModuleCreator(object):
 
         err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
 
-        if not self.remote_repo_valid:  # Doing it this way allows us to retain the remote_repo_valid error message
+        if not self._remote_repo_valid:  # Doing it this way allows us to retain the remote_repo_valid error message
             try:
                 self.verify_remote_repo()
             except VerificationError as e:
@@ -250,20 +242,20 @@ class NewModuleCreator(object):
         err_message = err_message.rstrip()  # Removes newline character (used for error message concatenation)
 
         if not valid:
-            self.can_push_repo_to_remote = False
+            self._can_push_repo_to_remote = False
             raise VerificationError(err_message)
 
-        self.can_push_repo_to_remote = True
+        self._can_push_repo_to_remote = True
 
     def create_local_module(self):
         ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
         # cd's into module directory, and creates complete file hierarchy
         # Then creates and commits to a new local repository
 
-        if not self.can_create_local_module:
+        if not self._can_create_local_module:
             self.verify_can_create_local_module()
 
-        self.can_create_local_module = False
+        self._can_create_local_module = False
 
         print("Making clean directory structure for " + self.disk_dir)
 
@@ -285,15 +277,21 @@ class NewModuleCreator(object):
         # All classes behave slightly differently
 
         # self.add_contact() # If contacts exist in the repository, they ought to be added here (or added to dict)
-        self.create_files_from_template_dict()
+        self._create_files_from_template_dict()
 
-    def create_files_from_template_dict(self):
+    def _create_files_from_template_dict(self):
         ''' Iterates through the template dict and creates all necessary files and folders '''
         # As dictionaries cannot have more than one key, and the directory does not previously exist, should I
         # error check?
 
-        for rel_path in self.template_files:  # dictionary keys are the relative file paths for the documents
+        for path in self.template_files:  # dictionary keys are the relative file paths for the documents
+            # Using template_args allows us to insert eg. module name into the file paths in template_files!
+            rel_path = path.format(**self.template_args)
+
             dir_path = os.path.dirname(rel_path)
+
+            if os.path.isfile(rel_path):
+                continue  # Stops us from overwriting files in folder (eg. .gitignore for IOC Old-style modules)
 
             if os.path.normpath(dir_path) == os.path.normpath(rel_path):
                 # If folder given instead of file (ie. rel_path ends with a slash or folder already exists)
@@ -302,97 +300,134 @@ class NewModuleCreator(object):
                 if not os.path.isdir(dir_path):
                     os.makedirs(dir_path)
 
-                open(rel_path, "w").write(self.template_files[rel_path].format(**self.template_args))
+                open(rel_path, "w").write(self.template_files[path].format(**self.template_args))
 
     def add_contact(self):
         # Add the module contact to the contacts database
         raise NotImplementedError
 
-    def print_messages(self):
-        # Prints the messages previously constructed. Could move message creation after file generation
-        # Move the print statement from make_files_tools to here!
-
-        print(self.message)
-
     def push_repo_to_remote(self):
         # Pushes the local repo to the remote server.
 
-        if not self.can_push_repo_to_remote:
+        if not self._can_push_repo_to_remote:
             self.verify_can_push_repo_to_remote()
 
-        self.can_push_repo_to_remote = False
+        self._can_push_repo_to_remote = False
 
         vcs_git.add_new_remote_and_push(self.dest, self.disk_dir)
 
 
-class NewModuleCreatorIOC(NewModuleCreator):
+class NewModuleCreatorTools(NewModuleCreator):
 
-    def __initialise_and_verify_module_variables(self, args):
+    def print_message(self):
 
-        # cols = args.module_name.split("/")
-        # if len(cols) > 1 and cols[1] != '':
-        #     domain = cols[0]
-        #     technical_area = cols[1]
-        #     if len(cols) == 3 and cols[2] != '':
-        #         ioc_number = cols[2]
-        #     else:
-        #         ioc_number = '01'
-        #     self.app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
-        #
-        #     if args.fullname:
-        #         self.module_name = domain + "/" + self.app_name
-        #     else:
-        #         self.module_name = domain + "/" + technical_area
-        # else:
-        #     cols = args.module_name.split("-")
-        #     if len(cols) > 1:
-        #         domain = cols[0]
-        #         self.app_name = args.module_name
-        #         self.module_name = domain + "/" + self.app_name
-        #     else:  # If module_name not in correct format
-        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
-        raise NotImplementedError
+        message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path)}
+
+        message = "\nPlease add your patch files to the {module_path:s} directory"
+        message += " and edit {module_path:s}/build script appropriately"
+        message = message.format(message_dict)
+
+        print(message)
+
+
+class NewModuleCreatorPython(NewModuleCreator):
+
+    def print_message(self):
+
+        message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path),
+                        'setup_path': os.path.join(self.disk_dir, "setup.py")}
+
+        message = "\nPlease add your python files to the {module_path:s} directory"
+        message += " and edit {setup_path} appropriately."
+        message = message.format(message_dict)
+
+        print(message)
+
+
+class NewModuleCreatorWithApps(NewModuleCreator):
+    # This is the superclass for all classes that use an app_name variable - for the moment, just Support and IOC
+    # These two classes use MakeBaseApp.pl, which creates app_nameApp folders inside the module.
+
+    def __init__(self, module_path, area):
+        super(NewModuleCreatorWithApps, self).__init__(module_path, area)
+        self.app_name = self.module_name  # Sensible default
+
+    def print_message(self):
+        # Prints the message. This one is shared between support and IOC
+
+        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
+            'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
+            'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
+
+        message = "\nPlease now edit {RELEASE:s} to put in correct paths for dependencies."
+        message += "\nYou can also add dependencies to {srcMakefile:s}"
+        message += "\nand {DbMakefile:s} if appropriate."
+        message = message.format(**message_dict)
+
+        print(message)
+
+
+class NewModuleCreatorSupport(NewModuleCreatorWithApps):
 
     def _create_files(self):
 
-        # os.system('makeBaseApp.pl -t dls ' + self.app_name)
-        # os.system('makeBaseApp.pl -i -t dls ' + self.app_name)
-        # shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
-        # print(self.message)
-        # self.create_files_from_template_dict()
-        raise NotImplementedError
+        os.system('makeBaseApp.pl -t dls {module:s}'.format(module=self.module_name))
+        os.system('dls-make-etc-dir.py && make clean uninstall')
+        self._create_files_from_template_dict()
 
 
-class NewModuleCreatorIOCOldStyleAddToModule(NewModuleCreatorIOC):
+class NewModuleCreatorIOC(NewModuleCreatorWithApps):
+
+    def __init__(self, module_path, app_name, area):
+
+        super(NewModuleCreatorIOC, self).__init__(module_path, area)
+        self.app_name = app_name  # Extra argument passed for IOC instantiation
+
+    def _create_files(self):
+
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(app_name=self.app_name))
+        os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(app_name=self.app_name))
+        shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
+        self._create_files_from_template_dict()
+
+
+class NewModuleCreatorIOCBL(NewModuleCreatorIOC):  # Note: does NOT inherit from NewModuleCreatorIOC (no shared code)
+
+    def _create_files(self):
+
+        os.system('makeBaseApp.pl -t dlsBL ' + self.app_name)
+        self._create_files_from_template_dict()
+
+    def print_message(self):
+
+        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
+                'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
+                'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
+
+        message = "\nPlease now edit {RELEASE:s} and path to scripts."
+        message += "\nAlso edit {srcMakefile:s} to add all database files from these technical areas."
+        message += "\nAn example set of screens has been placed in {DbMakefile:s} . Please modify these.\n"
+        message = message.format(**message_dict)
+
+        print(message)
+
+
+class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
     # Also need:
     # check_remote_repo_valid to look inside module if it exists
     # create_module
     # create_local_repo
 
-    def __initialise_and_verify_module_variables(self, args):
+    def __init__(self, module_path, app_name, area):
+        raise NotImplementedError
 
-        # cols = args.module_name.split("/")
-        # if len(cols) > 1 and cols[1] != '':
-        #     domain = cols[0]
-        #     technical_area = cols[1]
-        #     if len(cols) == 3 and cols[2] != '':
-        #         ioc_number = cols[2]
-        #     else:
-        #         ioc_number = '01'
-        #     self.app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
-        #
-        #     if args.fullname:
-        #         self.module_name = domain + "/" + self.app_name
-        #     else:
-        #         self.module_name = domain + "/" + technical_area
-        # else:
-        #     cols = args.module_name.split("-")
-        #     if len(cols) > 1:
-        #         domain = cols[0]
-        #         self.app_name = args.module_name
-        #         self.module_name = domain + "/" + self.app_name
-        #     else:  # If module_name not in correct format
-        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
+    def verify_remote_repo(self):
+        raise NotImplementedError
+
+    def create_local_module(self):
+        raise NotImplementedError
+
+    def push_repo_to_remote(self):
         raise NotImplementedError
 
     def _create_files(self):
@@ -402,96 +437,4 @@ class NewModuleCreatorIOCOldStyleAddToModule(NewModuleCreatorIOC):
         # shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
         # print(self.message)
         # self.create_files_from_template_dict()
-        raise NotImplementedError
-
-
-class NewModuleCreatorIOCBL(NewModuleCreator):  # Note: does NOT inherit from NewModuleCreatorIOC (no shared code)
-    
-    def __initialise_and_verify_module_variables(self, args):
-
-        # cols = args.module_name.split('/')
-        #
-        # if len(cols) > 1 and cols[1] != '':
-        #     domain = cols[0]
-        #     technical_area = cols[1]
-        #     module = domain + "/" + technical_area
-        #     app_name = domain
-        # else:
-        #     cols = args.module_name.split("-")
-        #     if len(cols) < 2:
-        #         raise Exception("Need a name with dashes in it, got " + args.module_name)
-        #
-        #     domain = cols[0]
-        #     self.app_name = args.module_name
-        #     self.module_name = domain + "/" + self.app_name
-        raise NotImplementedError
-
-    def _create_files(self):
-
-        # os.system('makeBaseApp.pl -t dlsBL ' + app_name)
-        # self.create_files_from_template_dict()
-        raise NotImplementedError
-
-    def compose_message(self):
-
-        # message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
-        #     'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
-        #     'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
-        # message = "\nPlease now edit {RELEASE:s} and path to scripts."
-        # message += "\nAlso edit {srcMakefile:s} to add all database files from these technical areas."
-        # message += "\nAn example set of screens has been placed in {DbMakefile:s} . Please modify these.\n"
-        #
-        # message = message.format(**message_dict)
-        #
-        # self.message = message
-        raise NotImplementedError
-
-
-class NewModuleCreatorPython(NewModuleCreator):
-    
-    def __initialise_and_verify_module_variables(self, args):
-
-        # module_name = args.module_name
-        #
-        # if not module_name.startswith("dls_") and "-" not in module_name and "." not in module_name:
-        #     raise Exception("Python module names must start with 'dls_' and be valid python identifiers")
-        # self.module_name = args.module_name
-        # self.app_name = self.module_name
-        raise NotImplementedError
-
-    def compose_message(self):
-
-        # message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path),
-        #                 'setup_path': os.path.join(self.disk_dir, "setup.py")}
-        #
-        # message = "\nPlease add your python files to the {module_path:s} directory"
-        # message += " and edit {setup_path} appropriately."
-        #
-        # message = message.format(message_dict)
-        #
-        # self.message = message
-        raise NotImplementedError
-
-
-class NewModuleCreatorSupport(NewModuleCreator):
-    
-    def _create_files(self):
-
-        # os.system('makeBaseApp.pl -t dls ' + self.module_path)
-        # os.system('dls-make-etc-dir.py && make clean uninstall')
-        # self.create_files_from_template_dict()
-        raise NotImplementedError
-
-
-class NewModuleCreatorTools(NewModuleCreator):
-    
-    def compose_message(self):
-
-        # message_dict = {"module": self.module_path}
-        #
-        # message = "\nPlease add your patch files to the {module:s} directory"
-        # message += " and edit {module:s}/build script appropriately"
-        #
-        # message = message.format(message_dict)
-        # self.message = message
         raise NotImplementedError
