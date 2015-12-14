@@ -3,9 +3,9 @@
 # new branch
 import os
 import sys
-import vcs_git
-from argument_parser import ArgParser
-import path_functions as path
+from dls_ade import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as path
 
 usage = """
 Default <area> is 'support'.
