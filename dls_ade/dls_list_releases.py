@@ -25,8 +25,11 @@ look for the module, this can be overridden with the -e flag.
 
 def get_rhel_version():
     """
-
-    :return:
+    Checks if platform is Linux redhat, if so returns base version number from environment (e.g. returns 6 if 6.7),
+    if not returns default of 6
+    
+    Returns:
+        Rhel version number
     """
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
@@ -39,8 +42,10 @@ def get_rhel_version():
 
 def make_parser():
     """
+    Takes default parser and adds 'module_name' and 'latest', 'git', 'epics_version' & 'rhel_version'
 
-    :return:
+    Returns:
+        ArgumentParser instance
     """
     parser = ArgParser(usage)
     parser.add_argument(
@@ -66,10 +71,16 @@ def make_parser():
 
 def check_epics_version(args, parser):
     """
+    Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
+    Then checks if the epics version matches the reg ex. Then sets environment epics version.
 
-    :param args:
-    :param parser:
-    :return:
+    Args:
+        args(ArgumentParser Namespace): Parser arguments
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        Error: "Expected epics version like R3.14.8.2, got: args.epics_version"
+
     """
     if args.epics_version:
         if not args.epics_version.startswith("R"):
@@ -84,12 +95,13 @@ def check_epics_version(args, parser):
 def check_technical_area(args, parser):
     """
     Checks if given area is IOC and if so, checks that the technical area is also provided.
-    Raises parser error if not.
-    :param args: Parser arguments
-    :type args: ArgumentParser Namespace
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+
+    Args:
+        args(ArgumentParser Namespace): Parser arguments
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        Error: "Missing Technical Area under Beamline"
     """
     if args.area == "ioc" \
             and len(args.module_name.split('/')) < 2:
