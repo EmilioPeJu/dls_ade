@@ -18,10 +18,14 @@ class ParserTest(unittest.TestCase):
         self.parser = dls_release.make_parser()
 
     def test_module_name_has_correct_attributes(self):
-        pass
+        arguments = self.parser._positionals._actions[4]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'module_name')
 
     def test_release_has_correct_attributes(self):
-        pass
+        arguments = self.parser._positionals._actions[5]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'release')
 
     def test_branch_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-b']
