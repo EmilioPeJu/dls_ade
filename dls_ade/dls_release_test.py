@@ -1,6 +1,7 @@
 #!/bin/env dls-python
 
 import unittest
+import logging
 from dls_ade import dls_release
 from pkg_resources import require
 require("mock")
@@ -8,11 +9,19 @@ from mock import patch, ANY, MagicMock
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 class ParserTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_release.make_parser()
+
+    def test_module_name_has_correct_attributes(self):
+        pass
+
+    def test_release_has_correct_attributes(self):
+        pass
 
     def test_branch_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-b']
@@ -189,159 +198,161 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         parse_error_patch = patch('dls_ade.dls_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
+        self.args = MagicMock()
+        self.args.module_name = ""
+        self.args.release = ""
+        self.args.next_version = False
 
-    def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self):
-
-        # args = []
-        # options = FakeOptions()
-        args = {'module_name': ""}
+    def test_given_no_module_name_then_parser_error_specifying_no_module_name(self):
         expected_error_msg = 'Module name not specified'
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_args_list_with_length_1_then_parser_error_called_specifying_no_module_version(self):
-
-        # args = ['module_name']
-        # options = FakeOptions()
-        args = {'module_name': "build", 'release_#': ""}
+    def test_given_no_release_then_parser_error_called_specifying_no_module_version(self):
+        self.args.module_name = "build"
         expected_error_msg = 'Module version not specified'
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
 
-        # args = ['build','12']
-        # options = FakeOptions(area='etc')
-        args = {'module_name': "build", 'release_#': "12",
-                'area': "etc", 'next_version': None}
+        self.args.module_name = "build"
+        self.args.release = "12"
+        self.args.area = "etc"
+
         expected_error_msg = 'Cannot release etc/build or etc/redirector as'
         expected_error_msg += ' modules - use configure system instead'
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self):
+        self.args.module_name = "redirector"
+        self.args.release = "12"
+        self.args.area = "etc"
 
-        # args = ['redirector','12']
-        # options = FakeOptions(area='etc')
-        args = {'module_name': "redirector", 'release_#': "12",
-                'area': "etc", 'next_version': None}
         expected_error_msg = 'Cannot release etc/build or etc/redirector as'
         expected_error_msg += ' modules - use configure system instead'
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self):
 
-        # args = ['not_build', '12']
-        # options = FakeOptions(area='etc')
-        args = {'module_name': "not build", 'release_#': "12",
-                'area': "etc", 'next_version': None, 'git': False}
+        self.args.module_name = "not build"
+        self.args.release = "12"
+        self.args.area = "etc"
+        self.args.git = False
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
-        n_calls = self.mock_error.call_count
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        self.assertFalse(n_calls)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self):
 
-        # args = ['redirector', 12]
-        # options = FakeOptions()
-        args = {'module_name': "redirector", 'release_#': 12,
-                'next_version': None, 'area': "support", 'git': False}
+        self.args.module_name = "redirector"
+        self.args.release = "12"
+        self.args.area = "support"
+        self.args.git = False
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        n_calls = self.mock_error.call_count
-
-        self.assertEqual(0, n_calls)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_next_version_and_git_flag_then_parser_error_called(self):
 
-        # args = ['module_name', 12]
-        # options = FakeOptions(git=True, next_version=True)
-        args = {'module_name': "module_name", 'release_#': 12,
-                'git': True, 'next_version': True, 'area': "support"}
+        self.args.module_name = "module_name"
+        self.args.release = "12"
+        self.args.area = "support"
+        self.args.next_version = True
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        expected_error_message = "When git is specified, version number must be provided"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self):
 
-        # args = ['redirector']
-        # options = FakeOptions(next_version=True)
-        args = {'module_name': "redirector", 'release_#': "",
-                'git': False, 'next_version': True, 'area': "support"}
+        self.args.module_name = "redirector"
+        self.args.release = ""
+        self.args.area = "support"
+        self.args.next_version = True
+        self.args.git = False
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
-        n_calls = self.mock_error.call_count
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        self.assertEqual(0, n_calls)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
 
-        # args = ['module', 'version']
-        # options = FakeOptions(git=True, area='archive')
-        args = {'module_name': "module", 'release_#': "version",
-                'git': True, 'area': "archive"}
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "archive"
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_epics_area_else_good_options_then_raise_error(self):
 
-        # args = ['module', 'version']
-        # options = FakeOptions(git=True, area='epics')
-        args = {'module_name': "module", 'release_#': "version",
-                'git': True, 'area': "epics"}
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "epics"
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_matlab_area_else_good_options_then_raise_error(self):
 
-        # args = ['module', 'version']
-        # options = FakeOptions(git=True, area='matlab')
-        args = {'module_name': "module", 'release_#': "version",
-                'git': True, 'area': "matlab"}
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "matlab"
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_etc_area_else_good_options_then_raise_error(self):
 
-        # args = ['module', 'version']
-        # options = FakeOptions(git=True, area='etc')
-        args = {'module_name': "module", 'release_#': "version",
-                'git': True, 'area': "etc"}
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_tools_area_else_good_options_then_error_not_raised(self):
 
-        # args = ['module', 'version']
-        # options = FakeOptions(git=True, area='tools')
-        args = {'module_name': "module", 'release_#': "version",
-                'git': True, 'area': "tools", 'next_version': None}
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "tools"
+        self.args.git = True
 
-        dls_release.check_parsed_arguments_valid(args, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        n_calls = self.mock_error.call_count
-
-        self.assertEqual(0, n_calls)
+        self.assertFalse(self.mock_error.call_count)
 
 
 class TestCreateVCSObject(unittest.TestCase):

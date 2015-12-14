@@ -4,28 +4,29 @@ require('python-ldap')
 
 import sys
 import re
-from dls_ade import vcs_svn
+import logging
+# from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 
+logging.basicConfig(level=logging.DEBUG)
+
 usage = """
 Default <area> is 'support'.
-Release <module_name> at version <release_#> from <area>.
+Release <module_name> at version <release> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
 the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
 prod.
 """
 
-
-# set default variables
 log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
     """
-    Takes default parser and adds module_name, release_#, --branch, --force, --no-test-build,
+    Takes default parser and adds module_name, release, --branch, --force, --no-test-build,
     --local-build-only, --epics_version, --message, --next_version, --git
     and either --rhel_version or --windows arguments.
 
@@ -39,7 +40,7 @@ def make_parser():
         "module_name", type=str, default=None,
         help="name of module to release")
     parser.add_argument(
-        "release_#", type=str, default=None,
+        "release", type=str, default=None,
         help="release number of module to release")
     parser.add_argument(
         "-b", "--branch", action="store", type=str, dest="branch",
@@ -70,7 +71,7 @@ def make_parser():
         default="",
         help="Add user message to the end of the default svn commit message. "
         "The message will be '%s'" %
-        (log_mess % ("<module_name>", "<release_#>", "<message>")))
+        (log_mess % ("<module_name>", "<release>", "<message>")))
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
@@ -162,17 +163,19 @@ def check_parsed_arguments_valid(args,  parser):
     :return:
     """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
-    if not args['module_name']:
+    if not args.module_name:
         parser.error("Module name not specified")
-    elif args['module_name'] and 'next_version' not in args:
+        logging.debug(args.module_name)
+        logging.debug(args.next_version)
+    elif not args.release and not args.next_version:
         parser.error("Module version not specified")
-    elif args['area'] is 'etc' and args['module_name'] in ['build', 'redirector']:
+    elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
-    elif args['next_version'] and args['git']:
+    elif args.next_version and args.git:
         parser.error("When git is specified, version number must be provided")
-    elif args['git'] and args['area'] not in git_supported_areas:
-        parser.error("%s area not supported by git" % args['area'])
+    elif args.git and args.area not in git_supported_areas:
+        parser.error("%s area not supported by git" % args.area)
 
 
 def format_argument_version(arg_version):
@@ -354,13 +357,9 @@ def perform_test_build(build_object, args, vcs):
 def main():
 
     parser = make_parser()
-    # parser.parse_args is an argparse.Namespace containing module_name
-    # release_# and other args; vars() converts it to a dictionary
     args = parser.parse_args()
 
-    print args
-
-    check_parsed_arguments_valid(vars(args), parser)
+    check_parsed_arguments_valid(args, parser)
     module = args.module_name
 
     build = create_build_object(args)
@@ -373,7 +372,7 @@ def main():
         releases = vcs.list_releases()
         version = next_version_number(releases, module=module)
     else:
-        version = format_argument_version(vars(args)['release_#'])
+        version = format_argument_version(args.release)
     vcs.set_version(version)
 
     vcs.set_log_message(
