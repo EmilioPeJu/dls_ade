@@ -38,7 +38,7 @@ def check_technical_area(args, parser):
     :type parser: ArgumentParser
     :return: Null
     """
-    if args['area'] == "ioc" and len(args['module_name'].split('/')) < 2:
+    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
         parser.error("Missing Technical Area under Beamline")
 
 
@@ -47,7 +47,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_technical_area(vars(args), parser)
+    check_technical_area(args, parser)
 
     module = args.module_name
     source = path.devModule(module, args.area)
