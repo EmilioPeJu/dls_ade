@@ -283,7 +283,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
         mod_c = new_c.NewModuleCreator("test_module", "test_area")
         dir_list = mod_c.get_remote_dir_list()
 
-        self.assertEqual(dir_list, [mod_c.dest, 'vendor_module', 'prod_module'])
+        self.assertEqual(dir_list, [mod_c.server_repo_path, 'vendor_module', 'prod_module'])
 
 
 class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
@@ -753,7 +753,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c.push_repo_to_remote()
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.dest, self.mod_c.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.server_repo_path, self.mod_c.disk_dir)
 
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
@@ -772,7 +772,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c.push_repo_to_remote()
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.dest, self.mod_c.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.server_repo_path, self.mod_c.disk_dir)
 
 # Add tests for all derived NewModuleCreator classes
 
@@ -853,7 +853,7 @@ class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
             pass
 
         self.mock_mkdtemp.assert_called_once_with()
-        self.mock_clone.assert_called_once_with(self.mod_c.dest, "tempdir")
+        self.mock_clone.assert_called_once_with(self.mod_c.server_repo_path, "tempdir")
 
     def test_given_isdir_false_then_exception_raised_with_correct_message(self):
 
@@ -947,4 +947,69 @@ class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):
         self.mock_push_to_remote.assert_called_with(self.mod_c.disk_dir)
 
 class NewModuleCreatorIOCAddToModuleCreateLocalModuleTest(unittest.TestCase):
-    pass
+
+    def setUp(self):
+
+            self.patch_chdir = patch('dls_ade.new_module_creator.os.chdir')
+            self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
+            self.patch_create_files = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._create_files')
+            self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
+
+            self.addCleanup(self.patch_chdir.stop)
+            self.addCleanup(self.patch_vcs_git.stop)
+            self.addCleanup(self.patch_create_files.stop)
+            self.addCleanup(self.patch_verify_can_create_local_module.stop)
+
+            self.mock_chdir = self.patch_chdir.start()
+            self.mock_vcs_git = self.patch_vcs_git.start()
+            self.mock_create_files = self.patch_create_files.start()
+            self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
+
+            # self.mock_os.return_value = "Example"
+
+            self.mod_c = new_c.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+
+    def test_given_can_create_local_module_true_then_flag_set_false(self):
+
+        self.mod_c._can_create_local_module = True
+
+        self.mod_c.create_local_module()
+
+        self.assertFalse(self.mod_c._can_create_local_module)
+
+    def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
+
+        self.mod_c._can_create_local_module = False
+        self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.create_local_module()
+
+        self.assertFalse(self.mock_vcs_git.clone.called)
+        self.assertEqual(str(e.exception), "error")
+
+    def test_given_can_create_local_module_true_then_rest_of_function_is_run(self):
+
+        self.mod_c._can_create_local_module = True
+
+        self.mod_c.create_local_module()
+
+        call_list = [call(self.mod_c.disk_dir), call(self.mod_c.cwd)]
+
+        self.mock_vcs_git.clone.assert_called_once_with(self.mod_c.server_repo_path, self.mod_c.disk_dir)
+        self.mock_chdir.assert_has_calls(call_list)
+        self.assertTrue(self.mock_create_files.called)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.mod_c.disk_dir)
+
+    def test_given_can_create_local_module_originally_false_but_verify_function_does_not_raise_exception_then_rest_of_function_is_run(self):
+
+        self.mod_c._can_create_local_module = False
+
+        self.mod_c.create_local_module()
+
+        call_list = [call(self.mod_c.disk_dir), call(self.mod_c.cwd)]
+
+        self.mock_vcs_git.clone.assert_called_once_with(self.mod_c.server_repo_path, self.mod_c.disk_dir)
+        self.mock_chdir.assert_has_calls(call_list)
+        self.assertTrue(self.mock_create_files.called)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.mod_c.disk_dir)

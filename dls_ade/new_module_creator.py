@@ -41,8 +41,8 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 # one on the server and not having to "git remote add origin" to the local repository. I have therefore
                 # moved this code into a separate class. However, if the module does not previously exist, the process
                 # is exactly the same as that described by NewModuleCreatorIOC.
-                dest = pathf.devModule(module_path, area)
-                if vcs_git.is_repo_path(dest):
+                server_repo_path = pathf.devModule(module_path, area)
+                if vcs_git.is_repo_path(server_repo_path):
                     # Adding new App to old style "domain/tech_area" module that already exists on the remote server
                     return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
 
@@ -111,12 +111,12 @@ class NewModuleCreator(object):
         # area
         # disk directory - directory where module to be imported is located
         # app name
-        # dest - location of file on server
+        # server_repo_path - location of file on server
 
         # Sensible defaults for variable initialisation:
 
-        self.area = area  # needed for file templates and dest
-        self.cwd = os.getcwd()
+        self.area = area  # needed for file templates and server_repo_path
+        self.cwd = os.getcwd()  # Should I be passing this as a parameter? - doing this makes the change easy!
 
         self.module_path = ""
         self.module_name = ""
@@ -126,9 +126,9 @@ class NewModuleCreator(object):
         # The above declarations could be separated out into a new function, which may then be altered by new classes
 
         self.disk_dir = ""
-        self.dest = ""
-        self.disk_dir = self.module_path
-        self.dest = pathf.devModule(self.module_path, self.area)
+        self.server_repo_path = ""
+        self.disk_dir = os.path.join(self.cwd, self.module_path)
+        self.server_repo_path = pathf.devModule(self.module_path, self.area)
 
         self.message = ""
         # self.compose_message()
@@ -177,11 +177,11 @@ class NewModuleCreator(object):
         return False, ""
 
     def get_remote_dir_list(self):
-        dest = self.dest
+        server_repo_path = self.server_repo_path
         vendor_path = pathf.vendorModule(self.module_path, self.area)
         prod_path = pathf.prodModule(self.module_path, self.area)
 
-        dir_list = [dest, vendor_path, prod_path]
+        dir_list = [server_repo_path, vendor_path, prod_path]
 
         return dir_list
 
@@ -192,7 +192,7 @@ class NewModuleCreator(object):
 
         err_message = ""
 
-        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+        mod_dir_exists = os.path.isdir(self.disk_dir)
         cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
                                             # NOTE: Does not detect if further folder is git repo - how to fix?
 
@@ -314,7 +314,7 @@ class NewModuleCreator(object):
 
         self._can_push_repo_to_remote = False
 
-        vcs_git.add_new_remote_and_push(self.dest, self.disk_dir)
+        vcs_git.add_new_remote_and_push(self.server_repo_path, self.disk_dir)
 
 
 class NewModuleCreatorTools(NewModuleCreator):
@@ -424,7 +424,7 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         temp_dir = ""
         try:
             temp_dir = tempfile.mkdtemp()
-            vcs_git.clone(self.dest, temp_dir)
+            vcs_git.clone(self.server_repo_path, temp_dir)
 
             if os.path.isdir(os.path.join(temp_dir, self.app_name + "App")):
                 err_message = "The app {app_name:s} already exists on gitolite, cannot continue"
@@ -438,7 +438,6 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         self._remote_repo_valid = True
 
     def create_local_module(self):
-        raise NotImplementedError
         # clones from the remote repository, then proceeds to input the new files alongside the previously existing ones
         # Then stages and commits (but does not push)
 
@@ -449,7 +448,7 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
 
         print("Cloning module to " + self.disk_dir)
 
-        vcs_git.clone(self.dest, self.disk_dir)
+        vcs_git.clone(self.server_repo_path, self.disk_dir)
 
         os.chdir(self.disk_dir)
         self._create_files()
