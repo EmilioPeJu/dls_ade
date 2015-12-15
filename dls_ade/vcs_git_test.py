@@ -400,7 +400,7 @@ class CreateRemoteRepoTest(unittest.TestCase):
         vcs_git.create_remote_repo("test_destination")
 
         mock_mkdtemp.assert_called_once_with()
-        mock_clone_from.assert_called_once_with("test_destination", "tempdir")
+        mock_clone_from.assert_called_once_with(os.path.join(vcs_git.GIT_SSH_ROOT, "test_destination"), "tempdir")
         mock_rmtree.assert_called_once_with("tempdir")
 
 

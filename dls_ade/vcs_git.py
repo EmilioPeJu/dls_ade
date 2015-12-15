@@ -126,12 +126,14 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="
 
 
 def create_remote_repo(dest):
-    # Change to make use of temporary directories
+
+    git_dest = os.path.join(GIT_SSH_ROOT, dest)
+
     print("Creating remote...")
     temp_dir = tempfile.mkdtemp()
 
     try:
-        git.Repo.clone_from(dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
+        git.Repo.clone_from(git_dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
     finally:
         shutil.rmtree(temp_dir)
 

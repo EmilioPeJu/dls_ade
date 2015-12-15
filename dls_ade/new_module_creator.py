@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import path_functions as pathf
 import shutil
+import tempfile
 from new_module_templates import py_files, tools_files, default_files
 import vcs_git
 
@@ -40,9 +41,8 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 # one on the server and not having to "git remote add origin" to the local repository. I have therefore
                 # moved this code into a separate class. However, if the module does not previously exist, the process
                 # is exactly the same as that described by NewModuleCreatorIOC.
-                # TODO Get server_repo_path from pathf; currently using vcs_git init method way!
-                server_repo_path = 'controls/' + area + '/' + module_path
-                if vcs_git.is_repo_path(server_repo_path):
+                dest = pathf.devModule(module_path, area)
+                if vcs_git.is_repo_path(dest):
                     # Adding new App to old style "domain/tech_area" module that already exists on the remote server
                     return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
 
@@ -248,7 +248,7 @@ class NewModuleCreator(object):
         self._can_push_repo_to_remote = True
 
     def create_local_module(self):
-        ''' General function that controls the creation of files and folders in a new module. Same for all classes '''
+        ''' General function that controls the creation of files and folders in a new module. '''
         # cd's into module directory, and creates complete file hierarchy
         # Then creates and commits to a new local repository
 
@@ -350,7 +350,7 @@ class NewModuleCreatorWithApps(NewModuleCreator):
 
     def __init__(self, module_path, area):
         super(NewModuleCreatorWithApps, self).__init__(module_path, area)
-        self.app_name = self.module_name  # Sensible default
+        self.app_name = self.module_name  # sensible default
 
     def print_message(self):
         # Prints the message. This one is shared between support and IOC
@@ -418,23 +418,51 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
     # create_module
     # create_local_repo
 
-    def __init__(self, module_path, app_name, area):
-        raise NotImplementedError
-
     def verify_remote_repo(self):
-        raise NotImplementedError
+        # Creates and uses dir_list to check remote repository for name collisions with new module
+        # Raises exception if one currently exists
+        temp_dir = ""
+        try:
+            temp_dir = tempfile.mkdtemp()
+            vcs_git.clone(self.dest, temp_dir)
+
+            if os.path.isdir(os.path.join(temp_dir, self.app_name + "App")):
+                err_message = "The app {app_name:s} already exists on gitolite, cannot continue"
+                raise Exception(err_message.format(app_name=self.app_name))
+        except Exception as e:
+            raise VerificationError(str(e))  # Also covers exceptions raised by vcs_git.clone, tempfile etc.
+        finally:
+            if temp_dir:  # If mkdtemp worked
+                shutil.rmtree(temp_dir)
+
+        self._remote_repo_valid = True
 
     def create_local_module(self):
         raise NotImplementedError
+        # clones from the remote repository, then proceeds to input the new files alongside the previously existing ones
+        # Then stages and commits (but does not push)
+
+        if not self._can_create_local_module:
+            self.verify_can_create_local_module()
+
+        self._can_create_local_module = False
+
+        print("Cloning module to " + self.disk_dir)
+
+        vcs_git.clone(self.dest, self.disk_dir)
+
+        os.chdir(self.disk_dir)
+        self._create_files()
+        os.chdir(self.cwd)
+
+        vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def push_repo_to_remote(self):
-        raise NotImplementedError
+        # Pushes the local repo to the remote server.
 
-    def _create_files(self):
+        if not self._can_push_repo_to_remote:
+            self.verify_can_push_repo_to_remote()
 
-        # os.system('makeBaseApp.pl -t dls ' + self.app_name)
-        # os.system('makeBaseApp.pl -i -t dls ' + self.app_name)
-        # shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
-        # print(self.message)
-        # self.create_files_from_template_dict()
-        raise NotImplementedError
+        self._can_push_repo_to_remote = False
+
+        vcs_git.push_to_remote(self.disk_dir)

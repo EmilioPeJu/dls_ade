@@ -809,6 +809,7 @@ class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
         mock_os_system.assert_has_calls(os_system_call_list)
         mock_create_from_dict.assert_called_once_with()
 
+
 class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.os.system')
@@ -821,3 +822,129 @@ class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
 
         mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
         mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_clone = patch('dls_ade.new_module_creator.vcs_git.clone')
+        self.patch_mkdtemp = patch('dls_ade.new_module_creator.tempfile.mkdtemp', return_value = 'tempdir')
+        self.patch_isdir = patch('dls_ade.new_module_creator.os.path.isdir')
+        self.patch_rmtree = patch('dls_ade.new_module_creator.shutil.rmtree')
+
+        self.addCleanup(self.patch_clone.stop)
+        self.addCleanup(self.patch_mkdtemp.stop)
+        self.addCleanup(self.patch_isdir.stop)
+        self.addCleanup(self.patch_rmtree.stop)
+
+        self.mock_clone = self.patch_clone.start()
+        self.mock_mkdtemp = self.patch_mkdtemp.start()
+        self.mock_isdir = self.patch_isdir.start()
+        self.mock_rmtree = self.patch_rmtree.start()
+
+        self.mod_c = new_c.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+
+    def test_given_function_called_then_mkdtemp_and_clone_called_correctly(self):
+
+        try:
+            self.mod_c.verify_remote_repo()
+        except:
+            pass
+
+        self.mock_mkdtemp.assert_called_once_with()
+        self.mock_clone.assert_called_once_with(self.mod_c.dest, "tempdir")
+
+    def test_given_isdir_false_then_exception_raised_with_correct_message(self):
+
+        self.mock_isdir.return_value = True
+        comp_message =  "The app {app_name:s} already exists on gitolite, cannot continue".format(app_name="test_app")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_remote_repo()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_isdir_false_and_exception_raised_outside_mkdtemp_then_rmtree_called_and_flag_still_false(self):
+
+        self.mock_isdir.return_value = True
+
+        with self.assertRaises(new_c.VerificationError):
+            self.mod_c.verify_remote_repo()
+
+        self.mock_rmtree.assert_called_once_with("tempdir")
+        self.assertFalse(self.mod_c._remote_repo_valid)
+
+    def test_given_mkdtemp_raises_exception_then_rmtree_not_called_and_correct_exception_passed_up(self):
+
+        self.mock_mkdtemp.side_effect = Exception("generic exception message")
+
+        with self.assertRaises(new_c.VerificationError) as e:
+            self.mod_c.verify_remote_repo()
+
+        self.assertFalse(self.mock_rmtree.called)
+        self.assertFalse(self.mod_c._remote_repo_valid)
+        self.assertEqual(str(e.exception), "generic exception message")
+
+    def test_given_isdir_true_and_no_exception_raised_then_rmtree_called_and_flag_set_true(self):
+
+        self.mock_isdir.return_value = False
+
+        self.mod_c.verify_remote_repo()
+
+        self.mock_rmtree.assert_called_once_with("tempdir")
+        self.assertTrue(self.mod_c._remote_repo_valid)
+
+
+class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule.verify_can_push_repo_to_remote')
+        self.patch_push_to_remote = patch('dls_ade.new_module_creator.vcs_git.push_to_remote')
+
+        self.addCleanup(self.patch_verify_can_push_repo_to_remote.stop)
+        self.addCleanup(self.patch_push_to_remote.stop)
+
+        self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
+        self.mock_push_to_remote = self.patch_push_to_remote.start()
+
+        self.mod_c = new_c.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+
+    def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
+
+        self.mod_c._can_push_repo_to_remote = True
+
+        self.mod_c.push_repo_to_remote()
+
+        self.assertFalse(self.mod_c._can_push_repo_to_remote)
+
+    def test_given_can_push_repo_to_remote_true_then_add_new_remote_and_push_called(self):
+
+        self.mod_c._can_push_repo_to_remote = True
+
+        self.mod_c.push_repo_to_remote()
+
+        self.mock_push_to_remote.assert_called_with(self.mod_c.disk_dir)
+
+    def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
+
+        self.mod_c._can_push_repo_to_remote = False
+        self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
+
+        with self.assertRaises(Exception) as e:
+            self.mod_c.push_repo_to_remote()
+
+        self.assertFalse(self.mock_push_to_remote.called)
+        self.assertEqual(str(e.exception), "error")
+
+    def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_add_new_remote_and_push_called(self):
+
+        self.mod_c._can_push_repo_to_remote = False
+
+        self.mod_c.push_repo_to_remote()
+
+        self.mock_push_to_remote.assert_called_with(self.mod_c.disk_dir)
+
+class NewModuleCreatorIOCAddToModuleCreateLocalModuleTest(unittest.TestCase):
+    pass
