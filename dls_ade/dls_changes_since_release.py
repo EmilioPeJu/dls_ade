@@ -46,33 +46,57 @@ def main():
 
     source = path.devModule(module, args.area)
     logging.debug(source)
-    release = path.prodModule(module, args.area)
-    logging.debug(release)
+    # release = path.prodModule(module, args.area)
+    # logging.debug(release)
+
+    logging.debug("Got to 1")
 
     # Check for existence of this module in various places in the repository and note revisions
     if not vcs_git.is_repo_path(source):
         parser.error("Repository does not contain " + source)
 
+    logging.debug("Got to 2")
+
     if vcs_git.is_repo_path(source):
         if os.path.isdir('./' + module):
+            logging.debug("Got to 3a")
             repo = vcs_git.git.Repo(module)
-            last_trunk_rev = vcs_git.list_module_releases(git.Repo(repo))
+            releases = vcs_git.list_module_releases(repo)
+            cloned = False
         else:
+            logging.debug("Got to 3b")
             vcs_git.clone(source, module)
             repo = vcs_git.git.Repo(module)
-            last_trunk_rev = vcs_git.list_module_releases(git.Repo(repo))
-            shutil.rmtree(module)
+            releases = vcs_git.list_module_releases(repo)
+            cloned = True
 
-    if vcs_git.is_repo_path(release):
+        last_release_num = releases[-1]
+        logging.debug(last_release_num)
+
+    else:
+        parser.error(source + "does not exist on the repository.")
+
+    logging.debug("Got to 4")
+
+    log = repo.git.log(last_release_num + "..HEAD")
+
+    print(log)
+
+    if cloned:
+        shutil.rmtree(module)
+
+    last_rev = "last rev"
+    # svn.info2(source,recurse=False)[0][1]["last_changed_rev"].number
+    if vcs_git.is_repo_path(source):
         last_release_rev = "last rev"
         # svn.info2(release, recurse=False)[0][1]["last_changed_rev"].number
         last_release_num = "last num"
         # e.sortReleases([x["name"] for x in svn.ls(release)])[-1].split("/")[-1]
         # print the output
-        if last_trunk_rev > last_release_rev:
+        if last_rev > last_release_rev:
             print(module + " (" + last_release_num + "): Outstanding changes. "
                                                      "Release = r" + str(last_release_rev) +
-                                                     ",Trunk = r" + str(last_trunk_rev))
+                                                     ",Trunk = r" + str(last_rev))
         else:
             print(module + " (" + last_release_num + "): Up to date.")
     else:
