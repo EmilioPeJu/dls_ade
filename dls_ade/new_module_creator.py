@@ -88,6 +88,7 @@ def get_new_module_creator(module_name, area="support", fullname=False):
 
 def obtain_template_files(area):
     # function to generate file templates for the classes. In future will obtain from new_module_templates or file tree
+    # This is likely to be different in the future!
     if area in ["default", "ioc", "support"]:
         return default_files
     elif area == "python":
@@ -195,7 +196,7 @@ class NewModuleCreator(object):
 
         err_message = ""
 
-        mod_dir_exists = os.path.isdir(self.disk_dir)
+        mod_dir_exists = os.path.exists(self.disk_dir)
         cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
                                             # NOTE: Does not detect if further folder is git repo - how to fix?
 
@@ -221,7 +222,7 @@ class NewModuleCreator(object):
         err_message = ""
         valid = True
 
-        mod_dir_exists = os.path.isdir(self.disk_dir)  # move to function where creation takes place?
+        mod_dir_exists = os.path.exists(self.disk_dir)  # move to function where creation takes place?
 
         if not mod_dir_exists:
             err_message += "Directory {dir:s} does not exist.\n"
@@ -354,6 +355,7 @@ class NewModuleCreatorWithApps(NewModuleCreator):
     def __init__(self, module_path, area):
         super(NewModuleCreatorWithApps, self).__init__(module_path, area)
         self.app_name = self.module_name  # sensible default
+        self.template_args.update({'app_name': self.app_name})
 
     def print_message(self):
         # Prints the message. This one is shared between support and IOC
@@ -374,7 +376,7 @@ class NewModuleCreatorSupport(NewModuleCreatorWithApps):
 
     def _create_files(self):
 
-        os.system('makeBaseApp.pl -t dls {module:s}'.format(module=self.module_name))
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(app_name=self.app_name))
         os.system('dls-make-etc-dir.py && make clean uninstall')
         self._create_files_from_template_dict()
 
@@ -385,6 +387,7 @@ class NewModuleCreatorIOC(NewModuleCreatorWithApps):
 
         super(NewModuleCreatorIOC, self).__init__(module_path, area)
         self.app_name = app_name  # Extra argument passed for IOC instantiation
+        self.template_args.update({'app_name': self.app_name})
 
     def _create_files(self):
 
@@ -425,7 +428,7 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
             temp_dir = tempfile.mkdtemp()
             vcs_git.clone(self.server_repo_path, temp_dir)
 
-            if os.path.isdir(os.path.join(temp_dir, self.app_name + "App")):
+            if os.path.exists(os.path.join(temp_dir, self.app_name + "App")):
                 err_message = "The app {app_name:s} already exists on gitolite, cannot continue"
                 raise Exception(err_message.format(app_name=self.app_name))
         except Exception as e:

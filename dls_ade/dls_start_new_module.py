@@ -6,7 +6,6 @@ from __future__ import print_function
 import os
 import sys
 from dls_ade.argument_parser import ArgParser
-import dls_ade.path_functions as pathf
 import dls_ade.new_module_creator as new_c
 
 usage = """Default <area> is 'support'.

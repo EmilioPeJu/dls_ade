@@ -2,18 +2,7 @@
 
 import unittest
 import dls_ade.dls_start_new_module
-from pkg_resources import require
-require("mock")
-from mock import patch, ANY, MagicMock, mock_open
-from new_module_templates import py_files, tools_files, default_files
-import os
 from argparse import _StoreTrueAction
-
-from sys import version_info
-if version_info.major == 2:
-    import __builtin__ as builtins  # Allows for Python 2/3 compatibility, 'builtins' is namespace for inbuilt functions
-else:
-    import builtins
 
 
 class MakeParserTest(unittest.TestCase):
