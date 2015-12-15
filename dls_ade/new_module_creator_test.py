@@ -717,6 +717,15 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         file_handle_mock = self.open_mock()
         file_handle_mock.write.assert_called_once_with("Written contents")
 
+    def test_given_file_with_no_folder_then_makedirs_not_called(self):
+
+        self.mod_c.template_files = {"file.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c._create_files_from_template_dict()
+
+        self.assertFalse(self.mock_makedirs.called)
+
 
 # TODO -----------------------------------------------------------------------------------------------------------------
 class NewModuleCreatorAddContactTest(unittest.TestCase):
