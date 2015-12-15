@@ -11,7 +11,10 @@ def root():
     return root_v
 
 
-def area(area_v):
+def area(area_v, type=None):
+
+    if type and type not in ['release', 'vendor']:
+        raise Exception("Type must be release or vendor")
 
     if area_v is "etc":
         return os.path.join(root(), area_v, "prod")
