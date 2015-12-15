@@ -11,19 +11,27 @@ def root():
     return root_v
 
 
-def area(area_v, type=None):
+def area(area_v, type_v=None):
 
-    if type and type not in ['release', 'vendor']:
+    if type_v and type_v not in ['release', 'vendor']:
         raise Exception("Type must be release or vendor")
 
     if area_v is "etc":
-        return os.path.join(root(), area_v, "prod")
+        raise NotImplementedError
+        # return os.path.join(root(), area_v, "prod")
     elif area_v is "epics":
-        return os.path.join(root(), area_v)
+        raise NotImplementedError
+        # return os.path.join(root(), area_v)
     elif area_v is "tools":
-        return os.path.join(root(), "diamond", "build_scripts")
+        raise NotImplementedError
+        # return os.path.join(root(), "diamond", "build_scripts")
     else:
-        return os.path.join("controls", area_v)
+        if type_v is None:
+            return os.path.join("controls", area_v)
+        elif type_v is 'release':
+            raise NotImplementedError
+        elif type_v is 'vendor':
+            raise NotImplementedError
 
 
 def devArea(area_v="support"):
@@ -38,7 +46,7 @@ def devModule(module, area_v="support"):
 
 def prodArea(area_v="support"):
     """Return the path for the release section of a particular area"""
-    return area(area_v)
+    return area(area_v, type_v='release')
 
 
 def prodModule(module, area_v="support"):
