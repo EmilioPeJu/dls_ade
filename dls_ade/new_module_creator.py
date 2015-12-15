@@ -262,11 +262,10 @@ class NewModuleCreator(object):
         if not os.path.isdir(self.disk_dir):
             os.makedirs(self.disk_dir)
 
-        os.chdir(self.disk_dir)
-        self._create_files()
+        os.chdir(self.disk_dir)  # The reason why we have to chdir into the folder where the files are created is in
+        self._create_files()     # order to remain compatible with makeBaseApp.pl, used for IOC and Support modules
         os.chdir(self.cwd)
 
-        # self.commit_to_local_repo()  # No longer needed
         vcs_git.init_repo(self.disk_dir)
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
@@ -297,18 +296,18 @@ class NewModuleCreator(object):
                 # If folder given instead of file (ie. rel_path ends with a slash or folder already exists)
                 raise Exception("{dir:s} in template dictionary is not a valid file name".format(dir=dir_path))
             else:
-                if not os.path.isdir(dir_path):
+                if dir_path and not os.path.isdir(dir_path):  # dir_path = '' if eg. "file.txt" given
                     os.makedirs(dir_path)
 
                 open(rel_path, "w").write(self.template_files[path].format(**self.template_args))
 
     def add_contact(self):
         # Add the module contact to the contacts database
+        # Will have to work out where this goes - will it be a part of _create_files or a separate process?
         raise NotImplementedError
 
     def push_repo_to_remote(self):
         # Pushes the local repo to the remote server.
-
         if not self._can_push_repo_to_remote:
             self.verify_can_push_repo_to_remote()
 
