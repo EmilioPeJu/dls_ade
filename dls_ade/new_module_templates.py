@@ -13,13 +13,13 @@ version = os.environ.get("MODULEVER", "0.0")
 
 setup(
 #    install_requires = ['cothread'], # require statements go here
-    name = '{module:s}',
+    name = '{module_name:s}',
     version = version,
     description = 'Module',
     author = '{getlogin:s}',
     author_email = '{getlogin:s}@fed.cclrc.ac.uk',
-    packages = ['{module:s}'],
-#    entry_points = {{'console_scripts': ['test-python-hello-world = {module:s}.{module:s}:main']}}, # this makes a script
+    packages = ['{module_name:s}'],
+#    entry_points = {{'console_scripts': ['test-python-hello-world = {module_name:s}.{module_name:s}:main']}}, # this makes a script
 #    include_package_data = True, # use this to include non python files
     zip_safe = False
     )
@@ -35,7 +35,7 @@ MODULEVER=0.0
 
 # This is run when we type make
 # It can depend on other targets e.g. the .py files produced by pyuic4
-dist: setup.py $(wildcard {module:s}/*.py)
+dist: setup.py $(wildcard {module_name:s}/*.py)
 \tMODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
 \ttouch dist
 \t$(MAKE) -C documentation
@@ -54,11 +54,11 @@ install: dist
 \t\t--prefix=$(PREFIX) dist/*.egg
 """
 
-py_files['module/module.py'] = """def main():
-    print("Hello world from {module:s}")
+py_files['{module_name:s}/{module_name:s}.py'] = """def main():
+    print("Hello world from {module_name:s}")
 """
 
-py_files['module/__init__.py'] = ""
+py_files['{module_name:s}/__init__.py'] = ""
 
 py_files['documentation/Makefile'] = """# this is the doxygen output dir
 DOCDIR := doxygen
@@ -90,14 +90,14 @@ py_files['documentation/index.html'] = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTM
 """
 
 py_files['documentation/config.cfg'] = """# info about project
-PROJECT_NAME           = {module:s}
+PROJECT_NAME           = {module_name:s}
 PROJECT_NUMBER         =
 # use <module>.<func> instead of <module>::<func>
 OPTIMIZE_OUTPUT_JAVA   = YES
 # need this to get all function/variable docs
 SHOW_NAMESPACES        = YES
 # add the input dir
-INPUT                 += ../{module:s} .
+INPUT                 += ../{module_name:s} .
 # add some examples
 # EXAMPLE_PATH           = examples
 # add the extensions
@@ -123,10 +123,10 @@ EXTRACT_ALL            = YES
 """
 
 py_files['documentation/manual.src'] = r"""/**
-\mainpage {module:s} Python Module
+\mainpage {module_name:s} Python Module
 \section intro_sec Introduction
 I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \n
-You can also link to \ref {module:s}.py "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. {module:s}.py
+You can also link to \ref {module_name:s}.py "internally generated documentation" with alternate text, or by just by mentioning its name, e.g. {module_name:s}.py
 
 \section Installation
 
@@ -214,7 +214,7 @@ target/
 
 tools_files = {}
 
-tools_files['build'] = """PROGRAM={module:s}
+tools_files['build'] = """PROGRAM={module_name:s}
 VERSION=<insert version here>
 # EXTENSION=<The tar or zip extension, defaults to .tar.gz.>
 # TAR_FILE=<The tar file name or list of tar files. Defaults to ${{PROGRAM}}-${{VERSION}}${{EXTENSION}}>

@@ -3,8 +3,11 @@ import os
 import path_functions as pathf
 import shutil
 import tempfile
+import logging
 from new_module_templates import py_files, tools_files, default_files
 import vcs_git
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def get_new_module_creator(module_name, area="support", fullname=False):
@@ -151,7 +154,7 @@ class NewModuleCreator(object):
 
     def generate_template_args(self):
         ''' returns a dictionary that can be used for the .format() method, used in creating files '''
-        template_args = {'module': self.module_path, 'getlogin': os.getlogin()}
+        template_args = {'module_name': self.module_name, 'getlogin': os.getlogin()}
 
         self.template_args = template_args
 
@@ -284,8 +287,9 @@ class NewModuleCreator(object):
         # error check?
 
         for path in self.template_files:  # dictionary keys are the relative file paths for the documents
-            # Using template_args allows us to insert eg. module name into the file paths in template_files!
+            # Using template_args allows us to insert eg. module name into the file paths in template_files
             rel_path = path.format(**self.template_args)
+            logging.debug("rel_path: " + rel_path)
 
             dir_path = os.path.dirname(rel_path)
 
@@ -412,10 +416,6 @@ class NewModuleCreatorIOCBL(NewModuleCreatorIOC):  # Note: does NOT inherit from
 
 
 class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
-    # Also need:
-    # check_remote_repo_valid to look inside module if it exists
-    # create_module
-    # create_local_repo
 
     def verify_remote_repo(self):
         # Creates and uses dir_list to check remote repository for name collisions with new module
