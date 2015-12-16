@@ -10,69 +10,20 @@ import vcs_git
 logging.basicConfig(level=logging.DEBUG)
 
 
+class Error(Exception):  # Error class for this module (use new_module_creator.Error)
+    pass
+
+
 def get_new_module_creator(module_name, area="support", fullname=False):
     ''' Use arguments to determine which new module creator to use, and return it '''
 
-    if area == "ioc":  # This section of code is ugly because it has to mimic the behaviour of the original script
-        cols = module_name.split('/')  # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
-        if len(cols) > 1 and cols[1] != '':
-            domain = cols[0]
-            technical_area = cols[1]
-
-            if technical_area == "BL":
-                module_path = domain + "/" + technical_area
-                app_name = domain
-                return NewModuleCreatorIOCBL(module_path, app_name, area)
-
-            if len(cols) == 3 and cols[2] != '':
-                ioc_number = cols[2]
-
-            else:
-                ioc_number = '01'
-
-            app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
-
-            if fullname:
-                module_path = domain + "/" + app_name
-                return NewModuleCreatorIOC(module_path, app_name, area)
-
-            else:
-                module_path = domain + "/" + technical_area
-                # This part is here to retain compatibility with "old-style" modules, in which a single module named
-                # "domain/technical_area" contains multiple domain-technical_area-IOC-xxApp's. This involves cloning
-                # from the remote repository, a different method for checking whether or not the App will conflict with
-                # one on the server and not having to "git remote add origin" to the local repository. I have therefore
-                # moved this code into a separate class. However, if the module does not previously exist, the process
-                # is exactly the same as that described by NewModuleCreatorIOC.
-                server_repo_path = pathf.devModule(module_path, area)
-                if vcs_git.is_repo_path(server_repo_path):
-                    # Adding new App to old style "domain/tech_area" module that already exists on the remote server
-                    return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
-
-                else:
-                    # Otherwise, the behaviour is exactly the same as that given by the ordinary IOC class
-                    # as module_path is the only thing that varies
-                    return NewModuleCreatorIOC(module_path, app_name, area)
-
-        else:
-            # assume full IOC name is given
-            cols = module_name.split('-')
-            if len(cols) <= 1:
-                raise Exception("Need a name with dashes in it, got " + module_name)
-            domain = cols[0]
-            technical_area = cols[1]
-            app_name = module_name
-            module_path = domain + "/" + app_name
-
-            if technical_area == "BL":
-                return NewModuleCreatorIOCBL(module_path, app_name, area)
-            else:
-                return NewModuleCreatorIOC(module_path, app_name, area)
+    if area == "ioc":
+        return get_new_module_creator_ioc(module_name, fullname)  # Delegate to another function for clarity
 
     elif area == "python":
         valid_name = module_name.startswith("dls_") and ("-" not in module_name) and ("." not in module_name)
         if not valid_name:
-            raise Exception("Python module names must start with 'dls_' and be valid python identifiers")
+            raise Error("Python module names must start with 'dls_' and be valid python identifiers")
 
         return NewModuleCreatorPython(module_name, area)
 
@@ -83,7 +34,67 @@ def get_new_module_creator(module_name, area="support", fullname=False):
         return NewModuleCreatorTools(module_name, area)
 
     else:
-        raise Exception("Don't know how to make a module of type: " + area)
+        raise Error("Don't know how to make a module of type: " + area)
+
+
+def get_new_module_creator_ioc(module_name, fullname=False):
+    # This section of code is ugly because it has to mimic the behaviour of the original script
+    # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
+    area = "ioc"
+    cols = module_name.split('/')
+    if len(cols) > 1 and cols[1] != '':
+        domain = cols[0]
+        technical_area = cols[1]
+
+        if technical_area == "BL":
+            module_path = domain + "/" + technical_area
+            app_name = domain
+            return NewModuleCreatorIOCBL(module_path, app_name, area)
+
+        if len(cols) == 3 and cols[2] != '':
+            ioc_number = cols[2]
+
+        else:
+            ioc_number = '01'
+
+        app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+
+        if fullname:
+            module_path = domain + "/" + app_name
+            return NewModuleCreatorIOC(module_path, app_name, area)
+
+        else:
+            module_path = domain + "/" + technical_area
+            # This part is here to retain compatibility with "old-style" modules, in which a single module named
+            # "domain/technical_area" contains multiple domain-technical_area-IOC-xxApp's. This involves cloning
+            # from the remote repository, a different method for checking whether or not the App will conflict with
+            # one on the server and not having to "git remote add origin" to the local repository. I have therefore
+            # moved this code into a separate class. However, if the module does not already exist, the process is
+            # exactly the same as that described by NewModuleCreatorIOC.
+            server_repo_path = pathf.devModule(module_path, area)
+            if vcs_git.is_repo_path(server_repo_path):
+                # Adding new App to old style "domain/tech_area" module that already exists on the remote server
+                return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
+
+            else:
+                # Otherwise, the behaviour is exactly the same as that given by the ordinary IOC class
+                # as module_path is the only thing that varies
+                return NewModuleCreatorIOC(module_path, app_name, area)
+
+    else:
+        # assume full IOC name is given
+        cols = module_name.split('-')
+        if len(cols) <= 1:
+            raise Error("Need a name with dashes in it, got " + module_name)
+        domain = cols[0]
+        technical_area = cols[1]
+        app_name = module_name
+        module_path = domain + "/" + app_name
+
+        if technical_area == "BL":
+            return NewModuleCreatorIOCBL(module_path, app_name, area)
+        else:
+            return NewModuleCreatorIOC(module_path, app_name, area)
 
 
 def obtain_template_files(area):
@@ -99,7 +110,7 @@ def obtain_template_files(area):
         return {}
 
 
-class VerificationError(Exception):  # To allow us to handle and concatenate internal verification errors only
+class VerificationError(Error):  # To allow us to handle and concatenate internal verification errors only
     pass
 
 
@@ -131,7 +142,7 @@ class NewModuleCreator(object):
 
         self.disk_dir = ""
         self.server_repo_path = ""
-        self.disk_dir = os.path.join(self.cwd, self.module_path)
+        self.disk_dir = self.module_path
         self.server_repo_path = pathf.devModule(self.module_path, self.area)
 
         self.message = ""
@@ -299,7 +310,7 @@ class NewModuleCreator(object):
 
             if os.path.normpath(dir_path) == os.path.normpath(rel_path):
                 # If folder given instead of file (ie. rel_path ends with a slash or folder already exists)
-                raise Exception("{dir:s} in template dictionary is not a valid file name".format(dir=dir_path))
+                raise Error("{dir:s} in template dictionary is not a valid file name".format(dir=dir_path))
             else:
                 if dir_path and not os.path.isdir(dir_path):  # dir_path = '' if eg. "file.txt" given
                     os.makedirs(dir_path)
@@ -430,9 +441,9 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
 
             if os.path.exists(os.path.join(temp_dir, self.app_name + "App")):
                 err_message = "The app {app_name:s} already exists on gitolite, cannot continue"
-                raise Exception(err_message.format(app_name=self.app_name))
-        except Exception as e:
-            raise VerificationError(str(e))  # Also covers exceptions raised by vcs_git.clone, tempfile etc.
+                raise Error(err_message.format(app_name=self.app_name))
+        except Exception as e:  # TODO(Martin) Once we have vcs_git-specific errors, catch these explicitly
+            raise VerificationError(str(e))  # Also covers exceptions raised by vcs_git.clone, etc.
         finally:
             if temp_dir:  # If mkdtemp worked
                 shutil.rmtree(temp_dir)

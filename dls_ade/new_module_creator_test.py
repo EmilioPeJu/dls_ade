@@ -14,14 +14,11 @@ else:
     import builtins
 
 
-class GetNewModuleCreator(unittest.TestCase):
+class GetNewModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
 
         methods_to_patch = [
-            'CreatorIOC',
-            'CreatorIOCAddToModule',
-            'CreatorIOCBL',
             'CreatorPython',
             'CreatorSupport',
             'CreatorTools'
@@ -34,6 +31,10 @@ class GetNewModuleCreator(unittest.TestCase):
             self.addCleanup(self.patch[method].stop)
             self.mocks[method] = self.patch[method].start()
 
+        self.patch_get_new_ioc = patch('dls_ade.new_module_creator.get_new_module_creator_ioc')
+        self.addCleanup(self.patch_get_new_ioc.stop)
+        self.mock_get_new_ioc = self.patch_get_new_ioc.start()
+
         # self.mocks['CreatorTools'].return_value = "Example"
 
     def test_given_unsupported_area_then_exception_raised(self):
@@ -41,57 +42,11 @@ class GetNewModuleCreator(unittest.TestCase):
         with self.assertRaises(Exception):
             new_c.get_new_module_creator("test_module", "fake_area")
 
-    def test_given_area_is_ioc_and_no_BL_statement_and_dash_separated_then_new_module_creator_ioc_called_with_correct_args(self):
+    def test_given_area_is_ioc_then_get_new_module_creator_ioc_called(self):
 
-        ioc_c_mock = self.mocks['CreatorIOC']
+        new_ioc_creator = new_c.get_new_module_creator("test_module", "ioc", fullname=True)
 
-        new_ioc_creator = new_c.get_new_module_creator("test-module-IOC-01", "ioc")
-
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
-
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_true_then_new_module_creator_ioc_called_with_correct_args(self):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
-
-        new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc", fullname=True)
-
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
-
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = False)
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_repo_path):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
-
-        new_ioc_creator = new_c.get_new_module_creator("test/module/01", "ioc")
-
-        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
-
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = True)
-    def test_given_area_is_ioc_and_no_BL_statement_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_add_to_module_called_with_correct_args(self, mock_is_repo_path):
-
-        ioc_os_c_mock = self.mocks['CreatorIOCAddToModule']
-
-        new_ioc_creator = new_c.get_new_module_creator("test/module/02", "ioc")
-
-        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        ioc_os_c_mock.assert_called_once_with("test/module", "test-module-IOC-02", "ioc")
-
-    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
-
-        new_tools_creator = new_c.get_new_module_creator("test/BL", "ioc")
-
-        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc")
-
-    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
-
-        new_tools_creator = new_c.get_new_module_creator("test-BL-IOC-01", "ioc")
-
-        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc")
+        self.mock_get_new_ioc.assert_called_once_with("test_module", True)
 
     def test_given_area_is_python_with_invalid_name_then_new_module_creator_python_not_returned(self):
 
@@ -135,6 +90,94 @@ class GetNewModuleCreator(unittest.TestCase):
         new_tools_creator = new_c.get_new_module_creator("test_module", "tools")
 
         tools_c_mock.assert_called_once_with("test_module", "tools")
+
+class GetNewModuleCreatorIOCTest(unittest.TestCase):
+
+    def setUp(self):
+
+        methods_to_patch = [
+            'CreatorIOC',
+            'CreatorIOCAddToModule',
+            'CreatorIOCBL',
+        ]
+
+        self.patch = {}
+        self.mocks = {}
+        for method in methods_to_patch:
+            self.patch[method] = patch('dls_ade.new_module_creator.NewModule' + method)
+            self.addCleanup(self.patch[method].stop)
+            self.mocks[method] = self.patch[method].start()
+
+        # self.mocks['CreatorTools'].return_value = "Example"
+
+    def test_given_module_name_with_no_slash_or_dash_then_exception_raised_with_correct_message(self):
+
+        comp_message = "Need a name with dashes in it, got test_module"
+
+        with self.assertRaises(new_c.Error) as e:
+            new_ioc_creator = new_c.get_new_module_creator_ioc("test_module")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_not_BL_and_dash_separated_then_new_module_creator_ioc_called_with_correct_args(self):
+
+        ioc_c_mock = self.mocks['CreatorIOC']
+
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test-module-IOC-01")
+
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
+
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_ioc_called_with_correct_args(self):
+
+        ioc_c_mock = self.mocks['CreatorIOC']
+
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=True)
+
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-02", "test-module-IOC-02", "ioc")
+
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_ioc_called_with_correct_args(self):
+
+        ioc_c_mock = self.mocks['CreatorIOC']
+
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module", fullname=True)
+
+        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
+
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = False)
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_repo_path):
+
+        ioc_c_mock = self.mocks['CreatorIOC']
+
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
+
+        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
+        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
+
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = True)
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_add_to_module_called_with_correct_args(self, mock_is_repo_path):
+
+        ioc_os_c_mock = self.mocks['CreatorIOCAddToModule']
+
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
+
+        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
+        ioc_os_c_mock.assert_called_once_with("test/module", "test-module-IOC-02", "ioc")
+
+    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
+
+        iocbl_c_mock = self.mocks['CreatorIOCBL']
+
+        new_tools_creator = new_c.get_new_module_creator_ioc("test/BL")
+
+        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc")
+
+    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
+
+        iocbl_c_mock = self.mocks['CreatorIOCBL']
+
+        new_tools_creator = new_c.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
+
+        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc")
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):

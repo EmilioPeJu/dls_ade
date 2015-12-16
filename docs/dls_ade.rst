@@ -20,3 +20,8 @@
 --------------------------------------
 .. automodule:: dls_ade.vcs_git
     :members:
+
+:mod:`dls_ade.new_module_creator` module
+--------------------------------------
+.. automodule:: dls_ade.new_module_creator
+    :members:
