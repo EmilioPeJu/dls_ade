@@ -22,17 +22,14 @@ class MakeParserTest(unittest.TestCase):
         self.assertEqual(arguments.dest, 'module_name')
 
     def test_earlier_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-e']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, int)
-        self.assertEqual(option.dest, "earlier_release")
-        self.assertIn("--earlier_release", option.option_strings)
+        arguments = self.parser._positionals._actions[5]
+        self.assertEqual(arguments.type, int)
+        self.assertEqual(arguments.dest, 'earlier_release')
 
     def test_later_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-l']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.dest, "later_release")
-        self.assertIn("--later_release", option.option_strings)
+        arguments = self.parser._positionals._actions[6]
+        self.assertEqual(arguments.type, int)
+        self.assertEqual(arguments.dest, 'later_release')
 
     def test_verbose_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-v']
@@ -48,7 +45,7 @@ class MakeParserTest(unittest.TestCase):
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):
-    # >>> Get MagicMock version from other checkout module branch
+    # >>> Get MagicMock version from other branch
     pass
 
 
@@ -58,10 +55,9 @@ class ColourTest(unittest.TestCase):
         word = "test_word"
         col = "test_col"
 
-        args = MagicMock()
-        args.raw = True
+        raw = True
 
-        return_value = dls_logs_since_release.colour(word, col, args)
+        return_value = dls_logs_since_release.colour(word, col, raw)
 
         self.assertEqual(return_value, word)
 
@@ -70,9 +66,8 @@ class ColourTest(unittest.TestCase):
         col = 5
         expected_return_value = "\x1b[" + str(col) + "m" + str(word) + "\x1b[0m"
 
-        args = MagicMock()
-        args.raw = False
+        raw = False
 
-        return_value = dls_logs_since_release.colour(word, col, args)
+        return_value = dls_logs_since_release.colour(word, col, raw)
 
         self.assertEqual(return_value, expected_return_value)
