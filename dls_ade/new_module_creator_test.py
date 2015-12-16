@@ -271,7 +271,7 @@ class NewModuleCreatorCheckIfRemoteRepoExistsTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator.get_remote_dir_list')
+        self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator._get_remote_dir_list')
         self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
 
         self.addCleanup(self.patch_get_remote_dir_list.stop)
@@ -323,7 +323,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
         mod_c = new_c.NewModuleCreator("test_module", "test_area")
-        dir_list = mod_c.get_remote_dir_list()
+        dir_list = mod_c._get_remote_dir_list()
 
         self.assertEqual(dir_list, [mod_c.server_repo_path, 'vendor_module', 'prod_module'])
 

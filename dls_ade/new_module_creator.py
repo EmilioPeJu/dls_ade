@@ -130,7 +130,7 @@ class NewModuleCreator(object):
 
         # Sensible defaults for variable initialisation:
 
-        self.area = area  # needed for file templates and server_repo_path
+        self._area = area  # needed for file templates and server_repo_path
         self.cwd = os.getcwd()  # Should I be passing this as a parameter? - doing this makes the change easy!
 
         self.module_path = ""
@@ -143,10 +143,7 @@ class NewModuleCreator(object):
         self.disk_dir = ""
         self.server_repo_path = ""
         self.disk_dir = self.module_path
-        self.server_repo_path = pathf.devModule(self.module_path, self.area)
-
-        self.message = ""
-        # self.compose_message()
+        self.server_repo_path = pathf.devModule(self.module_path, self._area)
 
         self.template_files = {}
         self.generate_template_files()
@@ -162,7 +159,7 @@ class NewModuleCreator(object):
 
     def generate_template_files(self):
         ''' Generates the template files dictionary that can be used to create default module files '''
-        self.template_files = obtain_template_files(self.area)
+        self.template_files = obtain_template_files(self._area)
 
     def generate_template_args(self):
         ''' returns a dictionary that can be used for the .format() method, used in creating files '''
@@ -183,7 +180,7 @@ class NewModuleCreator(object):
 
     def _check_if_remote_repo_exists(self):
 
-        dir_list = self.get_remote_dir_list()
+        dir_list = self._get_remote_dir_list()
 
         for d in dir_list:
             if vcs_git.is_repo_path(d):
@@ -191,10 +188,10 @@ class NewModuleCreator(object):
 
         return False, ""
 
-    def get_remote_dir_list(self):
+    def _get_remote_dir_list(self):
         server_repo_path = self.server_repo_path
-        vendor_path = pathf.vendorModule(self.module_path, self.area)
-        prod_path = pathf.prodModule(self.module_path, self.area)
+        vendor_path = pathf.vendorModule(self.module_path, self._area)
+        prod_path = pathf.prodModule(self.module_path, self._area)
 
         dir_list = [server_repo_path, vendor_path, prod_path]
 
