@@ -10,23 +10,16 @@ from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 class IsGitDirTest(unittest.TestCase):
 
-    def test_given_reasonable_input_then_function_called_correctly(self):
-        pass
-        # Method procedural and taken from internet - not sure how to test!
-
-
-class NewIsGitDirTest(unittest.TestCase):
-
     def test_given_invalid_file_path_then_error_raised(self):
         path = "/not/a/path"
 
         with self.assertRaises(Exception):
-            vcs_git.new_is_git_dir(path)
+            vcs_git.is_git_dir(path)
 
     def test_given_not_git_dir_then_returns_false(self):
         path = "/"
 
-        return_value = vcs_git.new_is_git_dir(path)
+        return_value = vcs_git.is_git_dir(path)
 
         self.assertFalse(return_value)
 
@@ -37,7 +30,7 @@ class NewIsGitDirTest(unittest.TestCase):
         git_inst = MagicMock()
         mock_git.Repo.return_value = git_inst
 
-        return_value = vcs_git.new_is_git_dir(path)
+        return_value = vcs_git.is_git_dir(path)
 
         self.assertTrue(return_value)
 

@@ -226,6 +226,158 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
         base_c = new_c.NewModuleCreator("test_module", "test_area")  # non-existent module and area
 
 
+class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_os = patch('dls_ade.new_module_creator.os')
+
+        self.addCleanup(self.patch_os.stop)
+
+        self.mock_os = self.patch_os.start()
+
+        self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
+
+        self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
+
+    def test_given_template_folder_is_not_directory_then_exception_raised_with_correct_message(self):
+
+        self.mock_os.path.isdir.return_value = False
+
+        comp_message = "The template folder {template_folder:s} does not exist".format(template_folder="test_template_folder")
+
+        with patch.object(builtins, 'open', self.open_mock):
+            with self.assertRaises(new_c.Error) as e:
+                self.mod_c.generate_template_files_from_folder("test_template_folder")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_files_directly_in_folder_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+    def test_given_files_nested_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+    def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+    def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mod_c.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder", True)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here",
+                     "non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+    def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mod_c.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder", False)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+    def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mod_c.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mod_c.generate_template_files_from_folder("test_template_folder", True)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here",
+                     "conflicting_file.txt": "I am the modified conflicting file text"}
+
+        self.assertEqual(comp_dict, self.mod_c.template_files)
+
+
 class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
 
     @patch('os.getlogin', return_value='my_login')

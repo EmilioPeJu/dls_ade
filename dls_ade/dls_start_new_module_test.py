@@ -27,6 +27,17 @@ class MakeParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "fullname")
         self.assertIn("--fullname", option.option_strings)
 
+    def test_template_folder_has_correct_attributes(self):
+        arguments = self.parser._positionals._actions[7]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'template_folder')
+
+    def test_template_update_argument_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-u']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "template_update")
+        self.assertIn("--template-update", option.option_strings)
+
 
 if __name__ == '__main__':
 

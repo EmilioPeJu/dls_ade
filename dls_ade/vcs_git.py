@@ -4,17 +4,19 @@ import subprocess
 import os
 import tempfile
 import shutil
+import logging
 
 from pkg_resources import require
 require('GitPython')
 import git
 
+logging.basicConfig(level=logging.DEBUG)
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
-def new_is_git_dir(path="./"):
+def is_git_dir(path="./"):
     if os.path.isdir(path):
         try:
             git.Repo(path)
@@ -24,16 +26,6 @@ def new_is_git_dir(path="./"):
             return True
     else:
         raise Exception("Path is not valid")
-
-
-def is_git_dir(path="."):
-    if not os.path.isdir(path):
-        # Check if local folder actually exists - below command will return True for non-existent folder that is a
-        # subdirectory of a git repository (eg. git_repo/fake_name)
-        return False
-
-    return subprocess.call(
-        ['git', 'status', path], stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
 
 def is_git_root_dir(path="."):

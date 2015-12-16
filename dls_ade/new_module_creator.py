@@ -161,6 +161,28 @@ class NewModuleCreator(object):
         ''' Generates the template files dictionary that can be used to create default module files '''
         self.template_files = obtain_template_files(self._area)
 
+    def generate_template_files_from_folder(self, template_folder, update = False):
+        ''' Generates the template files from a folder passed to it. Will include hidden files. update -> if yes, will include original dictionary '''
+
+        if not os.path.isdir(template_folder):
+            err_message = "The template folder {template_folder:s} does not exist"
+            raise Error(err_message.format(template_folder=template_folder))
+
+        template_files = {}
+        for dir_path, _, files in os.walk(template_folder):
+            for file_name in files:
+                file_path = os.path.join(dir_path, file_name)
+                with open(file_path, "r") as f:
+                    contents = f.read()
+                rel_path = os.path.relpath(file_path, template_folder)
+                logging.debug("rel path: " + rel_path)
+                template_files.update({rel_path:contents})
+
+        if update:
+            self.template_files.update(template_files)
+        else:
+            self.template_files = template_files
+
     def generate_template_args(self):
         ''' returns a dictionary that can be used for the .format() method, used in creating files '''
         template_args = {'module_name': self.module_name, 'getlogin': os.getlogin()}
@@ -292,8 +314,9 @@ class NewModuleCreator(object):
 
     def _create_files_from_template_dict(self):
         ''' Iterates through the template dict and creates all necessary files and folders '''
-        # As dictionaries cannot have more than one key, and the directory does not previously exist, should I
-        # error check?
+        # Consider whether I should allow this to create empty folders - git will not commit empty folders, but the user
+        # would be able to create a useable directory tree to fill in. Also change generate_template_files_from_folder
+        # to allow the dict creation for this as well
 
         for path in self.template_files:  # dictionary keys are the relative file paths for the documents
             # Using template_args allows us to insert eg. module name into the file paths in template_files
@@ -303,6 +326,7 @@ class NewModuleCreator(object):
             dir_path = os.path.dirname(rel_path)
 
             if os.path.isfile(rel_path):
+                logging.debug("File already exists: " + rel_path)
                 continue  # Stops us from overwriting files in folder (eg. .gitignore for IOC Old-style modules)
 
             if os.path.normpath(dir_path) == os.path.normpath(rel_path):

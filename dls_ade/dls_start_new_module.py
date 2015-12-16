@@ -33,6 +33,12 @@ def make_parser():
     parser.add_argument(
         "-f", "--fullname", action="store_true", dest="fullname",
         help="create new-style ioc, with full ioc name in path")
+    parser.add_argument(
+        "template_folder", type=str, default=None,
+        help="relative path of the template_folder")
+    parser.add_argument(
+        "-u", "--template-update", action="store_true", dest="template_update",
+        help="Will update the original module templates as opposed to overwriting them")
 
     return parser
 
@@ -46,6 +52,8 @@ def main():
     area = args.area
     fullname = args.fullname
     no_import = args.no_import
+    template_folder = args.template_folder
+    template_update = args.template_update
 
     mod_c = new_c.get_new_module_creator(module_name, area, fullname)
 
@@ -53,6 +61,9 @@ def main():
 
     if not no_import:
         mod_c.verify_remote_repo()
+
+    if template_folder:
+        mod_c.generate_template_files_from_folder(template_folder, template_update)
 
     mod_c.create_local_module()
     mod_c.print_message()
