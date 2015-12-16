@@ -4,22 +4,27 @@
 import os
 import sys
 import time
-from dls_ade.argument_parser import ArgParser
-# from dls_environment import environment
+from argument_parser import ArgParser
+from dls_environment import environment
+import path_functions as pathf
+import vcs_git
 
-usage = """Default <area> is 'support'.
+usage = """
+Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
-from one the revision number when <earlier_release> was done, to the revision
+from the revision number when <earlier_release> was done, to the revision
 when <later_release> was done. If not specified, <earlier_release> defaults to
 revision 0, and <later_release> defaults to the head revision. If
 <earlier_release> is given an invalid value (like 'latest') if will be set
-to the latest release."""
+to the latest release.
+"""
 
-BLACK = 30
 RED = 31
+BLUE = 34
+# Unused colours
+BLACK = 30
 GREEN = 32
 YELLOW = 33
-BLUE = 34
 MAGENTA = 35
 CYAN = 36
 GREY = 37
@@ -34,10 +39,10 @@ def make_parser():
         "module_name", type=str, default=None,
         help="name of module")
     parser.add_argument(
-        "earlier_release", type=int, default=0,
+        "-e", "--earlier_release", type=int, action="store", dest="earlier_release",
         help="start point of log messages")
     parser.add_argument(
-        "later_release", type=int, default="Set to head",
+        "-l", "--later_release", type=int, action="store", dest="later_release",
         help="end point of log messages")
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose",
@@ -49,11 +54,18 @@ def make_parser():
     return parser
 
 
-def colour(word, col):
-    if raw:
+def check_technical_area_valid(args, parser):
+
+    if args.area == "ioc" and not len(args.module.split('/')) > 1:
+        parser.error("Missing Technical Area Under Beamline")
+
+
+def colour(word, col, args):
+    if args.raw:
         return word
-    esc = 27
-    return '%(esc)c[%(col)dm%(word)s%(esc)c[0m' % locals()
+    # >>> I have just hard coded the char conversion of %27c in, as I couldn't find the
+    # .format equivalent of %c, is anything wrong with this?
+    return '\x1b[{col}m{word}\x1b[0m'.format(col=col, word=word)
 
 
 def main():
@@ -63,40 +75,28 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-#    if len(args) not in range(4):
-#        parser.error("Incorrect number of arguments.")
-        
-    # setup the environment
+    e = environment()
 
-#    e = environment()
-    
-    # import svn client
-    from dls_environment.svn import svnClient    
-    svn = svnClient()
-
-    # show modified files if verbose
-
-    # don't write coloured text if options.raw (it confuses less)
+    # don't write coloured text if args.raw (it confuses less)
     if args.raw or \
             (not args.raw and
                 (not sys.stdout.isatty() or os.getenv("TERM") is None or "dumb" ==
                     os.getenv("TERM"))):
+        # >>> Why is this initialised here when it is defined at the top?
         global raw
         raw = True
-        
-    # if module specified then check logs for that module        
-    if args:    
-        module = args.module
-        # check that iocs have a technical area
-        if args.area == "ioc":
-            assert len(module.split('/')) > 1, 'Missing Technical Area under Beamline'
-        source = svn.devModule(module, args.area)
-        release = svn.prodModule(module, args.area)
-    # otherwise do it for the entire area        
+
+    # module is 'everything', list logs for entire area
+    if args.module == 'everything':
+        module = args.area  # >>> This isn't very clear later on
+        source = pathf.devArea(args.area)
+        release = pathf.prodArea(args.area)
     else:
-        module = args.area
-        source = svn.devArea(args.area)
-        release = svn.prodArea(args.area)
+        # otherwise check logs for specific module
+        check_technical_area_valid(args, parser)
+        module = args.module
+        source = pathf.devModule(module, args.area)
+        release = pathf.prodModule(module, args.area)
     
     # Work out the initial and end release numbers
     start = svn.Revision(svn.opt_revision_kind.number, 0)
@@ -104,23 +104,19 @@ def main():
                 
     # Check for existence of this module in various places in the repository
     # and note revisions
-    assert svn.pathcheck(source), 'Repository does not contain "' + source + '"'
+    if not vcs_git.is_repo_path(source):
+        parser.error("Repository does not contain " + source)
     
-    if svn.pathcheck(release):
-        release_dir = \
-            release.replace(svn.info2(release,
-                                      recurse=False)[0][1]["repos_root_URL"], "")
-        # Remove unicode attribute from release_dir so that it doesn't propogate
+    if vcs_git.is_repo_path(release):
+        release_dir = release.replace(svn.info2(release, recurse=False)[0][1]["repos_root_URL"], "")
+        # Remove unicode attribute from release_dir so that it doesn't propagate
         # into other values and cause unexpected decode failures.
         release_dir = str(release_dir)
-                          
+
         # Now grab the logs from the release dir
         r_logs = svn.log(release, discover_changed_paths=True)
 
-# >>> The if len() statements are now redundant because the script won't run without
-# >>> module_name, earlier_release and later_release
-
-        if len(args) > 1:
+        if args.earlier_release:
             early_num = args.earlier_release
             releases = []    
             # Create a list of release numbers and their created dates
@@ -133,8 +129,7 @@ def main():
                                 releases = [(r, l) for r, l in releases if r != rnum] +\
                                            [(rnum, pdict["copyfrom_revision"])]
             # Sort them by rev
-            releases = \
-                [(r, l) for _, r, l in sorted([(l.number, r, l) for r, l in releases])]
+            releases = [(r, l) for _, r, l in sorted([(l.number, r, l) for r, l in releases])]
             
             # adjust the start rev to be early_release
             i = 0
@@ -142,8 +137,8 @@ def main():
                 i += 1
             if i == len(releases):
                 i = -1
-                print("Repository does not contain '" + early_num +
-                      "', using latest release '" + releases[-1][0] + "'")
+                print("Repository does not contain " + early_num +
+                      ", using latest release " + releases[-1][0])
 
             start = releases[i][1]
 
@@ -157,20 +152,21 @@ def main():
                 else:
                     end = svn.Revision(svn.opt_revision_kind.number,
                                        releases[j][1].number + 1)
-            r_logs = svn.log(release, revision_start=start, revision_end=end,
-                             discover_changed_paths=True)
+            r_logs = svn.log(release, revision_start=start, revision_end=end, discover_changed_paths=True)
     else:
         r_logs = []                    
     
     # now grab the logs from the 2 dirs
-    logs = svn.log(source, revision_start=start, revision_end=end,
-                   discover_changed_paths=args.verbose)
+    logs = svn.log(source, revision_start=start, revision_end=end, discover_changed_paths=args.verbose)
 
     for l in r_logs:
-        l["message"] += " (Release dir %s)" % l["changed_paths"][0]["path"].replace(release_dir, "").lstrip("/")
+        l["message"] += \
+            " (Release dir %s)" % l["changed_paths"][0]["path"].replace(release_dir, "").lstrip("/")
         if l["changed_paths"][0]["copyfrom_revision"]:
             # hack the revision so it's a little later than the copy from location
-# >>> WHAT IS THIS?
+
+            # >>> WHAT IS THIS?
+
             class rev:
                 number = l["changed_paths"][0]["copyfrom_revision"].number + 0.1            
             l["revision"] = rev()
@@ -183,26 +179,30 @@ def main():
     # Now print them
     print("Log Messages:")
     for log in logs:
-        mess = log["message"].split(module+":", 1)
-        if len(mess) == 1:
-            mess = mess[0].strip()
+        message = log["message"].split(module+":", 1)
+        if len(message) == 1:
+            message = message[0].strip()
         else:
-            mess = mess[1].strip()
-        rev = "(r%s)" % int(log["revision"].number)
-        pre = ("%%-%ds %%s:" % (17 - len(rev))) % (log["author"], rev)
+            message = message[1].strip()
+        rev = "(r{0})".format(int(log["revision"].number))
+        # Align print columns using {:(17 - len(rev)}
+        pre = "{:{}} {}:".format(log["author"], 17 - len(rev), rev)
         if args.verbose:
-            header = "%s %s" % (pre, time.ctime(log["date"]))
-            print(colour(header, RED))
-            print(colour("-" * min(80, len(header)), RED))
-            print(mess)
+            header = "{0} {1}".format(pre, time.ctime(log["date"]))
+            print(colour(header, RED, args))
+            print(colour("-" * min(80, len(header)), RED, args))
+            print(message)
             if log["changed_paths"]:
                 print("Changes:")
                 for change in log["changed_paths"]:
-                    print("  %s %s" % (change["action"], change["path"]))
+                    print("  {0} {1}" % (change["action"], change["path"]))
                 print("")
             print("")
         else:
-            print("%s %s" % (colour(pre, RED), mess))
-                              
+            print("{0} {1}".format(colour(pre, RED, args), message))
+
 if __name__ == "__main__":
+    parser = make_parser()
+    args = parser.parse_args()
+    print(colour("test", BLUE, args))
     sys.exit(main())
