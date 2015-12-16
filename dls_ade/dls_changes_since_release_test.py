@@ -68,6 +68,3 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-
-class MainTest(unittest.TestCase):
-    pass
