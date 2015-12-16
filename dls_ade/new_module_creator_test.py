@@ -226,7 +226,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
         base_c = new_c.NewModuleCreator("test_module", "test_area")  # non-existent module and area
 
 
-class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
+class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
 
     def setUp(self):
 
@@ -248,7 +248,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
 
         with patch.object(builtins, 'open', self.open_mock):
             with self.assertRaises(new_c.Error) as e:
-                self.mod_c.generate_template_files_from_folder("test_template_folder")
+                self.mod_c.set_template_files_from_folder("test_template_folder")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -264,7 +264,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder")
+            self.mod_c.set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
 
@@ -282,7 +282,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder")
+            self.mod_c.set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
 
@@ -300,7 +300,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder")
+            self.mod_c.set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
 
@@ -320,7 +320,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder", True)
+            self.mod_c.set_template_files_from_folder("test_template_folder", True)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
@@ -344,7 +344,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder", False)
+            self.mod_c.set_template_files_from_folder("test_template_folder", False)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
@@ -367,7 +367,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mod_c.generate_template_files_from_folder("test_template_folder", True)
+            self.mod_c.set_template_files_from_folder("test_template_folder", True)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
@@ -378,7 +378,7 @@ class NewModuleCreatorGenerateTemplateFilesFromFolderTest(unittest.TestCase):
         self.assertEqual(comp_dict, self.mod_c.template_files)
 
 
-class NewModuleCreatorGenerateTemplateArgs(unittest.TestCase):
+class NewModuleCreatorSetTemplateArgs(unittest.TestCase):
 
     @patch('os.getlogin', return_value='my_login')
     def test_given_reasonable_input_then_correct_template_args_given(self, mock_getlogin):
@@ -392,34 +392,34 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_check_if_remote_repo_exists = patch('dls_ade.new_module_creator.NewModuleCreator._check_if_remote_repo_exists')
+        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreator._get_existing_remote_repo_paths')
 
-        self.addCleanup(self.patch_check_if_remote_repo_exists.stop)
+        self.addCleanup(self.patch_get_existing_remote_repo_paths.stop)
 
-        self.mock_check_if_remote_repo_exists = self.patch_check_if_remote_repo_exists.start()
+        self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
 
         self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
-    def test_given_exists_true_then_exception_raised_with_correct_message_including_directory(self):
+    def test_given_get_existing_remote_repo_paths_returns_non_empty_list_then_exception_raised_with_correct_message(self):
 
-        self.mock_check_if_remote_repo_exists.return_value = (True, "test_directory")
-        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir="test_directory")
+        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        comp_message = ("The paths {dirs:s} already exist on gitolite, cannot continue").format(dirs=", ".join(["inrepo1", "inrepo2", "inrepo3"]))
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_exists_false_then_remote_repo_valid_set_true(self):
+    def test_given_get_existing_remote_repo_paths_returns_empty_list_then_remote_repo_valid_set_true(self):
 
-        self.mock_check_if_remote_repo_exists.return_value = (False, "")
+        self.mock_get_existing_remote_repo_paths.return_value = []
 
         self.mod_c.verify_remote_repo()
 
         self.assertTrue(self.mod_c._remote_repo_valid)
 
 
-class NewModuleCreatorCheckIfRemoteRepoExistsTest(unittest.TestCase):
+class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
 
     def setUp(self):
 
@@ -434,38 +434,32 @@ class NewModuleCreatorCheckIfRemoteRepoExistsTest(unittest.TestCase):
 
         self.mod_c = new_c.NewModuleCreator("test_module", "test_area")
 
-    def test_given_one_of_dir_list_exists_then_flag_set_true_and_directory_returned(self):
+    def test_given_one_of_dir_list_exists_then_directory_returned_in_list(self):
 
-        self.mock_get_remote_dir_list.return_value = ['inrepo', 'inrepo', 'inrepo']
+        self.mock_get_remote_dir_list.return_value = ["inrepo1", "inrepo2", "inrepo3"]
         self.mock_is_repo_path.return_value = True
 
-        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
+        existing_dir_paths = self.mod_c._get_existing_remote_repo_paths()
 
-        self.assertTrue(exists)
+        self.assertEqual(existing_dir_paths, ["inrepo1", "inrepo2", "inrepo3"])
 
-        self.assertEqual(dir_path, "inrepo")
+    def test_given_none_in_dir_list_exist_then_list_returned_is_empty(self):
 
-    def test_given_dir_list_does_not_exist_then_flag_set_false_and_directory_returned_is_blank(self):
-
-        self.mock_get_remote_dir_list.return_value = ['notinrepo', 'notinrepo', 'notinrepo']
+        self.mock_get_remote_dir_list.return_value = ["notinrepo1", "notinrepo2", "notinrepo3"]
         self.mock_is_repo_path.return_value = False
 
-        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
+        existing_dir_paths = self.mod_c._get_existing_remote_repo_paths()
 
-        self.assertFalse(exists)
+        self.assertFalse(existing_dir_paths)
 
-        self.assertEqual(dir_path, "")
+    def test_given_one_dir_does_exist_then_list_returned_is_correct(self):
 
-    def test_given_one_dir_does_exist_then_flag_set_true_and_directory_returned_is_correct(self):
-
-        self.mock_get_remote_dir_list.return_value = ['notinrepo', 'inrepo', 'notinrepo']
+        self.mock_get_remote_dir_list.return_value = ["notinrepo1", "inrepo2", "notinrepo3"]
         self.mock_is_repo_path.side_effect = [False, True, False]
 
-        exists, dir_path = self.mod_c._check_if_remote_repo_exists()
+        existing_dir_paths = self.mod_c._get_existing_remote_repo_paths()
 
-        self.assertTrue(exists)
-
-        self.assertEqual(dir_path, "inrepo")
+        self.assertEqual(existing_dir_paths, ["inrepo2"])
 
 
 class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
@@ -509,7 +503,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_exists.return_value = True
         self.mock_is_git_dir.return_value = False
 
-        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=self.mod_c.module_path)
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_can_create_local_module()
@@ -539,7 +533,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.\n"
         comp_message += "Currently in a git repository, please move elsewhere and try again."
-        comp_message = comp_message.format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message = comp_message.format(dir=self.mod_c.module_path)
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_can_create_local_module()
@@ -610,7 +604,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c._remote_repo_valid = True
 
-        comp_message = "Directory {dir:s} does not exist.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message = "Directory {dir:s} does not exist.".format(dir=self.mod_c.module_path)
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_can_push_repo_to_remote()
@@ -625,7 +619,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.mod_c._remote_repo_valid = True
 
-        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=self.mod_c.module_path)
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_can_push_repo_to_remote()
@@ -640,7 +634,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.return_value = False
 
         comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.\n"
-        comp_message = comp_message.format(dir=os.path.join("./", self.mod_c.disk_dir))
+        comp_message = comp_message.format(dir=self.mod_c.module_path)
         comp_message += "error"
         comp_message = comp_message.rstrip()
 
@@ -1031,72 +1025,140 @@ class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_clone = patch('dls_ade.new_module_creator.vcs_git.clone')
-        self.patch_mkdtemp = patch('dls_ade.new_module_creator.tempfile.mkdtemp', return_value = 'tempdir')
-        self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
-        self.patch_rmtree = patch('dls_ade.new_module_creator.shutil.rmtree')
+        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._get_existing_remote_repo_paths')
+        self.patch_check_if_remote_repo_has_app = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._check_if_remote_repo_has_app')
 
-        self.addCleanup(self.patch_clone.stop)
-        self.addCleanup(self.patch_mkdtemp.stop)
-        self.addCleanup(self.patch_exists.stop)
-        self.addCleanup(self.patch_rmtree.stop)
+        self.addCleanup(self.patch_get_existing_remote_repo_paths.stop)
+        self.addCleanup(self.patch_check_if_remote_repo_has_app.stop)
 
-        self.mock_clone = self.patch_clone.start()
-        self.mock_mkdtemp = self.patch_mkdtemp.start()
-        self.mock_exists = self.patch_exists.start()
-        self.mock_rmtree = self.patch_rmtree.start()
+        self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
+        self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
 
         self.mod_c = new_c.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
 
-    def test_given_function_called_then_mkdtemp_and_clone_called_correctly(self):
+    def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
 
-        try:
-            self.mod_c.verify_remote_repo()
-        except:
-            pass
+        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        self.mod_c.server_repo_path = "notinrepo"
 
-        self.mock_mkdtemp.assert_called_once_with()
-        self.mock_clone.assert_called_once_with(self.mod_c.server_repo_path, "tempdir")
-
-    def test_given_exists_false_then_exception_raised_with_correct_message(self):
-
-        self.mock_exists.return_value = True
-        comp_message =  "The app {app_name:s} already exists on gitolite, cannot continue".format(app_name="test_app")
+        comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_exists_false_and_exception_raised_outside_mkdtemp_then_rmtree_called_and_flag_still_false(self):
+    def test_given_app_exists_in_remote_repo_path_then_exception_raised_with_correct_error_message(self):
 
-        self.mock_exists.return_value = True
+        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        self.mod_c.server_repo_path = "inrepo1"
+        self.mock_check_if_remote_repo_has_app.side_effect = [True, False, True]
 
-        with self.assertRaises(new_c.VerificationError):
-            self.mod_c.verify_remote_repo()
-
-        self.mock_rmtree.assert_called_once_with("tempdir")
-        self.assertFalse(self.mod_c._remote_repo_valid)
-
-    def test_given_mkdtemp_raises_exception_then_rmtree_not_called_and_correct_exception_passed_up(self):
-
-        self.mock_mkdtemp.side_effect = Exception("generic exception message")
+        comp_message = "The repositories {paths:s} have apps that conflict with {app_name:s}".format(paths=", ".join(["inrepo1", "inrepo3"]), app_name="test_app")
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.mod_c.verify_remote_repo()
 
-        self.assertFalse(self.mock_rmtree.called)
-        self.assertFalse(self.mod_c._remote_repo_valid)
-        self.assertEqual(str(e.exception), "generic exception message")
+        self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_exists_true_and_no_exception_raised_then_rmtree_called_and_flag_set_true(self):
+    def test_given_all_checks_passed_then_remote_repo_valid_set_true(self):
 
-        self.mock_exists.return_value = False
+        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        self.mod_c.server_repo_path = "inrepo1"
+        self.mock_check_if_remote_repo_has_app.return_value = False
 
         self.mod_c.verify_remote_repo()
 
-        self.mock_rmtree.assert_called_once_with("tempdir")
         self.assertTrue(self.mod_c._remote_repo_valid)
+
+
+class NewModuleCreatorIOCAddToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
+        self.patch_mkdtemp = patch('dls_ade.new_module_creator.tempfile.mkdtemp', return_value='tempdir')
+        self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
+        self.patch_rmtree = patch('dls_ade.new_module_creator.shutil.rmtree')
+
+        self.addCleanup(self.patch_vcs_git.stop)
+        self.addCleanup(self.patch_mkdtemp.stop)
+        self.addCleanup(self.patch_exists.stop)
+        self.addCleanup(self.patch_rmtree.stop)
+
+        self.mock_vcs_git = self.patch_vcs_git.start()
+        self.mock_mkdtemp = self.patch_mkdtemp.start()
+        self.mock_exists = self.patch_exists.start()
+        self.mock_rmtree = self.patch_rmtree.start()
+
+        self.mod_c = new_c.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+
+    def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
+
+        self.mock_vcs_git.is_repo_path.return_value = False
+
+        comp_message = ("Remote repo {repo:s} does not exist. Cannot "
+                        "clone to determine if there is an app_name "
+                        "conflict with {app_name:s}".format(repo="test_repo_path", app_name="test_app"))
+
+        with self.assertRaises(new_c.Error) as e:
+            self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_remote_repo_exists_on_server_then_mkdtemp_and_clone_called_correctly(self):
+
+        self.mock_vcs_git.is_repo_path.return_value = True
+
+        try:
+            self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+        except:
+            pass
+
+        self.mock_mkdtemp.assert_called_once_with()
+        self.mock_vcs_git.clone.assert_called_once_with("test_repo_path", "tempdir")
+
+    def test_given_app_exists_then_return_value_is_true(self):
+
+        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_exists.return_value = True
+
+        exists = self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertTrue(exists)
+        self.mock_exists.assert_called_once_with("tempdir/test_appApp")
+
+    def test_given_app_does_not_exist_then_return_value_is_false(self):
+
+        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_exists.return_value = False
+
+        exists = self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertFalse(exists)
+        self.mock_exists.assert_called_once_with("tempdir/test_appApp")
+
+    def test_given_exception_raised_in_mkdtemp_then_rmtree_not_called(self):
+
+        self.mock_mkdtemp.side_effect = Exception("test_exception")
+        self.mock_vcs_git.is_repo_path.return_value = True
+
+        with self.assertRaises(Exception) as e:
+            self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertEqual(str(e.exception), "test_exception")
+        self.assertFalse(self.mock_rmtree.called)
+
+    def test_given_exception_raised_after_mkdtemp_then_rmtree_called(self):
+
+        self.mock_vcs_git.clone.side_effect = Exception("test_exception")
+        self.mock_vcs_git.is_repo_path.return_value = True
+
+        with self.assertRaises(Exception) as e:
+            self.mod_c._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertEqual(str(e.exception), "test_exception")
+        self.mock_rmtree.assert_called_once_with("tempdir")
 
 
 class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):

@@ -10,18 +10,60 @@ import vcs_git
 logging.basicConfig(level=logging.DEBUG)
 
 
-class Error(Exception):  # Error class for this module (use new_module_creator.Error)
+class Error(Exception):
+    """Class for exceptions relating to new_module_creator module
+
+    """
     pass
 
 
+# TODO(Martin) Add doc-string
 def get_new_module_creator(module_name, area="support", fullname=False):
-    ''' Use arguments to determine which new module creator to use, and return it '''
+    """Returns a NewModuleCreator object according to the arguments provided.
 
+    Args:
+        module_name: The name of the module to be created.
+            For a Python module, this needs to
+        param2 (Optional[str]): The second parameter. Defaults to None.
+            Second line of description should be indented.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        bool: True if successful, False otherwise.
+
+        The return type is optional and may be specified at the beginning of
+        the ``Returns`` section followed by a colon.
+
+        The ``Returns`` section may span multiple lines and paragraphs.
+        Following lines should be indented to match the first line.
+
+        The ``Returns`` section supports any reStructuredText formatting,
+        including literal blocks::
+
+            {
+                'param1': param1,
+                'param2': param2
+            }
+
+    Raises:
+        AttributeError: The ``Raises`` section is a list of all exceptions
+            that are relevant to the interface.
+        ValueError: If `param2` is equal to `param1`.
+
+
+    .. _PEP 484:
+       https://www.python.org/dev/peps/pep-0484/
+
+    """
+    # Use arguments to determine which new module creator to use, and return it '''
     if area == "ioc":
-        return get_new_module_creator_ioc(module_name, fullname)  # Delegate to another function for clarity
+        return get_new_module_creator_ioc(module_name, fullname)
 
     elif area == "python":
-        valid_name = module_name.startswith("dls_") and ("-" not in module_name) and ("." not in module_name)
+        valid_name = (module_name.startswith("dls_") and
+                      ("-" not in module_name) and
+                      ("." not in module_name))
         if not valid_name:
             raise Error("Python module names must start with 'dls_' and be valid python identifiers")
 
@@ -37,7 +79,45 @@ def get_new_module_creator(module_name, area="support", fullname=False):
         raise Error("Don't know how to make a module of type: " + area)
 
 
+# TODO(Martin) Add doc-string
 def get_new_module_creator_ioc(module_name, fullname=False):
+    """Returns a NewModuleCreator object according to the arguments provided.
+
+    Args:
+        module_name: The name of the module to be created.
+            For a Python module, this needs to
+        param2 (Optional[str]): The second parameter. Defaults to None.
+            Second line of description should be indented.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        bool: True if successful, False otherwise.
+
+        The return type is optional and may be specified at the beginning of
+        the ``Returns`` section followed by a colon.
+
+        The ``Returns`` section may span multiple lines and paragraphs.
+        Following lines should be indented to match the first line.
+
+        The ``Returns`` section supports any reStructuredText formatting,
+        including literal blocks::
+
+            {
+                'param1': param1,
+                'param2': param2
+            }
+
+    Raises:
+        AttributeError: The ``Raises`` section is a list of all exceptions
+            that are relevant to the interface.
+        ValueError: If `param2` is equal to `param1`.
+
+
+    .. _PEP 484:
+       https://www.python.org/dev/peps/pep-0484/
+
+    """
     # This section of code is ugly because it has to mimic the behaviour of the original script
     # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
     area = "ioc"
@@ -98,8 +178,15 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
 
 def obtain_template_files(area):
-    # function to generate file templates for the classes. In future will obtain from new_module_templates or file tree
-    # This is likely to be different in the future!
+    """Returns the default template_files dictionary for the given area.
+
+    Args:
+        area: The area of the module to be created.
+
+    Returns:
+        dict: The dictionary mapping file paths to document text.
+
+    """
     if area in ["default", "ioc", "support"]:
         return default_files
     elif area == "python":
@@ -110,62 +197,116 @@ def obtain_template_files(area):
         return {}
 
 
-class VerificationError(Error):  # To allow us to handle and concatenate internal verification errors only
+class VerificationError(Error):
+    """Class for exceptions relating to the verify_... methods.
+
+    This allows us to handle and concatenate internal verification errors.
+
+    """
     pass
 
 
+# TODO(Martin) Add doc-string
 class NewModuleCreator(object):
+    """Abstract base class for the management of the creation of new modules.
+
+    Attributes:
+        cwd: The current working directory upon initialisation.
+        module_name: The base name of the module path.
+        module_path: The relative module path.
+            Used in messages and exceptions for user-friendliness.
+        disk_dir: The absolute module path.
+            Used for system and git commands.
+        server_repo_path: The git repository server path for module.
+
+    Raises:
+        Error: All errors raised by this module inherit from this class
+        VerificationError: Errors relating to the verify_... methods.
+
+    """
 
     def __init__(self, module_path, area):
-        # Initialise all private variables.
-        # This one is used for testing purposes, although it is also used by support, tools and python
+        """Default initialisation of all object attributes.
 
-        # template list - include variable list for .format()?
+        Args:
+            module_path: The relative module path.
+                Used in messages and exceptions for user-friendliness.
+            area: The development area of the module to be created.
+                In particular, this specifies the exact template files to be
+                created as well as affecting the repository server path.
 
-        # module name
-        # area
-        # disk directory - directory where module to be imported is located
-        # app name
-        # server_repo_path - location of file on server
-
-        # Sensible defaults for variable initialisation:
-
-        self._area = area  # needed for file templates and server_repo_path
-        self.cwd = os.getcwd()  # Should I be passing this as a parameter? - doing this makes the change easy!
+        """
+        self._area = area  #: The 'area' of the module to be created.
+        self.cwd = os.getcwd()
 
         self.module_path = ""
         self.module_name = ""
-        self.module_path = module_path  # module_path has module_name at end, and folder is to contain "<app_name>App"
-        self.module_name = os.path.basename(os.path.normpath(self.module_path))  # Last part of module_path
-
-        # The above declarations could be separated out into a new function, which may then be altered by new classes
+        self.module_path = module_path
+        self.module_name = os.path.basename(
+            os.path.normpath(self.module_path))
 
         self.disk_dir = ""
         self.server_repo_path = ""
-        self.disk_dir = self.module_path
+        self.disk_dir = os.path.join(self.cwd, self.module_path)
         self.server_repo_path = pathf.devModule(self.module_path, self._area)
 
         self.template_files = {}
-        self.generate_template_files()
+        """dict: Dictionary containing file templates.
+        Each entry has the (relative) file-path as the key, and the file
+        contents as the value. Either may contain placeholders in the form
+        of {template_arg:s} for use with the string .format() method,
+        each evaluated using the `template_args` attribute."""
+
+        self.set_default_template_files()
+
         self.template_args = {}
-        self.generate_template_args()
+        """dict: Dictionary for module-specific phrases in template_files
+        Used for including module-specific phrases such as `module_name`"""
 
-        # This flag determines whether there are conflicting file names on the remote repository
-        self._remote_repo_valid = False  # call function at beginning of start_new_module script
-        # This set of 'valid' flags allows us to call the member functions in whatever order we like, and receive
-        # appropriate error messages, without having to repeat checks
-        self._can_create_local_module = False  # call function at start
+        self.set_default_template_args()
+
+        self._remote_repo_valid = False
+        """bool: Specifies whether there are conflicting server file paths.
+        This is separate from `_can_push_repo_to_remote` as the latter
+        considers local issues as well. This flag is separated as the user
+        needs to call this towards the beginning to avoid unnecessary file
+        creation"""
+
+        # These boolean values allow us to call the methods in any order
+        self._can_create_local_module = False
+        """bool: Specifies whether create_local_module can be called"""
+
         self._can_push_repo_to_remote = False
+        """bool: Specifies whether push_repo_to_remote can be called"""
 
-    def generate_template_files(self):
-        ''' Generates the template files dictionary that can be used to create default module files '''
+    def set_default_template_files(self):
+        """Sets `template_files` to default contents.
+
+        These were given in the original svn scripts as explicit strings.
+        They have now been moved to the new_module_templates module.
+
+        """
         self.template_files = obtain_template_files(self._area)
 
-    def generate_template_files_from_folder(self, template_folder, update = False):
-        ''' Generates the template files from a folder passed to it. Will include hidden files. update -> if yes, will include original dictionary '''
+    def set_template_files_from_folder(self, template_folder, update=False):
+        """Sets `template_files` from a folder passed to it.
 
+        If update is 'True', then the dictionary is updated, not overwritten.
+
+        Note:
+            All hidden files and folders (apart from '.' and '..') will be
+            included.
+
+        Args:
+            template_folder: The relative or absolute path to template folder.
+                Inside, all files and folders can use {value:s} placeholders
+                to allow completion using `template_args` attribute.
+            update: If True, `template_files` will be updated
+
+        """
         if not os.path.isdir(template_folder):
-            err_message = "The template folder {template_folder:s} does not exist"
+            err_message = ("The template folder {template_folder:s} "
+                           "does not exist")
             raise Error(err_message.format(template_folder=template_folder))
 
         template_files = {}
@@ -176,43 +317,82 @@ class NewModuleCreator(object):
                     contents = f.read()
                 rel_path = os.path.relpath(file_path, template_folder)
                 logging.debug("rel path: " + rel_path)
-                template_files.update({rel_path:contents})
+                template_files.update({rel_path: contents})
 
         if update:
             self.template_files.update(template_files)
         else:
             self.template_files = template_files
 
-    def generate_template_args(self):
-        ''' returns a dictionary that can be used for the .format() method, used in creating files '''
-        template_args = {'module_name': self.module_name, 'getlogin': os.getlogin()}
+    def set_default_template_args(self):
+        """Sets `template_args` to default contents."""
+        template_args = {'module_name': self.module_name,
+                         'getlogin': os.getlogin()}
 
         self.template_args = template_args
 
     def verify_remote_repo(self):
-        # Creates and uses dir_list to check remote repository for name collisions with new module
-        # Raises exception if one currently exists
+        """Verifies there are no name conflicts with the remote repository.
 
-        exists, dir_path = self._check_if_remote_repo_exists()
+        This checks whether or not there are any name conflicts between the
+        intended module name and the modules that already exist on the remote
+        repository.
 
-        if exists:
-            raise VerificationError("The path {dir:s} already exists on gitolite, cannot continue".format(dir=dir_path))
+        Sets the `_remote_repo_valid` boolean value to True if there are no
+        conflicts.
+
+        Raises:
+            VerificationError: If there is a name conflict with the server.
+
+        """
+        existing_remote_repo_paths = self._get_existing_remote_repo_paths()
+
+        if existing_remote_repo_paths:
+            err_message = ("The paths {dirs:s} already exist on gitolite,"
+                           " cannot continue")
+            raise VerificationError(
+                err_message.format(
+                    dirs=", ".join(existing_remote_repo_paths))
+            )
 
         self._remote_repo_valid = True
 
-    def _check_if_remote_repo_exists(self):
+    def _get_existing_remote_repo_paths(self):
+        """Gets a list of existing remote repository paths relating to module.
 
+        This checks whether any paths relating to the new module exist on
+        gitolite, returning a list of all of them.
+
+        Returns:
+            List[str]: A list of all existing remote repository paths
+
+        """
         dir_list = self._get_remote_dir_list()
+        existing_dir_paths = []
 
         for d in dir_list:
             if vcs_git.is_repo_path(d):
-                return True, d
+                existing_dir_paths.append(d)
 
-        return False, ""
+        return existing_dir_paths
 
     def _get_remote_dir_list(self):
+        """Returns a list of paths with which to check for naming collisions.
+
+        Aside from the intended server destination for the module, there
+        should be no conflicts with eg. vendor module paths.
+
+        Returns:
+            List[str]: A list of all potentially conflicting paths.
+
+        """
+        # Intended initial destination for module
         server_repo_path = self.server_repo_path
+
+        # Vendor location for module
         vendor_path = pathf.vendorModule(self.module_path, self._area)
+
+        # Production location for module
         prod_path = pathf.prodModule(self.module_path, self._area)
 
         dir_list = [server_repo_path, vendor_path, prod_path]
@@ -220,25 +400,38 @@ class NewModuleCreator(object):
         return dir_list
 
     def verify_can_create_local_module(self):
-        ''' Determines whether the local directory is a valid starting point for module file structure creation '''
-        # Checks that 'we' are not currently in a git repository, and that there are no name conflicts for the files
-        # to be created. Returns an exception if these requirements are not met.
+        """Verifies that conditions are suitable for creating a local module.
 
-        err_message = ""
+        When create_local_module is called, if the boolean value
+        `_can_create_local_module` is False, this method is run to make sure
+        that create_local_module can operate completely.
+
+        This method also sets the `_can_create_local_module` attribute to
+        True so it can be run separately before create_local_module.
+
+        Raises:
+            VerificationError: Raised if create_local_module should not finish
+                Reasons why:
+                    - The intended local directory for creation already exists
+                    - The user is currently inside a git repository
+
+        """
 
         mod_dir_exists = os.path.exists(self.disk_dir)
-        cwd_is_repo = vcs_git.is_git_dir()  # true if currently inside git repository
-                                            # NOTE: Does not detect if further folder is git repo - how to fix?
+        cwd_is_repo = vcs_git.is_git_dir()
 
         if mod_dir_exists or cwd_is_repo:
+            err_list = []
 
             if mod_dir_exists:
-                err_message += "Directory {dir:s} already exists, please move elsewhere and try again.\n"
+                err_list.append("Directory {dir:s} already exists, "
+                                "please move elsewhere and try again.")
 
             if cwd_is_repo:
-                err_message += "Currently in a git repository, please move elsewhere and try again."
+                err_list.append("Currently in a git repository, "
+                                "please move elsewhere and try again.")
 
-            err_message = err_message.format(dir=os.path.join("./", self.disk_dir)).rstrip()
+            err_message = "\n".join(err_list).format(dir=self.module_path)
 
             self._can_create_local_module = False
             raise VerificationError(err_message)
@@ -246,105 +439,164 @@ class NewModuleCreator(object):
         self._can_create_local_module = True
 
     def verify_can_push_repo_to_remote(self):
-        ''' Determines whether one can push the local repository to the remote one '''
-        # Checks that the folder exists, is a git repository and there are no remote server module path clashes
+        """Verifies that one can push the local module to the remote server.
 
-        err_message = ""
+        When push_repo_to_remote is called, if the boolean value
+        `_can_push_repo_to_remote` is False, this method is run to make sure
+        that push_repo_to_remote can operate completely.
+
+        This method also sets the `_can_push_repo_to_remote` attribute to
+        True so it can be run separately before push_repo_to_remote.
+
+        Raises:
+            VerificationError: Raised if push_repo_to_remote should not finish
+                Reasons why:
+                    - The local module does not exists
+                    - The local module is not a git repository
+                    - There is a naming conflict with the remote server
+
+        """
         valid = True
 
-        mod_dir_exists = os.path.exists(self.disk_dir)  # move to function where creation takes place?
+        mod_dir_exists = os.path.exists(self.disk_dir)
+
+        err_list = []
 
         if not mod_dir_exists:
-            err_message += "Directory {dir:s} does not exist.\n"
+            err_list.append("Directory {dir:s} does not exist.")
             valid = False
 
         else:
-            mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)  # true if folder currently inside git repository
+            mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
             if not mod_dir_is_repo:
-                err_message += "Directory {dir:s} is not a git repository. Unable to push to remote repository.\n"
+                err_list.append("Directory {dir:s} is not a git repository. "
+                                "Unable to push to remote repository.")
                 valid = False
 
-        err_message = err_message.format(dir=os.path.join("./", self.disk_dir))
+        err_list = [err.format(dir=self.module_path) for err in err_list]
 
-        if not self._remote_repo_valid:  # Doing it this way allows us to retain the remote_repo_valid error message
+        # This allows us to retain the remote_repo_valid error message
+        if not self._remote_repo_valid:
             try:
                 self.verify_remote_repo()
             except VerificationError as e:
-                err_message += str(e)
+                err_list.append(str(e))
                 valid = False
-
-        err_message = err_message.rstrip()  # Removes newline character (used for error message concatenation)
 
         if not valid:
             self._can_push_repo_to_remote = False
-            raise VerificationError(err_message)
+            raise VerificationError("\n".join(err_list))
 
         self._can_push_repo_to_remote = True
 
     def create_local_module(self):
-        ''' General function that controls the creation of files and folders in a new module. '''
-        # cd's into module directory, and creates complete file hierarchy
-        # Then creates and commits to a new local repository
+        """Creates the folder structure and files in a new git repository.
 
+        This will use the file creation specified in _create_files. It will
+        also stage and commit these files to a git repository located in the
+        same directory
+
+        Note:
+            This will set `_can_create_local_module` False in order to
+            prevent the user calling this method twice in succession.
+
+        Raises:
+            VerificationError: From verify_can_create_local_module
+
+        """
         if not self._can_create_local_module:
             self.verify_can_create_local_module()
 
         self._can_create_local_module = False
 
-        print("Making clean directory structure for " + self.disk_dir)
+        print("Making clean directory structure for " + self.module_path)
 
         if not os.path.isdir(self.disk_dir):
             os.makedirs(self.disk_dir)
 
-        os.chdir(self.disk_dir)  # The reason why we have to chdir into the folder where the files are created is in
-        self._create_files()     # order to remain compatible with makeBaseApp.pl, used for IOC and Support modules
+        # The reason why we have to change directory into the folder where the
+        # files are created is in order to remain compatible with
+        # makeBaseApp.pl, used for IOC and Support modules
+        os.chdir(self.disk_dir)
+        self._create_files()
         os.chdir(self.cwd)
 
         vcs_git.init_repo(self.disk_dir)
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def _create_files(self):
-        # Uses makeBaseApp, dls-etc-dir.py and make_files functions depending on area of module
-        # Default just sticks to template dictionary entries
+        """Creates the folder structure and files in the current directory.
 
-        # All classes behave slightly differently
+        This uses the _create_files_from_template_dict method for file
+        creation by default.
 
-        # self.add_contact() # If contacts exist in the repository, they ought to be added here (or added to dict)
+        Raises:
+            Error: From _create_files_from_template_dict
+
+        """
+        # TODO(Martin) Call add_contact method here?
+        # self.add_contact()
         self._create_files_from_template_dict()
 
     def _create_files_from_template_dict(self):
-        ''' Iterates through the template dict and creates all necessary files and folders '''
-        # Consider whether I should allow this to create empty folders - git will not commit empty folders, but the user
-        # would be able to create a useable directory tree to fill in. Also change generate_template_files_from_folder
-        # to allow the dict creation for this as well
+        """Creates files from `template_files` and `template_args`
 
-        for path in self.template_files:  # dictionary keys are the relative file paths for the documents
-            # Using template_args allows us to insert eg. module name into the file paths in template_files
+        This uses the `template_files` and `template_args` attributes for
+        file creation by default.
+
+        Raises:
+            Error: If key in `template_files` is a directory, not a file.
+
+        """
+        # dictionary keys are the relative file paths for the documents
+        for path in self.template_files:
+            # Using template_args allows us to insert eg. module_name
             rel_path = path.format(**self.template_args)
             logging.debug("rel_path: " + rel_path)
 
             dir_path = os.path.dirname(rel_path)
 
+            # Stops us from overwriting files in folder (eg .gitignore when
+            # adding to Old-Style IOC modules (IOCAddToModule)
             if os.path.isfile(rel_path):
                 logging.debug("File already exists: " + rel_path)
-                continue  # Stops us from overwriting files in folder (eg. .gitignore for IOC Old-style modules)
+                continue
 
             if os.path.normpath(dir_path) == os.path.normpath(rel_path):
-                # If folder given instead of file (ie. rel_path ends with a slash or folder already exists)
-                raise Error("{dir:s} in template dictionary is not a valid file name".format(dir=dir_path))
+                # If folder given instead of file (ie. rel_path ends with a
+                # slash or folder already exists)
+                err_message = ("{dir:s} in template dictionary "
+                               "is not a valid file name")
+                raise Error(err_message.format(dir=dir_path))
             else:
-                if dir_path and not os.path.isdir(dir_path):  # dir_path = '' if eg. "file.txt" given
+                # dir_path = '' (dir_path = False) if eg. "file.txt" given
+                if dir_path and not os.path.isdir(dir_path):
                     os.makedirs(dir_path)
 
-                open(rel_path, "w").write(self.template_files[path].format(**self.template_args))
+                open(rel_path, "w").write(self.template_files[path].format(
+                    **self.template_args))
+
+    def print_message(self):
+        """Prints a message to detail the user's next steps."""
+        raise NotImplementedError
 
     def add_contact(self):
-        # Add the module contact to the contacts database
-        # Will have to work out where this goes - will it be a part of _create_files or a separate process?
+        """Add the current user as primary module contact"""
+        # TODO(Martin) Will have to work out how this works
+        # What checks should this method perform?
         raise NotImplementedError
 
     def push_repo_to_remote(self):
-        # Pushes the local repo to the remote server.
+        """Pushes the local repo to the remote server.
+
+        Note:
+            This will set `_can_push_repo_to_remote` False in order to
+            prevent the user calling this method twice in succession.
+
+        Raises:
+            VerificationError: From verify_can_push_repo_to_remote.
+
+        """
         if not self._can_push_repo_to_remote:
             self.verify_can_push_repo_to_remote()
 
@@ -354,133 +606,302 @@ class NewModuleCreator(object):
 
 
 class NewModuleCreatorTools(NewModuleCreator):
+    """Class for the management of the creation of new Tools modules."""
 
     def print_message(self):
+        message_dict = {'module_path': self.module_path}
 
-        message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path)}
-
-        message = "\nPlease add your patch files to the {module_path:s} directory"
-        message += " and edit {module_path:s}/build script appropriately"
+        message = ("\nPlease add your patch files to the {module_path:s} "
+                   "\ndirectory and edit {module_path:s}/build script "
+                   "appropriately")
         message = message.format(message_dict)
 
         print(message)
 
 
 class NewModuleCreatorPython(NewModuleCreator):
+    """Class for the management of the creation of new Python modules."""
 
     def print_message(self):
+        message_dict = {'module_path': self.module_path,
+                        'setup_path': os.path.join(self.module_path,
+                                                   "setup.py")
+                        }
 
-        message_dict = {'module_path': os.path.join(self.disk_dir, self.module_path),
-                        'setup_path': os.path.join(self.disk_dir, "setup.py")}
-
-        message = "\nPlease add your python files to the {module_path:s} directory"
-        message += " and edit {setup_path} appropriately."
+        message = ("\nPlease add your python files to the {module_path:s}"
+                   " \ndirectory and edit {setup_path} appropriately.")
         message = message.format(message_dict)
 
         print(message)
 
 
 class NewModuleCreatorWithApps(NewModuleCreator):
-    # This is the superclass for all classes that use an app_name variable - for the moment, just Support and IOC
-    # These two classes use MakeBaseApp.pl, which creates app_nameApp folders inside the module.
+    """Abstract class for the management of the creation of app-based modules.
+
+    Attributes:
+        app_name: The name of the app for the new module.
+            This is a separate folder in each git repository, corresponding to
+            the newly created module.
+
+    """
 
     def __init__(self, module_path, area):
         super(NewModuleCreatorWithApps, self).__init__(module_path, area)
-        self.app_name = self.module_name  # sensible default
+        self.app_name = ""
         self.template_args.update({'app_name': self.app_name})
 
     def print_message(self):
-        # Prints the message. This one is shared between support and IOC
+        # This message is shared between support and IOC
+        message_dict = {
+            'RELEASE': os.path.join(
+                self.module_path,
+                '/configure/RELEASE'
+            ),
+            'srcMakefile': os.path.join(
+                self.module_path,
+                self.app_name + 'App/src/Makefile'
+            ),
+            'DbMakefile': os.path.join(
+                self.module_path,
+                self.app_name + 'App/Db/Makefile'
+            )
+        }
 
-        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
-            'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
-            'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
-
-        message = "\nPlease now edit {RELEASE:s} to put in correct paths for dependencies."
-        message += "\nYou can also add dependencies to {srcMakefile:s}"
-        message += "\nand {DbMakefile:s} if appropriate."
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths for"
+                   " dependencies.\nYou can also add dependencies to"
+                   " {srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
         message = message.format(**message_dict)
 
         print(message)
 
 
 class NewModuleCreatorSupport(NewModuleCreatorWithApps):
+    """Class for the management of the creation of new Support modules.
+
+    These have apps with the same name as the module.
+
+    """
+
+    def __init__(self, module_path, area):
+        """
+        Args:
+            app_name: The name of the app to go inside the module repository
+
+        """
+        super(NewModuleCreatorWithApps, self).__init__(module_path, area)
+        self.app_name = self.module_name
+        self.template_args.update({'app_name': self.app_name})
 
     def _create_files(self):
+        """Creates the folder structure and files in the current directory.
 
-        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(app_name=self.app_name))
+        This uses makeBaseApp.pl program alongside the
+        _create_files_from_template_dict method for file creation.
+
+        """
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
+            app_name=self.app_name))
         os.system('dls-make-etc-dir.py && make clean uninstall')
         self._create_files_from_template_dict()
 
 
 class NewModuleCreatorIOC(NewModuleCreatorWithApps):
+    """Class for the management of the creation of new IOC modules.
+
+    These have apps with a different name to the module.
+
+    """
 
     def __init__(self, module_path, app_name, area):
+        """
+        Args:
+            app_name: The name of the app to go inside the module
 
+        """
         super(NewModuleCreatorIOC, self).__init__(module_path, area)
-        self.app_name = app_name  # Extra argument passed for IOC instantiation
+        self.app_name = app_name
         self.template_args.update({'app_name': self.app_name})
 
     def _create_files(self):
+        """Creates the folder structure and files in the current directory.
 
-        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(app_name=self.app_name))
-        os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(app_name=self.app_name))
+        This uses makeBaseApp.pl program alongside the
+        _create_files_from_template_dict method for file creation.
+
+        """
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
+            app_name=self.app_name))
+        os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
+            app_name=self.app_name))
         shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
         self._create_files_from_template_dict()
 
 
-class NewModuleCreatorIOCBL(NewModuleCreatorIOC):  # Note: does NOT inherit from NewModuleCreatorIOC (no shared code)
+class NewModuleCreatorIOCBL(NewModuleCreatorIOC):
+    """Class for the management of the creation of new IOC BL modules."""
 
     def _create_files(self):
+        """Creates the folder structure and files in the current directory.
 
+        This uses makeBaseApp.pl program alongside the
+        _create_files_from_template_dict method for file creation.
+
+        """
         os.system('makeBaseApp.pl -t dlsBL ' + self.app_name)
         self._create_files_from_template_dict()
 
     def print_message(self):
+        message_dict = {
+            'RELEASE': os.path.join(
+                self.module_path,
+                '/configure/RELEASE'
+            ),
+            'srcMakefile': os.path.join(
+                self.module_path,
+                self.app_name + 'App/src/Makefile'
+            ),
+            'DbMakefile': os.path.join(
+                self.module_path,
+                self.app_name + 'App/Db/Makefile'
+            )
+        }
 
-        message_dict = {'RELEASE': os.path.join(self.disk_dir, '/configure/RELEASE'),
-                'srcMakefile': os.path.join(self.disk_dir, self.app_name + 'App/src/Makefile'),
-                'DbMakefile': os.path.join(self.disk_dir, self.app_name + 'App/Db/Makefile')}
-
-        message = "\nPlease now edit {RELEASE:s} and path to scripts."
-        message += "\nAlso edit {srcMakefile:s} to add all database files from these technical areas."
-        message += "\nAn example set of screens has been placed in {DbMakefile:s} . Please modify these.\n"
+        message = ("\nPlease now edit {RELEASE:s} and path to scripts.\nAlso"
+                   " edit {srcMakefile:s} to add all database files from"
+                   " these technical areas.\nAn example set of screens has"
+                   " been placed in {DbMakefile:s} . Please modify these.\n")
         message = message.format(**message_dict)
 
         print(message)
 
 
 class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
+    """Class for the management of adding a new App to an existing IOC module.
+
+    In an old-style module, a single module repository contains multiple IOC
+    apps. To maintain compatibility, this class exists for the creation of new
+    apps inside existing modules.
+
+    Note:
+        While the script is called dls_start_new_module, the original svn
+        script similarly created the new 'app_nameApp' folders in existing
+        svn 'modules'.
+
+        In keeping with the rest of the NewModuleCreator code, I continue to
+        use the word 'module' to refer to the git repository (local or
+        remote) in the documentation, and the 'app' to be the new IOC folder
+        'app_nameApp' created inside.
+
+        From the point of view of the user, however, the 'app_nameApp' folder
+        itself was considered the 'module', hence the confusing use of eg.
+        dls_start_new_module for the main script's name.
+
+    """
 
     def verify_remote_repo(self):
-        # Creates and uses dir_list to check remote repository for name collisions with new module
-        # Raises exception if one currently exists
+        """Verifies there are no name conflicts with the remote repository.
+
+        This checks whether or not there are any name conflicts between the
+        intended module and app names, and the modules that already exist on
+        the remote repository.
+
+        Sets the `_remote_repo_valid` boolean value to True if there are no
+        conflicts.
+
+        Raises:
+            VerificationError: If cannot clone module or app_name conflicts.
+                Reasons why:
+                    - There is no remote repository to clone from
+                    - There is an app_name conflict with one of the remote
+                        paths
+            Error: From _check_if_remote_repo_has_app.
+                This should never be raised. There is a bug if it is!
+
+        """
+        existing_remote_repo_paths = self._get_existing_remote_repo_paths()
+
+        if self.server_repo_path not in existing_remote_repo_paths:
+            err_message = ("The path {path:s} does not exist on gitolite, so "
+                           "cannot clone from it")
+            err_message = err_message.format(path=self.server_repo_path)
+            raise VerificationError(err_message)
+
+        conflicting_paths = []
+
+        for path in existing_remote_repo_paths:
+            if self._check_if_remote_repo_has_app(path):
+                conflicting_paths.append(path)
+
+        if conflicting_paths:
+            err_message = ("The repositories {paths:s} have apps that"
+                           " conflict with {app_name:s}")
+            err_message = err_message.format(
+                paths=", ".join(conflicting_paths),
+                app_name=self.app_name
+            )
+            raise VerificationError(err_message)
+
+        self._remote_repo_valid = True
+
+    def _check_if_remote_repo_has_app(self, remote_repo_path):
+        """Checks if the remote repository contains an app_nameApp folder.
+
+        This checks whether or not there is already a folder with the name
+        "app_nameApp" on the remote repository with the given gitolite
+        repository path.
+
+        Sets the `_remote_repo_valid` boolean value to True if there are no
+        conflicts.
+
+        Returns:
+            bool: True if app exists, False otherwise.
+
+        Raises:
+            Error: If given repo path does not exist on gitolite.
+                This should never be raised. There is a bug if it is!
+
+        """
+        if not vcs_git.is_repo_path(remote_repo_path):
+            # This should never get raised!
+            err_message = ("Remote repo {repo:s} does not exist. Cannot "
+                           "clone to determine if there is an app_name "
+                           "conflict with {app_name:s}")
+            err_message = err_message.format(repo=remote_repo_path,
+                                             app_name=self.app_name)
+            raise Error(err_message)
+
         temp_dir = ""
+        exists = False
         try:
             temp_dir = tempfile.mkdtemp()
-            vcs_git.clone(self.server_repo_path, temp_dir)
+            vcs_git.clone(remote_repo_path, temp_dir)
 
             if os.path.exists(os.path.join(temp_dir, self.app_name + "App")):
-                err_message = "The app {app_name:s} already exists on gitolite, cannot continue"
-                raise Error(err_message.format(app_name=self.app_name))
-        except Exception as e:  # TODO(Martin) Once we have vcs_git-specific errors, catch these explicitly
-            raise VerificationError(str(e))  # Also covers exceptions raised by vcs_git.clone, etc.
+                exists = True
+
         finally:
             if temp_dir:  # If mkdtemp worked
                 shutil.rmtree(temp_dir)
 
-        self._remote_repo_valid = True
+        return exists
 
+    # TODO(Martin) Add doc-string
     def create_local_module(self):
-        # clones from the remote repository, then proceeds to input the new files alongside the previously existing ones
-        # Then stages and commits (but does not push)
+        """Creates the folder structure and files in a cloned git repository.
 
+        This will use the file creation specified in _create_files. It will
+        call this function directly inside the cloned repository; as a result,
+        any files you wish to insert in the app folder using
+        _create_files_from_template_dict will require `template_files` keys to
+        begin with "{app_name:s}App/" before the usual file path.
+
+        """
         if not self._can_create_local_module:
             self.verify_can_create_local_module()
 
         self._can_create_local_module = False
 
-        print("Cloning module to " + self.disk_dir)
+        print("Cloning module to " + self.module_path)
 
         vcs_git.clone(self.server_repo_path, self.disk_dir)
 
@@ -491,8 +912,15 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def push_repo_to_remote(self):
-        # Pushes the local repo to the remote server.
+        """Pushes the local repo to the remote server using remote 'origin'.
 
+        This will push the master branch of the local repository to the remote
+        server it was cloned from.
+
+        Raises:
+            Error: From verify_can_push_repo_to_remote.
+
+        """
         if not self._can_push_repo_to_remote:
             self.verify_can_push_repo_to_remote()
 
