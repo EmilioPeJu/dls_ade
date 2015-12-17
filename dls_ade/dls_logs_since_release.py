@@ -37,10 +37,10 @@ def make_parser():
         "module_name", type=str, default=None,
         help="name of module")
     parser.add_argument(
-        "earlier_release", type=int, default=0,
+        "earlier_release", type=str, default='0',
         help="start point of log messages")
     parser.add_argument(
-        "later_release", type=int, default="Set to Head",
+        "later_release", type=str, default='1',
         help="end point of log messages")
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose",
@@ -54,7 +54,7 @@ def make_parser():
 
 def check_technical_area_valid(args, parser):
 
-    if args.area == "ioc" and not len(args.module.split('/')) > 1:
+    if args.area == "ioc" and not len(args.module_name.split('/')) > 1:
         parser.error("Missing Technical Area Under Beamline")
 
 
@@ -66,136 +66,111 @@ def colour(word, col, raw):
     return '\x1b[{col}m{word}\x1b[0m'.format(col=col, word=word)
 
 
-def main():
+def create_release_list(repo):
 
-    sys.path.append("..")
+    release_list = []
+    for tag in repo.tags:
+        info = repo.git.show(tag)
+        for i, entry in enumerate(info.split()):
+            if entry == "Date:":
+                date = info.split()[i+3] + ' ' + info.split()[i+2] + ' ' + info.split()[i+5]
+                break
+        release_list.append((str(tag), date))
+    return release_list
+
+
+def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
     e = environment()
+    test_list = e.sortReleases([args.earlier_release, args.later_release])
+    if args.later_release == test_list[0]:
+        parser.error("<later_release> must be more recent than <earlier_release>")
 
-    # don't write coloured text if args.raw (it confuses less)
+    # don't write coloured text if args.raw
     if args.raw or \
             (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
         raw = True
     else:
         raw = False
 
-    # module is 'everything', list logs for entire area
-    if args.module == 'everything':
+    # If module is 'everything', list logs for entire area >>> Is this used? It will be a little difficult to implement.
+    if args.module_name == 'everything':
         module = args.area  # >>> This isn't very clear later on
         source = pathf.devArea(args.area)
-        release = pathf.prodArea(args.area)
-        # release = e.prodArea
+        # release = pathf.prodArea(args.area)
     else:
         # otherwise check logs for specific module
         check_technical_area_valid(args, parser)
-        module = args.module
+        module = args.module_name
         source = pathf.devModule(module, args.area)
-        release = pathf.prodModule(module, args.area)
-        # release = e.prodModule
-    
-    # Work out the initial and end release numbers
-    start = svn.Revision(svn.opt_revision_kind.number, 0)
-    end = svn.Revision(svn.opt_revision_kind.head)    
+        # release = pathf.prodModule(module, args.area)
 
-    # Check for existence of this module in various places in the repository
-    # and note revisions
     if not vcs_git.is_repo_path(source):
         parser.error("Repository does not contain " + source)
-    
-    if vcs_git.is_repo_path(release):
-        release_dir = release.replace(svn.info2(release, recurse=False)[0][1]["repos_root_URL"], "")
-        # Remove unicode attribute from release_dir so that it doesn't propagate
-        # into other values and cause unexpected decode failures.
-        release_dir = str(release_dir)
 
-        # Now grab the logs from the release dir
-        r_logs = svn.log(release, discover_changed_paths=True)
+    if vcs_git.is_repo_path(source):
 
-        early_num = args.earlier_release
-        releases = []
-        # Create a list of release numbers and their created dates
-        for log in r_logs:
-            if log["changed_paths"]:
-                for pdict in log["changed_paths"]:
-                    if pdict["action"].upper() == "A":
-                        rnum = pdict["path"].replace(release_dir, "").lstrip("/")
-                        if rnum and "/" not in rnum and pdict["copyfrom_revision"]:
-                            releases = [(r, l) for r, l in releases if r != rnum] +\
-                                       [(rnum, pdict["copyfrom_revision"])]
-        # Sort them by rev
-        releases = [(r, l) for _, r, l in sorted([(l.number, r, l) for r, l in releases])]
-
-        # adjust the start rev to be early_release
-        i = 0
-        while i < len(releases) and releases[i][0] != early_num:
-            i += 1
-        if i == len(releases):
-            i = -1
-            print("Repository does not contain " + early_num +
-                  ", using latest release " + releases[-1][0])
-
-        start = releases[i][1]
-
-        late_num = args.later_release
-        j = len(releases) - 1
-        while j > 0 and releases[j][0] != late_num:
-            j -= 1
-        if j == 0:
-            print("Repository does not contain '" + late_num + "', using head'")
+        # Get the list of releases from the repo
+        if os.path.isdir('./' + module):
+            repo = vcs_git.git.Repo(module)
+            releases = create_release_list(repo)
         else:
-            end = svn.Revision(svn.opt_revision_kind.number,
-                                releases[j][1].number + 1)
-        r_logs = svn.log(release, revision_start=start, revision_end=end, discover_changed_paths=True)
+            vcs_git.clone(source, module)
+            repo = vcs_git.git.Repo(module)
+            releases = create_release_list(repo)
+
+        for entry in releases:
+            if args.earlier_release == entry[0]:
+                start = entry[0]
+            if args.later_release == entry[0]:
+                end = entry[0]
     else:
-        parser.error(module + " doesn't exist in " + release)
-    
-    # now grab the logs from the 2 dirs
-    logs = svn.log(source, revision_start=start, revision_end=end, discover_changed_paths=args.verbose)
+        parser.error("Module " + module + " doesn't exist in " + source)
 
-    for l in r_logs:
-        l["message"] += \
-            " (Release dir %s)" % l["changed_paths"][0]["path"].replace(release_dir, "").lstrip("/")
-        if l["changed_paths"][0]["copyfrom_revision"]:
-            # hack the revision so it's a little later than the copy from location
+    # Get logs between start and end releases with custom format
+    # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
+    # >>> %body: commit message body
+    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n %s %n %b %n%n").split('\n\n\n')
 
-            # >>> WHAT IS THIS?
+    formatted_logs = []
+    for entry in logs:
+        commit = entry.split(' ')[0]
 
-            class rev:
-                number = l["changed_paths"][0]["copyfrom_revision"].number + 0.1            
-            l["revision"] = rev()
-    
-    # intersperse them
-    ll = [(l["revision"].number, l) for l in r_logs]
-    ll += [(l["revision"].number, l) for l in logs if l["revision"].number > start.number]    
-    logs = [l[1] for l in reversed(sorted(ll))]
-
-    # Now print them
-    print("Log Messages:")
-    for log in logs:
-        message = log["message"].split(module+":", 1)
-        if len(message) == 1:
-            message = message[0].strip()
+        if len(entry.split(' ')[2]) == 1:
+            date = '0' + entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
         else:
-            message = message[1].strip()
-        rev = "(r{0})".format(int(log["revision"].number))
-        # Align print columns using {:(17 - len(rev)}
-        pre = "{:{}} {}:".format(log["author"], 17 - len(rev), rev)
-        if args.verbose:
-            header = "{0} {1}".format(pre, time.ctime(log["date"]))
-            print(colour(header, RED, raw))
-            print(colour("-" * min(80, len(header)), RED, raw))
-            print(message)
-            if log["changed_paths"]:
-                print("Changes:")
-                for change in log["changed_paths"]:
-                    print("  {0} {1}".format(change["action"], change["path"]))
-                print("")
-            print("")
+            date = entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
+
+        name = '{:->15}'.format(entry.split(' ')[7] + ' ' + entry.split(' ')[8])
+
+        if len(entry.split('\n')) > 3:
+            message = entry.split('\n')[1] + ' - ' + entry.split('\n')[2]
         else:
-            print("{0} {1}".format(colour(pre, RED, raw), message))
+            message = entry.split('\n')[1]
+
+        formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(date, CYAN, raw) + ' ' +
+                              colour(name, GREEN, raw) + ': ' + message)
+
+    print("Log Messages for " + module + " between releases " + start + " and " + end + ":")
+    # if args.verbose:
+    #     header = "{0} {1}".format(pre, time.ctime(log["date"]))
+    #     print(colour(header, RED, raw))
+    #     print(colour("-" * min(80, len(header)), RED, raw))
+    #     print(message)
+    #     if log["changed_paths"]:
+    #         print("Changes:")
+    #         for change in log["changed_paths"]:
+    #             print("  {0} {1}".format(change["action"], change["path"]))
+    #         print("")
+    #     print("")
+    # else:
+    #
+    for log in formatted_logs:
+        print(log)
+
 
 if __name__ == "__main__":
     sys.exit(main())
