@@ -3,11 +3,13 @@
 
 import os
 import sys
-import time
 from argument_parser import ArgParser
 from dls_environment import environment
 import path_functions as pathf
 import vcs_git
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
@@ -133,41 +135,51 @@ def main():
     # Get logs between start and end releases with custom format
     # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
     # >>> %body: commit message body
-    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n %s %n %b %n%n").split('\n\n\n')
+
+    # Lots of line spacings in case someone puts line spacings at end of a commit message and ruins the splitting
+    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n %s %n %b %n%n%n%n%n")
+    # Add log for start -- end is included in start..end but start is not
+    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n %s %n %b")
+    # There is one extra line space in the split because one is appended to the front of each entry automatically
+    logs = logs.split('\n\n\n\n\n\n')
+
+    logs.reverse()
 
     formatted_logs = []
+    prev_commit = ''
     for entry in logs:
-        commit = entry.split(' ')[0]
+        commit = entry.split()[0]
 
-        if len(entry.split(' ')[2]) == 1:
-            date = '0' + entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
-        else:
-            date = entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
+        name = '{:<20}'.format(entry.split()[7] + ' ' + entry.split()[8])
 
-        name = '{:->15}'.format(entry.split(' ')[7] + ' ' + entry.split(' ')[8])
-
+        message = entry.split('\n')[1]
         if len(entry.split('\n')) > 3:
-            message = entry.split('\n')[1] + ' - ' + entry.split('\n')[2]
-        else:
-            message = entry.split('\n')[1]
+            for sub_entry in entry.split('\n')[2:]:
+                if sub_entry:
+                    message = message + '\n' + '{:>30}'.format(sub_entry)
 
-        formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(date, CYAN, raw) + ' ' +
-                              colour(name, GREEN, raw) + ': ' + message)
+        if args.verbose:
+
+            if len(entry.split()[2]) == 1:
+                date = '0' + entry.split()[2] + ' ' + entry.split()[3] + ' ' + entry.split()[4]
+            else:
+                date = entry.split()[2] + ' ' + entry.split()[3] + ' ' + entry.split()[4]
+
+            time = entry.split()[5]
+
+            formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(date, CYAN, raw) + ' ' +
+                                  colour(time, CYAN, raw) + ' ' + colour(name, GREEN, raw) + ': ' + message)
+
+            if prev_commit:
+                diff = repo.git.diff("--name-status", prev_commit, commit)
+                if diff:
+                    formatted_logs.append("Changes:\n" + diff + '\n')
+            prev_commit = commit
+        else:
+            formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(name, GREEN, raw) + ': ' + message)
 
     print("Log Messages for " + module + " between releases " + start + " and " + end + ":")
-    # if args.verbose:
-    #     header = "{0} {1}".format(pre, time.ctime(log["date"]))
-    #     print(colour(header, RED, raw))
-    #     print(colour("-" * min(80, len(header)), RED, raw))
-    #     print(message)
-    #     if log["changed_paths"]:
-    #         print("Changes:")
-    #         for change in log["changed_paths"]:
-    #             print("  {0} {1}".format(change["action"], change["path"]))
-    #         print("")
-    #     print("")
-    # else:
-    #
+
     for log in formatted_logs:
         print(log)
 
