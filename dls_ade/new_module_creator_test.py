@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import unittest
 import os
 
@@ -143,7 +145,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = False)
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_repo_path):
 
         ioc_c_mock = self.mocks['CreatorIOC']
@@ -153,7 +155,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
         ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value = True)
+    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_add_to_module_called_with_correct_args(self, mock_is_repo_path):
 
         ioc_os_c_mock = self.mocks['CreatorIOCAddToModule']
@@ -464,8 +466,8 @@ class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
 
 class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
 
-    @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value = 'vendor_module')
-    @patch('dls_ade.new_module_creator.pathf.prodModule', return_value = 'prod_module')
+    @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value='vendor_module')
+    @patch('dls_ade.new_module_creator.pathf.prodModule', return_value='prod_module')
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
         mod_c = new_c.NewModuleCreator("test_module", "test_area")
@@ -971,7 +973,67 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.mock_add_new_remote_and_push.assert_called_with(self.mod_c.server_repo_path, self.mod_c.disk_dir)
 
+
 # Add tests for all derived NewModuleCreator classes
+
+
+class NewModuleCreatorToolsPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mod_c = new_c.NewModuleCreatorTools('test_module_path', 'test_area')
+
+        comp_message = ("\nPlease add your patch files to the test_module_path "
+                        "\ndirectory and edit test_module_path/build script "
+                        "appropriately")
+
+        mod_c.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
+
+class NewModuleCreatorPythonPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mod_c = new_c.NewModuleCreatorPython('test_module_path', 'test_area')
+
+        message_dict = {'module_path': "test_module_path",
+                        'setup_path': "test_module_path/setup.py"}
+
+        comp_message = ("\nPlease add your python files to the {module_path:s} "
+                        "\ndirectory and edit {setup_path} appropriately.")
+        comp_message = comp_message.format(**message_dict)
+
+        mod_c.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
+
+class NewModuleCreatorWithAppsPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mod_c = new_c.NewModuleCreatorWithApps('test_module_path', 'test_area')
+
+        message_dict = {
+            'RELEASE': "test_module_path/configure/RELEASE",
+            'srcMakefile': "test_module_path/test_module_pathApp/src/Makefile",
+            'DbMakefile': "test_module_path/test_module_pathApp/Db/Makefile"
+        }
+
+        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                        "for dependencies.\nYou can also add dependencies to "
+                        "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
+        comp_message = comp_message.format(**message_dict)
+
+        mod_c.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
 
 class NewModuleCreatorSupportCreateFiles(unittest.TestCase):
 
@@ -1019,6 +1081,32 @@ class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
 
         mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
         mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mod_c = new_c.NewModuleCreatorIOCBL('test_module_path', 'test_app', 'test_area')
+
+        message_dict = {
+            'RELEASE': "test_module_path/configure/RELEASE",
+            'srcMakefile': "test_module_path/test_appApp/src/Makefile",
+            'opi/edl': "test_module_path/test_appApp/opi/edl"
+        }
+
+        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                        "for the ioc's other technical areas and path to scripts."
+                        "\nAlso edit {srcMakefile:s} to add all database files "
+                        "from these technical areas.\nAn example set of screens"
+                        " has been placed in {opi/edl} . Please modify these.\n")
+
+        comp_message = comp_message.format(**message_dict)
+
+        mod_c.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
 
 
 class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):

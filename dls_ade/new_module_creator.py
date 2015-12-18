@@ -11,49 +11,55 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class Error(Exception):
-    """Class for exceptions relating to new_module_creator module
-
-    """
+    """Class for exceptions relating to new_module_creator module"""
     pass
 
 
-# TODO(Martin) Add doc-string
 def get_new_module_creator(module_name, area="support", fullname=False):
-    """Returns a NewModuleCreator object according to the arguments provided.
+    """Returns a NewModuleCreator subclass object.
+
+    Returns an object of a subclass of NewModuleCreator, depending on the
+    different arguments given.
+
+    Supported areas are:
+        - Python
+        - Support
+        - Tools
+        - IOC
+
+    Python module name format:
+        - Must begin with "dls_"
+        - Must not have any hyphens ("-") or full stops (".")
+
+    IOC module name format:
+        New-Style module (preferred):
+            Format: "BL02I-VA-IOC-03"
+                "<beamline>-<technical_area>-IOC-<ioc_number>"
+            Alternative: "BL02I/VA/03", with fullname = True
+                "<beamline>/<technical_area>/<ioc_number>", fullname = True
+
+        Old-Style module (deprecated, except for BL modules):
+            Format: "BL02I/VA/03" (fullname = False by default)
+                "<beamline>/<technical_area>/<ioc_number>"
+
+        If the module is specified using slashes, if the IOC number is omitted
+        (eg. <beamline>/<technical_area>) it defaults to "01"
 
     Args:
-        module_name: The name of the module to be created.
-            For a Python module, this needs to
-        param2 (Optional[str]): The second parameter. Defaults to None.
-            Second line of description should be indented.
-        *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
+        module_name: The name of the module.
+        area: The area of the module.
+        fullname: Create new-style module from old-style input.
+            If True and module_name given in old-style format, then a
+            new-style module is created.
 
     Returns:
-        bool: True if successful, False otherwise.
-
-        The return type is optional and may be specified at the beginning of
-        the ``Returns`` section followed by a colon.
-
-        The ``Returns`` section may span multiple lines and paragraphs.
-        Following lines should be indented to match the first line.
-
-        The ``Returns`` section supports any reStructuredText formatting,
-        including literal blocks::
-
-            {
-                'param1': param1,
-                'param2': param2
-            }
+        NewModuleCreator: An object of a NewModuleCreator subclass
 
     Raises:
-        AttributeError: The ``Raises`` section is a list of all exceptions
-            that are relevant to the interface.
-        ValueError: If `param2` is equal to `param1`.
-
-
-    .. _PEP 484:
-       https://www.python.org/dev/peps/pep-0484/
+        Error: If invalid arguments are provided.
+            This can be a result of:
+                - Not using a supported area
+                - Using an invalid name (Python or IOC module)
 
     """
     # Use arguments to determine which new module creator to use, and return it '''
@@ -79,47 +85,42 @@ def get_new_module_creator(module_name, area="support", fullname=False):
         raise Error("Don't know how to make a module of type: " + area)
 
 
-# TODO(Martin) Add doc-string
 def get_new_module_creator_ioc(module_name, fullname=False):
-    """Returns a NewModuleCreator object according to the arguments provided.
+    """Returns a NewModuleCreatorIOC subclass object.
+
+    Returns an object of a subclass of NewModuleCreatorIOC, depending on the
+    different arguments given.
+
+    IOC module name format:
+        New-Style module (preferred):
+            Format: "BL02I-VA-IOC-03"
+                "<beamline>-<technical_area>-IOC-<ioc_number>"
+            Alternative: "BL02I/VA/03", with fullname = True
+                "<beamline>/<technical_area>/<ioc_number>", fullname = True
+
+        Old-Style module (deprecated, except for BL modules):
+            Format: "BL02I/VA/03" (fullname = False by default)
+                "<beamline>/<technical_area>/<ioc_number>"
+
+        If the module is specified using slashes, if the IOC number is omitted
+        (eg. <beamline>/<technical_area>) it defaults to "01"
 
     Args:
-        module_name: The name of the module to be created.
-            For a Python module, this needs to
-        param2 (Optional[str]): The second parameter. Defaults to None.
-            Second line of description should be indented.
-        *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
+        module_name: The name of the module.
+        fullname: Create new-style module from old-style input.
+            If True and module_name given in old-style format, then a
+            new-style module is created.
 
     Returns:
-        bool: True if successful, False otherwise.
-
-        The return type is optional and may be specified at the beginning of
-        the ``Returns`` section followed by a colon.
-
-        The ``Returns`` section may span multiple lines and paragraphs.
-        Following lines should be indented to match the first line.
-
-        The ``Returns`` section supports any reStructuredText formatting,
-        including literal blocks::
-
-            {
-                'param1': param1,
-                'param2': param2
-            }
+        NewModuleCreatorIOC: An object of a NewModuleCreatorIOC subclass
 
     Raises:
-        AttributeError: The ``Raises`` section is a list of all exceptions
-            that are relevant to the interface.
-        ValueError: If `param2` is equal to `param1`.
-
-
-    .. _PEP 484:
-       https://www.python.org/dev/peps/pep-0484/
+        Error: Using an invalid name
 
     """
-    # This section of code is ugly because it has to mimic the behaviour of the original script
-    # Feel free to modify if you think you can tidy it up a bit! (use unit tests)
+    # This section of code is ugly because it has to mimic the behaviour of
+    # the original script. Feel free to modify if you think you can tidy it up
+    # a bit! (use unit tests)
     area = "ioc"
     cols = module_name.split('/')
     if len(cols) > 1 and cols[1] != '':
@@ -137,7 +138,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
         else:
             ioc_number = '01'
 
-        app_name = domain + '-' + technical_area + '-' + 'IOC' + '-' + ioc_number
+        app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
 
         if fullname:
             module_path = domain + "/" + app_name
@@ -145,24 +146,30 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
         else:
             module_path = domain + "/" + technical_area
-            # This part is here to retain compatibility with "old-style" modules, in which a single module named
-            # "domain/technical_area" contains multiple domain-technical_area-IOC-xxApp's. This involves cloning
-            # from the remote repository, a different method for checking whether or not the App will conflict with
-            # one on the server and not having to "git remote add origin" to the local repository. I have therefore
-            # moved this code into a separate class. However, if the module does not already exist, the process is
-            # exactly the same as that described by NewModuleCreatorIOC.
+            # This part is here to retain compatibility with "old-style"
+            # modules, in which a single repo (or module) named
+            # "domain/technical_area" contains multiple
+            # domain-technical_area-IOC-xxApp's. This code is included in
+            # here to retain compatibility with the older svn scripts. The
+            # naming is a little ambiguous, however. I will continue to use
+            # the name 'module' to refer to the repo, but be aware that
+            # start_new_module and new_module_creator don't have to actually
+            # create new modules (repos) on the server in this instance.
             server_repo_path = pathf.devModule(module_path, area)
             if vcs_git.is_repo_path(server_repo_path):
-                # Adding new App to old style "domain/tech_area" module that already exists on the remote server
-                return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
+                # Adding new App to old style "domain/tech_area" module that
+                # already exists on the remote server.
+                return NewModuleCreatorIOCAddToModule(module_path,
+                                                      app_name, area)
 
             else:
-                # Otherwise, the behaviour is exactly the same as that given by the ordinary IOC class
-                # as module_path is the only thing that varies
+                # Otherwise, the behaviour is exactly the same as that given
+                # by the ordinary IOC class as module_path is the only thing
+                # that is different
                 return NewModuleCreatorIOC(module_path, app_name, area)
 
     else:
-        # assume full IOC name is given
+        # assume full IOC name is given explicitly.
         cols = module_name.split('-')
         if len(cols) <= 1:
             raise Error("Need a name with dashes in it, got " + module_name)
@@ -614,7 +621,7 @@ class NewModuleCreatorTools(NewModuleCreator):
         message = ("\nPlease add your patch files to the {module_path:s} "
                    "\ndirectory and edit {module_path:s}/build script "
                    "appropriately")
-        message = message.format(message_dict)
+        message = message.format(**message_dict)
 
         print(message)
 
@@ -628,9 +635,9 @@ class NewModuleCreatorPython(NewModuleCreator):
                                                    "setup.py")
                         }
 
-        message = ("\nPlease add your python files to the {module_path:s}"
-                   " \ndirectory and edit {setup_path} appropriately.")
-        message = message.format(message_dict)
+        message = ("\nPlease add your python files to the {module_path:s} "
+                   "\ndirectory and edit {setup_path} appropriately.")
+        message = message.format(**message_dict)
 
         print(message)
 
@@ -647,16 +654,13 @@ class NewModuleCreatorWithApps(NewModuleCreator):
 
     def __init__(self, module_path, area):
         super(NewModuleCreatorWithApps, self).__init__(module_path, area)
-        self.app_name = ""
+        self.app_name = self.module_name
         self.template_args.update({'app_name': self.app_name})
 
     def print_message(self):
         # This message is shared between support and IOC
         message_dict = {
-            'RELEASE': os.path.join(
-                self.module_path,
-                '/configure/RELEASE'
-            ),
+            'RELEASE': os.path.join(self.module_path, 'configure/RELEASE'),
             'srcMakefile': os.path.join(
                 self.module_path,
                 self.app_name + 'App/src/Makefile'
@@ -667,9 +671,9 @@ class NewModuleCreatorWithApps(NewModuleCreator):
             )
         }
 
-        message = ("\nPlease now edit {RELEASE:s} to put in correct paths for"
-                   " dependencies.\nYou can also add dependencies to"
-                   " {srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                   "for dependencies.\nYou can also add dependencies to "
+                   "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
         message = message.format(**message_dict)
 
         print(message)
@@ -681,16 +685,6 @@ class NewModuleCreatorSupport(NewModuleCreatorWithApps):
     These have apps with the same name as the module.
 
     """
-
-    def __init__(self, module_path, area):
-        """
-        Args:
-            app_name: The name of the app to go inside the module repository
-
-        """
-        super(NewModuleCreatorWithApps, self).__init__(module_path, area)
-        self.app_name = self.module_name
-        self.template_args.update({'app_name': self.app_name})
 
     def _create_files(self):
         """Creates the folder structure and files in the current directory.
@@ -752,24 +746,22 @@ class NewModuleCreatorIOCBL(NewModuleCreatorIOC):
 
     def print_message(self):
         message_dict = {
-            'RELEASE': os.path.join(
-                self.module_path,
-                '/configure/RELEASE'
-            ),
+            'RELEASE': os.path.join(self.module_path, "configure/RELEASE"),
             'srcMakefile': os.path.join(
                 self.module_path,
-                self.app_name + 'App/src/Makefile'
+                self.app_name + "App/src/Makefile"
             ),
-            'DbMakefile': os.path.join(
+            'opi/edl': os.path.join(
                 self.module_path,
-                self.app_name + 'App/Db/Makefile'
+                self.app_name + "App/opi/edl"
             )
         }
 
-        message = ("\nPlease now edit {RELEASE:s} and path to scripts.\nAlso"
-                   " edit {srcMakefile:s} to add all database files from"
-                   " these technical areas.\nAn example set of screens has"
-                   " been placed in {DbMakefile:s} . Please modify these.\n")
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                   "for the ioc's other technical areas and path to scripts."
+                   "\nAlso edit {srcMakefile:s} to add all database files "
+                   "from these technical areas.\nAn example set of screens"
+                   " has been placed in {opi/edl} . Please modify these.\n")
         message = message.format(**message_dict)
 
         print(message)
