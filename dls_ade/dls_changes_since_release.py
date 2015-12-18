@@ -1,9 +1,9 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-import sys
+
 import os
-import shutil
+import sys
 import logging
 from argument_parser import ArgParser
 from dls_environment import environment
@@ -15,6 +15,10 @@ import git
 
 e = environment()
 logging.basicConfig(level=logging.DEBUG)
+
+BLUE = 34
+GREEN = 32
+CYAN = 36
 
 usage = """
 Default <area> is 'support'.
@@ -35,6 +39,13 @@ def check_technical_area_valid(args, parser):
         parser.error("Missing Technical Area Under Beamline")
 
 
+def colour(word, col):
+    # >>> I have just hard coded the char conversion of %27c in, as I couldn't find the
+    # .format equivalent of %c, is anything wrong with this?
+    return '\x1b[{col}m{word}\x1b[0m'.format(col=col, word=word)
+
+
+
 def main():
 
     parser = make_parser()
@@ -46,8 +57,6 @@ def main():
 
     source = path.devModule(module, args.area)
     logging.debug(source)
-    # release = path.prodModule(module, args.area)
-    # logging.debug(release)
 
     logging.debug("Got to 1")
 
@@ -62,46 +71,50 @@ def main():
             logging.debug("Got to 3a")
             repo = vcs_git.git.Repo(module)
             releases = vcs_git.list_module_releases(repo)
-            cloned = False
         else:
             logging.debug("Got to 3b")
             vcs_git.clone(source, module)
             repo = vcs_git.git.Repo(module)
             releases = vcs_git.list_module_releases(repo)
-            cloned = True
 
         last_release_num = releases[-1]
         logging.debug(last_release_num)
-
     else:
         parser.error(source + "does not exist on the repository.")
 
+    # if hasn't been released:
+    # print(module + " (No release done): Outstanding changes.")
+
     logging.debug("Got to 4")
 
-    log = repo.git.log(last_release_num + "..HEAD")
+    logs = repo.git.log(last_release_num + "..HEAD", "--format=%h %aD %cn %n %s %n %b %n%n%n%n").split('\n\n\n\n\n')
 
-    print(log)
+    if logs:
+        print("Changes have been made to " + module + " since release " + last_release_num)
+        formatted_logs = []
+        for entry in logs:
+            commit = entry.split(' ')[0]
 
-    if cloned:
-        shutil.rmtree(module)
+            if len(entry.split(' ')[2]) == 1:
+                date = '0' + entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
+            else:
+                date = entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
 
-    last_rev = "last rev"
-    # svn.info2(source,recurse=False)[0][1]["last_changed_rev"].number
-    if vcs_git.is_repo_path(source):
-        last_release_rev = "last rev"
-        # svn.info2(release, recurse=False)[0][1]["last_changed_rev"].number
-        last_release_num = "last num"
-        # e.sortReleases([x["name"] for x in svn.ls(release)])[-1].split("/")[-1]
-        # print the output
-        if last_rev > last_release_rev:
-            print(module + " (" + last_release_num + "): Outstanding changes. "
-                                                     "Release = r" + str(last_release_rev) +
-                                                     ",Trunk = r" + str(last_rev))
-        else:
-            print(module + " (" + last_release_num + "): Up to date.")
+            name = '{:<20}'.format(entry.split(' ')[7] + ' ' + entry.split(' ')[8])
+
+            if len(entry.split('\n')) > 3:
+                message = entry.split('\n')[1] + ' - ' + entry.split('\n')[2]
+            else:
+                message = entry.split('\n')[1]
+
+            formatted_logs.append(colour(commit, BLUE) + ' ' + colour(date, CYAN) + ' ' +
+                              colour(name, GREEN) + ': ' + message)
+            for log in formatted_logs:
+                print(log)
     else:
-        print(module + " (No release done): Outstanding changes.")
-    
+        print("No changes made to " + module + " since release " + last_release_num)
+
+    # >>> More concise log messages for changes. Make check for no release.
 
 if __name__ == "__main__":
     sys.exit(main())
