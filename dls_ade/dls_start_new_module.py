@@ -8,17 +8,23 @@ import sys
 from dls_ade.argument_parser import ArgParser
 import dls_ade.new_module_creator as new_c
 
-usage = """Default <area> is 'support'.
-Start a new diamond module of particular type.
-Uses makeBaseApp with the dls template for a 'support' or 'ioc' module,\
- copies the example from the environment module for python.
-Creates this module and imports it into git.
-If the -i flag is used, <module_name> is expected to be of the form "Domain/Technical Area/IOC number" i.e. BL02I/VA/03
-The IOC number can be omitted, in which case, it defaults to "01".
-If the --fullname flag is used, the IOC will be imported as BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same\
- technical area) and the IOC may optionally be specified as BL02I-VA-IOC-03 instead of BL02I/VA/03
-Otherwise it will be imported as BL02I/VA (old naming style)
-If the Technical area is BL then a different template is used, to create a top level module for screens and gda."""
+usage = ("Default <area> is 'support'."
+         "\nStart a new diamond module of a particular type."
+         "\nUses makeBaseApp with the dls template for a 'support' or 'ioc' "
+         "module, and uses the default templates in new_module_templates for "
+         "both Python and Tools modules."
+         "\nCreates this module and imports it into git."
+         "\nIf the -i flag is used, <module_name> is expected to be of the "
+         "form 'Domain/Technical Area/IOC number' i.e. BL02I/VA/03"
+         "\nThe IOC number can be omitted, in which case, it defaults to "
+         '"01".'
+         "\nIf the --fullname flag is used, the IOC will be imported as "
+         "BL02I/BL02I-VA-IOC-03 (useful for multiple IOCs in the same "
+         "technical area) and the IOC may optionally be specified as "
+         "BL02I-VA-IOC-03 instead of BL02I/VA/03\nOtherwise it will be "
+         "imported as BL02I/VA (old naming style)\nIf the Technical area is "
+         "BL then a different template is used, to create a top level "
+         "module for screens and gda.")
 
 
 def make_parser():

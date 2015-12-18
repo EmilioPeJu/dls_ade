@@ -37,13 +37,13 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 "<beamline>-<technical_area>-IOC-<ioc_number>"
             Alternative: "BL02I/VA/03", with fullname = True
                 "<beamline>/<technical_area>/<ioc_number>", fullname = True
+            Note:
+                If the alternative is used, if the IOC number is omitted
+                (eg. <beamline>/<technical_area>) it defaults to "01"
 
         Old-Style module (deprecated, except for BL modules):
             Format: "BL02I/VA/03" (fullname = False by default)
                 "<beamline>/<technical_area>/<ioc_number>"
-
-        If the module is specified using slashes, if the IOC number is omitted
-        (eg. <beamline>/<technical_area>) it defaults to "01"
 
     Args:
         module_name: The name of the module.
@@ -97,13 +97,13 @@ def get_new_module_creator_ioc(module_name, fullname=False):
                 "<beamline>-<technical_area>-IOC-<ioc_number>"
             Alternative: "BL02I/VA/03", with fullname = True
                 "<beamline>/<technical_area>/<ioc_number>", fullname = True
+            Note:
+                If the alternative is used, if the IOC number is omitted
+                (eg. <beamline>/<technical_area>) it defaults to "01"
 
         Old-Style module (deprecated, except for BL modules):
             Format: "BL02I/VA/03" (fullname = False by default)
                 "<beamline>/<technical_area>/<ioc_number>"
-
-        If the module is specified using slashes, if the IOC number is omitted
-        (eg. <beamline>/<technical_area>) it defaults to "01"
 
     Args:
         module_name: The name of the module.
