@@ -54,7 +54,8 @@ def make_parser():
         help="New modules will use this as the template directory")
     parser.add_argument(
         "-u", "--template-update", action="store_true", dest="template_update",
-        help="Will update the original module templates as opposed to overwriting them")
+        help=("Will update the original module templates"
+              " as opposed to overwriting them"))
 
     return parser
 
