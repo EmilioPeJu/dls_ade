@@ -55,25 +55,25 @@ def main():
     template_folder = args.template_folder
     template_update = args.template_update
 
-    mod_c = new_c.get_new_module_creator(module_name, area, fullname)
+    nmc_obj = new_c.get_new_module_creator(module_name, area, fullname)
 
-    mod_c.verify_can_create_local_module()
+    nmc_obj.verify_can_create_local_module()
 
     if not no_import:
-        mod_c.verify_remote_repo()
+        nmc_obj.verify_remote_repo()
 
     if template_folder:
-        mod_c.generate_template_files_from_folder(template_folder, template_update)
+        nmc_obj.set_template_files_from_folder(template_folder, template_update)
 
-    mod_c.create_local_module()
-    mod_c.print_message()
+    nmc_obj.create_local_module()
+    nmc_obj.print_message()
 
     if not no_import:
-        #mod_c.push_repo_to_remote()
+        #nmc_obj.push_repo_to_remote()
         print("push_repo_to_remote placeholder")
         # I want to test push_repo_to_remote() properly before I uncomment this
     else:
-        os.chdir(mod_c.disk_dir)
+        os.chdir(nmc_obj.disk_dir)
 
 
 if __name__ == "__main__":
