@@ -30,7 +30,7 @@ usage = ("Default <area> is 'support'."
          "to use {module_name:s}, {get_login:s}, and for IOC or support "
          "modules {app_name:s} to insert the module name, user login and "
          "application name (phrase before 'App' in support and IOC modules), "
-         " respectively. This can be used in both folders and text files."
+         "respectively. This can be used in both folders and text files."
          "\nIf the --template-update flag is used, the template folder will "
          "update the existing template dictionary, as opposed to overwriting "
          "it.")
@@ -54,7 +54,8 @@ def make_parser():
         help="New modules will use this as the template directory")
     parser.add_argument(
         "-u", "--template-update", action="store_true", dest="template_update",
-        help="Will update the original module templates as opposed to overwriting them")
+        help=("Will update the original module templates"
+              " as opposed to overwriting them"))
 
     return parser
 
@@ -79,7 +80,8 @@ def main():
         nmc_obj.verify_remote_repo()
 
     if template_folder:
-        nmc_obj.set_template_files_from_folder(template_folder, template_update)
+        nmc_obj.set_template_files_from_folder(template_folder,
+                                               template_update)
 
     nmc_obj.create_local_module()
     nmc_obj.print_message()

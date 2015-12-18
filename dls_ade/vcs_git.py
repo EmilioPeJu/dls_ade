@@ -31,7 +31,9 @@ def is_git_dir(path="./"):
 def is_git_root_dir(path="."):
     if is_git_dir(path):
         git_repo = git.Repo(path)
-        top_level_path = os.path.normpath(git_repo.git.rev_parse("--show-toplevel"))
+        top_level_path = os.path.normpath(
+            git_repo.git.rev_parse("--show-toplevel")
+        )
         full_path = os.path.abspath(path)
         if full_path == top_level_path:
             return True
@@ -64,7 +66,8 @@ def init_repo(path="./"):
         raise Exception("Path {path:s} is not a directory".format(path=path))
 
     if is_git_root_dir(path):
-            raise Exception("Path {path:s} is already a git repository".format(path=path))
+        err_message = "Path {path:s} is already a git repository"
+        raise Exception(err_message.format(path=path))
 
     print("Initialising repo...")
     git.Repo.init(path)
@@ -77,7 +80,8 @@ def stage_all_files_and_commit(path="./"):
         raise Exception("Path {path:s} is not a directory".format(path=path))
 
     if not is_git_root_dir(path):
-        raise Exception("Path {path:s} is not a git repository".format(path=path))
+        err_message = "Path {path:s} is not a git repository"
+        raise Exception(err_message.format(path=path))
 
     repo = git.Repo(path)
     print("Staging files...")
@@ -87,24 +91,29 @@ def stage_all_files_and_commit(path="./"):
     print(msg)
 
 
-def add_new_remote_and_push(dest, path="./", remote_name="origin", branch_name="master", ):
+def add_new_remote_and_push(dest, path="./", remote_name="origin",
+                            branch_name="master"):
     '''
-    This will push the given repository to the URL given by dest. If the repository already has a remote called
-    <remote_name>, then it will return an exception - use push_to_remote_repo. Pushes only branch <branch_name>.
+    This will push the given repository to the URL given by dest. If the
+    repository already has a remote called <remote_name>, then it will return
+    an exception - use push_to_remote_repo. Pushes only branch <branch_name>.
     '''
 
     if not is_git_root_dir(path):
-        raise Exception("Path {path:s} is not a git repository".format(path=path))
+        err_message = "Path {path:s} is not a git repository"
+        raise Exception(err_message.format(path=path))
 
     repo = git.Repo(path)
 
     if branch_name not in [x.name for x in repo.branches]:
-        err_message = "Local repository branch {branch:s} does not currently exist.".format(branch=branch_name)
-        raise Exception(err_message)
+        err_message = ("Local repository branch {branch:s} does not currently "
+                       "exist.")
+        raise Exception(err_message.format(branch=branch_name))
 
     if remote_name in [x.name for x in repo.remotes]:
-        # <remote_name> remote already exists - use push_to_remote_repo instead!
-        err_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
+        # <remote_name> already exists - use push_to_remote_repo instead!
+        err_message = ("Cannot push local repository to destination as remote "
+                       "{remote:s} is already defined")
         raise Exception(err_message.format(remote=remote_name))
 
     if is_repo_path(dest):
@@ -125,30 +134,40 @@ def create_remote_repo(dest):
     temp_dir = tempfile.mkdtemp()
 
     try:
-        git.Repo.clone_from(git_dest, temp_dir)  # Cloning from gitolite server with non-existent repo creates it
+        # Cloning from gitolite server with non-existent repo creates it
+        git.Repo.clone_from(git_dest, temp_dir)
     finally:
         shutil.rmtree(temp_dir)
 
 
 def push_to_remote(path="./", remote_name="origin", branch_name="master"):
     '''
-    This will push the given local repository to its remote <remote_name> on branch <branch_name>.
+    This will push the given local repository to its remote <remote_name> on
+    branch <branch_name>.
     '''
 
     if not is_git_root_dir(path):
-        raise Exception("Path {path:s} is not a git repository".format(path=path))
+        err_message = "Path {path:s} is not a git repository"
+        raise Exception(err_message.format(path=path))
 
     repo = git.Repo(path)
 
     if branch_name not in [x.name for x in repo.branches]:
-        raise Exception("Local repository branch {branch:s} does not currently exist.".format(branch=branch_name))
+        err_message = ("Local repository branch {branch:s} does not currently "
+                       "exist.")
+        raise Exception(err_message.format(branch=branch_name))
 
-    if remote_name not in [x.name for x in repo.remotes]:  # Remote "origin" does not already exist
-        raise Exception("Local repository does not have remote {remote:s}".format(remote=remote_name))
+    if remote_name not in [x.name for x in repo.remotes]:
+        # Remote "origin" does not already exist
+        err_message = "Local repository does not have remote {remote:s}"
+        raise Exception(err_message.format(remote=remote_name))
 
-    remote = repo.remotes[remote_name]  # They have overloaded the dictionary lookup to compare string given with .name
+    # They have overloaded the dictionary lookup to compare string with .name
+    remote = repo.remotes[remote_name]
     if not is_repo_path(remote.url):
-        raise Exception("Remote repository URL {remoteURL:s} does not currently exist".format(remoteURL=remote.url))
+        err_message = ("Remote repository URL {remoteURL:s} does not "
+                       "currently exist")
+        raise Exception(err_message.format(remoteURL=remote.url))
 
     print("Pushing repo to destination...")
     remote.push(branch_name)

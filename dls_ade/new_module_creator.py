@@ -62,7 +62,7 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 - Using an invalid name (Python or IOC module)
 
     """
-    # Use arguments to determine which new module creator to use, and return it '''
+    # Use arguments to determine which new module creator to use, and return it
     if area == "ioc":
         return get_new_module_creator_ioc(module_name, fullname)
 
@@ -71,7 +71,8 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                       ("-" not in module_name) and
                       ("." not in module_name))
         if not valid_name:
-            raise Error("Python module names must start with 'dls_' and be valid python identifiers")
+            raise Error("Python module names must start with 'dls_' and be"
+                        " valid python identifiers")
 
         return NewModuleCreatorPython(module_name, area)
 
@@ -260,9 +261,9 @@ class NewModuleCreator(object):
         self.template_files = {}
         """dict: Dictionary containing file templates.
         Each entry has the (relative) file-path as the key, and the file
-        contents as the value. Either may contain placeholders in the form
-        of {template_arg:s} for use with the string .format() method,
-        each evaluated using the `template_args` attribute."""
+        contents as the value. Either may contain placeholders in the form of
+        {template_arg:s} for use with the string .format() method, each
+        evaluated using the `template_args` attribute."""
 
         self.set_default_template_files()
 
@@ -386,8 +387,8 @@ class NewModuleCreator(object):
     def _get_remote_dir_list(self):
         """Returns a list of paths with which to check for naming collisions.
 
-        Aside from the intended server destination for the module, there
-        should be no conflicts with eg. vendor module paths.
+        Aside from the intended server destination for the module, there should
+        be no conflicts with eg. vendor module paths.
 
         Returns:
             List[str]: A list of all potentially conflicting paths.
@@ -413,8 +414,8 @@ class NewModuleCreator(object):
         `_can_create_local_module` is False, this method is run to make sure
         that create_local_module can operate completely.
 
-        This method also sets the `_can_create_local_module` attribute to
-        True so it can be run separately before create_local_module.
+        This method also sets the `_can_create_local_module` attribute to True
+        so it can be run separately before create_local_module.
 
         Raises:
             VerificationError: Raised if create_local_module should not finish
@@ -452,8 +453,8 @@ class NewModuleCreator(object):
         `_can_push_repo_to_remote` is False, this method is run to make sure
         that push_repo_to_remote can operate completely.
 
-        This method also sets the `_can_push_repo_to_remote` attribute to
-        True so it can be run separately before push_repo_to_remote.
+        This method also sets the `_can_push_repo_to_remote` attribute to True
+        so it can be run separately before push_repo_to_remote.
 
         Raises:
             VerificationError: Raised if push_repo_to_remote should not finish
@@ -504,8 +505,8 @@ class NewModuleCreator(object):
         same directory
 
         Note:
-            This will set `_can_create_local_module` False in order to
-            prevent the user calling this method twice in succession.
+            This will set `_can_create_local_module` False in order to prevent
+            the user calling this method twice in succession.
 
         Raises:
             VerificationError: From verify_can_create_local_module
@@ -534,8 +535,8 @@ class NewModuleCreator(object):
     def _create_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses the _create_files_from_template_dict method for file
-        creation by default.
+        This uses the _create_files_from_template_dict method for file creation
+        by default.
 
         Raises:
             Error: From _create_files_from_template_dict
@@ -548,8 +549,8 @@ class NewModuleCreator(object):
     def _create_files_from_template_dict(self):
         """Creates files from `template_files` and `template_args`
 
-        This uses the `template_files` and `template_args` attributes for
-        file creation by default.
+        This uses the `template_files` and `template_args` attributes for file
+        creation by default.
 
         Raises:
             Error: If key in `template_files` is a directory, not a file.
@@ -597,8 +598,8 @@ class NewModuleCreator(object):
         """Pushes the local repo to the remote server.
 
         Note:
-            This will set `_can_push_repo_to_remote` False in order to
-            prevent the user calling this method twice in succession.
+            This will set `_can_push_repo_to_remote` False in order to prevent
+            the user calling this method twice in succession.
 
         Raises:
             VerificationError: From verify_can_push_repo_to_remote.
@@ -780,8 +781,8 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         svn 'modules'.
 
         In keeping with the rest of the NewModuleCreator code, I continue to
-        use the word 'module' to refer to the git repository (local or
-        remote) in the documentation, and the 'app' to be the new IOC folder
+        use the word 'module' to refer to the git repository (local or remote)
+        in the documentation, and the 'app' to be the new IOC folder
         'app_nameApp' created inside.
 
         From the point of view of the user, however, the 'app_nameApp' folder
