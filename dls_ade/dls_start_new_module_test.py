@@ -28,9 +28,10 @@ class MakeParserTest(unittest.TestCase):
         self.assertIn("--fullname", option.option_strings)
 
     def test_template_folder_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[7]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'template_folder')
+        option = self.parser._option_string_actions['-t']
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.dest, 'template_folder')
+        self.assertIn("--template-folder", option.option_strings)
 
     def test_template_update_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-u']

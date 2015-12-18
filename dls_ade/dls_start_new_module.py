@@ -24,7 +24,16 @@ usage = ("Default <area> is 'support'."
          "BL02I-VA-IOC-03 instead of BL02I/VA/03\nOtherwise it will be "
          "imported as BL02I/VA (old naming style)\nIf the Technical area is "
          "BL then a different template is used, to create a top level "
-         "module for screens and gda.")
+         "module for screens and gda."
+         "\nIf the template-folder optional argument is given, the module "
+         "will be created using the given folder as a template. It is able "
+         "to use {module_name:s}, {get_login:s}, and for IOC or support "
+         "modules {app_name:s} to insert the module name, user login and "
+         "application name (phrase before 'App' in support and IOC modules), "
+         " respectively. This can be used in both folders and text files."
+         "\nIf the --template-update flag is used, the template folder will "
+         "update the existing template dictionary, as opposed to overwriting "
+         "it.")
 
 
 def make_parser():
@@ -40,8 +49,9 @@ def make_parser():
         "-f", "--fullname", action="store_true", dest="fullname",
         help="create new-style ioc, with full ioc name in path")
     parser.add_argument(
-        "template_folder", type=str, default=None,
-        help="relative path of the template_folder")
+        "-t", "--template-folder", action="store", type=str,
+        default=None, dest="template_folder",
+        help="New modules will use this as the template directory")
     parser.add_argument(
         "-u", "--template-update", action="store_true", dest="template_update",
         help="Will update the original module templates as opposed to overwriting them")
