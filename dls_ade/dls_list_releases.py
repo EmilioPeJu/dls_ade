@@ -116,8 +116,6 @@ def main():
     check_epics_version(args, parser)
     check_technical_area(args, parser)
 
-    module = args.module_name
-
     # >>> Not sure what this is for
     # Force options.svn if no releases in the file system
     if args.area in ["etc", "tools", "epics"]:
@@ -129,16 +127,21 @@ def main():
     if args.git:
         # List branches of repository
         target = "the repository"
-        source = os.path.join(pathf.prodArea(args.area), module)
+        source = os.path.join(pathf.prodArea(args.area), args.module)
+# >>>>
+        # repo = vcs_git.temp_clone(source)
+        # releases = vcs_git.list_module_releases(repo)
+# >>>> To replace
         if vcs_git.is_repo_path(source):
-            if os.path.isdir('./' + module):
-                repo = vcs_git.git.Repo(module)
+            if os.path.isdir('./' + args.module):
+                repo = vcs_git.git.Repo(args.module)
                 releases = vcs_git.list_module_releases(repo)
             else:
-                vcs_git.clone(source, module)
-                repo = vcs_git.git.Repo(module)
+                vcs_git.clone(source, args.module)
+                repo = vcs_git.git.Repo(args.module)
                 releases = vcs_git.list_module_releases(repo)
-                shutil.rmtree(module)
+                shutil.rmtree(args.module)
+# >>>> once merged with list-branches branch with clone_temp function
     else:
         # List branches from prod
         target = "prod"
@@ -147,7 +150,7 @@ def main():
             prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
                                                                    platform.machine()))
             logging.debug(prodArea)
-        release_dir = os.path.join(prodArea, module)
+        release_dir = os.path.join(prodArea, args.module)
 
         if os.path.isdir(release_dir):
             for p in os.listdir(release_dir):
@@ -160,18 +163,18 @@ def main():
             msg = "No releases made in git"
         else:
             # >>> Prints "No releases made for None" if epics_version not set
-            msg = "No releases made for %s" % args.epics_version
-        print(module + ": " + msg)
+            msg = "No releases made for {0}".format(args.epics_version)
+        print(args.module + ": " + msg)
         return 1
 
     # sort the releases
     releases = e.sortReleases(releases)
 
     if args.latest:
-        print("The latest release for " + module + " in " + target +
+        print("The latest release for " + args.module + " in " + target +
               " is: " + releases[-1])
     else:
-        print("Previous releases for " + module + " in " + target + ":")
+        print("Previous releases for " + args.module + " in " + target + ":")
         for path in releases:
             print(path)
 
