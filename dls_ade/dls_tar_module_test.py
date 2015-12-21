@@ -107,6 +107,14 @@ class SetUpEpicsEnvironmentTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
+    def test_given_valid_epics_version_without_R_then_no_error_raised(self):
+        args = MagicMock()
+        args.epics_version = '3.14.8.2.1.1'
+
+        dls_tar_module.set_up_epics_environment(args, self.parser)
+
+        self.assertFalse(self.mock_error.call_count)
+
 
 class CheckTechnicalAreaTest(unittest.TestCase):
 

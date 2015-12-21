@@ -43,9 +43,12 @@ def check_area(args, parser):
         parser.error("Modules in area " + args.area + " cannot be archived")
 
 
+# Implement via dls_environment?
 def set_up_epics_environment(args, parser):
 
     if args.epics_version:
+        if not args.epics_version.startswith("R"):
+            args.epics_version = "R{0}".format(args.epics_version)
         if e.epics_ver_re.match(args.epics_version):
             e.setEpics(args.epics_version)
         else:
@@ -76,6 +79,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
     check_area(args, parser)
+    # >>> This is duplicated in list-releases, put in dls_environment?
     set_up_epics_environment(args, parser)
 
     check_technical_area(args, parser)
@@ -90,8 +94,6 @@ def main():
     build = dlsbuild.archive_build(args.untar)
     
     if args.epics_version:
-        if not args.epics_version.startswith("R"):
-            args.epics_version = "R" + args.epics_version
         build.set_epics(args.epics_version)
     
     build.set_area(args.area)
