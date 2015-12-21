@@ -8,7 +8,10 @@ from dls_ade.argument_parser import ArgParser
 from dls_ade import dlsbuild
 # >>> dlsbuild doesn't run because it doesnt' know what ldap is, ldap required for this?
 
-usage = """Default <area> is 'support'.
+e = environment()
+
+usage = """
+Default <area> is 'support'.
 This script removes all O.* directories from an old release of a module and
 tars it up before deleting the release directory. <module_name>/<module_release>
 will be stored as <module_name>/<module_release>.tar.gz. Running the script with
@@ -17,7 +20,6 @@ a -u flag will untar the module and remove the archive.
 
 
 def make_parser():
-    e = environment()
 
     parser = ArgParser(usage)
     parser.add_argument(
@@ -36,49 +38,53 @@ def make_parser():
     return parser
 
 
-def main():
+def check_area(args, parser):
+    if args.area not in ["support", "ioc", "python", "matlab"]:
+        parser.error("Modules in area " + args.area + " cannot be archived")
 
-    e = environment()
 
-    parser = make_parser()
-    args = parser.parse_args()
+def set_up_epics_environment(args, parser):
 
-#    if len(args) != 2:
-#        parser.error("Incorrect number of arguments.")
-
-    module = args.module_name
-    release = args.release
-
-    if args.untar:
-        action = "unarchive"
-    else:
-        action = "archive"
-
-    assert args.area in ("support", "ioc", "python", "matlab"), \
-        "Modules in area ' " + args.area + "' cannot be archived"
-
-    # setup the environment
     if args.epics_version:
         if e.epics_ver_re.match(args.epics_version):
             e.setEpics(args.epics_version)
         else:
-            parser.error("Expected epics version like R3.14.8.2, got: " + args.epics_version)
-    if args.area == "ioc":
-        assert len(module.split('/')) > 1, "Missing Technical Area under Beamline"
+            parser.error("Expected epics version like R3.14.8.2, got: " +
+                         args.epics_version)
+
+
+def check_technical_area(args, parser):
+    if args.area == 'ioc' and len(args.module_name.split('/')) < 2:
+            parser.error("Missing Technical Area under Beamline")
+
+
+def check_file_paths(release_dir, archive, args, parser):
+    if args.untar:
+        if not os.path.isfile(archive):
+            parser.error("Archive '{0}' doesn't exist".format(archive))
+        if os.path.isdir(release_dir):
+            parser.error("Path '{0}' already exists".format(release_dir))
+    else:
+        if not os.path.isdir(release_dir):
+            parser.error("Path '{0}' doesn't exist".format(release_dir))
+        if os.path.isfile(archive):
+            parser.error("Archive '{0}' already exists".format(archive))
+
+
+def main():
+
+    parser = make_parser()
+    args = parser.parse_args()
+    check_area(args, parser)
+    set_up_epics_environment(args, parser)
+
+    check_technical_area(args, parser)
     
     # Check for the existence of release of this module/IOC    
-    w_dir = os.path.join(e.prodArea(args.area), module)
-    
-    # If an archive already exists fail
-    release_dir = os.path.join(w_dir, release)
+    w_dir = os.path.join(e.prodArea(args.area), args.module_name)
+    release_dir = os.path.join(w_dir, args.release)
     archive = release_dir + ".tar.gz"
-
-    if args.untar:
-        assert os.path.isfile(archive), "Archive '%s' doesn't exist" % archive
-        assert not os.path.isdir(release_dir), "Path '%s' already exists" % release_dir        
-    else:
-        assert os.path.isdir(release_dir), "Path '%s' doesn't exist" % release_dir
-        assert not os.path.isfile(archive), "Archive '%s' already exists" % archive
+    check_file_paths(release_dir, archive, args, parser)
     
     # Create build object for release
     build = dlsbuild.archive_build(args.untar)
@@ -90,7 +96,7 @@ def main():
     
     build.set_area(args.area)
 
-    build.submit("", module, release)
+    build.submit("", args.module_name, args.release)
 
 
 if __name__ == "__main__":
