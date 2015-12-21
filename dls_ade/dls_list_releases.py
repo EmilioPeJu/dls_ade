@@ -116,18 +116,18 @@ def main():
     check_epics_version(args, parser)
     check_technical_area(args, parser)
 
-    # >>> Not sure what this is for
+# >>> Not sure what this is for
     # Force options.svn if no releases in the file system
     if args.area in ["etc", "tools", "epics"]:
         args.git = True
-    # >>>
+# >>>
 
     # Check for the existence of releases of this module/IOC    
     releases = []
     if args.git:
         # List branches of repository
         target = "the repository"
-        source = os.path.join(pathf.prodArea(args.area), args.module)
+        source = pathf.devModule(args.module, args.area)
 # >>>>
         # repo = vcs_git.temp_clone(source)
         # releases = vcs_git.list_module_releases(repo)
@@ -141,7 +141,7 @@ def main():
                 repo = vcs_git.git.Repo(args.module)
                 releases = vcs_git.list_module_releases(repo)
                 shutil.rmtree(args.module)
-# >>>> once merged with list-branches branch with clone_temp function
+# >>>> once merged with list-branches branch with temp_clone function
     else:
         # List branches from prod
         target = "prod"
