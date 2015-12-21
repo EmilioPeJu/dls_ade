@@ -4,9 +4,9 @@
 import os
 import sys
 import shutil
-from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
-from dls_ade import vcs_git
+from argument_parser import ArgParser
+import path_functions as path
+import vcs_git
 
 usage = """
 Default <area> is 'support'.
@@ -49,32 +49,21 @@ def main():
 
     check_technical_area(args, parser)
 
-    module = args.module_name
-    source = path.devModule(module, args.area)
+    source = path.devModule(args.module_name, args.area)
 
     if not vcs_git.is_repo_path(source):
-        parser.error("Module does not exist on repo")
+        parser.error(args.module_name + " does not exist on repo")
 
-    if not os.path.isdir('./' + module):
-        print("Cloning module " + module + " to current directory...\n")
-        vcs_git.clone(source, module)
-        cloned = True
-    else:
-        print("Module " + module + " already exists in the current directory\n")
-        cloned = False
+    print("Branches of " + args.module_name + ":\n")
 
-    os.chdir(module)
+    path_to_repo = vcs_git.temp_clone(source)
 
-    branches = vcs_git.list_remote_branches()
-    print("Branches of " + module + ":\n")
+    branches = vcs_git.list_remote_branches(path_to_repo)
     for branch in branches:
         print branch
     print("")
 
-    os.chdir('..')
-
-    if cloned:
-        shutil.rmtree(module)
+    shutil.rmtree(path_to_repo)
 
 
 if __name__ == "__main__":
