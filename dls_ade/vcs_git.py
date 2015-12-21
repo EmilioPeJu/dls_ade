@@ -89,8 +89,10 @@ def clone(source, module):
     if source[-1] == '/':
         source = source[:-1]
 
-    git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
-                        os.path.join("./", module))
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
+                               os.path.join("./", module))
+
+    return repo
 
 
 def clone_multi(source):
@@ -122,32 +124,37 @@ def clone_multi(source):
                 print(target_path + " already exists in current directory")
 
 
-def list_remote_branches():
+def list_remote_branches(repo):
     """
     Lists remote branches of current git repository
 
+    Args:
+        repo: Repository instance
+
     Returns:
         list: Branches of current git repository
+
     """
-    g = git.Git()
     branches = []
-    for entry in g.branch("-r").split():
-        if "->" not in entry and "HEAD" not in entry:
-            branches.append(entry[7:])
+    for ref in repo.references:
+        if ref not in repo.branches + repo.tags:
+            remote = ref.name.split('/')[1]
+            if remote not in ['master', 'HEAD']:
+                branches.append(remote)
     return branches
 
 
-def checkout_remote_branch(branch):
+def checkout_remote_branch(branch, repo):
     """
     Creates a new local branch and links it to a remote of the current repo
 
     Args:
         branch(str): Remote branch to create locally
+        repo: Repository instance
     """
-    g = git.Git()
-    if branch in list_remote_branches():
+    if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
-        g.checkout("-b", branch, "origin/" + branch)
+        repo.git.checkout("-b", branch, "origin/" + branch)
 
 
 class Git(BaseVCS):
