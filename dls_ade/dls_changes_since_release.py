@@ -1,7 +1,6 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-
 import os
 import sys
 import logging
@@ -14,16 +13,15 @@ require('GitPython')
 import git
 
 e = environment()
-logging.basicConfig(level=logging.DEBUG)
-
-BLUE = 34
-GREEN = 32
-CYAN = 36
+logging.basicConfig(level=logging.WARNING)
 
 usage = """
 Default <area> is 'support'.
 Check if a module in the <area> area of the repository has had changes committed since its last release.
 """
+
+BLUE = 34
+GREEN = 32
 
 
 def make_parser():
@@ -44,6 +42,26 @@ def colour(word, col):
     # .format equivalent of %c, is anything wrong with this?
     return '\x1b[{col}m{word}\x1b[0m'.format(col=col, word=word)
 
+
+def format_message_width(message, line_len):
+
+    if not isinstance(message, list):
+        message = [message]
+    for i, part in enumerate(message):
+        if len(message[i]) > line_len:
+            # Find first ' ' before line_len cut-off
+            line_end = line_len - message[i][line_len::-1].find(' ')
+            # Append second section to separate list entry
+            if ' ' in message[i][line_len::-1]:
+                # +1 -> without ' '
+                message.insert(i+1, message[i][line_end+1:])
+            else:
+                # Keep string as is if there are no spaces (e.g. long file paths)
+                message.insert(i+1, message[i][line_end:])
+            # Keep section before cut-off
+            message[i] = message[i][:line_end]
+
+    return message
 
 
 def main():
@@ -78,43 +96,43 @@ def main():
             releases = vcs_git.list_module_releases(repo)
 
         last_release_num = releases[-1]
-        logging.debug(last_release_num)
     else:
         parser.error(source + "does not exist on the repository.")
 
     # if hasn't been released:
-    # print(module + " (No release done): Outstanding changes.")
+        # print(module + " (No release done): Outstanding changes.")
 
     logging.debug("Got to 4")
 
-    logs = repo.git.log(last_release_num + "..HEAD", "--format=%h %aD %cn %n %s %n %b %n%n%n%n").split('\n\n\n\n\n')
-
+    logs = repo.git.log(last_release_num + "..HEAD",
+                        "--format=%h %aD %cn %n%s%n%b<END>").split('<END>\n')
     if logs:
-        print("Changes have been made to " + module + " since release " + last_release_num)
-        formatted_logs = []
-        for entry in logs:
-            commit = entry.split(' ')[0]
-
-            if len(entry.split(' ')[2]) == 1:
-                date = '0' + entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
-            else:
-                date = entry.split(' ')[2] + ' ' + entry.split(' ')[3] + ' ' + entry.split(' ')[4]
-
-            name = '{:<20}'.format(entry.split(' ')[7] + ' ' + entry.split(' ')[8])
-
-            if len(entry.split('\n')) > 3:
-                message = entry.split('\n')[1] + ' - ' + entry.split('\n')[2]
-            else:
-                message = entry.split('\n')[1]
-
-            formatted_logs.append(colour(commit, BLUE) + ' ' + colour(date, CYAN) + ' ' +
-                              colour(name, GREEN) + ': ' + message)
-            for log in formatted_logs:
-                print(log)
+        print("Changes have been made to " + module + " since most recent release " + last_release_num + ":\n")
+        # formatted_logs = []
+        # max_line_length = 80
+        # message_padding = 30
+        # for entry in logs:
+        #     commit_hash = entry.split()[0]
+        #     name = '{:<20}'.format(entry.split()[7] + ' ' + entry.split()[8])
+        #
+        #     # Add commit subject message
+        #     commit_message = filter(None, entry.split('\n')[1])
+        #     if len(commit_message) > max_line_length:
+        #         commit_message = format_message_width(commit_message, max_line_length)
+        #         formatted_message = commit_message[0]
+        #         for line in commit_message[1:]:
+        #             formatted_message += '\n' + '{:<{}}'.format('...', message_padding) + line
+        #     else:
+        #         formatted_message = commit_message
+        #
+        #     formatted_logs.append(colour(commit_hash, BLUE) + ' ' +
+        #                           colour(name, GREEN) + ': ' + formatted_message)
+        #
+        # for log in formatted_logs:
+        #     print(log)
     else:
         print("No changes made to " + module + " since release " + last_release_num)
 
-    # >>> More concise log messages for changes. Make check for no release.
 
 if __name__ == "__main__":
     sys.exit(main())
