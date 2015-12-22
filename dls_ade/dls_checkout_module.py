@@ -108,26 +108,27 @@ def main():
         vcs_git.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        vcs_git.clone(source, module)
+        repo = vcs_git.clone(source, module)
 
-    if args.branch:
-        # cd into new module and get remote branches
-        os.chdir(args.module_name)
-        branches = vcs_git.list_remote_branches()
-        if args.branch in branches:
-            vcs_git.checkout_remote_branch(args.branch)
-        else:
-            # Invalid branch name, print branches and ask user to re-enter the branch they want
-            print("Branch '" + args.branch + "' does not exist in " + source +
-                  "\nBranch List:\n")
-            for entry in branches:
-                print(entry)
-            print("\nWhich branch would you like to checkout?")
-            branch = raw_input("Enter branch: ")
-            if branch in branches and branch != "master":
-                vcs_git.checkout_remote_branch(branch)
+        if args.branch:
+            # cd into new module and get remote branches
+            os.chdir(args.module_name)
+            branches = vcs_git.list_remote_branches(repo)
+            if args.branch in branches:
+                vcs_git.checkout_remote_branch(args.branch, repo)
             else:
-                print("\nmaster branch checked out by default")
+                # Invalid branch name, print branches and ask user to
+                # re-enter the branch they want
+                print("Branch '" + args.branch + "' does not exist in " + source +
+                      "\nBranch List:\n")
+                for entry in branches:
+                    print(entry)
+                print("\nWhich branch would you like to checkout?")
+                branch = raw_input("Enter branch: ")
+                if branch in branches and branch != "master":
+                    vcs_git.checkout_remote_branch(branch, repo)
+                else:
+                    print("\nmaster branch checked out by default")
 
 
 if __name__ == "__main__":
