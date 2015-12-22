@@ -98,7 +98,7 @@ def main():
     e = environment()
 
     test_list = e.sortReleases([args.earlier_release, args.later_release])
-    if args.later_release == test_list[0]:
+    if args.later_release == test_list[0] and args.later_release != 'HEAD':
         parser.error("<later_release> must be more recent than <earlier_release>")
 
     check_technical_area_valid(args, parser)
@@ -130,7 +130,7 @@ def main():
             start = args.earlier_release
         else:
             parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
-        if args.later_release in releases:
+        if args.later_release in releases or args.later_release == 'HEAD':
             end = args.later_release
         else:
             parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
