@@ -21,15 +21,9 @@ revision 0, and <later_release> defaults to the head revision. If
 to the latest release.
 """
 
-RED = 31
 BLUE = 34
-# Unused colours
-BLACK = 30
-GREEN = 32
-YELLOW = 33
-MAGENTA = 35
 CYAN = 36
-GREY = 37
+GREEN = 32
 
 
 def make_parser():
@@ -72,24 +66,42 @@ def create_release_list(repo):
 
     release_list = []
     for tag in repo.tags:
-        info = repo.git.show(tag)
-        for i, entry in enumerate(info.split()):
-            if entry == "Date:":
-                date = info.split()[i+3] + ' ' + info.split()[i+2] + ' ' + info.split()[i+5]
-                break
-        release_list.append((str(tag), date))
+        release_list.append(str(tag))
     return release_list
+
+
+def format_message_width(message, line_len):
+
+    if not isinstance(message, list):
+        message = [message]
+    for i, part in enumerate(message):
+        if len(message[i]) > line_len:
+            # Find first ' ' before line_len cut-off
+            line_end = line_len - message[i][line_len::-1].find(' ')
+            # Append second section to separate list entry
+            if ' ' in message[i][line_len::-1]:
+                # +1 -> without ' '
+                message.insert(i+1, message[i][line_end+1:])
+            else:
+                # Keep string as is if there are no spaces (e.g. long file paths)
+                message.insert(i+1, message[i][line_end:])
+            # Keep section before cut-off
+            message[i] = message[i][:line_end]
+
+    return message
 
 
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
-
     e = environment()
+
     test_list = e.sortReleases([args.earlier_release, args.later_release])
     if args.later_release == test_list[0]:
         parser.error("<later_release> must be more recent than <earlier_release>")
+
+    check_technical_area_valid(args, parser)
 
     # don't write coloured text if args.raw
     if args.raw or \
@@ -98,68 +110,77 @@ def main():
     else:
         raw = False
 
-    # If module is 'everything', list logs for entire area >>> Is this used? It will be a little difficult to implement.
-    if args.module_name == 'everything':
-        module = args.area  # >>> This isn't very clear later on
-        source = pathf.devArea(args.area)
-        # release = pathf.prodArea(args.area)
-    else:
-        # otherwise check logs for specific module
-        check_technical_area_valid(args, parser)
-        module = args.module_name
-        source = pathf.devModule(module, args.area)
-        # release = pathf.prodModule(module, args.area)
-
-    if not vcs_git.is_repo_path(source):
-        parser.error("Repository does not contain " + source)
-
+    source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
-
         # Get the list of releases from the repo
-        if os.path.isdir('./' + module):
-            repo = vcs_git.git.Repo(module)
+        if os.path.isdir('./' + args.module_name):
+            repo = vcs_git.git.Repo(args.module_name)
             releases = create_release_list(repo)
         else:
-            vcs_git.clone(source, module)
-            repo = vcs_git.git.Repo(module)
+            # >>> Use temp_clone once merged
+            # repo = vcs_git.temp_clone(source, module)
+            vcs_git.clone(source, args.module_name)
+            repo = vcs_git.git.Repo(args.module_name)
+            # <<<
             releases = create_release_list(repo)
 
-        for entry in releases:
-            if args.earlier_release == entry[0]:
-                start = entry[0]
-            if args.later_release == entry[0]:
-                end = entry[0]
+        logging.debug(releases)
+
+        if args.earlier_release in releases:
+            start = args.earlier_release
+        else:
+            parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
+        if args.later_release in releases:
+            end = args.later_release
+        else:
+            parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
     else:
-        parser.error("Module " + module + " doesn't exist in " + source)
+        parser.error("Module " + args.module_name + " doesn't exist in " + source)
 
-    # Get logs between start and end releases with custom format
+    # Get logs between start and end releases in a custom format
     # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
-    # >>> %body: commit message body
-
-    # Lots of line spacings in case someone puts line spacings at end of a commit message and ruins the splitting
-    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n %s %n %b %n%n%n%n%n")
-    # Add log for start -- end is included in start..end but start is not
-    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n %s %n %b")
+    # >>> %b: commit message body
+    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b<END>")
+    # Add log for start; end is included in start..end but start is not
+    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n%s%n%b")
     # There is one extra line space in the split because one is appended to the front of each entry automatically
-    logs = logs.split('\n\n\n\n\n\n')
-
+    logs = logs.split('<END>\n')
+    # Sort logs from earliest to latest
     logs.reverse()
 
+    # Add formatting parameters
+    if args.verbose:
+        max_line_length = 60
+        message_padding = 51
+    else:
+        max_line_length = 80
+        message_padding = 30
+
+    # Make list of logs
     formatted_logs = []
     prev_commit = ''
     for entry in logs:
-        commit = entry.split()[0]
-
+        commit_hash = entry.split()[0]
         name = '{:<20}'.format(entry.split()[7] + ' ' + entry.split()[8])
 
-        message = entry.split('\n')[1]
-        if len(entry.split('\n')) > 3:
-            for sub_entry in entry.split('\n')[2:]:
-                if sub_entry:
-                    message = message + '\n' + '{:>30}'.format(sub_entry)
+        # Add commit subject message
+        commit_message = filter(None, entry.split('\n')[1])
+        if len(commit_message) > max_line_length:
+            commit_message = format_message_width(commit_message, max_line_length)
+            formatted_message = commit_message[0]
+            for line in commit_message[1:]:
+                formatted_message += '\n' + '{:<{}}'.format('...', message_padding) + line
+        else:
+            formatted_message = commit_message
 
+        # Check if there is a commit message body and append it
+        if len(filter(None, entry.split('\n'))) > 3:
+            commit_body = format_message_width(filter(None, entry.split('\n')[2:]), max_line_length - 5)
+            for line in commit_body:
+                formatted_message += '\n' + '{:<{}}'.format('>>>', message_padding + 5) + line
+
+        # Add date, time and diff info if verbose
         if args.verbose:
-
             if len(entry.split()[2]) == 1:
                 date = '0' + entry.split()[2] + ' ' + entry.split()[3] + ' ' + entry.split()[4]
             else:
@@ -167,18 +188,21 @@ def main():
 
             time = entry.split()[5]
 
-            formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(date, CYAN, raw) + ' ' +
-                                  colour(time, CYAN, raw) + ' ' + colour(name, GREEN, raw) + ': ' + message)
-
+            formatted_logs.append(colour(commit_hash, BLUE, raw) + ' ' +
+                                  colour(date, CYAN, raw) + ' ' +
+                                  colour(time, CYAN, raw) + ' ' +
+                                  colour(name, GREEN, raw) + ': ' + formatted_message)
             if prev_commit:
-                diff = repo.git.diff("--name-status", prev_commit, commit)
+                diff = repo.git.diff("--name-status", prev_commit, commit_hash)
                 if diff:
                     formatted_logs.append("Changes:\n" + diff + '\n')
-            prev_commit = commit
+            prev_commit = commit_hash
+        # Otherwise just add to list
         else:
-            formatted_logs.append(colour(commit, BLUE, raw) + ' ' + colour(name, GREEN, raw) + ': ' + message)
+            formatted_logs.append(colour(commit_hash, BLUE, raw) + ' ' +
+                                  colour(name, GREEN, raw) + ': ' + formatted_message)
 
-    print("Log Messages for " + module + " between releases " + start + " and " + end + ":")
+    print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
 
     for log in formatted_logs:
         print(log)
