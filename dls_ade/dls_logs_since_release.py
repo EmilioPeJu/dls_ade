@@ -27,6 +27,13 @@ GREEN = 32
 
 
 def make_parser():
+    """
+    Takes default parser arguments and adds module_name, earlier_release, later_release,
+    -v: verbose and -r: raw.
+
+    Returns:
+        ArgumentParser: Parser with relevant arguments
+    """
 
     parser = ArgParser(usage)
     parser.add_argument(
@@ -49,20 +56,51 @@ def make_parser():
 
 
 def check_technical_area_valid(args, parser):
+    """
+    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
+    raises a parser error if not
 
-    if args.area == "ioc" and not len(args.module_name.split('/')) > 1:
+    Args:
+        args (ArgumentParser Namespace): Parser arguments
+        parser (ArgumentParser): Parser instance
+
+    Raises:
+        Parser error if <area> ioc and <module_name> not valid
+    """
+
+    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
         parser.error("Missing Technical Area Under Beamline")
 
 
 def colour(word, col, raw):
+    """
+    Formats <word> in given colour <col> and returns it, unless raw is True
+
+    Args:
+        word (str): Text to format
+        col (int): Number corresponding to colour
+        raw (bool): False if colour to be added, True otherwise
+
+    Returns:
+        str: Coloured text or unchanged text if raw is True
+    """
     if raw:
         return word
-    # >>> I have just hard coded the char conversion of %27c in, as I couldn't find the
+    # >>> I have just hard coded the char conversion of %27c = \x1b in, as I couldn't find the
     # .format equivalent of %c, is anything wrong with this?
     return '\x1b[{col}m{word}\x1b[0m'.format(col=col, word=word)
 
 
 def create_release_list(repo):
+    """
+    Get a list of tags of the repository
+
+    Args:
+        repo (Repo): Git repository instance
+
+    Returns:
+        list: List of tags of repo
+    """
 
     release_list = []
     for tag in repo.tags:
@@ -71,6 +109,17 @@ def create_release_list(repo):
 
 
 def format_message_width(message, line_len):
+    """
+    Takes message and formats each line to be shorter than <line_len>, splits a line into
+    multiple lines if it is too long
+
+    Args:
+        message (str): Message to format
+        line_len (int): Maximum line length to format to
+
+    Returns:
+        str: Formatted message
+    """
 
     if not isinstance(message, list):
         message = [message]
@@ -103,7 +152,7 @@ def main():
 
     check_technical_area_valid(args, parser)
 
-    # don't write coloured text if args.raw
+    # don't write coloured text if args.raw is True
     if args.raw or \
             (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
         raw = True
@@ -139,7 +188,13 @@ def main():
 
     # Get logs between start and end releases in a custom format
     # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
-    # >>> %b: commit message body
+    # %b: commit message body
+    # E.g.:
+    #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000] %cn[Ronaldo Mercado]
+    #       %s[(re-apply changeset 131625)]
+    #       %b[GenericADC cycle parameter default now blank
+    #       to prevent accidental "None" strings in startup script][<END>]
+
     logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b<END>")
     # Add log for start; end is included in start..end but start is not
     logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n%s%n%b")
