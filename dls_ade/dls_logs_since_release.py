@@ -173,11 +173,11 @@ def main():
     #       %b[GenericADC cycle parameter default now blank
     #       to prevent accidental "None" strings in startup script][<END>]
 
-    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b<END>")
+    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b%n<END>")
     # Add log for start; end is included in start..end but start is not
     logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n%s%n%b")
     # There is an extra line space in the split because one is appended to the front of each entry automatically
-    logs = logs.split('<END>\n')
+    logs = logs.split('\n<END>\n')
     # Sort logs from earliest to latest
     logs.reverse()
 
