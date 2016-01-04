@@ -168,7 +168,8 @@ def main():
     # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
     # %b: commit message body
     # E.g.:
-    #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000] %cn[Ronaldo Mercado]
+    #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000]
+    #       %cn[Ronaldo Mercado]
     #       %s[(re-apply changeset 131625)]
     #       %b[GenericADC cycle parameter default now blank
     #       to prevent accidental "None" strings in startup script][<END>]
