@@ -72,25 +72,18 @@ def main():
     check_technical_area_valid(args, parser)
 
     module = args.module_name
-
     source = path.devModule(module, args.area)
     logging.debug(source)
-
-    logging.debug("Got to 1")
 
     # Check for existence of this module in various places in the repository and note revisions
     if not vcs_git.is_repo_path(source):
         parser.error("Repository does not contain " + source)
 
-    logging.debug("Got to 2")
-
     if vcs_git.is_repo_path(source):
         if os.path.isdir('./' + module):
-            logging.debug("Got to 3a")
             repo = vcs_git.git.Repo(module)
             releases = vcs_git.list_module_releases(repo)
         else:
-            logging.debug("Got to 3b")
             vcs_git.clone(source, module)
             repo = vcs_git.git.Repo(module)
             releases = vcs_git.list_module_releases(repo)
@@ -98,11 +91,12 @@ def main():
         last_release_num = releases[-1]
     else:
         parser.error(source + "does not exist on the repository.")
+        # return so 'releases' can't be referenced before assignment
+        return 1
 
-    # if hasn't been released:
-        # print(module + " (No release done): Outstanding changes.")
-
-    logging.debug("Got to 4")
+    if len(releases) == 0:
+        print(module + " (No release done): Outstanding changes.")
+        return
 
     logs = repo.git.log(last_release_num + "..HEAD",
                         "--format=%h %aD %cn %n%s%n%b<END>").split('<END>\n')
