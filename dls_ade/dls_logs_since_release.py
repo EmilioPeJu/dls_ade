@@ -173,9 +173,9 @@ def main():
     #       %b[GenericADC cycle parameter default now blank
     #       to prevent accidental "None" strings in startup script][<END>]
 
-    logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b%n<END>")
+    logs = repo.git.log(start + ".." + end, "--format=%h %aD %n%cn %n%s%n%b%n<END>")
     # Add log for start; end is included in start..end but start is not
-    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n%s%n%b")
+    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
     # There is an extra line space in the split because one is appended to the front of each entry automatically
     logs = logs.split('\n<END>\n')
     # Sort logs from earliest to latest
@@ -201,10 +201,10 @@ def main():
     prev_commit = ''
     for entry in logs:
         commit_hash = entry.split()[0]
-        name = '{:<20}'.format(entry.split()[7] + ' ' + entry.split()[8])
+        name = '{:<20}'.format(entry.split('\n')[1])
 
         # Add commit subject message
-        commit_message = filter(None, entry.split('\n')[1])
+        commit_message = filter(None, entry.split('\n')[2])
         if len(commit_message) > max_line_length:
             commit_message = format_message_width(commit_message, max_line_length)
             formatted_message = commit_message[0]
@@ -214,8 +214,8 @@ def main():
             formatted_message = commit_message
 
         # Check if there is a commit message body and append it
-        if len(filter(None, entry.split('\n'))) > 3:
-            commit_body = format_message_width(filter(None, entry.split('\n')[2:]), max_line_length - 5)
+        if len(filter(None, entry.split('\n'))) > 4:
+            commit_body = format_message_width(filter(None, entry.split('\n')[3:]), max_line_length - 5)
             for line in commit_body:
                 formatted_message += '\n' + '{:<{}}'.format('>>>', message_padding + 5) + line
 
