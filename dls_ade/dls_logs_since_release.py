@@ -21,10 +21,6 @@ revision 0, and <later_release> defaults to the head revision. If
 to the latest release.
 """
 
-BLUE = 34
-CYAN = 36
-GREEN = 32
-
 
 def make_parser():
     """
@@ -53,23 +49,6 @@ def make_parser():
         help="Print raw text (not in colour)")
 
     return parser
-
-
-def check_technical_area_valid(args, parser):
-    """
-    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
-    raises a parser error if not
-
-    Args:
-        args (ArgumentParser Namespace): Parser arguments
-        parser (ArgumentParser): Parser instance
-
-    Raises:
-        Parser error if <area> ioc and <module_name> not valid
-    """
-
-    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
-        parser.error("Missing Technical Area Under Beamline")
 
 
 def colour(word, col, raw):
@@ -144,13 +123,18 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
+
+    blue = 34
+    cyan = 36
+    green = 32
+
     e = environment()
 
     test_list = e.sortReleases([args.earlier_release, args.later_release])
     if args.later_release == test_list[0] and args.later_release != 'HEAD':
         parser.error("<later_release> must be more recent than <earlier_release>")
 
-    check_technical_area_valid(args, parser)
+    pathf.check_technical_area_valid(args, parser)
 
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
@@ -241,10 +225,10 @@ def main():
             date = '{:0>2}'.format(entry.split()[2]) + ' ' + entry.split()[3] + ' ' + entry.split()[4]
             time = entry.split()[5]
 
-            formatted_logs.append(colour(commit_hash, BLUE, raw) + ' ' +
-                                  colour(date, CYAN, raw) + ' ' +
-                                  colour(time, CYAN, raw) + ' ' +
-                                  colour(name, GREEN, raw) + ': ' + formatted_message)
+            formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
+                                  colour(date, cyan, raw) + ' ' +
+                                  colour(time, cyan, raw) + ' ' +
+                                  colour(name, green, raw) + ': ' + formatted_message)
             if prev_commit:
                 diff = repo.git.diff("--name-status", prev_commit, commit_hash)
                 if diff:
@@ -252,8 +236,8 @@ def main():
             prev_commit = commit_hash
         # Otherwise just add to list
         else:
-            formatted_logs.append(colour(commit_hash, BLUE, raw) + ' ' +
-                                  colour(name, GREEN, raw) + ': ' + formatted_message)
+            formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
+                                  colour(name, green, raw) + ': ' + formatted_message)
 
     print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
 

@@ -4,6 +4,11 @@ import unittest
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
+class CheckTechnicalAreaTest(unittest.TestCase):
+    # >>> Get MagicMock version from other branch
+    pass
+
+
 class RootTest(unittest.TestCase):
 
     def test_return_value(self):

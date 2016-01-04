@@ -6,7 +6,7 @@ import sys
 import logging
 from argument_parser import ArgParser
 from dls_environment import environment
-import path_functions as path
+import path_functions as pathf
 import vcs_git
 from pkg_resources import require
 require('GitPython')
@@ -34,30 +34,15 @@ def make_parser():
     return parser
 
 
-def check_technical_area_valid(args, parser):
-    """
-
-    Args:
-        args:
-        parser:
-
-    Returns:
-
-    """
-
-    if args.area == "ioc" and len(args.module.split('/')) < 2:
-        parser.error("Missing Technical Area Under Beamline")
-
-
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
-    check_technical_area_valid(args, parser)
+    pathf.check_technical_area_valid(args, parser)
 
     module = args.module_name
-    source = path.devModule(module, args.area)
+    source = pathf.devModule(module, args.area)
     logging.debug(source)
 
     # Check for existence of this module in various places in the repository and note revisions

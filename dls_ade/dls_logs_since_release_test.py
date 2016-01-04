@@ -23,12 +23,12 @@ class MakeParserTest(unittest.TestCase):
 
     def test_earlier_argument_has_correct_attributes(self):
         arguments = self.parser._positionals._actions[5]
-        self.assertEqual(arguments.type, int)
+        self.assertEqual(arguments.type, str)
         self.assertEqual(arguments.dest, 'earlier_release')
 
     def test_later_argument_has_correct_attributes(self):
         arguments = self.parser._positionals._actions[6]
-        self.assertEqual(arguments.type, int)
+        self.assertEqual(arguments.type, str)
         self.assertEqual(arguments.dest, 'later_release')
 
     def test_verbose_argument_has_correct_attributes(self):
@@ -42,11 +42,6 @@ class MakeParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreTrueAction)
         self.assertEqual(option.dest, "raw")
         self.assertIn("--raw", option.option_strings)
-
-
-class CheckTechnicalAreaTest(unittest.TestCase):
-    # >>> Get MagicMock version from other branch
-    pass
 
 
 class ColourTest(unittest.TestCase):

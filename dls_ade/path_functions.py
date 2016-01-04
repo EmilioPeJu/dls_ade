@@ -4,6 +4,23 @@ import vcs_git
 GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
 
 
+def check_technical_area_valid(args, parser):
+    """
+    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
+    raises a parser error if not
+
+    Args:
+        args (ArgumentParser Namespace): Parser arguments
+        parser (ArgumentParser): Parser instance
+
+    Raises:
+        Parser error if <area> ioc and <module_name> not valid
+    """
+
+    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
+        parser.error("Missing Technical Area Under Beamline")
+
+
 def root():
     """Return the root for subversion (SVN_ROOT variable in the environment)"""
     root_v = GIT_SSH_ROOT
