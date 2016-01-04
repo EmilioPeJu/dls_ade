@@ -222,6 +222,11 @@ class NewModuleCreator(object):
         disk_dir: The absolute module path.
             Used for system and git commands.
         server_repo_path: The git repository server path for module.
+        template_files(dict): Stores file templates.
+        template_args(dict): Stores placeholder values for templates.
+        _remote_repo_valid(bool): Set True if remote repository path is valid.
+        _can_create_local_module(bool): Set True if we can create local module.
+        _can_push_repo_to_remote(bool): Set True if we can push repo to remote.
 
     Raises:
         Error: All errors raised by this module inherit from this class
@@ -597,8 +602,9 @@ class NewModuleCreator(object):
         """Pushes the local repo to the remote server.
 
         Note:
-            This will set `_can_push_repo_to_remote` False in order to prevent
-            the user calling this method twice in succession.
+            This will set `_can_push_repo_to_remote` and `_remote_repo_valid`
+            False in order to prevent the user calling this method twice in
+            succession.
 
         Raises:
             VerificationError: Local repository cannot be pushed to remote.
@@ -608,6 +614,7 @@ class NewModuleCreator(object):
             self.verify_can_push_repo_to_remote()
 
         self._can_push_repo_to_remote = False
+        self._remote_repo_valid = False
 
         vcs_git.add_new_remote_and_push(self.server_repo_path, self.disk_dir)
 
