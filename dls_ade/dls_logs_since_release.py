@@ -118,7 +118,7 @@ def format_message_width(message, line_len):
         line_len (int): Maximum line length to format to
 
     Returns:
-        str: Formatted message
+        list: Formatted message as list of message parts shorter than max line length
     """
 
     if not isinstance(message, list):
@@ -127,14 +127,14 @@ def format_message_width(message, line_len):
         if len(message[i]) > line_len:
             # Find first ' ' before line_len cut-off
             line_end = line_len - message[i][line_len::-1].find(' ')
-            # Append second section to separate list entry
+            # Insert second section to separate list entry
             if ' ' in message[i][line_len::-1]:
-                # +1 -> without ' '
+                # line_end+1 means the ' ' is not printed at the start of the new line
                 message.insert(i+1, message[i][line_end+1:])
             else:
                 # Keep string as is if there are no spaces (e.g. long file paths)
                 message.insert(i+1, message[i][line_end:])
-            # Keep section before cut-off
+            # Cut off end of line in original entry
             message[i] = message[i][:line_end]
 
     return message
@@ -152,13 +152,6 @@ def main():
 
     check_technical_area_valid(args, parser)
 
-    # don't write coloured text if args.raw is True
-    if args.raw or \
-            (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
-        raw = True
-    else:
-        raw = False
-
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
         # Get the list of releases from the repo
@@ -172,19 +165,20 @@ def main():
             repo = vcs_git.git.Repo(args.module_name)
             # <<<
             releases = create_release_list(repo)
-
         logging.debug(releases)
-
-        if args.earlier_release in releases:
-            start = args.earlier_release
-        else:
-            parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
-        if args.later_release in releases or args.later_release == 'HEAD':
-            end = args.later_release
-        else:
-            parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
     else:
         parser.error("Module " + args.module_name + " doesn't exist in " + source)
+        # return so 'releases' can't be referenced before assignment
+        return 1
+
+    if args.earlier_release in releases:
+        start = args.earlier_release
+    else:
+        parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
+    if args.later_release in releases or args.later_release == 'HEAD':
+        end = args.later_release
+    else:
+        parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
 
     # Get logs between start and end releases in a custom format
     # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
@@ -198,11 +192,18 @@ def main():
     logs = repo.git.log(start + ".." + end, "--format=%h %aD %cn %n%s%n%b<END>")
     # Add log for start; end is included in start..end but start is not
     logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %cn %n%s%n%b")
-    # There is one extra line space in the split because one is appended to the front of each entry automatically
+    # There is an extra line space in the split because one is appended to the front of each entry automatically
     logs = logs.split('<END>\n')
     # Sort logs from earliest to latest
     logs.reverse()
 
+    # don't write coloured text if args.raw is True
+    if args.raw or \
+            (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
+        raw = True
+    else:
+        raw = False
+    
     # Add formatting parameters
     if args.verbose:
         max_line_length = 60
@@ -236,11 +237,8 @@ def main():
 
         # Add date, time and diff info if verbose
         if args.verbose:
-            if len(entry.split()[2]) == 1:
-                date = '0' + entry.split()[2] + ' ' + entry.split()[3] + ' ' + entry.split()[4]
-            else:
-                date = entry.split()[2] + ' ' + entry.split()[3] + ' ' + entry.split()[4]
-
+            # Add '0' to front of day if only one digit, to keep consistent length
+            date = '{:0>2}'.format(entry.split()[2]) + ' ' + entry.split()[3] + ' ' + entry.split()[4]
             time = entry.split()[5]
 
             formatted_logs.append(colour(commit_hash, BLUE, raw) + ' ' +
