@@ -16,10 +16,10 @@ class Error(Exception):
 
 
 def get_new_module_creator(module_name, area="support", fullname=False):
-    """Returns a NewModuleCreator subclass object.
+    """Returns a :class:`NewModuleCreator` subclass object.
 
-    Returns an object of a subclass of NewModuleCreator, depending on the
-    different arguments given.
+    Returns an object of a subclass of :class:`NewModuleCreator`, depending on
+    the arguments given.
 
     Supported areas are:
         - Python
@@ -28,7 +28,7 @@ def get_new_module_creator(module_name, area="support", fullname=False):
         - IOC
 
     Python module name format:
-        - Must begin with "dls_"
+        - Must begin with `dls_`
         - Must not have any hyphens ("-") or full stops (".")
 
     IOC module name format:
@@ -37,12 +37,12 @@ def get_new_module_creator(module_name, area="support", fullname=False):
                 "<beamline>-<technical_area>-IOC-<ioc_number>"
             Alternative: "BL02I/VA/03", with fullname = True
                 "<beamline>/<technical_area>/<ioc_number>", fullname = True
-            Note:
-                If the alternative is used, if the IOC number is omitted
-                (eg. <beamline>/<technical_area>) it defaults to "01"
+
+            If the alternative is used, if the IOC number is omitted
+            (eg. <beamline>/<technical_area>) it defaults to "01"
 
         Old-Style module (deprecated, except for BL modules):
-            Format: "BL02I/VA/03" (fullname = False by default)
+            Format: "BL02I/VA/03", with fullname = False (or omitted)
                 "<beamline>/<technical_area>/<ioc_number>"
 
     Args:
@@ -53,13 +53,10 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             new-style module is created.
 
     Returns:
-        NewModuleCreator: An object of a NewModuleCreator subclass
+        NewModuleCreator: An object of a :class:`NewModuleCreator` subclass
 
     Raises:
         Error: If invalid arguments are provided.
-            This can be a result of:
-                - Not using a supported area
-                - Using an invalid name (Python or IOC module)
 
     """
     # Use arguments to determine which new module creator to use, and return it
@@ -87,10 +84,10 @@ def get_new_module_creator(module_name, area="support", fullname=False):
 
 
 def get_new_module_creator_ioc(module_name, fullname=False):
-    """Returns a NewModuleCreatorIOC subclass object.
+    """Returns a :class:`NewModuleCreatorIOC` subclass object.
 
-    Returns an object of a subclass of NewModuleCreatorIOC, depending on the
-    different arguments given.
+    Returns an object of a subclass of :class:`NewModuleCreatorIOC`, depending
+    on the arguments given.
 
     IOC module name format:
         New-Style module (preferred):
@@ -98,12 +95,12 @@ def get_new_module_creator_ioc(module_name, fullname=False):
                 "<beamline>-<technical_area>-IOC-<ioc_number>"
             Alternative: "BL02I/VA/03", with fullname = True
                 "<beamline>/<technical_area>/<ioc_number>", fullname = True
-            Note:
-                If the alternative is used, if the IOC number is omitted
-                (eg. <beamline>/<technical_area>) it defaults to "01"
+
+            If the alternative is used, if the IOC number is omitted
+            (eg. <beamline>/<technical_area>) it defaults to "01"
 
         Old-Style module (deprecated, except for BL modules):
-            Format: "BL02I/VA/03" (fullname = False by default)
+            Format: "BL02I/VA/03", with fullname = False (or omitted)
                 "<beamline>/<technical_area>/<ioc_number>"
 
     Args:
@@ -113,7 +110,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             new-style module is created.
 
     Returns:
-        NewModuleCreatorIOC: An object of a NewModuleCreatorIOC subclass
+        NewModuleCreatorIOC: :class:`NewModuleCreatorIOC` subclass object
 
     Raises:
         Error: Using an invalid name
@@ -206,7 +203,7 @@ def obtain_template_files(area):
 
 
 class VerificationError(Error):
-    """Class for exceptions relating to the verify_... methods.
+    """Class for exceptions relating to the `verify_` methods.
 
     This allows us to handle and concatenate internal verification errors.
 
@@ -214,7 +211,6 @@ class VerificationError(Error):
     pass
 
 
-# TODO(Martin) Add doc-string
 class NewModuleCreator(object):
     """Abstract base class for the management of the creation of new modules.
 
@@ -229,7 +225,7 @@ class NewModuleCreator(object):
 
     Raises:
         Error: All errors raised by this module inherit from this class
-        VerificationError: Errors relating to the verify_... methods.
+        VerificationError: Errors relating to the `verify_` methods.
 
     """
 
@@ -291,7 +287,8 @@ class NewModuleCreator(object):
         """Sets `template_files` to default contents.
 
         These were given in the original svn scripts as explicit strings.
-        They have now been moved to the new_module_templates module.
+        They have now been moved to the :mod:`dls_ade.new_module_templates`
+        module.
 
         """
         self.template_files = obtain_template_files(self._area)
@@ -410,18 +407,19 @@ class NewModuleCreator(object):
     def verify_can_create_local_module(self):
         """Verifies that conditions are suitable for creating a local module.
 
-        When create_local_module is called, if the boolean value
+        When :meth:`create_local_module` is called, if the boolean value
         `_can_create_local_module` is False, this method is run to make sure
-        that create_local_module can operate completely.
+        that :meth:`create_local_module` can operate completely.
 
         This method also sets the `_can_create_local_module` attribute to True
-        so it can be run separately before create_local_module.
+        so it can be run separately before :meth:`create_local_module`.
+
+        This method will fail (raise a VerificationError) if:
+            - The intended local directory for creation already exists
+            - The user is currently inside a git repository
 
         Raises:
-            VerificationError: Raised if create_local_module should not finish
-                Reasons why:
-                    - The intended local directory for creation already exists
-                    - The user is currently inside a git repository
+            VerificationError: Local module cannot be created.
 
         """
 
@@ -449,19 +447,20 @@ class NewModuleCreator(object):
     def verify_can_push_repo_to_remote(self):
         """Verifies that one can push the local module to the remote server.
 
-        When push_repo_to_remote is called, if the boolean value
+        When :meth:`push_repo_to_remote` is called, if the boolean value
         `_can_push_repo_to_remote` is False, this method is run to make sure
-        that push_repo_to_remote can operate completely.
+        that :meth:`push_repo_to_remote` can operate completely.
 
         This method also sets the `_can_push_repo_to_remote` attribute to True
-        so it can be run separately before push_repo_to_remote.
+        so it can be run separately before :meth:`push_repo_to_remote`.
+
+        This method will fail (raise a VerificationError) if:
+            - The local module does not exist
+            - The local module is not a git repository
+            - There is a naming conflict with the remote server
 
         Raises:
-            VerificationError: Raised if push_repo_to_remote should not finish
-                Reasons why:
-                    - The local module does not exists
-                    - The local module is not a git repository
-                    - There is a naming conflict with the remote server
+            VerificationError: Local repository cannot be pushed to remote.
 
         """
         valid = True
@@ -500,16 +499,16 @@ class NewModuleCreator(object):
     def create_local_module(self):
         """Creates the folder structure and files in a new git repository.
 
-        This will use the file creation specified in _create_files. It will
-        also stage and commit these files to a git repository located in the
-        same directory
+        This will use the file creation specified in :meth:`_create_files`.
+        It will also stage and commit these files to a git repository located
+        in the same directory
 
         Note:
             This will set `_can_create_local_module` False in order to prevent
             the user calling this method twice in succession.
 
         Raises:
-            VerificationError: From verify_can_create_local_module
+            VerificationError: Local module cannot be created.
 
         """
         if not self._can_create_local_module:
@@ -535,11 +534,11 @@ class NewModuleCreator(object):
     def _create_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses the _create_files_from_template_dict method for file creation
-        by default.
+        This uses the :meth:`_create_files_from_template_dict` method for file
+        creation by default.
 
         Raises:
-            Error: From _create_files_from_template_dict
+            Error: From :meth:`_create_files_from_template_dict`
 
         """
         # TODO(Martin) Call add_contact method here?
@@ -602,7 +601,7 @@ class NewModuleCreator(object):
             the user calling this method twice in succession.
 
         Raises:
-            VerificationError: From verify_can_push_repo_to_remote.
+            VerificationError: Local repository cannot be pushed to remote.
 
         """
         if not self._can_push_repo_to_remote:
@@ -691,7 +690,7 @@ class NewModuleCreatorSupport(NewModuleCreatorWithApps):
         """Creates the folder structure and files in the current directory.
 
         This uses makeBaseApp.pl program alongside the
-        _create_files_from_template_dict method for file creation.
+        :meth:`_create_files_from_template_dict` method for file creation.
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
@@ -736,12 +735,6 @@ class NewModuleCreatorIOCBL(NewModuleCreatorIOC):
     """Class for the management of the creation of new IOC BL modules."""
 
     def _create_files(self):
-        """Creates the folder structure and files in the current directory.
-
-        This uses makeBaseApp.pl program alongside the
-        _create_files_from_template_dict method for file creation.
-
-        """
         os.system('makeBaseApp.pl -t dlsBL ' + self.app_name)
         self._create_files_from_template_dict()
 
@@ -780,9 +773,9 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         script similarly created the new 'app_nameApp' folders in existing
         svn 'modules'.
 
-        In keeping with the rest of the NewModuleCreator code, I continue to
-        use the word 'module' to refer to the git repository (local or remote)
-        in the documentation, and the 'app' to be the new IOC folder
+        In keeping with the rest of the :class:`NewModuleCreator` code, I
+        continue to use the word 'module' to refer to the git repository (local
+        or remote) in the documentation, and the 'app' to be the new IOC folder
         'app_nameApp' created inside.
 
         From the point of view of the user, however, the 'app_nameApp' folder
@@ -801,13 +794,14 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         Sets the `_remote_repo_valid` boolean value to True if there are no
         conflicts.
 
+        This method will fail (raise a VerificationError) if:
+            - There is no remote repository to clone from
+            - There is an app_name conflict with one of the remote
+              paths
+
         Raises:
-            VerificationError: If cannot clone module or app_name conflicts.
-                Reasons why:
-                    - There is no remote repository to clone from
-                    - There is an app_name conflict with one of the remote
-                        paths
-            Error: From _check_if_remote_repo_has_app.
+            VerificationError: If there is an issue with the remote repository.
+            Error: From :meth:`_check_if_remote_repo_has_app`.
                 This should never be raised. There is a bug if it is!
 
         """
@@ -878,15 +872,14 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
 
         return exists
 
-    # TODO(Martin) Add doc-string
     def create_local_module(self):
         """Creates the folder structure and files in a cloned git repository.
 
-        This will use the file creation specified in _create_files. It will
-        call this function directly inside the cloned repository; as a result,
-        any files you wish to insert in the app folder using
-        _create_files_from_template_dict will require `template_files` keys to
-        begin with "{app_name:s}App/" before the usual file path.
+        This will use the file creation specified in :meth:`_create_files`. It
+        will call this function directly inside the cloned repository; as a
+        result, any files you wish to insert in the app folder using
+        :meth:`_create_files_from_template_dict` will require `template_files`
+        keys to begin with "{app_name:s}App/" before the usual file path.
 
         """
         if not self._can_create_local_module:
@@ -911,7 +904,7 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         server it was cloned from.
 
         Raises:
-            Error: From verify_can_push_repo_to_remote.
+            Error: From :meth:`verify_can_push_repo_to_remote`.
 
         """
         if not self._can_push_repo_to_remote:
