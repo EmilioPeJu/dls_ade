@@ -20,6 +20,12 @@ a -u flag will untar the module and remove the archive.
 
 
 def make_parser():
+    """
+    Takes default parser and adds arguments for module_name, release, -u: untar and -e: epics_version
+
+    Returns:
+        Parser: An argument parser instance with the relevant arguments
+    """
 
     parser = ArgParser(usage)
     parser.add_argument(
@@ -39,12 +45,31 @@ def make_parser():
 
 
 def check_area(args, parser):
+    """
+    Checks parsed area is a valid option and returns a parser error if not
+
+    Args:
+        args (ArgumentParser Namespace): Parser arguments
+        parser (ArgumentParser): Parser instance
+
+    Raises:
+        Parser error if area not in list of valid areas
+    """
     if args.area not in ["support", "ioc", "python", "matlab"]:
         parser.error("Modules in area " + args.area + " cannot be archived")
 
 
 # Implement via dls_environment?
 def set_up_epics_environment(args, parser):
+    """
+
+    Args:
+        args:
+        parser:
+
+    Returns:
+
+    """
 
     if args.epics_version:
         if not args.epics_version.startswith("R"):
@@ -57,11 +82,35 @@ def set_up_epics_environment(args, parser):
 
 
 def check_technical_area(args, parser):
+    """
+    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
+    raises a parser error if not
+
+    Args:
+        args (ArgumentParser Namespace): Parser arguments
+        parser (ArgumentParser): Parser instance
+
+    Raises:
+        Parser error if <area> ioc and <module_name> not valid
+    """
     if args.area == 'ioc' and len(args.module_name.split('/')) < 2:
             parser.error("Missing Technical Area under Beamline")
 
 
 def check_file_paths(release_dir, archive, args, parser):
+    """
+    Checks if the file to untar exists and the directory to build it a does not (if untar is True), or
+    checks if the opposite is true (if untar is False)
+
+    Args:
+        release_dir (str): Directory to build to or to tar from
+        archive (str): File to build from or to tar into
+        args (ArgumentParser Namespace): Parser arguments
+        parser (ArgumentParser): Parser instance
+
+    Raises:
+        Parser error if source does not exist or target already exists
+    """
     if args.untar:
         if not os.path.isfile(archive):
             parser.error("Archive '{0}' doesn't exist".format(archive))
