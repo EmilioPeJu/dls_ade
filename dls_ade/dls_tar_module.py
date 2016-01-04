@@ -81,6 +81,7 @@ def set_up_epics_environment(args, parser):
                          args.epics_version)
 
 
+# Route through path_functions once merged with changes branch
 def check_technical_area(args, parser):
     """
     Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
