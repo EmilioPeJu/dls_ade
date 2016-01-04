@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import re
 import path_functions as pathf
 import shutil
 import tempfile
@@ -116,69 +117,63 @@ def get_new_module_creator_ioc(module_name, fullname=False):
         Error: Using an invalid name
 
     """
-    # This section of code is ugly because it has to mimic the behaviour of
-    # the original script. Feel free to modify if you think you can tidy it up
-    # a bit! (use unit tests)
     area = "ioc"
-    cols = module_name.split('/')
-    if len(cols) > 1 and cols[1] != '':
-        domain = cols[0]
-        technical_area = cols[1]
+    cols = re.split(r'[-/]', module_name)
 
-        if technical_area == "BL":
-            module_path = domain + "/" + technical_area
-            app_name = domain
-            return NewModuleCreatorIOCBL(module_path, app_name, area)
+    if len(cols) <= 1 or not cols[1]:
+        err_message = ("Need a name with dashes or hyphens in it, got "
+                       "{module:s}")
+        raise Error(err_message.format(module=module_name))
 
-        if len(cols) == 3 and cols[2] != '':
-            ioc_number = cols[2]
+    domain = cols[0]
+    technical_area = cols[1]
+    dash_separated = "/" not in module_name
 
-        else:
-            ioc_number = '01'
-
-        app_name = domain + '-' + technical_area + '-IOC-' + ioc_number
-
-        if fullname:
+    if technical_area == "BL":
+        if dash_separated:
+            app_name = module_name
             module_path = domain + "/" + app_name
-            return NewModuleCreatorIOC(module_path, app_name, area)
-
         else:
+            app_name = domain
             module_path = domain + "/" + technical_area
-            # This part is here to retain compatibility with "old-style"
-            # modules, in which a single repo (or module) named
-            # "domain/technical_area" contains multiple
-            # domain-technical_area-IOC-xxApp's. This code is included in
-            # here to retain compatibility with the older svn scripts. The
-            # naming is a little ambiguous, however. I will continue to use
-            # the name 'module' to refer to the repo, but be aware that
-            # start_new_module and new_module_creator don't have to actually
-            # create new modules (repos) on the server in this instance.
-            server_repo_path = pathf.devModule(module_path, area)
-            if vcs_git.is_repo_path(server_repo_path):
-                # Adding new App to old style "domain/tech_area" module that
-                # already exists on the remote server.
-                return NewModuleCreatorIOCAddToModule(module_path,
-                                                      app_name, area)
 
-            else:
-                # Otherwise, the behaviour is exactly the same as that given
-                # by the ordinary IOC class as module_path is the only thing
-                # that is different
-                return NewModuleCreatorIOC(module_path, app_name, area)
+        return NewModuleCreatorIOCBL(module_path, app_name, area)
 
-    else:
-        # assume full IOC name is given explicitly.
-        cols = module_name.split('-')
-        if len(cols) <= 1:
-            raise Error("Need a name with dashes in it, got " + module_name)
-        domain = cols[0]
-        technical_area = cols[1]
+    if dash_separated:
         app_name = module_name
         module_path = domain + "/" + app_name
+        return NewModuleCreatorIOC(module_path, app_name, area)
 
-        if technical_area == "BL":
-            return NewModuleCreatorIOCBL(module_path, app_name, area)
+    if len(cols) == 3 and cols[2]:
+        ioc_number = cols[2]
+    else:
+        ioc_number = "01"
+
+    app_name = domain + "-" + technical_area + "-IOC-" + ioc_number
+
+    if fullname:
+        module_path = domain + "/" + app_name
+        return NewModuleCreatorIOC(module_path, app_name, area)
+    else:
+        # This part is here to retain compatibility with "old-style"
+        # modules, in which a single repo (or module) named
+        # "domain/technical_area" contains multiple
+        # domain-technical_area-IOC-xxApp's. This code is included in
+        # here to retain compatibility with the older svn scripts. The
+        # naming is a little ambiguous, however. I will continue to use
+        # the name 'module' to refer to the repo, but be aware that
+        # start_new_module and new_module_creator don't have to actually
+        # create new modules (repos) on the server in this instance.
+        module_path = domain + "/" + technical_area
+        server_repo_path = pathf.devModule(module_path, area)
+        if vcs_git.is_repo_path(server_repo_path):
+            # Adding new App to old style "domain/tech_area" module that
+            # already exists on the remote server.
+            return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
         else:
+            # Otherwise, the behaviour is exactly the same as that given
+            # by the ordinary IOC class as module_path is the only thing
+            # that is different
             return NewModuleCreatorIOC(module_path, app_name, area)
 
 

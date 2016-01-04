@@ -93,6 +93,7 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
         tools_c_mock.assert_called_once_with("test_module", "tools")
 
+
 class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
     def setUp(self):
@@ -114,7 +115,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
     def test_given_module_name_with_no_slash_or_dash_then_exception_raised_with_correct_message(self):
 
-        comp_message = "Need a name with dashes in it, got test_module"
+        comp_message = "Need a name with dashes or hyphens in it, got test_module"
 
         with self.assertRaises(nmc.Error) as e:
             new_ioc_creator = nmc.get_new_module_creator_ioc("test_module")
