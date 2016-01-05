@@ -72,17 +72,17 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             raise Error("Python module names must start with 'dls_' and be"
                         " valid python identifiers")
 
-        module_template = ModuleTemplatePython()
+        module_template_cls = ModuleTemplatePython
 
-        return NewModuleCreator(module_name, area, module_template)
+        return NewModuleCreator(module_name, area, module_template_cls)
 
     elif area == "support":
-        module_template = ModuleTemplateSupport()
-        return NewModuleCreatorWithApps(module_name, area, module_template)
+        module_template_cls = ModuleTemplateSupport
+        return NewModuleCreatorWithApps(module_name, area, module_template_cls)
 
     elif area == "tools":
-        module_template = ModuleTemplateTools()
-        return NewModuleCreator(module_name, area, module_template)
+        module_template_cls = ModuleTemplateTools
+        return NewModuleCreator(module_name, area, module_template_cls)
 
     else:
         raise Error("Don't know how to make a module of type: " + area)
@@ -135,7 +135,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
     # TODO(Martin) - should I add extra validation checks on the input?
     if technical_area == "BL":
-        module_template = ModuleTemplateIOCBL()
+        module_template_cls = ModuleTemplateIOCBL
         if dash_separated:
             app_name = module_name
             module_path = domain + "/" + app_name
@@ -143,15 +143,15 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             app_name = domain
             module_path = domain + "/" + technical_area
 
-        return NewModuleCreatorWithApps(module_path, area, module_template,
+        return NewModuleCreatorWithApps(module_path, area, module_template_cls,
                                         app_name)
 
-    module_template = ModuleTemplateIOC()
+    module_template_cls = ModuleTemplateIOC
 
     if dash_separated:
         app_name = module_name
         module_path = domain + "/" + app_name
-        return NewModuleCreatorWithApps(module_path, area, module_template,
+        return NewModuleCreatorWithApps(module_path, area, module_template_cls,
                                         app_name)
 
     if len(cols) == 3 and cols[2]:
@@ -163,7 +163,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
     if fullname:
         module_path = domain + "/" + app_name
-        return NewModuleCreatorWithApps(module_path, area, module_template,
+        return NewModuleCreatorWithApps(module_path, area, module_template_cls,
                                         app_name)
     else:
         # This part is here to retain compatibility with "old-style" modules,
@@ -180,13 +180,14 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             # Adding new App to old style "domain/tech_area" module that
             # already exists on the remote server.
             return NewModuleCreatorAddAppToModule(module_path, area,
-                                                  module_template, app_name)
+                                                  module_template_cls,
+                                                  app_name)
         else:
             # Otherwise, the behaviour is exactly the same as that given
             # by the ordinary IOC class as module_path is the only thing
             # that is different
-            return NewModuleCreatorWithApps(module_path, area, module_template,
-                                            app_name)
+            return NewModuleCreatorWithApps(module_path, area,
+                                            module_template_cls, app_name)
 
 
 def obtain_template_files(area):
@@ -236,7 +237,8 @@ class NewModuleCreator(object):
 
     """
 
-    def __init__(self, module_path, area, module_template):
+    def __init__(self, module_path, area, module_template_cls,
+                 extra_placeholders=None):
         """Default initialisation of all object attributes.
 
         Args:
@@ -262,12 +264,12 @@ class NewModuleCreator(object):
         self.server_repo_path = pathf.devModule(self.module_path, self._area)
 
         placeholders = {'module_name': self.module_name,
-                                'module_path': self.module_path,
-                                'getlogin': os.getlogin()}
+                        'module_path': self.module_path,
+                        'getlogin': os.getlogin()}
 
-        self.module_template = module_template
+        self.module_template = module_template_cls()
 
-        self.module_template.set_placeholders(placeholders, True)
+        self.module_template.set_placeholders(placeholders)
 
         self._remote_repo_valid = False
         """bool: Specifies whether there are conflicting server file paths.
@@ -729,14 +731,17 @@ class ModuleTemplate(object):
         {template_arg:s} for use with the string .format() method, each
         evaluated using the `template_args` attribute."""
 
+        # TODO(Martin) Sort out
+        self.required_placeholders = [
+            'module_name', 'module_path', 'getlogin'
+        ]
+        """dict: List of all placeholders used by default.
+        These are the placeholders used either in the printed message, or as
+        part of the file creation process."""
+
         self.placeholders = {}
         """dict: Dictionary for module-specific phrases in template_files
         Used for including module-specific phrases such as `module_name`"""
-
-        self.required_placeholders = {}
-        """dict: Dictionary containing all placeholders by default.
-        These are the placeholders used either in the printed message, or as
-        part of the file creation process."""
 
     def set_placeholders(self, extra_placeholders, update=False):
         if update:
@@ -845,11 +850,10 @@ class ModuleTemplateTools(ModuleTemplate):
         """Initialise placeholders and default template files."""
         super(ModuleTemplateTools, self).__init__()
 
+        # TODO(Martin) Sort out
         self.required_placeholders = {'module_name': "module_name",
-                                 'module_path': "module_path",
-                                 'getlogin': "user_login"}
-
-        self.set_placeholders(self.required_placeholders)
+                                      'module_path': "module_path",
+                                      'getlogin': "user_login"}
 
         initial_template_files = obtain_template_files("tools")
 
@@ -873,11 +877,10 @@ class ModuleTemplatePython(ModuleTemplate):
         """Initialise placeholders and default template files."""
         super(ModuleTemplatePython, self).__init__()
 
+        # TODO(Martin) Sort out
         self.required_placeholders = {'module_name': "module_name",
                                  'module_path': "module_path",
                                  'getlogin': "user_login"}
-
-        self.set_placeholders(self.required_placeholders)
 
         initial_template_files = obtain_template_files("python")
 
@@ -908,12 +911,11 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
         """Initialise placeholders and default template files."""
         super(ModuleTemplateSupportAndIOC, self).__init__()
 
-        self.required_placeholders = {'module_name': "module_name",
-                                 'module_path': "module_path",
-                                 'getlogin': "user_login",
-                                 'app_name': "app_name"}
+        # TODO(Martin) Sort out
+        self.required_placeholders.append('app_name')
 
-        self.set_placeholders(self.required_placeholders)
+        # TODO(Martin) Sort out
+        # self.set_placeholders(self.required_placeholders)
 
     def print_message(self):
         # This message is shared between support and IOC

@@ -47,7 +47,6 @@ class GetNewModuleCreatorTest(unittest.TestCase):
             self.mt_patches[cls] = patch('dls_ade.new_module_creator.ModuleTemplate' + cls)
             self.addCleanup(self.mt_patches[cls].stop)
             self.mt_mocks[cls] = self.mt_patches[cls].start()
-            self.mt_mocks[cls].return_value = cls
 
         self.patch_get_new_ioc = patch('dls_ade.new_module_creator.get_new_module_creator_ioc')
 
@@ -89,19 +88,19 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
         new_py_creator = nmc.get_new_module_creator("dls_test_module", "python")
 
-        self.mock_nmc_base.assert_called_once_with("dls_test_module", "python", 'Python')
+        self.mock_nmc_base.assert_called_once_with("dls_test_module", "python", self.mt_mocks['Python'])
 
     def test_given_area_is_support_then_new_module_creator_returned_with_correct_args(self):
 
         new_sup_creator = nmc.get_new_module_creator("test_module")  # Area automatically support
 
-        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", 'Support')
+        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'])
 
     def test_given_area_is_tools_then_new_module_creator_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator("test_module", "tools")
 
-        self.mock_nmc_base.assert_called_once_with("test_module", "tools", 'Tools')
+        self.mock_nmc_base.assert_called_once_with("test_module", "tools", self.mt_mocks['Tools'])
 
 
 class GetNewModuleCreatorIOCTest(unittest.TestCase):
@@ -134,7 +133,6 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
             self.mt_patches[cls] = patch('dls_ade.new_module_creator.ModuleTemplate' + cls)
             self.addCleanup(self.mt_patches[cls].stop)
             self.mt_mocks[cls] = self.mt_patches[cls].start()
-            self.mt_mocks[cls].return_value = cls
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
@@ -151,19 +149,19 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test-module-IOC-01")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", "IOC", "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=True)
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", "IOC", "test-module-IOC-02")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module", fullname=True)
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", "IOC", "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self, mock_is_repo_path):
@@ -171,7 +169,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/01", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", "IOC", "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self, mock_is_repo_path):
@@ -179,19 +177,19 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", "IOC", "test-module-IOC-02")
+        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator_ioc("test/BL")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", "IOCBL", "test")
+        self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", self.mt_mocks['IOCBL'], "test")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", "IOCBL", "test-BL-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], "test-BL-IOC-01")
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
@@ -246,12 +244,14 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
     def test_given_function_called_then_module_template_version_called(self):
 
         mock_mod_t = MagicMock()
+        mock_mod_t_obj = MagicMock()
+        mock_mod_t.return_value = mock_mod_t_obj
 
         nmc_obj = nmc.NewModuleCreator("test_module", "test_area", mock_mod_t)
 
         nmc_obj.set_template_files_from_folder("test_folder", True)
 
-        mock_mod_t.set_template_files_from_folder.assert_called_once_with("test_folder", True)
+        mock_mod_t_obj.set_template_files_from_folder.assert_called_once_with("test_folder", True)
 
 
 class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
@@ -527,13 +527,15 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_vcs_git = self.patch_vcs_git.start()
         self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
 
+        self.mock_module_template_cls = MagicMock()
         self.mock_module_template = MagicMock()
+        self.mock_module_template_cls.return_value = self.mock_module_template
         self.mock_create_files = self.mock_module_template.create_files
 
 
         # self.mock_os.return_value = "Example"
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", self.mock_module_template)
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", self.mock_module_template_cls)
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -867,12 +869,14 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
             self.mock_vcs_git = self.patch_vcs_git.start()
             self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
 
+            self.mock_module_template_cls = MagicMock()
             self.mock_module_template = MagicMock()
+            self.mock_module_template_cls.return_value = self.mock_module_template
             self.mock_create_files = self.mock_module_template.create_files
 
             # self.mock_os.return_value = "Example"
 
-            self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template, "test_app")
+            self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, "test_app")
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
