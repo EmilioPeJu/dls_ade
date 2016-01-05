@@ -271,7 +271,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
     def test_given_files_nested_then_template_dict_correctly_created(self):
 
@@ -289,7 +289,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
     def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
 
@@ -307,7 +307,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
     def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
 
@@ -316,7 +316,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.nmc_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+        self.nmc_obj.module_template.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
@@ -331,7 +331,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
                      "extra_folder2/file4.txt": "file4 text goes here",
                      "non_conflicting_file.txt": "I am the non-conflicting file text"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
     def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
 
@@ -340,7 +340,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.nmc_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+        self.nmc_obj.module_template.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
@@ -354,7 +354,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
                      "extra_folder2/file3.txt": "file3 text goes here",
                      "extra_folder2/file4.txt": "file4 text goes here"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
     def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
 
@@ -363,7 +363,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.nmc_obj.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
+        self.nmc_obj.module_template.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
@@ -378,17 +378,7 @@ class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
                      "extra_folder2/file4.txt": "file4 text goes here",
                      "conflicting_file.txt": "I am the modified conflicting file text"}
 
-        self.assertEqual(comp_dict, self.nmc_obj.template_files)
-
-
-class NewModuleCreatorSetTemplateArgs(unittest.TestCase):
-
-    @patch('os.getlogin', return_value='my_login')
-    def test_given_reasonable_input_then_correct_template_args_given(self, mock_getlogin):
-
-        nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
-
-        self.assertEqual(nmc_obj.template_args, {'module_name': "test_module", 'getlogin': "my_login"})
+        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
 
 
 class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
@@ -654,7 +644,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         self.patch_os = patch('dls_ade.new_module_creator.os')
         self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-        self.patch_create_files = patch('dls_ade.new_module_creator.NewModuleCreator._create_files')
+        self.patch_create_files = patch('dls_ade.new_module_creator.ModuleTemplate.create_files')
         self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
 
         self.addCleanup(self.patch_os.stop)
@@ -743,10 +733,10 @@ class NewModuleCreatorCreateFilesTest(unittest.TestCase):
 
         self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
 
-    @patch('dls_ade.new_module_creator.NewModuleCreator._create_files_from_template_dict')
+    @patch('dls_ade.new_module_creator.ModuleTemplate._create_files_from_template_dict')
     def test_create_files_from_template_called(self, mock_create_files_from_template):
 
-        self.nmc_obj._create_files()
+        self.nmc_obj.module_template.create_files()
 
         mock_create_files_from_template.assert_called_once_with()
 
@@ -769,17 +759,17 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isfile.return_value = False
 
         self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
-        self.nmc_obj.template_args = {"arg1": "argument_1", "arg2": "argument_2"}
+        self.nmc_obj.module_template.placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
     def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
 
-        self.nmc_obj.template_files = {"folder_name/": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"folder_name/": "Written contents"}
         comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
 
         with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
             with self.assertRaises(Exception) as e:
-                self.nmc_obj._create_files_from_template_dict()
+                self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.assertEqual(str(e.exception), comp_message)
         self.assertFalse(self.open_mock.called)
@@ -788,11 +778,11 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_that_already_exists_then_file_not_created(self):
 
-        self.nmc_obj.template_files = {"already_exists.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"already_exists.txt": "Written contents"}
         self.mock_isfile.return_value = True
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.assertFalse(self.open_mock.called)
 
@@ -801,10 +791,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_then_file_created_and_correctly_written_to(self):
 
-        self.nmc_obj.template_files = {"file1.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.open_mock.assert_called_once_with("file1.txt", "w")
 
@@ -813,10 +803,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_in_folder_that_does_not_exist_then_folder_and_file_created_and_file_correctly_written_to(self):
 
-        self.nmc_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.mock_makedirs.asset_called_once_with("test_folder")
         self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
@@ -828,10 +818,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
         self.mock_isdir.return_value = True
 
-        self.nmc_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.assertFalse(self.mock_makedirs.called)
         self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
@@ -841,10 +831,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_two_files_in_separate_folders_then_both_folders_created_and_files_correctly_written_to(self):
 
-        self.nmc_obj.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
+        self.nmc_obj.module_template.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.mock_makedirs.assert_has_calls([call("test_folder1"), call("test_folder2")], any_order=True)
 
@@ -857,10 +847,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
         self.mock_isdir.side_effect = [False, True]
 
-        self.nmc_obj.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
+        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.mock_makedirs.assert_called_once_with("test_folder")
 
@@ -871,11 +861,11 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
 
-        self.nmc_obj.template_files = {"{arg:s}.txt": "Written contents"}
-        self.nmc_obj.template_args = {'arg': "my_argument"}
+        self.nmc_obj.module_template.template_files = {"{arg:s}.txt": "Written contents"}
+        self.nmc_obj.module_template.placeholders = {'arg': "my_argument"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.open_mock.assert_called_once_with("my_argument.txt", "w")
 
@@ -884,10 +874,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_args_and_template_then_arguments_are_inserted_correctly(self):
 
-        self.nmc_obj.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
+        self.nmc_obj.module_template.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.open_mock.assert_called_once_with("file1.txt", "w")
 
@@ -896,10 +886,10 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_nested_directory_then_folder_and_file_both_created_and_file_correctly_written_to(self):
 
-        self.nmc_obj.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.mock_makedirs.assert_called_once_with("test_folder/another_folder/yet_another_folder")
 
@@ -910,18 +900,18 @@ class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_file_with_no_folder_then_makedirs_not_called(self):
 
-        self.nmc_obj.template_files = {"file.txt": "Written contents"}
+        self.nmc_obj.module_template.template_files = {"file.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj._create_files_from_template_dict()
+            self.nmc_obj.module_template._create_files_from_template_dict()
 
         self.assertFalse(self.mock_makedirs.called)
 
 
-# TODO -----------------------------------------------------------------------------------------------------------------
+# TODO(Martin) -----------------------------------------------------------------------------------------------------------------
 class NewModuleCreatorAddContactTest(unittest.TestCase):
     pass
-# TODO -----------------------------------------------------------------------------------------------------------------
+# TODO(Martin) -----------------------------------------------------------------------------------------------------------------
 
 
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):

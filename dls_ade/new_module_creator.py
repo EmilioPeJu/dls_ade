@@ -155,15 +155,14 @@ def get_new_module_creator_ioc(module_name, fullname=False):
         module_path = domain + "/" + app_name
         return NewModuleCreatorIOC(module_path, app_name, area)
     else:
-        # This part is here to retain compatibility with "old-style"
-        # modules, in which a single repo (or module) named
-        # "domain/technical_area" contains multiple
-        # domain-technical_area-IOC-xxApp's. This code is included in
-        # here to retain compatibility with the older svn scripts. The
-        # naming is a little ambiguous, however. I will continue to use
-        # the name 'module' to refer to the repo, but be aware that
-        # start_new_module and new_module_creator don't have to actually
-        # create new modules (repos) on the server in this instance.
+        # This part is here to retain compatibility with "old-style" modules,
+        # in which a single repo (or module) named "domain/technical_area"
+        # contains multiple domain-technical_area-IOC-xxApp's. This code is
+        # included in here to retain compatibility with the older svn scripts.
+        # The naming is ambiguous, however. I will continue to use the name
+        # 'module' to refer to the repo, but be aware that start_new_module and
+        # new_module_creator don't have to actually create new modules (repos)
+        # on the server in this instance.
         module_path = domain + "/" + technical_area
         server_repo_path = pathf.devModule(module_path, area)
         if vcs_git.is_repo_path(server_repo_path):
@@ -217,11 +216,6 @@ class NewModuleCreator(object):
         disk_dir: The absolute module path.
             Used for system and git commands.
         server_repo_path: The git repository server path for module.
-        template_files(dict): Stores file templates.
-        template_args(dict): Stores placeholder values for templates.
-        _remote_repo_valid(bool): Set True if remote repository path is valid.
-        _can_create_local_module(bool): Set True if we can create local module.
-        _can_push_repo_to_remote(bool): Set True if we can push repo to remote.
 
     Raises:
         Error: All errors raised by this module inherit from this class
@@ -254,20 +248,14 @@ class NewModuleCreator(object):
         self.disk_dir = os.path.join(self.cwd, self.module_path)
         self.server_repo_path = pathf.devModule(self.module_path, self._area)
 
-        self.template_files = {}
-        """dict: Dictionary containing file templates.
-        Each entry has the (relative) file-path as the key, and the file
-        contents as the value. Either may contain placeholders in the form of
-        {template_arg:s} for use with the string .format() method, each
-        evaluated using the `template_args` attribute."""
+        initial_files = obtain_template_files(self._area)
+        initial_placeholders = {'module_name': self.module_name,
+                                'getlogin': os.getlogin()}
 
-        self.set_default_template_files()
+        self.module_template = ModuleTemplate()
 
-        self.template_args = {}
-        """dict: Dictionary for module-specific phrases in template_files
-        Used for including module-specific phrases such as `module_name`"""
-
-        self.set_default_template_args()
+        self.module_template.template_files.update(initial_files)
+        self.module_template.placeholders.update(initial_placeholders)
 
         self._remote_repo_valid = False
         """bool: Specifies whether there are conflicting server file paths.
@@ -282,16 +270,6 @@ class NewModuleCreator(object):
 
         self._can_push_repo_to_remote = False
         """bool: Specifies whether push_repo_to_remote can be called"""
-
-    def set_default_template_files(self):
-        """Sets `template_files` to default contents.
-
-        These were given in the original svn scripts as explicit strings.
-        They have now been moved to the :mod:`dls_ade.new_module_templates`
-        module.
-
-        """
-        self.template_files = obtain_template_files(self._area)
 
     def set_template_files_from_folder(self, template_folder, update=False):
         """Sets `template_files` from a folder passed to it.
@@ -309,32 +287,9 @@ class NewModuleCreator(object):
             update: If True, `template_files` will be updated
 
         """
-        if not os.path.isdir(template_folder):
-            err_message = ("The template folder {template_folder:s} "
-                           "does not exist")
-            raise Error(err_message.format(template_folder=template_folder))
 
-        template_files = {}
-        for dir_path, _, files in os.walk(template_folder):
-            for file_name in files:
-                file_path = os.path.join(dir_path, file_name)
-                with open(file_path, "r") as f:
-                    contents = f.read()
-                rel_path = os.path.relpath(file_path, template_folder)
-                logging.debug("rel path: " + rel_path)
-                template_files.update({rel_path: contents})
-
-        if update:
-            self.template_files.update(template_files)
-        else:
-            self.template_files = template_files
-
-    def set_default_template_args(self):
-        """Sets `template_args` to default contents."""
-        template_args = {'module_name': self.module_name,
-                         'getlogin': os.getlogin()}
-
-        self.template_args = template_args
+        self.module_template.set_template_files_from_folder(template_folder,
+                                                            update)
 
     def verify_remote_repo(self):
         """Verifies there are no name conflicts with the remote repository.
@@ -525,67 +480,15 @@ class NewModuleCreator(object):
         # files are created is in order to remain compatible with
         # makeBaseApp.pl, used for IOC and Support modules
         os.chdir(self.disk_dir)
-        self._create_files()
+        self.module_template.create_files()
         os.chdir(self.cwd)
 
         vcs_git.init_repo(self.disk_dir)
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
-    def _create_files(self):
-        """Creates the folder structure and files in the current directory.
-
-        This uses the :meth:`_create_files_from_template_dict` method for file
-        creation by default.
-
-        Raises:
-            Error: From :meth:`_create_files_from_template_dict`
-
-        """
-        # TODO(Martin) Call add_contact method here?
-        # self.add_contact()
-        self._create_files_from_template_dict()
-
-    def _create_files_from_template_dict(self):
-        """Creates files from `template_files` and `template_args`
-
-        This uses the `template_files` and `template_args` attributes for file
-        creation by default.
-
-        Raises:
-            Error: If key in `template_files` is a directory, not a file.
-
-        """
-        # dictionary keys are the relative file paths for the documents
-        for path in self.template_files:
-            # Using template_args allows us to insert eg. module_name
-            rel_path = path.format(**self.template_args)
-            logging.debug("rel_path: " + rel_path)
-
-            dir_path = os.path.dirname(rel_path)
-
-            # Stops us from overwriting files in folder (eg .gitignore when
-            # adding to Old-Style IOC modules (IOCAddToModule)
-            if os.path.isfile(rel_path):
-                logging.debug("File already exists: " + rel_path)
-                continue
-
-            if os.path.normpath(dir_path) == os.path.normpath(rel_path):
-                # If folder given instead of file (ie. rel_path ends with a
-                # slash or folder already exists)
-                err_message = ("{dir:s} in template dictionary "
-                               "is not a valid file name")
-                raise Error(err_message.format(dir=dir_path))
-            else:
-                # dir_path = '' (dir_path = False) if eg. "file.txt" given
-                if dir_path and not os.path.isdir(dir_path):
-                    os.makedirs(dir_path)
-
-                open(rel_path, "w").write(self.template_files[path].format(
-                    **self.template_args))
-
     def print_message(self):
         """Prints a message to detail the user's next steps."""
-        raise NotImplementedError
+        self.module_template.print_message()
 
     def add_contact(self):
         """Add the current user as primary module contact"""
@@ -915,3 +818,123 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         self._can_push_repo_to_remote = False
 
         vcs_git.push_to_remote(self.disk_dir)
+
+
+class ModuleTemplate(object):
+    """Class for the creation of new module contents.
+
+    Raises:
+        Error: All errors raised by this module inherit from this class
+
+    """
+
+    def __init__(self):
+        """Default initialisation of all object attributes.
+
+        Args:
+            initial_files(dict): Initial values for the dictionary.
+            initial_placeholders(dict): Initial values for the dictionary.
+
+        """
+
+        self.template_files = {}
+        """dict: Dictionary containing file templates.
+        Each entry has the (relative) file-path as the key, and the file
+        contents as the value. Either may contain placeholders in the form of
+        {template_arg:s} for use with the string .format() method, each
+        evaluated using the `template_args` attribute."""
+
+        self.placeholders = {}
+        """dict: Dictionary for module-specific phrases in template_files
+        Used for including module-specific phrases such as `module_name`"""
+
+    def set_template_files_from_folder(self, template_folder, update=False):
+        """Sets `template_files` from a folder passed to it.
+
+        If update is 'True', then the dictionary is updated, not overwritten.
+
+        Note:
+            All hidden files and folders (apart from '.' and '..') will be
+            included.
+
+        Args:
+            template_folder: The relative or absolute path to template folder.
+                Inside, all files and folders can use {value:s} placeholders
+                to allow completion using `template_args` attribute.
+            update: If True, `template_files` will be updated
+
+        """
+        if not os.path.isdir(template_folder):
+            err_message = ("The template folder {template_folder:s} "
+                           "does not exist")
+            raise Error(err_message.format(template_folder=template_folder))
+
+        template_files = {}
+        for dir_path, _, files in os.walk(template_folder):
+            for file_name in files:
+                file_path = os.path.join(dir_path, file_name)
+                with open(file_path, "r") as f:
+                    contents = f.read()
+                rel_path = os.path.relpath(file_path, template_folder)
+                logging.debug("rel path: " + rel_path)
+                template_files.update({rel_path: contents})
+
+        if update:
+            self.template_files.update(template_files)
+        else:
+            self.template_files = template_files
+
+    def create_files(self):
+        """Creates the folder structure and files in the current directory.
+
+        This uses the :meth:`_create_files_from_template_dict` method for file
+        creation by default.
+
+        Raises:
+            Error: From :meth:`_create_files_from_template_dict`
+
+        """
+        self._create_files_from_template_dict()
+
+    def _create_files_from_template_dict(self):
+        """Creates files from `template_files` and `template_args`
+
+        This uses the `template_files` and `template_args` attributes for file
+        creation by default.
+
+        Raises:
+            Error: If key in `template_files` is a directory, not a file.
+
+        """
+        # dictionary keys are the relative file paths for the documents
+        for path in self.template_files:
+            # Using template_args allows us to insert eg. module_name
+            rel_path = path.format(**self.placeholders)
+            logging.debug("rel_path: " + rel_path)
+
+            dir_path = os.path.dirname(rel_path)
+
+            # Stops us from overwriting files in folder (eg .gitignore when
+            # adding to Old-Style IOC modules (IOCAddToModule)
+            if os.path.isfile(rel_path):
+                logging.debug("File already exists: " + rel_path)
+                continue
+
+            if os.path.normpath(dir_path) == os.path.normpath(rel_path):
+                # If folder given instead of file (ie. rel_path ends with a
+                # slash or folder already exists)
+                err_message = ("{dir:s} in template dictionary "
+                               "is not a valid file name")
+                raise Error(err_message.format(dir=dir_path))
+            else:
+                # dir_path = '' (dir_path = False) if eg. "file.txt" given
+                if dir_path and not os.path.isdir(dir_path):
+                    os.makedirs(dir_path)
+
+                open(rel_path, "w").write(self.template_files[path].format(
+                    **self.placeholders))
+
+    def print_message(self):
+        """Prints a message to detail the user's next steps."""
+        raise NotImplementedError
+
