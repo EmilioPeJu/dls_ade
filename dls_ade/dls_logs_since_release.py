@@ -240,6 +240,8 @@ def main():
             formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
                                   colour(name, green, raw) + ': ' + formatted_message)
 
+    # .format in the message padding once we know what the longest name is?
+
     print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
 
     for log in formatted_logs:
