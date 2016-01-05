@@ -72,13 +72,17 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             raise Error("Python module names must start with 'dls_' and be"
                         " valid python identifiers")
 
-        return NewModuleCreatorPython(module_name, area)
+        module_template = ModuleTemplatePython()
+
+        return NewModuleCreator(module_name, area, module_template)
 
     elif area == "support":
-        return NewModuleCreatorSupport(module_name, area)
+        module_template = ModuleTemplateSupport()
+        return NewModuleCreatorWithApps(module_name, area, module_template)
 
     elif area == "tools":
-        return NewModuleCreatorTools(module_name, area)
+        module_template = ModuleTemplateTools()
+        return NewModuleCreator(module_name, area, module_template)
 
     else:
         raise Error("Don't know how to make a module of type: " + area)
@@ -129,7 +133,9 @@ def get_new_module_creator_ioc(module_name, fullname=False):
     technical_area = cols[1]
     dash_separated = "/" not in module_name
 
+    # TODO(Martin) - should I add extra validation checks on the input?
     if technical_area == "BL":
+        module_template = ModuleTemplateIOCBL()
         if dash_separated:
             app_name = module_name
             module_path = domain + "/" + app_name
@@ -137,12 +143,16 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             app_name = domain
             module_path = domain + "/" + technical_area
 
-        return NewModuleCreatorIOCBL(module_path, app_name, area)
+        return NewModuleCreatorWithApps(module_path, area, module_template,
+                                        app_name)
+
+    module_template = ModuleTemplateIOC()
 
     if dash_separated:
         app_name = module_name
         module_path = domain + "/" + app_name
-        return NewModuleCreatorIOC(module_path, app_name, area)
+        return NewModuleCreatorWithApps(module_path, area, module_template,
+                                        app_name)
 
     if len(cols) == 3 and cols[2]:
         ioc_number = cols[2]
@@ -153,7 +163,8 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
     if fullname:
         module_path = domain + "/" + app_name
-        return NewModuleCreatorIOC(module_path, app_name, area)
+        return NewModuleCreatorWithApps(module_path, area, module_template,
+                                        app_name)
     else:
         # This part is here to retain compatibility with "old-style" modules,
         # in which a single repo (or module) named "domain/technical_area"
@@ -168,12 +179,14 @@ def get_new_module_creator_ioc(module_name, fullname=False):
         if vcs_git.is_repo_path(server_repo_path):
             # Adding new App to old style "domain/tech_area" module that
             # already exists on the remote server.
-            return NewModuleCreatorIOCAddToModule(module_path, app_name, area)
+            return NewModuleCreatorAddAppToModule(module_path, area,
+                                                  module_template, app_name)
         else:
             # Otherwise, the behaviour is exactly the same as that given
             # by the ordinary IOC class as module_path is the only thing
             # that is different
-            return NewModuleCreatorIOC(module_path, app_name, area)
+            return NewModuleCreatorWithApps(module_path, area, module_template,
+                                            app_name)
 
 
 def obtain_template_files(area):
@@ -223,7 +236,7 @@ class NewModuleCreator(object):
 
     """
 
-    def __init__(self, module_path, area):
+    def __init__(self, module_path, area, module_template):
         """Default initialisation of all object attributes.
 
         Args:
@@ -248,14 +261,13 @@ class NewModuleCreator(object):
         self.disk_dir = os.path.join(self.cwd, self.module_path)
         self.server_repo_path = pathf.devModule(self.module_path, self._area)
 
-        initial_files = obtain_template_files(self._area)
-        initial_placeholders = {'module_name': self.module_name,
+        placeholders = {'module_name': self.module_name,
+                                'module_path': self.module_path,
                                 'getlogin': os.getlogin()}
 
-        self.module_template = ModuleTemplate()
+        self.module_template = module_template
 
-        self.module_template.template_files.update(initial_files)
-        self.module_template.placeholders.update(initial_placeholders)
+        self.module_template.set_placeholders(placeholders, True)
 
         self._remote_repo_valid = False
         """bool: Specifies whether there are conflicting server file paths.
@@ -454,7 +466,7 @@ class NewModuleCreator(object):
     def create_local_module(self):
         """Creates the folder structure and files in a new git repository.
 
-        This will use the file creation specified in :meth:`_create_files`.
+        This will use the file creation specified in :meth:`create_files`.
         It will also stage and commit these files to a git repository located
         in the same directory
 
@@ -517,36 +529,6 @@ class NewModuleCreator(object):
         vcs_git.add_new_remote_and_push(self.server_repo_path, self.disk_dir)
 
 
-class NewModuleCreatorTools(NewModuleCreator):
-    """Class for the management of the creation of new Tools modules."""
-
-    def print_message(self):
-        message_dict = {'module_path': self.module_path}
-
-        message = ("\nPlease add your patch files to the {module_path:s} "
-                   "\ndirectory and edit {module_path:s}/build script "
-                   "appropriately")
-        message = message.format(**message_dict)
-
-        print(message)
-
-
-class NewModuleCreatorPython(NewModuleCreator):
-    """Class for the management of the creation of new Python modules."""
-
-    def print_message(self):
-        message_dict = {'module_path': self.module_path,
-                        'setup_path': os.path.join(self.module_path,
-                                                   "setup.py")
-                        }
-
-        message = ("\nPlease add your python files to the {module_path:s} "
-                   "\ndirectory and edit {setup_path} appropriately.")
-        message = message.format(**message_dict)
-
-        print(message)
-
-
 class NewModuleCreatorWithApps(NewModuleCreator):
     """Abstract class for the management of the creation of app-based modules.
 
@@ -557,116 +539,24 @@ class NewModuleCreatorWithApps(NewModuleCreator):
 
     """
 
-    def __init__(self, module_path, area):
-        super(NewModuleCreatorWithApps, self).__init__(module_path, area)
-        self.app_name = self.module_name
-        self.template_args.update({'app_name': self.app_name})
+    def __init__(self, module_path, area, module_template, app_name=None):
+        """Initialise variables.
 
-    def print_message(self):
-        # This message is shared between support and IOC
-        message_dict = {
-            'RELEASE': os.path.join(self.module_path, 'configure/RELEASE'),
-            'srcMakefile': os.path.join(
-                self.module_path,
-                self.app_name + 'App/src/Makefile'
-            ),
-            'DbMakefile': os.path.join(
-                self.module_path,
-                self.app_name + 'App/Db/Makefile'
-            )
-        }
-
-        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
-                   "for dependencies.\nYou can also add dependencies to "
-                   "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
-        message = message.format(**message_dict)
-
-        print(message)
-
-
-class NewModuleCreatorSupport(NewModuleCreatorWithApps):
-    """Class for the management of the creation of new Support modules.
-
-    These have apps with the same name as the module.
-
-    """
-
-    def _create_files(self):
-        """Creates the folder structure and files in the current directory.
-
-        This uses makeBaseApp.pl program alongside the
-        :meth:`_create_files_from_template_dict` method for file creation.
-
-        """
-        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
-            app_name=self.app_name))
-        os.system('dls-make-etc-dir.py && make clean uninstall')
-        self._create_files_from_template_dict()
-
-
-class NewModuleCreatorIOC(NewModuleCreatorWithApps):
-    """Class for the management of the creation of new IOC modules.
-
-    These have apps with a different name to the module.
-
-    """
-
-    def __init__(self, module_path, app_name, area):
-        """
         Args:
-            app_name: The name of the app to go inside the module
-
+            app_name: The name of the app for the new module.
         """
-        super(NewModuleCreatorIOC, self).__init__(module_path, area)
-        self.app_name = app_name
-        self.template_args.update({'app_name': self.app_name})
+        super(NewModuleCreatorWithApps, self).__init__(module_path, area,
+                                                       module_template)
+        if app_name:
+            self.app_name = app_name
+        else:  # Sensible default - used by support
+            self.app_name = self.module_name
 
-    def _create_files(self):
-        """Creates the folder structure and files in the current directory.
-
-        This uses makeBaseApp.pl program alongside the
-        _create_files_from_template_dict method for file creation.
-
-        """
-        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
-            app_name=self.app_name))
-        os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
-            app_name=self.app_name))
-        shutil.rmtree(os.path.join(self.app_name+'App', 'opi'))
-        self._create_files_from_template_dict()
+        self.module_template.set_placeholders({'app_name': self.app_name},
+                                              True)
 
 
-class NewModuleCreatorIOCBL(NewModuleCreatorIOC):
-    """Class for the management of the creation of new IOC BL modules."""
-
-    def _create_files(self):
-        os.system('makeBaseApp.pl -t dlsBL ' + self.app_name)
-        self._create_files_from_template_dict()
-
-    def print_message(self):
-        message_dict = {
-            'RELEASE': os.path.join(self.module_path, "configure/RELEASE"),
-            'srcMakefile': os.path.join(
-                self.module_path,
-                self.app_name + "App/src/Makefile"
-            ),
-            'opi/edl': os.path.join(
-                self.module_path,
-                self.app_name + "App/opi/edl"
-            )
-        }
-
-        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
-                   "for the ioc's other technical areas and path to scripts."
-                   "\nAlso edit {srcMakefile:s} to add all database files "
-                   "from these technical areas.\nAn example set of screens"
-                   " has been placed in {opi/edl} . Please modify these.\n")
-        message = message.format(**message_dict)
-
-        print(message)
-
-
-class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
+class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
     """Class for the management of adding a new App to an existing IOC module.
 
     In an old-style module, a single module repository contains multiple IOC
@@ -797,7 +687,7 @@ class NewModuleCreatorIOCAddToModule(NewModuleCreatorIOC):
         vcs_git.clone(self.server_repo_path, self.disk_dir)
 
         os.chdir(self.disk_dir)
-        self._create_files()
+        self.module_template.create_files()
         os.chdir(self.cwd)
 
         vcs_git.stage_all_files_and_commit(self.disk_dir)
@@ -831,12 +721,7 @@ class ModuleTemplate(object):
     def __init__(self):
         """Default initialisation of all object attributes.
 
-        Args:
-            initial_files(dict): Initial values for the dictionary.
-            initial_placeholders(dict): Initial values for the dictionary.
-
         """
-
         self.template_files = {}
         """dict: Dictionary containing file templates.
         Each entry has the (relative) file-path as the key, and the file
@@ -847,6 +732,23 @@ class ModuleTemplate(object):
         self.placeholders = {}
         """dict: Dictionary for module-specific phrases in template_files
         Used for including module-specific phrases such as `module_name`"""
+
+        self.required_placeholders = {}
+        """dict: Dictionary containing all placeholders by default.
+        These are the placeholders used either in the printed message, or as
+        part of the file creation process."""
+
+    def set_placeholders(self, extra_placeholders, update=False):
+        if update:
+            self.placeholders.update(extra_placeholders)
+        else:
+            self.placeholders = extra_placeholders
+
+    def set_template_files(self, extra_template_files, update=False):
+        if update:
+            self.template_files.update(extra_template_files)
+        else:
+            self.template_files = extra_template_files
 
     def set_template_files_from_folder(self, template_folder, update=False):
         """Sets `template_files` from a folder passed to it.
@@ -879,10 +781,7 @@ class ModuleTemplate(object):
                 logging.debug("rel path: " + rel_path)
                 template_files.update({rel_path: contents})
 
-        if update:
-            self.template_files.update(template_files)
-        else:
-            self.template_files = template_files
+        self.set_template_files(template_files, update)
 
     def create_files(self):
         """Creates the folder structure and files in the current directory.
@@ -937,4 +836,203 @@ class ModuleTemplate(object):
     def print_message(self):
         """Prints a message to detail the user's next steps."""
         raise NotImplementedError
+
+
+class ModuleTemplateTools(ModuleTemplate):
+    """Class for the management of the creation of new Tools modules."""
+
+    def __init__(self):
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplateTools, self).__init__()
+
+        self.required_placeholders = {'module_name': "module_name",
+                                 'module_path': "module_path",
+                                 'getlogin': "user_login"}
+
+        self.set_placeholders(self.required_placeholders)
+
+        initial_template_files = obtain_template_files("tools")
+
+        self.set_template_files(initial_template_files)
+
+    def print_message(self):
+        message_dict = {'module_path': self.placeholders['module_path']}
+
+        message = ("\nPlease add your patch files to the {module_path:s} "
+                   "\ndirectory and edit {module_path:s}/build script "
+                   "appropriately")
+        message = message.format(**message_dict)
+
+        print(message)
+
+
+class ModuleTemplatePython(ModuleTemplate):
+    """Class for the management of the creation of new Python modules."""
+
+    def __init__(self):
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplatePython, self).__init__()
+
+        self.required_placeholders = {'module_name': "module_name",
+                                 'module_path': "module_path",
+                                 'getlogin': "user_login"}
+
+        self.set_placeholders(self.required_placeholders)
+
+        initial_template_files = obtain_template_files("python")
+
+        self.set_template_files(initial_template_files)
+
+    def print_message(self):
+        module_path = self.placeholders['module_path']
+        message_dict = {'module_path': module_path,
+                        'setup_path': os.path.join(module_path, "setup.py")
+                        }
+
+        message = ("\nPlease add your python files to the {module_path:s} "
+                   "\ndirectory and edit {setup_path} appropriately.")
+        message = message.format(**message_dict)
+
+        print(message)
+
+
+class ModuleTemplateSupportAndIOC(ModuleTemplate):
+    """Abstract class to implement the shared user message for Support and IOC.
+
+    Ensure you use this with :mod:`NewModuleCreatorWithApps`, in order to
+    ensure that the app_name value exists
+
+    """
+
+    def __init__(self):
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplateSupportAndIOC, self).__init__()
+
+        self.required_placeholders = {'module_name': "module_name",
+                                 'module_path': "module_path",
+                                 'getlogin': "user_login",
+                                 'app_name': "app_name"}
+
+        self.set_placeholders(self.required_placeholders)
+
+    def print_message(self):
+        # This message is shared between support and IOC
+        module_path = self.placeholders['module_path']
+        app_name = self.placeholders['app_name']
+
+        message_dict = {
+            'RELEASE': os.path.join(module_path, 'configure/RELEASE'),
+            'srcMakefile': os.path.join(
+                module_path,
+                app_name + 'App/src/Makefile'
+            ),
+            'DbMakefile': os.path.join(
+                module_path,
+                app_name + 'App/Db/Makefile'
+            )
+        }
+
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                   "for dependencies.\nYou can also add dependencies to "
+                   "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
+        message = message.format(**message_dict)
+
+        print(message)
+
+
+class ModuleTemplateSupport(ModuleTemplateSupportAndIOC):
+    """Class for the management of the creation of new Support modules.
+
+    These have apps with the same name as the module.
+
+    """
+
+    def __init__(self):
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplateSupport, self).__init__()
+
+        initial_template_files = obtain_template_files("support")
+
+        self.set_template_files(initial_template_files)
+
+    def create_files(self):
+        """Creates the folder structure and files in the current directory.
+
+        This uses makeBaseApp.pl program alongside the
+        :meth:`_create_files_from_template_dict` method for file creation.
+
+        """
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
+            app_name=self.placeholders['app_name']))
+        os.system('dls-make-etc-dir.py && make clean uninstall')
+        self._create_files_from_template_dict()
+
+
+class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
+    """Class for the management of the creation of new IOC modules.
+
+    These have apps with a different name to the module.
+
+    """
+
+    def __init__(self):
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplateIOC, self).__init__()
+
+        initial_template_files = obtain_template_files("ioc")
+
+        self.set_template_files(initial_template_files)
+
+    def create_files(self):
+        """Creates the folder structure and files in the current directory.
+
+        This uses makeBaseApp.pl program alongside the
+        _create_files_from_template_dict method for file creation.
+
+        """
+        os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
+            **self.placeholders))
+        os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
+            **self.placeholders))
+        shutil.rmtree(os.path.join(self.placeholders['app_name'] + 'App',
+                                   'opi'))
+        self._create_files_from_template_dict()
+
+
+class ModuleTemplateIOCBL(ModuleTemplateIOC):
+    """Class for the management of the creation of new IOC BL modules."""
+
+    def print_message(self):
+        module_path = self.placeholders['module_path']
+        app_name = self.placeholders['app_name']
+        message_dict = {
+            'RELEASE': os.path.join(module_path, "configure/RELEASE"),
+            'srcMakefile': os.path.join(
+                module_path,
+                app_name + "App/src/Makefile"
+            ),
+            'opi/edl': os.path.join(
+                module_path,
+                app_name + "App/opi/edl"
+            )
+        }
+
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                   "for the ioc's other technical areas and path to scripts."
+                   "\nAlso edit {srcMakefile:s} to add all database files "
+                   "from these technical areas.\nAn example set of screens"
+                   " has been placed in {opi/edl} . Please modify these.\n")
+        message = message.format(**message_dict)
+
+        print(message)
+
+    def create_files(self):
+        """Creates the folder structure and files in the current directory.
+
+        This uses makeBaseApp.pl program alongside the
+        _create_files_from_template_dict method for file creation.
+
+        """
+        os.system('makeBaseApp.pl -t dlsBL ' + self.placeholders['app_name'])
+        self._create_files_from_template_dict()
 

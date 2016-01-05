@@ -20,21 +20,39 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
 
-        methods_to_patch = [
-            'CreatorPython',
-            'CreatorSupport',
-            'CreatorTools'
+        nmc_classes_to_patch = [
+            'Creator',
+            'CreatorWithApps',
         ]
 
-        self.patch = {}
-        self.mocks = {}
-        for method in methods_to_patch:
-            self.patch[method] = patch('dls_ade.new_module_creator.NewModule' + method)
-            self.addCleanup(self.patch[method].stop)
-            self.mocks[method] = self.patch[method].start()
+        self.nmc_patches = {}
+        self.nmc_mocks = {}
+        for cls in nmc_classes_to_patch:
+            self.nmc_patches[cls] = patch('dls_ade.new_module_creator.NewModule' + cls)
+            self.addCleanup(self.nmc_patches[cls].stop)
+            self.nmc_mocks[cls] = self.nmc_patches[cls].start()
+
+        self.mock_nmc_base = self.nmc_mocks['Creator']
+        self.mock_nmc_with_apps = self.nmc_mocks['CreatorWithApps']
+
+        mt_classes_to_patch = [
+            'Python',
+            'Support',
+            'Tools'
+        ]
+
+        self.mt_patches = {}
+        self.mt_mocks = {}
+        for cls in mt_classes_to_patch:
+            self.mt_patches[cls] = patch('dls_ade.new_module_creator.ModuleTemplate' + cls)
+            self.addCleanup(self.mt_patches[cls].stop)
+            self.mt_mocks[cls] = self.mt_patches[cls].start()
+            self.mt_mocks[cls].return_value = cls
 
         self.patch_get_new_ioc = patch('dls_ade.new_module_creator.get_new_module_creator_ioc')
+
         self.addCleanup(self.patch_get_new_ioc.stop)
+
         self.mock_get_new_ioc = self.patch_get_new_ioc.start()
 
         # self.mocks['CreatorTools'].return_value = "Example"
@@ -52,64 +70,71 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
     def test_given_area_is_python_with_invalid_name_then_new_module_creator_python_not_returned(self):
 
-        py_c_mock = self.mocks['CreatorPython']
-
         with self.assertRaises(Exception):
             new_py_creator = nmc.get_new_module_creator("test_module", "python")
 
-        self.assertFalse(py_c_mock.called)
+        self.assertFalse(self.mock_nmc_base.called)
 
         with self.assertRaises(Exception):
             new_py_creator = nmc.get_new_module_creator("dls_test-module", "python")
 
-        self.assertFalse(py_c_mock.called)
+        self.assertFalse(self.mock_nmc_base.called)
 
         with self.assertRaises(Exception):
             new_py_creator = nmc.get_new_module_creator("dls_test.module", "python")
 
-        self.assertFalse(py_c_mock.called)
+        self.assertFalse(self.mock_nmc_base.called)
 
-    def test_given_area_is_python_with_valid_name_then_new_module_creator_python_called_with_correct_args(self):
-
-        py_c_mock = self.mocks['CreatorPython']
+    def test_given_area_is_python_with_valid_name_then_new_module_creator_returned_with_correct_args(self):
 
         new_py_creator = nmc.get_new_module_creator("dls_test_module", "python")
 
-        py_c_mock.assert_called_once_with("dls_test_module", "python")
+        self.mock_nmc_base.assert_called_once_with("dls_test_module", "python", 'Python')
 
-    def test_given_area_is_support_then_new_module_creator_support_returned(self):
-
-        sup_c_mock = self.mocks['CreatorSupport']
+    def test_given_area_is_support_then_new_module_creator_returned_with_correct_args(self):
 
         new_sup_creator = nmc.get_new_module_creator("test_module")  # Area automatically support
 
-        sup_c_mock.assert_called_once_with("test_module", "support")
+        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", 'Support')
 
-    def test_given_area_is_tools_then_new_module_creator_tools_returned(self):
-
-        tools_c_mock = self.mocks['CreatorTools']
+    def test_given_area_is_tools_then_new_module_creator_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator("test_module", "tools")
 
-        tools_c_mock.assert_called_once_with("test_module", "tools")
+        self.mock_nmc_base.assert_called_once_with("test_module", "tools", 'Tools')
 
 
 class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
     def setUp(self):
 
-        methods_to_patch = [
-            'CreatorIOC',
-            'CreatorIOCAddToModule',
-            'CreatorIOCBL',
+        nmc_classes_to_patch = [
+            'CreatorWithApps',
+            'CreatorAddAppToModule'
         ]
 
-        self.patch = {}
-        self.mocks = {}
-        for method in methods_to_patch:
-            self.patch[method] = patch('dls_ade.new_module_creator.NewModule' + method)
-            self.addCleanup(self.patch[method].stop)
-            self.mocks[method] = self.patch[method].start()
+        self.nmc_patches = {}
+        self.nmc_mocks = {}
+        for cls in nmc_classes_to_patch:
+            self.nmc_patches[cls] = patch('dls_ade.new_module_creator.NewModule' + cls)
+            self.addCleanup(self.nmc_patches[cls].stop)
+            self.nmc_mocks[cls] = self.nmc_patches[cls].start()
+
+        self.mock_nmc_with_apps = self.nmc_mocks['CreatorWithApps']
+        self.mock_nmc_add_app = self.nmc_mocks['CreatorAddAppToModule']
+
+        mt_classes_to_patch = [
+            'IOC',
+            'IOCBL'
+        ]
+
+        self.mt_patches = {}
+        self.mt_mocks = {}
+        for cls in mt_classes_to_patch:
+            self.mt_patches[cls] = patch('dls_ade.new_module_creator.ModuleTemplate' + cls)
+            self.addCleanup(self.mt_patches[cls].stop)
+            self.mt_mocks[cls] = self.mt_patches[cls].start()
+            self.mt_mocks[cls].return_value = cls
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
@@ -122,65 +147,51 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_not_BL_and_dash_separated_then_new_module_creator_ioc_called_with_correct_args(self):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
+    def test_given_not_BL_and_dash_separated_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test-module-IOC-01")
 
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", "IOC", "test-module-IOC-01")
 
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_ioc_called_with_correct_args(self):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=True)
 
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-02", "test-module-IOC-02", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", "IOC", "test-module-IOC-02")
 
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_ioc_called_with_correct_args(self):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module", fullname=True)
 
-        ioc_c_mock.assert_called_once_with("test/test-module-IOC-01", "test-module-IOC-01", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", "IOC", "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_ioc_called_with_correct_args(self, mock_is_repo_path):
-
-        ioc_c_mock = self.mocks['CreatorIOC']
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self, mock_is_repo_path):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/01", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        ioc_c_mock.assert_called_once_with("test/module", "test-module-IOC-01", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", "IOC", "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_ioc_add_to_module_called_with_correct_args(self, mock_is_repo_path):
-
-        ioc_os_c_mock = self.mocks['CreatorIOCAddToModule']
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self, mock_is_repo_path):
 
         new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
-        ioc_os_c_mock.assert_called_once_with("test/module", "test-module-IOC-02", "ioc")
+        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", "IOC", "test-module-IOC-02")
 
-    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
+    def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator_ioc("test/BL")
 
-        iocbl_c_mock.assert_called_once_with("test/BL", "test", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", "IOCBL", "test")
 
-    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_ioc_bl_called_with_correct_args(self):
-
-        iocbl_c_mock = self.mocks['CreatorIOCBL']
+    def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = nmc.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
 
-        iocbl_c_mock.assert_called_once_with("test/test-BL-IOC-01", "test-BL-IOC-01", "ioc")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", "IOCBL", "test-BL-IOC-01")
 
 
 class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
@@ -224,161 +235,23 @@ class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
 
 class NewModuleCreatorClassInitTest(unittest.TestCase):
 
-    def test_given_reasonable_input_then_initialisation_is_successful(self):
+    @patch('dls_ade.new_module_creator.ModuleTemplate')
+    def test_given_reasonable_input_then_initialisation_is_successful(self, mock_MT):
 
-        base_c = nmc.NewModuleCreator("test_module", "test_area")  # non-existent module and area
+        base_c = nmc.NewModuleCreator("test_module", "test_area", mock_MT())  # non-existent module and area
 
 
 class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
 
-    def setUp(self):
+    def test_given_function_called_then_module_template_version_called(self):
 
-        self.patch_os = patch('dls_ade.new_module_creator.os')
+        mock_mod_t = MagicMock()
 
-        self.addCleanup(self.patch_os.stop)
+        nmc_obj = nmc.NewModuleCreator("test_module", "test_area", mock_mod_t)
 
-        self.mock_os = self.patch_os.start()
+        nmc_obj.set_template_files_from_folder("test_folder", True)
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
-
-        self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
-
-    def test_given_template_folder_is_not_directory_then_exception_raised_with_correct_message(self):
-
-        self.mock_os.path.isdir.return_value = False
-
-        comp_message = "The template folder {template_folder:s} does not exist".format(template_folder="test_template_folder")
-
-        with patch.object(builtins, 'open', self.open_mock):
-            with self.assertRaises(nmc.Error) as e:
-                self.nmc_obj.set_template_files_from_folder("test_template_folder")
-
-        self.assertEqual(str(e.exception), comp_message)
-
-    def test_given_files_directly_in_folder_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.txt", "file2.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
-
-    def test_given_files_nested_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder", "", ["file1.txt", "file2.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
-
-    def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
-
-    def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.nmc_obj.module_template.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder", True)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here",
-                     "non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
-
-    def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.nmc_obj.module_template.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder", False)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
-
-    def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.nmc_obj.module_template.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.set_template_files_from_folder("test_template_folder", True)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here",
-                     "conflicting_file.txt": "I am the modified conflicting file text"}
-
-        self.assertEqual(comp_dict, self.nmc_obj.module_template.template_files)
+        mock_mod_t.set_template_files_from_folder.assert_called_once_with("test_folder", True)
 
 
 class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
@@ -391,7 +264,7 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
         self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_get_existing_remote_repo_paths_returns_non_empty_list_then_exception_raised_with_correct_message(self):
 
@@ -425,7 +298,7 @@ class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
         self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
         self.mock_is_repo_path = self.patch_is_repo_path.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_one_of_dir_list_exists_then_directory_returned_in_list(self):
 
@@ -461,7 +334,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.pathf.prodModule', return_value='prod_module')
     def test_correct_dir_list_returned(self, mock_prod, mock_vend):
 
-        nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
         dir_list = nmc_obj._get_remote_dir_list()
 
         self.assertEqual(dir_list, [nmc_obj.server_repo_path, 'vendor_module', 'prod_module'])
@@ -480,7 +353,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_is_git_dir = self.patch_is_git_dir.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
 
@@ -552,7 +425,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
         self.mock_verify_remote_repo = self.patch_verify_remote_repo.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
 
@@ -644,22 +517,23 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         self.patch_os = patch('dls_ade.new_module_creator.os')
         self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-        self.patch_create_files = patch('dls_ade.new_module_creator.ModuleTemplate.create_files')
         self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
 
         self.addCleanup(self.patch_os.stop)
         self.addCleanup(self.patch_vcs_git.stop)
-        self.addCleanup(self.patch_create_files.stop)
         self.addCleanup(self.patch_verify_can_create_local_module.stop)
 
         self.mock_os = self.patch_os.start()
         self.mock_vcs_git = self.patch_vcs_git.start()
-        self.mock_create_files = self.patch_create_files.start()
         self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
+
+        self.mock_module_template = MagicMock()
+        self.mock_create_files = self.mock_module_template.create_files
+
 
         # self.mock_os.return_value = "Example"
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", self.mock_module_template)
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -727,185 +601,6 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_os.makedirs.assert_called_once_with(self.nmc_obj.disk_dir)
 
 
-class NewModuleCreatorCreateFilesTest(unittest.TestCase):
-
-    def setUp(self):
-
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
-
-    @patch('dls_ade.new_module_creator.ModuleTemplate._create_files_from_template_dict')
-    def test_create_files_from_template_called(self, mock_create_files_from_template):
-
-        self.nmc_obj.module_template.create_files()
-
-        mock_create_files_from_template.assert_called_once_with()
-
-
-class NewModuleCreatorCreateFilesFromTemplateDictTest(unittest.TestCase):
-
-    def setUp(self):
-
-        self.patch_isdir = patch('dls_ade.new_module_creator.os.path.isdir')
-        self.patch_makedirs = patch('dls_ade.new_module_creator.os.makedirs')
-        self.patch_isfile = patch('dls_ade.new_module_creator.os.path.isfile')
-        self.addCleanup(self.patch_isdir.stop)
-        self.addCleanup(self.patch_makedirs.stop)
-        self.addCleanup(self.patch_isfile.stop)
-        self.mock_isdir = self.patch_isdir.start()
-        self.mock_makedirs = self.patch_makedirs.start()
-        self.mock_isfile = self.patch_isfile.start()
-
-        self.mock_isdir.return_value = False
-        self.mock_isfile.return_value = False
-
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
-        self.nmc_obj.module_template.placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
-        self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
-
-    def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
-
-        self.nmc_obj.module_template.template_files = {"folder_name/": "Written contents"}
-        comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
-
-        with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
-            with self.assertRaises(Exception) as e:
-                self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.assertEqual(str(e.exception), comp_message)
-        self.assertFalse(self.open_mock.called)
-        file_handle_mock = self.open_mock()
-        self.assertFalse(file_handle_mock.write.called)
-
-    def test_given_single_file_that_already_exists_then_file_not_created(self):
-
-        self.nmc_obj.module_template.template_files = {"already_exists.txt": "Written contents"}
-        self.mock_isfile.return_value = True
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.assertFalse(self.open_mock.called)
-
-        file_handle_mock = self.open_mock()
-        self.assertFalse(file_handle_mock.called)
-
-    def test_given_single_file_then_file_created_and_correctly_written_to(self):
-
-        self.nmc_obj.module_template.template_files = {"file1.txt": "Written contents"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.open_mock.assert_called_once_with("file1.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_any_call("Written contents")
-
-    def test_given_single_file_in_folder_that_does_not_exist_then_folder_and_file_created_and_file_correctly_written_to(self):
-
-        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.mock_makedirs.asset_called_once_with("test_folder")
-        self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_any_call("Written contents")
-
-    def test_given_single_file_in_folder_that_exists_then_folder_not_created_but_file_created_and_file_correctly_written_to(self):
-
-        self.mock_isdir.return_value = True
-
-        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.assertFalse(self.mock_makedirs.called)
-        self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_any_call("Written contents")
-
-    def test_given_two_files_in_separate_folders_then_both_folders_created_and_files_correctly_written_to(self):
-
-        self.nmc_obj.module_template.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.mock_makedirs.assert_has_calls([call("test_folder1"), call("test_folder2")], any_order=True)
-
-        self.open_mock.assert_has_calls([call("test_folder1/file1.txt", "w"), call("test_folder2/file2.txt", "w")], any_order=True)
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_has_calls([call("Written contents1"), call("Written contents2")], any_order=True)
-
-    def test_given_two_files_in_same_folder_then_both_created_and_written_to_but_directory_only_made_once(self):
-
-        self.mock_isdir.side_effect = [False, True]
-
-        self.nmc_obj.module_template.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.mock_makedirs.assert_called_once_with("test_folder")
-
-        self.open_mock.assert_has_calls([call("test_folder/file1.txt", "w"), call("test_folder/file2.txt", "w")], any_order=True)
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_has_calls([call("Written contents1"), call("Written contents2")], any_order=True)
-
-    def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
-
-        self.nmc_obj.module_template.template_files = {"{arg:s}.txt": "Written contents"}
-        self.nmc_obj.module_template.placeholders = {'arg': "my_argument"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.open_mock.assert_called_once_with("my_argument.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_any_call("Written contents")
-
-    def test_given_args_and_template_then_arguments_are_inserted_correctly(self):
-
-        self.nmc_obj.module_template.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.open_mock.assert_called_once_with("file1.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_called_once_with("argument_1 and argument_2")
-
-    def test_given_nested_directory_then_folder_and_file_both_created_and_file_correctly_written_to(self):
-
-        self.nmc_obj.module_template.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.mock_makedirs.assert_called_once_with("test_folder/another_folder/yet_another_folder")
-
-        self.open_mock.assert_called_once_with("test_folder/another_folder/yet_another_folder/file.txt", "w")
-
-        file_handle_mock = self.open_mock()
-        file_handle_mock.write.assert_called_once_with("Written contents")
-
-    def test_given_file_with_no_folder_then_makedirs_not_called(self):
-
-        self.nmc_obj.module_template.template_files = {"file.txt": "Written contents"}
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.nmc_obj.module_template._create_files_from_template_dict()
-
-        self.assertFalse(self.mock_makedirs.called)
 
 
 # TODO(Martin) -----------------------------------------------------------------------------------------------------------------
@@ -927,7 +622,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
         self.mock_add_new_remote_and_push = self.patch_add_new_remote_and_push.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area")
+        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -965,147 +660,12 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj.server_repo_path, self.nmc_obj.disk_dir)
 
 
-# Add tests for all derived NewModuleCreator classes
-
-
-class NewModuleCreatorToolsPrintMessageTest(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
-
-        nmc_obj = nmc.NewModuleCreatorTools('test_module_path', 'test_area')
-
-        comp_message = ("\nPlease add your patch files to the test_module_path "
-                        "\ndirectory and edit test_module_path/build script "
-                        "appropriately")
-
-        nmc_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
-
-
-class NewModuleCreatorPythonPrintMessageTest(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
-
-        nmc_obj = nmc.NewModuleCreatorPython('test_module_path', 'test_area')
-
-        message_dict = {'module_path': "test_module_path",
-                        'setup_path': "test_module_path/setup.py"}
-
-        comp_message = ("\nPlease add your python files to the {module_path:s} "
-                        "\ndirectory and edit {setup_path} appropriately.")
-        comp_message = comp_message.format(**message_dict)
-
-        nmc_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
-
-
-class NewModuleCreatorWithAppsPrintMessageTest(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
-
-        nmc_obj = nmc.NewModuleCreatorWithApps('test_module_path', 'test_area')
-
-        message_dict = {
-            'RELEASE': "test_module_path/configure/RELEASE",
-            'srcMakefile': "test_module_path/test_module_pathApp/src/Makefile",
-            'DbMakefile': "test_module_path/test_module_pathApp/Db/Makefile"
-        }
-
-        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
-                        "for dependencies.\nYou can also add dependencies to "
-                        "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
-        comp_message = comp_message.format(**message_dict)
-
-        nmc_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
-
-
-class NewModuleCreatorSupportCreateFiles(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.os.system')
-    @patch('dls_ade.new_module_creator.NewModuleCreatorSupport._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
-
-        nmc_obj = nmc.NewModuleCreatorSupport('test_module_path', 'test_area')
-
-        nmc_obj._create_files()
-
-        os_system_call_list = [call("makeBaseApp.pl -t dls {mod_path:s}".format(mod_path="test_module_path")), call("dls-make-etc-dir.py && make clean uninstall")]
-
-        mock_os_system.assert_has_calls(os_system_call_list)
-        mock_create_from_dict.assert_called_once_with()
-
-
-class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.shutil.rmtree')
-    @patch('dls_ade.new_module_creator.os.system')
-    @patch('dls_ade.new_module_creator.NewModuleCreatorIOC._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
-
-        nmc_obj = nmc.NewModuleCreatorIOC('test_module_path', 'test_app_name', 'test_area')
-
-        nmc_obj._create_files()
-
-        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
-
-        mock_rmtree.assert_called_once_with(os.path.join("{app_name:s}App".format(app_name="test_app_name"), 'opi'))
-        mock_os_system.assert_has_calls(os_system_call_list)
-        mock_create_from_dict.assert_called_once_with()
-
-
-class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.os.system')
-    @patch('dls_ade.new_module_creator.NewModuleCreatorIOCBL._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
-
-        nmc_obj = nmc.NewModuleCreatorIOCBL('test_module_path', 'test_app_name', 'test_area')
-
-        nmc_obj._create_files()
-
-        mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
-        mock_create_from_dict.assert_called_once_with()
-
-
-class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
-
-        nmc_obj = nmc.NewModuleCreatorIOCBL('test_module_path', 'test_app', 'test_area')
-
-        message_dict = {
-            'RELEASE': "test_module_path/configure/RELEASE",
-            'srcMakefile': "test_module_path/test_appApp/src/Makefile",
-            'opi/edl': "test_module_path/test_appApp/opi/edl"
-        }
-
-        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
-                        "for the ioc's other technical areas and path to scripts."
-                        "\nAlso edit {srcMakefile:s} to add all database files "
-                        "from these technical areas.\nAn example set of screens"
-                        " has been placed in {opi/edl} . Please modify these.\n")
-
-        comp_message = comp_message.format(**message_dict)
-
-        nmc_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
-
-
-class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
+class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._get_existing_remote_repo_paths')
-        self.patch_check_if_remote_repo_has_app = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._check_if_remote_repo_has_app')
+        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._get_existing_remote_repo_paths')
+        self.patch_check_if_remote_repo_has_app = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
 
         self.addCleanup(self.patch_get_existing_remote_repo_paths.stop)
         self.addCleanup(self.patch_check_if_remote_repo_has_app.stop)
@@ -1113,7 +673,7 @@ class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
         self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
 
@@ -1151,7 +711,7 @@ class NewModuleCreatorIOCAddToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.assertTrue(self.nmc_obj._remote_repo_valid)
 
 
-class NewModuleCreatorIOCAddToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
+class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def setUp(self):
 
@@ -1170,7 +730,7 @@ class NewModuleCreatorIOCAddToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_rmtree = self.patch_rmtree.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
 
@@ -1240,11 +800,11 @@ class NewModuleCreatorIOCAddToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.mock_rmtree.assert_called_once_with("tempdir")
 
 
-class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):
+class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule.verify_can_push_repo_to_remote')
+        self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule.verify_can_push_repo_to_remote')
         self.patch_push_to_remote = patch('dls_ade.new_module_creator.vcs_git.push_to_remote')
 
         self.addCleanup(self.patch_verify_can_push_repo_to_remote.stop)
@@ -1253,7 +813,7 @@ class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
         self.mock_push_to_remote = self.patch_push_to_remote.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -1290,28 +850,29 @@ class NewModuleCreatorIOCAddToModulePushRepoToRemoteTest(unittest.TestCase):
 
         self.mock_push_to_remote.assert_called_with(self.nmc_obj.disk_dir)
 
-class NewModuleCreatorIOCAddToModuleCreateLocalModuleTest(unittest.TestCase):
+
+class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
     def setUp(self):
 
             self.patch_chdir = patch('dls_ade.new_module_creator.os.chdir')
             self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-            self.patch_create_files = patch('dls_ade.new_module_creator.NewModuleCreatorIOCAddToModule._create_files')
             self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
 
             self.addCleanup(self.patch_chdir.stop)
             self.addCleanup(self.patch_vcs_git.stop)
-            self.addCleanup(self.patch_create_files.stop)
             self.addCleanup(self.patch_verify_can_create_local_module.stop)
 
             self.mock_chdir = self.patch_chdir.start()
             self.mock_vcs_git = self.patch_vcs_git.start()
-            self.mock_create_files = self.patch_create_files.start()
             self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
+
+            self.mock_module_template = MagicMock()
+            self.mock_create_files = self.mock_module_template.create_files
 
             # self.mock_os.return_value = "Example"
 
-            self.nmc_obj = nmc.NewModuleCreatorIOCAddToModule("test_module", "test_app", "test_area")
+            self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template, "test_app")
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -1357,3 +918,494 @@ class NewModuleCreatorIOCAddToModuleCreateLocalModuleTest(unittest.TestCase):
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
+
+
+class ModuleTemplateCreateFilesTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.ModuleTemplate._create_files_from_template_dict')
+    def test_create_files_from_template_dict_called(self, mock_create_files_from_template):
+
+        mt_obj = nmc.ModuleTemplate()
+
+        mt_obj.create_files()
+
+        mock_create_files_from_template.assert_called_once_with()
+
+
+class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_isdir = patch('dls_ade.new_module_creator.os.path.isdir')
+        self.patch_makedirs = patch('dls_ade.new_module_creator.os.makedirs')
+        self.patch_isfile = patch('dls_ade.new_module_creator.os.path.isfile')
+        self.addCleanup(self.patch_isdir.stop)
+        self.addCleanup(self.patch_makedirs.stop)
+        self.addCleanup(self.patch_isfile.stop)
+        self.mock_isdir = self.patch_isdir.start()
+        self.mock_makedirs = self.patch_makedirs.start()
+        self.mock_isfile = self.patch_isfile.start()
+
+        self.mock_isdir.return_value = False
+        self.mock_isfile.return_value = False
+
+        self.mt_obj = nmc.ModuleTemplate()
+        self.mt_obj.placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
+        self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
+
+    def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
+
+        self.mt_obj.template_files = {"folder_name/": "Written contents"}
+        comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
+
+        with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
+            with self.assertRaises(Exception) as e:
+                self.mt_obj._create_files_from_template_dict()
+
+        self.assertEqual(str(e.exception), comp_message)
+        self.assertFalse(self.open_mock.called)
+        file_handle_mock = self.open_mock()
+        self.assertFalse(file_handle_mock.write.called)
+
+    def test_given_single_file_that_already_exists_then_file_not_created(self):
+
+        self.mt_obj.template_files = {"already_exists.txt": "Written contents"}
+        self.mock_isfile.return_value = True
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.assertFalse(self.open_mock.called)
+
+        file_handle_mock = self.open_mock()
+        self.assertFalse(file_handle_mock.called)
+
+    def test_given_single_file_then_file_created_and_correctly_written_to(self):
+
+        self.mt_obj.template_files = {"file1.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.open_mock.assert_called_once_with("file1.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_any_call("Written contents")
+
+    def test_given_single_file_in_folder_that_does_not_exist_then_folder_and_file_created_and_file_correctly_written_to(self):
+
+        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.mock_makedirs.asset_called_once_with("test_folder")
+        self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_any_call("Written contents")
+
+    def test_given_single_file_in_folder_that_exists_then_folder_not_created_but_file_created_and_file_correctly_written_to(self):
+
+        self.mock_isdir.return_value = True
+
+        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.assertFalse(self.mock_makedirs.called)
+        self.open_mock.assert_called_once_with("test_folder/file1.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_any_call("Written contents")
+
+    def test_given_two_files_in_separate_folders_then_both_folders_created_and_files_correctly_written_to(self):
+
+        self.mt_obj.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.mock_makedirs.assert_has_calls([call("test_folder1"), call("test_folder2")], any_order=True)
+
+        self.open_mock.assert_has_calls([call("test_folder1/file1.txt", "w"), call("test_folder2/file2.txt", "w")], any_order=True)
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_has_calls([call("Written contents1"), call("Written contents2")], any_order=True)
+
+    def test_given_two_files_in_same_folder_then_both_created_and_written_to_but_directory_only_made_once(self):
+
+        self.mock_isdir.side_effect = [False, True]
+
+        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.mock_makedirs.assert_called_once_with("test_folder")
+
+        self.open_mock.assert_has_calls([call("test_folder/file1.txt", "w"), call("test_folder/file2.txt", "w")], any_order=True)
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_has_calls([call("Written contents1"), call("Written contents2")], any_order=True)
+
+    def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
+
+        self.mt_obj.template_files = {"{arg:s}.txt": "Written contents"}
+        self.mt_obj.placeholders = {'arg': "my_argument"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.open_mock.assert_called_once_with("my_argument.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_any_call("Written contents")
+
+    def test_given_args_and_template_then_arguments_are_inserted_correctly(self):
+
+        self.mt_obj.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.open_mock.assert_called_once_with("file1.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_called_once_with("argument_1 and argument_2")
+
+    def test_given_nested_directory_then_folder_and_file_both_created_and_file_correctly_written_to(self):
+
+        self.mt_obj.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.mock_makedirs.assert_called_once_with("test_folder/another_folder/yet_another_folder")
+
+        self.open_mock.assert_called_once_with("test_folder/another_folder/yet_another_folder/file.txt", "w")
+
+        file_handle_mock = self.open_mock()
+        file_handle_mock.write.assert_called_once_with("Written contents")
+
+    def test_given_file_with_no_folder_then_makedirs_not_called(self):
+
+        self.mt_obj.template_files = {"file.txt": "Written contents"}
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._create_files_from_template_dict()
+
+        self.assertFalse(self.mock_makedirs.called)
+
+
+class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_os = patch('dls_ade.new_module_creator.os')
+
+        self.addCleanup(self.patch_os.stop)
+
+        self.mock_os = self.patch_os.start()
+
+        self.mt_obj = nmc.ModuleTemplate()
+
+        self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
+
+    def test_given_template_folder_is_not_directory_then_exception_raised_with_correct_message(self):
+
+        self.mock_os.path.isdir.return_value = False
+
+        comp_message = "The template folder {template_folder:s} does not exist".format(template_folder="test_template_folder")
+
+        with patch.object(builtins, 'open', self.open_mock):
+            with self.assertRaises(nmc.Error) as e:
+                self.mt_obj.set_template_files_from_folder("test_template_folder")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_files_directly_in_folder_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+    def test_given_files_nested_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+    def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+    def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mt_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder", True)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here",
+                     "non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+    def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mt_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder", False)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+    def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mt_obj.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj.set_template_files_from_folder("test_template_folder", True)
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here",
+                     "conflicting_file.txt": "I am the modified conflicting file text"}
+
+        self.assertEqual(comp_dict, self.mt_obj.template_files)
+
+# TODO -----------------------------------------------------------------------------------------------------------------------------------------------
+# Tests for ModuleTemplate Subclasses
+
+
+class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mt_obj = nmc.ModuleTemplateTools()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area"})
+
+        comp_message = ("\nPlease add your patch files to the test_module_path "
+                        "\ndirectory and edit test_module_path/build script "
+                        "appropriately")
+
+        mt_obj.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
+
+class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mt_obj = nmc.ModuleTemplatePython()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area"})
+        message_dict = {'module_path': "test_module_path",
+                        'setup_path': "test_module_path/setup.py"}
+
+        comp_message = ("\nPlease add your python files to the {module_path:s} "
+                        "\ndirectory and edit {setup_path} appropriately.")
+        comp_message = comp_message.format(**message_dict)
+
+        mt_obj.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
+
+class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mt_obj = nmc.ModuleTemplateSupportAndIOC()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area",
+                                    'app_name': "test_app_name"})
+        message_dict = {
+            'RELEASE': "test_module_path/configure/RELEASE",
+            'srcMakefile': "test_module_path/test_app_nameApp/src/Makefile",
+            'DbMakefile': "test_module_path/test_app_nameApp/Db/Makefile"
+        }
+
+        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                        "for dependencies.\nYou can also add dependencies to "
+                        "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
+        comp_message = comp_message.format(**message_dict)
+
+        mt_obj.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+
+
+class ModuleTemplateSupportCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.ModuleTemplateSupport._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+
+        mt_obj = nmc.ModuleTemplateSupport()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area",
+                                    'app_name': "test_app_name"})
+
+        mt_obj.create_files()
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {mod_path:s}".format(mod_path="test_app_name")), call("dls-make-etc-dir.py && make clean uninstall")]
+
+        mock_os_system.assert_has_calls(os_system_call_list)
+        mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.shutil.rmtree')
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.ModuleTemplateIOC._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
+
+        mt_obj = nmc.ModuleTemplateIOC()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area",
+                                    'app_name': "test_app_name"})
+
+        mt_obj.create_files()
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        mock_rmtree.assert_called_once_with(os.path.join("{app_name:s}App".format(app_name="test_app_name"), 'opi'))
+        mock_os_system.assert_has_calls(os_system_call_list)
+        mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.os.system')
+    @patch('dls_ade.new_module_creator.ModuleTemplateIOCBL._create_files_from_template_dict')
+    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+
+        mt_obj = nmc.ModuleTemplateIOCBL()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area",
+                                    'app_name': "test_app_name"})
+
+        mt_obj.create_files()
+
+        mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
+        mock_create_from_dict.assert_called_once_with()
+
+
+class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
+
+    @patch('dls_ade.new_module_creator.print', create=True)
+    def test_given_print_message_called_then_message_printed(self, mock_print):
+
+        mt_obj = nmc.ModuleTemplateIOCBL()
+
+        mt_obj.placeholders.update({'module_path': "test_module_path",
+                                    'area': "test_area",
+                                    'app_name': "test_app_name"})
+
+        message_dict = {
+            'RELEASE': "test_module_path/configure/RELEASE",
+            'srcMakefile': "test_module_path/test_app_nameApp/src/Makefile",
+            'opi/edl': "test_module_path/test_app_nameApp/opi/edl"
+        }
+
+        comp_message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                        "for the ioc's other technical areas and path to scripts."
+                        "\nAlso edit {srcMakefile:s} to add all database files "
+                        "from these technical areas.\nAn example set of screens"
+                        " has been placed in {opi/edl} . Please modify these.\n")
+
+        comp_message = comp_message.format(**message_dict)
+
+        mt_obj.print_message()
+
+        mock_print.assert_called_once_with(comp_message)
+

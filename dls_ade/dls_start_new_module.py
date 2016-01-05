@@ -90,6 +90,9 @@ def main():
         #nmc_obj.push_repo_to_remote()
         print("push_repo_to_remote placeholder")
         # I want to test push_repo_to_remote() properly before I uncomment this
+        #nmc_obj.add_contact()
+        print("add_contact placeholder")
+        # Need to implement add_contact function, using Gary's function
     else:
         os.chdir(nmc_obj.disk_dir)
 
