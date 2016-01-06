@@ -133,7 +133,6 @@ def get_new_module_creator_ioc(module_name, fullname=False):
     technical_area = cols[1]
     dash_separated = "/" not in module_name
 
-    # TODO(Martin) - should I add extra validation checks on the input?
     if technical_area == "BL":
         module_template_cls = ModuleTemplateIOCBL
         if dash_separated:
@@ -284,26 +283,6 @@ class NewModuleCreator(object):
 
         self._can_push_repo_to_remote = False
         """bool: Specifies whether push_repo_to_remote can be called"""
-
-    def set_template_files_from_folder(self, template_folder, update=False):
-        """Sets `template_files` from a folder passed to it.
-
-        If update is 'True', then the dictionary is updated, not overwritten.
-
-        Note:
-            All hidden files and folders (apart from '.' and '..') will be
-            included.
-
-        Args:
-            template_folder: The relative or absolute path to template folder.
-                Inside, all files and folders can use {value:s} placeholders
-                to allow completion using `template_args` attribute.
-            update: If True, `template_files` will be updated
-
-        """
-
-        self.module_template.set_template_files_from_folder(template_folder,
-                                                            update)
 
     def verify_remote_repo(self):
         """Verifies there are no name conflicts with the remote repository.
@@ -555,7 +534,7 @@ class NewModuleCreatorWithApps(NewModuleCreator):
             self.app_name = self.module_name
 
         self.module_template.set_placeholders({'app_name': self.app_name},
-                                              True)
+                                              update=True)
 
 
 class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
@@ -731,14 +710,6 @@ class ModuleTemplate(object):
         {template_arg:s} for use with the string .format() method, each
         evaluated using the `template_args` attribute."""
 
-        # TODO(Martin) Sort out
-        self.required_placeholders = [
-            'module_name', 'module_path', 'getlogin'
-        ]
-        """dict: List of all placeholders used by default.
-        These are the placeholders used either in the printed message, or as
-        part of the file creation process."""
-
         self.placeholders = {}
         """dict: Dictionary for module-specific phrases in template_files
         Used for including module-specific phrases such as `module_name`"""
@@ -848,12 +819,7 @@ class ModuleTemplateTools(ModuleTemplate):
 
     def __init__(self):
         """Initialise placeholders and default template files."""
-        super(ModuleTemplateTools, self).__init__()
-
-        # TODO(Martin) Sort out
-        self.required_placeholders = {'module_name': "module_name",
-                                      'module_path': "module_path",
-                                      'getlogin': "user_login"}
+        # super(ModuleTemplateTools, self).__init__()
 
         initial_template_files = obtain_template_files("tools")
 
@@ -876,11 +842,6 @@ class ModuleTemplatePython(ModuleTemplate):
     def __init__(self):
         """Initialise placeholders and default template files."""
         super(ModuleTemplatePython, self).__init__()
-
-        # TODO(Martin) Sort out
-        self.required_placeholders = {'module_name': "module_name",
-                                 'module_path': "module_path",
-                                 'getlogin': "user_login"}
 
         initial_template_files = obtain_template_files("python")
 
@@ -906,16 +867,6 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
     ensure that the app_name value exists
 
     """
-
-    def __init__(self):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplateSupportAndIOC, self).__init__()
-
-        # TODO(Martin) Sort out
-        self.required_placeholders.append('app_name')
-
-        # TODO(Martin) Sort out
-        # self.set_placeholders(self.required_placeholders)
 
     def print_message(self):
         # This message is shared between support and IOC

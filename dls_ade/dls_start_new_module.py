@@ -24,16 +24,7 @@ usage = ("Default <area> is 'support'."
          "BL02I-VA-IOC-03 instead of BL02I/VA/03\nOtherwise it will be "
          "imported as BL02I/VA (old naming style)\nIf the Technical area is "
          "BL then a different template is used, to create a top level "
-         "module for screens and gda."
-         "\nIf the template-folder optional argument is given, the module "
-         "will be created using the given folder as a template. It is able "
-         "to use {module_name:s}, {get_login:s}, and for IOC or support "
-         "modules {app_name:s} to insert the module name, user login and "
-         "application name (phrase before 'App' in support and IOC modules), "
-         "respectively. This can be used in both folders and text files."
-         "\nIf the --template-update flag is used, the template folder will "
-         "update the existing template dictionary, as opposed to overwriting "
-         "it.")
+         "module for screens and gda.")
 
 
 def make_parser():
@@ -48,14 +39,6 @@ def make_parser():
     parser.add_argument(
         "-f", "--fullname", action="store_true", dest="fullname",
         help="create new-style ioc, with full ioc name in path")
-    parser.add_argument(
-        "-t", "--template-folder", action="store", type=str,
-        default=None, dest="template_folder",
-        help="New modules will use this as the template directory")
-    parser.add_argument(
-        "-u", "--template-update", action="store_true", dest="template_update",
-        help=("Will update the original module templates"
-              " as opposed to overwriting them"))
 
     return parser
 
@@ -69,8 +52,6 @@ def main():
     area = args.area
     fullname = args.fullname
     no_import = args.no_import
-    template_folder = args.template_folder
-    template_update = args.template_update
 
     nmc_obj = new_c.get_new_module_creator(module_name, area, fullname)
 
@@ -79,19 +60,15 @@ def main():
     if not no_import:
         nmc_obj.verify_remote_repo()
 
-    if template_folder:
-        nmc_obj.set_template_files_from_folder(template_folder,
-                                               template_update)
-
     nmc_obj.create_local_module()
     nmc_obj.print_message()
 
     if not no_import:
         #nmc_obj.push_repo_to_remote()
-        print("push_repo_to_remote placeholder")
+        print("push_repo_to_remote")
         # I want to test push_repo_to_remote() properly before I uncomment this
         #nmc_obj.add_contact()
-        print("add_contact placeholder")
+        print("add_contact")
         # Need to implement add_contact function, using Gary's function
     else:
         os.chdir(nmc_obj.disk_dir)
