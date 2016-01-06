@@ -3,9 +3,9 @@
 
 from __future__ import print_function
 import sys
-from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
-from dls_ade import vcs_git
+from argument_parser import ArgParser
+import path_functions as path
+import vcs_git
 
 usage = """
 Default <area> is 'support'.
@@ -40,11 +40,11 @@ def print_module_list(source, area):
     :return: Null
     """
     split_list = vcs_git.get_repository_list()
-    prefix = len("controls/" + area) + 1
     print("Modules in " + area + ":\n")
     for module in split_list:
         if source in module:
-            print(module[prefix:])
+            # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
+            print(module.split('/', 2)[-1])
 
 
 def make_parser():
