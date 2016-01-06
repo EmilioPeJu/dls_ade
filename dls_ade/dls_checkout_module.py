@@ -111,14 +111,12 @@ def main():
         repo = vcs_git.clone(source, module)
 
         if args.branch:
-            # cd into new module and get remote branches
-            os.chdir(args.module_name)
+            # Get branches list
             branches = vcs_git.list_remote_branches(repo)
             if args.branch in branches:
                 vcs_git.checkout_remote_branch(args.branch, repo)
             else:
-                # Invalid branch name, print branches and ask user to
-                # re-enter the branch they want
+                # Invalid branch name, print branches list and exit
                 print("Branch '" + args.branch + "' does not exist in " + source +
                       "\nBranch List:\n")
                 for entry in branches:
