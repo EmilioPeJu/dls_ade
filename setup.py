@@ -29,7 +29,7 @@ setup(
     license='APACHE',
     install_requires = ['GitPython>=0.3.2', 'python-ldap>=2.3.12', 'six'],
     packages = ["dls_ade","dls_environment"],
-    package_data = {"dls_ade": build_scripts},
+    package_data = {"dls_ade": build_scripts, "dls_ade": ['new_module_templates/*']},
     # define console_scripts
     entry_points = { 'console_scripts':
                          ['dls-release.py = dls_ade.dls_release:main',] },
