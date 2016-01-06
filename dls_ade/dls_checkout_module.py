@@ -27,7 +27,7 @@ def make_parser():
     parser.add_argument("module_name", type=str, default="",
                         help="name of module to checkout")
     parser.add_argument("-b", "--branch", action="store", type=str, dest="branch",
-                        help="Checkout a branch rather than master")
+                        help="Checkout a specific named branch rather than the default (master)")
     parser.add_argument("-f", "--force", action="store_true", dest="force",
                         help="force the checkout, disable warnings")
     return parser
@@ -123,12 +123,6 @@ def main():
                       "\nBranch List:\n")
                 for entry in branches:
                     print(entry)
-                print("\nWhich branch would you like to checkout?")
-                branch = raw_input("Enter branch: ")
-                if branch in branches and branch != "master":
-                    vcs_git.checkout_remote_branch(branch, repo)
-                else:
-                    print("\nmaster branch checked out by default")
 
 
 if __name__ == "__main__":
