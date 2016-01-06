@@ -94,7 +94,7 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
         new_sup_creator = nmc.get_new_module_creator("test_module")  # Area automatically support
 
-        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'])
+        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'], "test_module")
 
     def test_given_area_is_tools_then_new_module_creator_returned_with_correct_args(self):
 
@@ -233,25 +233,38 @@ class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
 
 class NewModuleCreatorClassInitTest(unittest.TestCase):
 
-    @patch('dls_ade.new_module_creator.ModuleTemplate')
-    def test_given_reasonable_input_then_initialisation_is_successful(self, mock_MT):
+    def setUp(self):
 
-        base_c = nmc.NewModuleCreator("test_module", "test_area", mock_MT())  # non-existent module and area
+        self.patch_mt = patch('dls_ade.new_module_creator.ModuleTemplate')
+        self.addCleanup(self.patch_mt.stop)
+        self.mock_mt = self.patch_mt.start()
 
+    def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-class NewModuleCreatorSetTemplateFilesFromFolderTest(unittest.TestCase):
+        nmc.NewModuleCreator("test_module", "test_area", self.mock_mt)
 
-    def test_given_function_called_then_module_template_version_called(self):
+    @patch('os.getlogin', return_value='test_login')
+    def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
 
-        mock_mod_t = MagicMock()
-        mock_mod_t_obj = MagicMock()
-        mock_mod_t.return_value = mock_mod_t_obj
+        expected_dict = {'module_name': "test_module",
+                         'module_path': "test_module",
+                         'user_login': "test_login",
+                         'additional': "value"}
 
-        nmc_obj = nmc.NewModuleCreator("test_module", "test_area", mock_mod_t)
+        base_c = nmc.NewModuleCreator("test_module", "test_area", self.mock_mt, {'additional': "value"})
 
-        nmc_obj.set_template_files_from_folder("test_folder", True)
+        self.mock_mt.assert_called_once_with(expected_dict)
 
-        mock_mod_t_obj.set_template_files_from_folder.assert_called_once_with("test_folder", True)
+    @patch('os.getlogin', return_value='test_login')
+    def test_given_no_extra_placeholders_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
+
+        expected_dict = {'module_name': "test_module",
+                         'module_path': "test_module",
+                         'user_login': "test_login"}
+
+        base_c = nmc.NewModuleCreator("test_module", "test_area", self.mock_mt)
+
+        self.mock_mt.assert_called_once_with(expected_dict)
 
 
 class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
@@ -929,11 +942,87 @@ class ModuleTemplateCreateFilesTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplate._create_files_from_template_dict')
     def test_create_files_from_template_dict_called(self, mock_create_files_from_template):
 
-        mt_obj = nmc.ModuleTemplate()
+        mt_obj = nmc.ModuleTemplate({})
 
         mt_obj.create_files()
 
         mock_create_files_from_template.assert_called_once_with()
+
+
+class ModuleTemplateSetPlaceholdersTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mt_obj = nmc.ModuleTemplate({})
+
+        self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
+
+    def test_given_update_false_then_placeholders_overwritten_correctly(self):
+
+        self.mt_obj.set_placeholders({'arg3': "argument3"})
+
+        self.assertEqual(self.mt_obj._placeholders['arg3'], "argument3")
+
+        self.assertTrue(all(arg not in self.mt_obj._placeholders for arg in ['arg1', 'arg2']))
+
+    def test_given_update_true_then_placeholders_updated_correctly(self):
+
+        self.mt_obj.set_placeholders({'arg3': "argument3"}, update=True)
+
+        self.assertEqual(self.mt_obj._placeholders['arg1'], "argument1")
+        self.assertEqual(self.mt_obj._placeholders['arg2'], "argument2")
+        self.assertEqual(self.mt_obj._placeholders['arg3'], "argument3")
+
+
+class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mt_obj = nmc.ModuleTemplate({})
+
+        self.mt_obj._template_files = {'arg1': "argument1", 'arg2': "argument2"}
+
+    def test_given_update_false_then_template_files_overwritten_correctly(self):
+
+        self.mt_obj.set_template_files({'arg3': "argument3"})
+
+        self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
+
+        self.assertTrue(all(arg not in self.mt_obj._template_files for arg in ['arg1', 'arg2']))
+
+    def test_given_update_true_then_template_files_updated_correctly(self):
+
+        self.mt_obj.set_template_files({'arg3': "argument3"}, update=True)
+
+        self.assertEqual(self.mt_obj._template_files['arg1'], "argument1")
+        self.assertEqual(self.mt_obj._template_files['arg2'], "argument2")
+        self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
+
+
+class ModuleTemplateVerifyPlaceholders(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mt_obj = nmc.ModuleTemplate({})
+
+        self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
+
+    def test_given_required_placeholders_present_then_no_error_raised(self):
+
+        self.mt_obj._required_placeholders = ['arg1']
+
+        self.mt_obj.verify_placeholders()
+
+    def test_given_required_placeholders_not_present_then_error_raised_with_correct_message(self):
+
+        self.mt_obj._required_placeholders = ['arg1', 'arg3']
+
+        err_message = "All required placeholders must be supplied: arg1, arg3"
+
+        with self.assertRaises(nmc.VerificationError) as e:
+            self.mt_obj.verify_placeholders()
+
+        self.assertEqual(str(e.exception), err_message)
 
 
 class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
@@ -953,13 +1042,13 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isdir.return_value = False
         self.mock_isfile.return_value = False
 
-        self.mt_obj = nmc.ModuleTemplate()
-        self.mt_obj.placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
+        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj._placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
     def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
 
-        self.mt_obj.template_files = {"folder_name/": "Written contents"}
+        self.mt_obj._template_files = {"folder_name/": "Written contents"}
         comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
 
         with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
@@ -973,7 +1062,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_that_already_exists_then_file_not_created(self):
 
-        self.mt_obj.template_files = {"already_exists.txt": "Written contents"}
+        self.mt_obj._template_files = {"already_exists.txt": "Written contents"}
         self.mock_isfile.return_value = True
 
         with patch.object(builtins, 'open', self.open_mock):
@@ -986,7 +1075,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_then_file_created_and_correctly_written_to(self):
 
-        self.mt_obj.template_files = {"file1.txt": "Written contents"}
+        self.mt_obj._template_files = {"file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -998,7 +1087,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_in_folder_that_does_not_exist_then_folder_and_file_created_and_file_correctly_written_to(self):
 
-        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+        self.mt_obj._template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1013,7 +1102,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
         self.mock_isdir.return_value = True
 
-        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents"}
+        self.mt_obj._template_files = {"test_folder/file1.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1026,7 +1115,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_two_files_in_separate_folders_then_both_folders_created_and_files_correctly_written_to(self):
 
-        self.mt_obj.template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
+        self.mt_obj._template_files = {"test_folder1/file1.txt": "Written contents1", "test_folder2/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1042,7 +1131,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
         self.mock_isdir.side_effect = [False, True]
 
-        self.mt_obj.template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
+        self.mt_obj._template_files = {"test_folder/file1.txt": "Written contents1", "test_folder/file2.txt": "Written contents2"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1056,8 +1145,8 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
 
-        self.mt_obj.template_files = {"{arg:s}.txt": "Written contents"}
-        self.mt_obj.placeholders = {'arg': "my_argument"}
+        self.mt_obj._template_files = {"{arg:s}.txt": "Written contents"}
+        self.mt_obj._placeholders = {'arg': "my_argument"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1069,7 +1158,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_args_and_template_then_arguments_are_inserted_correctly(self):
 
-        self.mt_obj.template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
+        self.mt_obj._template_files = {"file1.txt": "{arg1:s} and {arg2:s}"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1081,7 +1170,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_nested_directory_then_folder_and_file_both_created_and_file_correctly_written_to(self):
 
-        self.mt_obj.template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
+        self.mt_obj._template_files = {"test_folder/another_folder/yet_another_folder/file.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1095,7 +1184,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
 
     def test_given_file_with_no_folder_then_makedirs_not_called(self):
 
-        self.mt_obj.template_files = {"file.txt": "Written contents"}
+        self.mt_obj._template_files = {"file.txt": "Written contents"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1113,7 +1202,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         self.mock_os = self.patch_os.start()
 
-        self.mt_obj = nmc.ModuleTemplate()
+        self.mt_obj = nmc.ModuleTemplate({})
 
         self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
 
@@ -1125,7 +1214,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         with patch.object(builtins, 'open', self.open_mock):
             with self.assertRaises(nmc.Error) as e:
-                self.mt_obj.set_template_files_from_folder("test_template_folder")
+                self.mt_obj._set_template_files_from_folder("test_template_folder")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -1141,11 +1230,11 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder")
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
     def test_given_files_nested_then_template_dict_correctly_created(self):
 
@@ -1159,11 +1248,11 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder")
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
     def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
 
@@ -1177,11 +1266,11 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder")
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
     def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
 
@@ -1190,14 +1279,14 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.mt_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+        self.mt_obj._template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder", True)
+            self.mt_obj._set_template_files_from_folder("test_template_folder", True)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
@@ -1205,7 +1294,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
                      "extra_folder2/file4.txt": "file4 text goes here",
                      "non_conflicting_file.txt": "I am the non-conflicting file text"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
     def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
 
@@ -1214,21 +1303,21 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.mt_obj.template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+        self.mt_obj._template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
         file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder", False)
+            self.mt_obj._set_template_files_from_folder("test_template_folder", False)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
                      "extra_folder2/file3.txt": "file3 text goes here",
                      "extra_folder2/file4.txt": "file4 text goes here"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
     def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
 
@@ -1237,14 +1326,14 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         self.mock_os.path.isdir.return_value = True
         file_handle_mock = self.open_mock()
 
-        self.mt_obj.template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
+        self.mt_obj._template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
 
         self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
 
         file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
 
         with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj.set_template_files_from_folder("test_template_folder", True)
+            self.mt_obj._set_template_files_from_folder("test_template_folder", True)
 
         comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
                      "extra_folder1/file2.txt": "file2 text goes here",
@@ -1252,10 +1341,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
                      "extra_folder2/file4.txt": "file4 text goes here",
                      "conflicting_file.txt": "I am the modified conflicting file text"}
 
-        self.assertEqual(comp_dict, self.mt_obj.template_files)
-
-# TODO -----------------------------------------------------------------------------------------------------------------------------------------------
-# Tests for ModuleTemplate Subclasses
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
 
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
@@ -1263,10 +1349,9 @@ class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateTools()
-
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area"})
+        mt_obj = nmc.ModuleTemplateTools({'module_name': "test_module_name",
+                                          'module_path': "test_module_path",
+                                          'user_login': "test_login"})
 
         comp_message = ("\nPlease add your patch files to the test_module_path "
                         "\ndirectory and edit test_module_path/build script "
@@ -1282,9 +1367,11 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplatePython()
+        mt_obj = nmc.ModuleTemplatePython({'module_name': "test_module_name",
+                                          'module_path': "test_module_path",
+                                          'user_login': "test_login"})
 
-        mt_obj.placeholders.update({'module_path': "test_module_path",
+        mt_obj._placeholders.update({'module_path': "test_module_path",
                                     'area': "test_area"})
         message_dict = {'module_path': "test_module_path",
                         'setup_path': "test_module_path/setup.py"}
@@ -1303,11 +1390,11 @@ class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateSupportAndIOC()
+        mt_obj = nmc.ModuleTemplateSupportAndIOC({'module_name': "test_module_name",
+                                                  'module_path': "test_module_path",
+                                                  'user_login': "test_login",
+                                                  'app_name': "test_app_name"})
 
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area",
-                                    'app_name': "test_app_name"})
         message_dict = {
             'RELEASE': "test_module_path/configure/RELEASE",
             'srcMakefile': "test_module_path/test_app_nameApp/src/Makefile",
@@ -1330,15 +1417,14 @@ class ModuleTemplateSupportCreateFiles(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateSupport._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
 
-        mt_obj = nmc.ModuleTemplateSupport()
-
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area",
-                                    'app_name': "test_app_name"})
+        mt_obj = nmc.ModuleTemplateSupport({'module_name': "test_module_name",
+                                            'module_path': "test_module_path",
+                                            'user_login': "test_login",
+                                            'app_name': "test_app_name"})
 
         mt_obj.create_files()
 
-        os_system_call_list = [call("makeBaseApp.pl -t dls {mod_path:s}".format(mod_path="test_app_name")), call("dls-make-etc-dir.py && make clean uninstall")]
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("dls-make-etc-dir.py && make clean uninstall")]
 
         mock_os_system.assert_has_calls(os_system_call_list)
         mock_create_from_dict.assert_called_once_with()
@@ -1351,11 +1437,10 @@ class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateIOC._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
 
-        mt_obj = nmc.ModuleTemplateIOC()
-
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area",
-                                    'app_name': "test_app_name"})
+        mt_obj = nmc.ModuleTemplateIOC({'module_name': "test_module_name",
+                                        'module_path': "test_module_path",
+                                        'user_login': "test_login",
+                                        'app_name': "test_app_name"})
 
         mt_obj.create_files()
 
@@ -1372,11 +1457,10 @@ class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateIOCBL._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
 
-        mt_obj = nmc.ModuleTemplateIOCBL()
-
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area",
-                                    'app_name': "test_app_name"})
+        mt_obj = nmc.ModuleTemplateIOCBL({'module_name': "test_module_name",
+                                          'module_path': "test_module_path",
+                                          'user_login': "test_login",
+                                          'app_name': "test_app_name"})
 
         mt_obj.create_files()
 
@@ -1389,11 +1473,10 @@ class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateIOCBL()
-
-        mt_obj.placeholders.update({'module_path': "test_module_path",
-                                    'area': "test_area",
-                                    'app_name': "test_app_name"})
+        mt_obj = nmc.ModuleTemplateIOCBL({'module_name': "test_module_name",
+                                          'module_path': "test_module_path",
+                                          'user_login': "test_login",
+                                          'app_name': "test_app_name"})
 
         message_dict = {
             'RELEASE': "test_module_path/configure/RELEASE",
