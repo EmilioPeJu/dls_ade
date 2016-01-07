@@ -26,9 +26,18 @@ log_mess = "%s: Released version %s. %s"
 
 def make_parser():
     """
-    Takes default parser and adds module_name, release, --branch, --force, --no-test-build,
-    --local-build-only, --epics_version, --message, --next_version, --git
-    and either --rhel_version or --windows arguments.
+    Takes default parser and adds:
+    * module_name
+    * release
+    * --branch
+    * --force
+    * --no-test-build
+    * --local-build-only
+    * --epics_version
+    * --message
+    * --next_version
+    * --git
+    * --rhel_version or --windows arguments
 
     Returns:
         ArgumentParser instance
