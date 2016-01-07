@@ -24,6 +24,10 @@ def is_repo_path(server_repo_path):
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
+    # list_cmd_output is some heading text followed by a module list in the form:
+    # R   W 	(alan.greer)	controls/support/ADAndor
+    # R   W 	(ronaldo.mercado)	controls/support/ethercat
+    # This is split to give a list that includes the module file paths, then checked against <server_repo_path>
 
     return server_repo_path in list_cmd_output
 
@@ -259,3 +263,6 @@ class Git(BaseVCS):
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"
+
+
+is_repo_path("test")
