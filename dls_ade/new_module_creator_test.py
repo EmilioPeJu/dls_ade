@@ -1573,4 +1573,4 @@ class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest
 
         mt_obj._set_template_files_from_area("tools")
 
-        self.assertEqual(mt_obj._template_files['build'], tools_files['build'])
+        self.assertEqual(mt_obj._template_files, tools_files)

@@ -210,6 +210,8 @@ target/
 
 """
 
+py_files['.gitattributes'] = """* module-contact={user_login:s}\n"""
+
 # tools_module: initial files for a tools module
 
 tools_files = {}
@@ -228,6 +230,10 @@ build()
 # vim: set filetype=sh:
 """
 
+tools_files['.gitattributes'] = """* module-contact={user_login:s}\n"""
+
 default_files = {}
 
 default_files['.gitignore'] = """bin\ndata\ndb\ndbd\ninclude\nlib\n"""  # Taken from svn:ignore statements
+
+default_files['.gitattributes'] = """* module-contact={user_login:s}\n"""

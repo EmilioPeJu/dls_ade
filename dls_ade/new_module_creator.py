@@ -893,7 +893,7 @@ class ModuleTemplateTools(ModuleTemplate):
         super(ModuleTemplateTools, self).__init__(placeholders)
 
         self._required_placeholders = [
-            'module_name', 'module_path'
+            'module_name', 'module_path', 'user_login'
         ]
 
         self._verify_placeholders()
@@ -947,7 +947,6 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
 
     For this class to work properly, the following placeholders must be
     specified upon initialisation:
-        - module_name
         - module_path
         - user_login
         - app_name
@@ -958,7 +957,7 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
         super(ModuleTemplateSupportAndIOC, self).__init__(placeholders)
 
         self._required_placeholders = [
-            'module_path', 'app_name'
+            'module_path', 'app_name', 'user_login'
         ]
 
         self._verify_placeholders()
