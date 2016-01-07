@@ -12,7 +12,7 @@ setup(
     author = '{user_login:s}',
     author_email = '{user_login:s}@fed.cclrc.ac.uk',
     packages = ['{module_name:s}'],
-#    entry_points = {'console_scripts': ['test-python-hello-world = {module_name:s}.{module_name:s}:main']}, # this makes a script
+#    entry_points = {{'console_scripts': ['test-python-hello-world = {module_name:s}.{module_name:s}:main']}}, # this makes a script
 #    include_package_data = True, # use this to include non python files
     zip_safe = False
     )

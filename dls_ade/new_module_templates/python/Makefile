@@ -17,7 +17,7 @@ dist: setup.py $(wildcard {module_name:s}/*.py)
 clean:
 	$(PYTHON) setup.py clean
 	-rm -rf build dist *egg-info installed.files prefix
-	-find -name '*.pyc' -exec rm {} \;
+	-find -name '*.pyc' -exec rm {{}} \;
 	$(MAKE) -C documentation clean
 
 # Install the built egg and keep track of what was installed

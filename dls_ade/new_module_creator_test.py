@@ -2,6 +2,9 @@ from __future__ import print_function
 
 import unittest
 import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 import dls_ade.new_module_creator as nmc
 from pkg_resources import require
@@ -190,45 +193,6 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         new_tools_creator = nmc.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], "test-BL-IOC-01")
-
-
-class NewModuleCreatorObtainTemplateFilesTest(unittest.TestCase):
-
-    def test_given_area_is_unknown_then_returns_empty_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("test_area")
-
-        self.assertEqual(template_dict, {})
-
-    def test_given_area_is_default_then_returns_default_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("default")
-
-        self.assertEqual(template_dict, default_files)
-
-    def test_given_area_is_ioc_then_returns_default_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("ioc")
-
-        self.assertEqual(template_dict, default_files)
-
-    def test_given_area_is_support_then_returns_default_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("support")
-
-        self.assertEqual(template_dict, default_files)
-
-    def test_given_area_is_python_then_returns_python_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("python")
-
-        self.assertEqual(template_dict, py_files)
-
-    def test_given_area_is_tools_then_returns_tools_dictionary(self):
-
-        template_dict = nmc.obtain_template_files("tools")
-
-        self.assertEqual(template_dict, tools_files)
 
 
 class NewModuleCreatorClassInitTest(unittest.TestCase):
@@ -999,7 +963,7 @@ class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
         self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
 
 
-class ModuleTemplateVerifyPlaceholders(unittest.TestCase):
+class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
 
     def setUp(self):
 
@@ -1023,6 +987,49 @@ class ModuleTemplateVerifyPlaceholders(unittest.TestCase):
             self.mt_obj.verify_placeholders()
 
         self.assertEqual(str(e.exception), err_message)
+
+
+class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_os = patch('dls_ade.new_module_creator.os')
+        self.patch_set_from_folder = patch('dls_ade.new_module_creator.ModuleTemplate._set_template_files_from_folder')
+        self.addCleanup(self.patch_os.stop)
+        self.addCleanup(self.patch_set_from_folder.stop)
+
+        self.mock_os = self.patch_os.start()
+        self.mock_set_from_folder = self.patch_set_from_folder.start()
+
+        # I want to retain these functions
+        self.mock_os.path.join = os.path.join
+        self.mock_os.path.dirname = os.path.dirname
+
+        self.mt_obj = nmc.ModuleTemplate({})
+
+    def test_given_template_folder_does_not_exist_then_exception_raised_with_correct_message(self):
+
+        self.mock_os.path.realpath.return_value = "test_dir/script_name"
+        self.mock_os.path.isdir.return_value = False
+
+        comp_message = ("Template folder test_dir/new_module_templates/non_existent does not exist. "
+                        "\nNote: This exception means there is a bug in the ModuleTemplate subclass code.")
+
+        with self.assertRaises(nmc.Error) as e:
+            self.mt_obj._set_template_files_from_area("non_existent")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_template_folder_does_exist_then_set_template_files_from_folder_called_with_correct_arguments(self):
+
+        self.mock_os.path.realpath.return_value = "test_dir/script_name"
+        self.mock_os.path.isdir.return_value = True
+
+        self.mt_obj._set_template_files_from_area("this_folder_exists")
+
+        self.mock_set_from_folder.assert_called_once_with("test_dir/new_module_templates/this_folder_exists")
+
+
 
 
 class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
@@ -1411,7 +1418,7 @@ class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
         mock_print.assert_called_once_with(comp_message)
 
 
-class ModuleTemplateSupportCreateFiles(unittest.TestCase):
+class ModuleTemplateSupportCreateFilesTest(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.os.system')
     @patch('dls_ade.new_module_creator.ModuleTemplateSupport._create_files_from_template_dict')
@@ -1430,7 +1437,7 @@ class ModuleTemplateSupportCreateFiles(unittest.TestCase):
         mock_create_from_dict.assert_called_once_with()
 
 
-class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
+class NewModuleCreatorIOCCreateFilesTest(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.shutil.rmtree')
     @patch('dls_ade.new_module_creator.os.system')
@@ -1451,7 +1458,7 @@ class NewModuleCreatorIOCCreateFiles(unittest.TestCase):
         mock_create_from_dict.assert_called_once_with()
 
 
-class NewModuleCreatorIOCBLCreateFiles(unittest.TestCase):
+class NewModuleCreatorIOCBLCreateFilesTest(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.os.system')
     @patch('dls_ade.new_module_creator.ModuleTemplateIOCBL._create_files_from_template_dict')
@@ -1496,3 +1503,30 @@ class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
 
         mock_print.assert_called_once_with(comp_message)
 
+
+# TODO(Martin) Remove temporary tests below for new_module_templates folder
+class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest.TestCase):
+
+    def test_default_files_equal(self):
+
+        mt_obj = nmc.ModuleTemplate({})
+
+        mt_obj._set_template_files_from_area("default")
+
+        self.assertEqual(mt_obj._template_files, default_files)
+
+    def test_python_files_equal(self):
+
+        mt_obj = nmc.ModuleTemplate({})
+
+        mt_obj._set_template_files_from_area("python")
+
+        self.assertEqual(mt_obj._template_files, py_files)
+
+    def test_tools_files_equal(self):
+
+        mt_obj = nmc.ModuleTemplate({})
+
+        mt_obj._set_template_files_from_area("tools")
+
+        self.assertEqual(mt_obj._template_files['build'], tools_files['build'])

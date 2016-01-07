@@ -5,7 +5,6 @@ import path_functions as pathf
 import shutil
 import tempfile
 import logging
-from new_module_templates import py_files, tools_files, default_files
 import vcs_git
 
 logging.basicConfig(level=logging.DEBUG)
@@ -188,26 +187,6 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             # that is different
             return NewModuleCreatorWithApps(module_path, area,
                                             module_template_cls, app_name)
-
-
-def obtain_template_files(area):
-    """Returns the default template_files dictionary for the given area.
-
-    Args:
-        area: The area of the module to be created.
-
-    Returns:
-        dict: The dictionary mapping file paths to document text.
-
-    """
-    if area in ["default", "ioc", "support"]:
-        return default_files
-    elif area == "python":
-        return py_files
-    elif area == "tools":
-        return tools_files
-    else:
-        return {}
 
 
 class VerificationError(Error):
@@ -720,7 +699,6 @@ class ModuleTemplate(object):
 
         self.verify_placeholders()
 
-
     def set_placeholders(self, extra_placeholders, update=False):
         """Set the placeholders using the given dictionary.
 
@@ -760,6 +738,38 @@ class ModuleTemplate(object):
                                     "supplied: " +
                                     str(", ".join(self._required_placeholders)))
 
+    def _set_template_files_from_area(self, template_area):
+        """Sets `template_files` from the templates folder in dls_ade.
+
+        Uses the new_module_templates folder to set the `template_files`.
+
+        Note:
+            "default" template contains a basic .gitignore file that can be
+            used by all modules.
+
+        Args:
+            template_area: The module area for obtaining the templates.
+
+        Raises:
+            Error: If template folder does not exist.
+
+        """
+        templates_folder = "new_module_templates"
+        template_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            templates_folder,
+            template_area
+        )
+
+        if not os.path.isdir(template_path):
+            err_message = ("Template folder {template_path:s} does not exist. "
+                           "\nNote: This exception means there is a bug in "
+                           "the ModuleTemplate subclass code.")
+
+            raise Error(err_message.format(template_path=template_path))
+
+        self._set_template_files_from_folder(template_path)
+
     def _set_template_files_from_folder(self, template_folder, update=False):
         """Sets `template_files` from a folder passed to it.
 
@@ -774,6 +784,9 @@ class ModuleTemplate(object):
                 Inside, all files and folders can use {value:s} placeholders
                 to allow completion using `template_args` attribute.
             update: If True, `_template_files` will be updated
+
+        Raises:
+            Error: If `template_folder` does not exist.
 
         """
         if not os.path.isdir(template_folder):
@@ -848,8 +861,8 @@ class ModuleTemplate(object):
         raise NotImplementedError
 
 
-class ModuleTemplateToolsAndPython(ModuleTemplate):
-    """Abstract class for he management of Tools and Python modules.
+class ModuleTemplateTools(ModuleTemplate):
+    """Class for the management of the creation of new Tools modules.
 
     For this class to work properly, the following placeholders must be
     specified upon initialisation:
@@ -860,28 +873,16 @@ class ModuleTemplateToolsAndPython(ModuleTemplate):
     """
 
     def __init__(self, placeholders):
-        super(ModuleTemplateToolsAndPython, self).__init__(placeholders)
+        """Initialise placeholders and default template files."""
+        super(ModuleTemplateTools, self).__init__(placeholders)
 
         self._required_placeholders = [
-            'module_name', 'module_path', 'user_login'
+            'module_name', 'module_path'
         ]
 
         self.verify_placeholders()
 
-    def print_message(self):
-        raise NotImplementedError
-
-
-class ModuleTemplateTools(ModuleTemplateToolsAndPython):
-    """Class for the management of the creation of new Tools modules."""
-
-    def __init__(self, placeholders):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplateTools, self).__init__(placeholders)
-
-        initial_template_files = obtain_template_files("tools")
-
-        self.set_template_files(initial_template_files)
+        self._set_template_files_from_area("tools")
 
     def print_message(self):
         message_dict = {'module_path': self._placeholders['module_path']}
@@ -894,16 +895,20 @@ class ModuleTemplateTools(ModuleTemplateToolsAndPython):
         print(message)
 
 
-class ModuleTemplatePython(ModuleTemplateToolsAndPython):
+class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
 
     def __init__(self, placeholders):
         """Initialise placeholders and default template files."""
         super(ModuleTemplatePython, self).__init__(placeholders)
 
-        initial_template_files = obtain_template_files("python")
+        self._required_placeholders = [
+            'module_name', 'module_path', 'user_login'
+        ]
 
-        self.set_template_files(initial_template_files)
+        self.verify_placeholders()
+
+        self._set_template_files_from_area("python")
 
     def print_message(self):
         module_path = self._placeholders['module_path']
@@ -937,10 +942,12 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
         super(ModuleTemplateSupportAndIOC, self).__init__(placeholders)
 
         self._required_placeholders = [
-            'module_name', 'module_path', 'user_login', 'app_name'
+            'module_path', 'app_name'
         ]
 
         self.verify_placeholders()
+
+        self._set_template_files_from_area("default")
 
     def print_message(self):
         # This message is shared between support and IOC
@@ -974,14 +981,6 @@ class ModuleTemplateSupport(ModuleTemplateSupportAndIOC):
 
     """
 
-    def __init__(self, placeholders):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplateSupport, self).__init__(placeholders)
-
-        initial_template_files = obtain_template_files("support")
-
-        self.set_template_files(initial_template_files)
-
     def create_files(self):
         """Creates the folder structure and files in the current directory.
 
@@ -1002,14 +1001,6 @@ class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
 
     """
 
-    def __init__(self, placeholders):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplateIOC, self).__init__(placeholders)
-
-        initial_template_files = obtain_template_files("ioc")
-
-        self.set_template_files(initial_template_files)
-
     def create_files(self):
         """Creates the folder structure and files in the current directory.
 
@@ -1026,7 +1017,7 @@ class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
         self._create_files_from_template_dict()
 
 
-class ModuleTemplateIOCBL(ModuleTemplateIOC):
+class ModuleTemplateIOCBL(ModuleTemplateSupportAndIOC):
     """Class for the management of the creation of new IOC BL modules."""
 
     def print_message(self):
