@@ -308,13 +308,12 @@ class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
 class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
 
     @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value='vendor_module')
-    @patch('dls_ade.new_module_creator.pathf.prodModule', return_value='prod_module')
-    def test_correct_dir_list_returned(self, mock_prod, mock_vend):
+    def test_correct_dir_list_returned(self, mock_vend):
 
         nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
         dir_list = nmc_obj._get_remote_dir_list()
 
-        self.assertEqual(dir_list, [nmc_obj._server_repo_path, 'vendor_module', 'prod_module'])
+        self.assertEqual(dir_list, [nmc_obj._server_repo_path, 'vendor_module'])
 
 
 class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):

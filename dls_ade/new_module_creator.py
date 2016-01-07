@@ -202,15 +202,15 @@ class NewModuleCreator(object):
     """Abstract base class for the management of the creation of new modules.
 
     Attributes:
+        _area: The 'area' of the module to be created.
         _cwd: The current working directory upon initialisation.
         _module_name: The base name of the module path.
-        module_path: The relative module path.
+        _module_path: The relative module path.
             Used in messages and exceptions for user-friendliness.
         disk_dir: The absolute module path.
             Used for system and git commands.
         _server_repo_path: The git repository server path for module.
         _module_template: Object that handles file and user message creation.
-        extra_placeholders: Additional placeholders for module creation.
 
     Raises:
         Error: All errors raised by this module inherit from this class
@@ -230,9 +230,10 @@ class NewModuleCreator(object):
                 created as well as affecting the repository server path.
             module_template_cls: Class for module_template object.
                 Must be a non-abstract subclass of ModuleTemplate.
+            extra_placeholders: Additional placeholders for module creation.
 
         """
-        self._area = area  #: The 'area' of the module to be created.
+        self._area = area
         self._cwd = os.getcwd()
 
         self._module_path = ""
@@ -328,12 +329,16 @@ class NewModuleCreator(object):
         server_repo_path = self._server_repo_path
 
         # Vendor location for module
+        # TODO(Martin) Determine if this will still be included; it may be that
+        # TODO(Martin) vendor modules are stored on gitolite.
         vendor_path = pathf.vendorModule(self._module_path, self._area)
 
         # Production location for module
-        prod_path = pathf.prodModule(self._module_path, self._area)
+        # NOTE: No longer applies with git, as the releases are now indicated
+        # by tags on the git repository.
+        # prod_path = pathf.prodModule(self._module_path, self._area)
 
-        dir_list = [server_repo_path, vendor_path, prod_path]
+        dir_list = [server_repo_path, vendor_path]
 
         return dir_list
 
@@ -846,8 +851,9 @@ class ModuleTemplate(object):
 
             dir_path = os.path.dirname(rel_path)
 
-            # Stops us from overwriting files in folder (eg .gitignore when
-            # adding to Old-Style IOC modules (IOCAddToModule)
+            # Stops us from overwriting files in folder (eg .gitignore and
+            # .gitattributes when adding to Old-Style IOC modules
+            # (NewModuleCreatorAddAppToModule))
             if os.path.isfile(rel_path):
                 logging.debug("File already exists: " + rel_path)
                 continue
@@ -858,13 +864,13 @@ class ModuleTemplate(object):
                 err_message = ("{dir:s} in template dictionary "
                                "is not a valid file name")
                 raise Error(err_message.format(dir=dir_path))
-            else:
-                # dir_path = '' (dir_path = False) if eg. "file.txt" given
-                if dir_path and not os.path.isdir(dir_path):
-                    os.makedirs(dir_path)
 
-                open(rel_path, "w").write(self._template_files[path].format(
-                    **self._placeholders))
+            # dir_path = '' (dir_path = False) if eg. "file.txt" given
+            if dir_path and not os.path.isdir(dir_path):
+                os.makedirs(dir_path)
+
+            open(rel_path, "w").write(self._template_files[path].format(
+                **self._placeholders))
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
@@ -936,8 +942,8 @@ class ModuleTemplatePython(ModuleTemplate):
 class ModuleTemplateSupportAndIOC(ModuleTemplate):
     """Abstract class to implement the shared user message for Support and IOC.
 
-    Ensure you use this with :mod:`NewModuleCreatorWithApps`, in order to
-    ensure that the app_name value exists
+    Ensure you use this with :class:`NewModuleCreatorWithApps`, in order to
+    ensure that the `app_name` value exists.
 
     For this class to work properly, the following placeholders must be
     specified upon initialisation:
