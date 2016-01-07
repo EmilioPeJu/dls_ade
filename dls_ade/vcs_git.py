@@ -57,7 +57,7 @@ def temp(area, module):
         pass
 
     path = "./"
-    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/" + area + module
+    target = os.path.join(GIT_SSH_ROOT, "controls", area, module)
 
     print("Initialising repo...")
     repo = git.Repo.init(path)
