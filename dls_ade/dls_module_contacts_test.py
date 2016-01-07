@@ -1,12 +1,13 @@
 #!/bin/env dls-python
 
+from __future__ import print_function
 from dls_ade import dls_module_contacts
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, MagicMock, mock_open
+from mock import patch, MagicMock, mock_open, ANY
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
@@ -148,8 +149,42 @@ class LookupContactNameTest(unittest.TestCase):
 
 class OutputContactInfoTest(unittest.TestCase):
 
-    # >>> Don't what function is going to be yet.
-    pass
+    def setUp(self):
+        self.args = MagicMock()
+
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    @patch('dls_ade.vcs_git.git')
+    @patch('dls_ade.vcs_git.clone')
+    def test_given_module_then_clone_and_check_attr(self, mock_clone, mock_git, _2):
+        module = "test_module"
+
+        repo_inst = MagicMock()
+        mock_git.Repo.return_value = repo_inst
+
+        dls_module_contacts.output_contact_info(self.args, repo_inst, module)
+
+        repo_inst.git.check_attr.assert_called_with(ANY, ANY)
+        call_args = repo_inst.git.check_attr.call_args_list
+        self.assertEqual(call_args[0][0], ("module-contact", "."))
+        self.assertEqual(call_args[1][0], ("module-cc", "."))
+
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name', side_effect=["test_contact_name", "test_cc_name"])
+    @patch('dls_ade.vcs_git.git')
+    @patch('dls_ade.vcs_git.clone')
+    def test_given_csv_then_print_csv_format(self, mock_clone, mock_git, _2):
+        self.args.csv = True
+        module = "test_module"
+
+        repo_inst = MagicMock()
+        mock_git.Repo.return_value = repo_inst
+        repo_inst.git.check_attr.side_effect = ["test_contact", "test_cc"]
+
+        with patch.object(builtins, 'print') as mock_print:
+            dls_module_contacts.output_contact_info(self.args, repo_inst, module)
+
+        call_args = mock_print.call_args_list
+        # This needs to be compared as a tuple to match properly
+        self.assertEqual(call_args[0][0], ("test_module,test_contact,test_contact_name,test_cc,test_cc_name", ))
 
 
 class ImportFromCSVTest(unittest.TestCase):
@@ -168,18 +203,6 @@ class ImportFromCSVTest(unittest.TestCase):
         modules = []
         expected_error_message = "CSV file is empty"
         mock_csv.reader.return_value = []
-
-        with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
-            dls_module_contacts.import_from_csv(modules, self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
-
-    @patch('dls_ade.dls_module_contacts.csv')
-    def test_given_title_no_module_then_error_raised(self, mock_csv):
-        modules = []
-        expected_error_message = "Module table is empty"
-        mock_csv.reader.return_value = \
-            [["Module", "Contact", "Contact Name", "CC", "CC Name"]]
 
         with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
             dls_module_contacts.import_from_csv(modules, self.args, self.parser)

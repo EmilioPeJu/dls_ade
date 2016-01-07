@@ -1,8 +1,10 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
+from __future__ import print_function
 import os
 import sys
+import re
 import shutil
 import logging
 import csv
@@ -65,7 +67,7 @@ def check_parsed_args_compatible(parser, args):
         parser.error("--import cannot be used with --contact or --cc")
 
 
-# >>> Something similar in vcs_git already?
+# >>> In vcs_git already
 def get_repo_module_list(area):
 
     split_list = vcs_git.get_repository_list()
@@ -81,11 +83,9 @@ def get_repo_module_list(area):
 def get_module_list(args):
 
     modules = []
-    optional_args = ['area', 'ioc', 'python', 'contact', 'cc', 'csv', 'imp']
     if args.modules:
         for module in args.modules:
-            if module not in optional_args:
-                modules.append(module)
+            modules.append(module)
     # If modules not specified, list entire area
     else:
         for module in get_repo_module_list(args.area):
@@ -107,46 +107,57 @@ def lookup_contact_name(fed_id):
     l.simple_bind_s()
     ldap_result_id = l.search(basedn, search_scope, search_filter, search_attribute)
     ldap_output = l.result(ldap_result_id, 0)
+    logging.debug(ldap_output)
     # ldap_output has form:
     # (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk', {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
 
     # Extract contact name from output
     name_info_dict = ldap_output[1][0][1]
     # {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
-    contact_name = name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
+    if isinstance(name_info_dict, dict):
+        contact_name = name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
+    else:
+        raise Exception(fed_id + " is not an existing contact")
 
     return contact_name
 
 
-def output_contact_info(args, modules):
+def output_contact_info(args, repo, module):
 
-    for module in modules:
-        # >>> Use temp_clone once merged
-        source = pathf.devModule(module, args.area)
-        print("Cloning " + module + " from " + args.area + " area...")
-        # vcs_git.clone(source, module)
-        repo = vcs_git.git.Repo(module)
+    contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
+    cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
 
-        contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-        cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+    if args.csv:
 
-        if args.csv:
-            print("Module,Contact,Contact Name,CC,CC Name")
-            print("{module},{contact},{contact_name},{cc},{cc_name}".format(
-                module=module, contact=contact, contact_name=lookup_contact_name(contact),
-                cc=cc_contact, cc_name=lookup_contact_name(cc_contact)))
+        # Check if <FED-ID>s are specified in repo, if not don't run lookup function
+        if contact != 'unspecified':
+            contact_name = lookup_contact_name(contact)
         else:
-            print("Contact: " + contact + " (CC: " + cc_contact + ")")
+            contact_name = contact
+        if cc_contact != 'unspecified':
+            cc_name = lookup_contact_name(cc_contact)
+        else:
+            cc_name = cc_contact
+
+        print("{module},{contact},{contact_name},{cc},{cc_name}".format(
+            module=module, contact=contact, contact_name=contact_name,
+            cc=cc_contact, cc_name=cc_name))
+    else:
+        print("Contact: " + contact + " (CC: " + cc_contact + ")")
 
 
 def import_from_csv(modules, args, parser):
 
-    contacts = []
     reader = csv.reader(open(args.imp, "rb"))
-    if reader:
-        if reader == [["Module", "Contact", "Contact Name", "CC", "CC Name"]]:
-            parser.error("Module table is empty")
-        for row in reader:
+    # Extract data from reader object
+    csv_file = []
+    for row in reader:
+        csv_file.append(row)
+    logging.debug(csv_file)
+
+    if csv_file:
+        contacts = []
+        for row in csv_file:
             if row[0] != "Module":
                 if len(row) > 1:
                     module = row[0].strip()
@@ -171,22 +182,34 @@ def import_from_csv(modules, args, parser):
     return contacts
 
 
-def edit_contact_info(contact, cc, module, repo):
+def edit_contact_info(parser, contact, cc, module, repo):
 
-    if contact:
-        contact = contact.strip()
-    if cc:
-        cc = cc.strip()
+    current_contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
+    current_cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
 
     git_attr_file = open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb')
 
-    if contact is not None:
-        print "{0}: Setting contact to {1}".format(module, contact)
-        git_attr_file.write("* module-contact={}\n".format(contact))
+    fed_reg_ex = re.compile(r"^[a-z]{2,6}[0-9]{2,6}$")
+    if not re.match(fed_reg_ex, contact):
+        parser.error(contact + " is not a valid FED-ID")
+    if not re.match(fed_reg_ex, cc):
+        parser.error(cc + " is not a valid FED-ID")
 
-    if cc is not None:
-        print "{0}: Setting cc to {1}".format(module, cc)
+    if contact and re.match(fed_reg_ex, contact):
+        contact = contact.strip()
+        print("{0}: Setting contact to {1}".format(module, contact))
+        git_attr_file.write("* module-contact={}\n".format(contact))
+    else:
+        print(contact + " is not a valid FED-ID, leaving contact unchanged")
+        git_attr_file.write("* module-contact={}\n".format(current_contact))
+
+    if cc and re.match(fed_reg_ex, cc):
+        cc = cc.strip()
+        print("{0}: Setting cc to {1}".format(module, cc))
         git_attr_file.write("* module-cc={}\n".format(cc))
+    else:
+        print(cc + " is not a valid FED-ID, leaving contact unchanged")
+        git_attr_file.write("* module-cc={}\n".format(current_cc_contact))
 
     git_attr_file.close()
 
@@ -198,12 +221,22 @@ def main():
 
     check_parsed_args_compatible(parser, args)
 
-    # Create the list of modules from args or gitolite server if none provided
+    # Create the list of modules from args or the gitolite server if none provided
     modules = get_module_list(args)
 
     if not (args.contact or args.cc or args.imp):
         # Print/save requested contacts and end script
-        output_contact_info(args, modules)
+        if args.csv:
+            print("Module,Contact,Contact Name,CC,CC Name")
+        for module in modules:
+            # >>> Use temp_clone once merged
+            source = pathf.devModule(module, args.area)
+            # vcs_git.clone(source, module)
+            repo = vcs_git.git.Repo(module)
+
+            output_contact_info(args, repo, module)
+
+            # shutil.rmtree(module)
         return 0
 
     # If we get to this point, we are assigning contacts
@@ -234,12 +267,6 @@ def main():
         repo = vcs_git.git.Repo(module)
 
         edit_contact_info(contact, cc, module, repo)
-
-        # contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-        # logging.debug(contact)
-        # cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
-        # logging.debug(cc_contact)
-        # print("Contact: " + contact + " (CC: " + cc_contact + ")")
 
         # git add, commit, push
         # shutil.rmtree(module)
