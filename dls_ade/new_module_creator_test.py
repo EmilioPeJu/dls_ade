@@ -314,7 +314,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
         nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
         dir_list = nmc_obj._get_remote_dir_list()
 
-        self.assertEqual(dir_list, [nmc_obj.server_repo_path, 'vendor_module', 'prod_module'])
+        self.assertEqual(dir_list, [nmc_obj._server_repo_path, 'vendor_module', 'prod_module'])
 
 
 class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
@@ -346,7 +346,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_exists.return_value = True
         self.mock_is_git_dir.return_value = False
 
-        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=self.nmc_obj.module_path)
+        comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=self.nmc_obj._module_path)
 
         with self.assertRaises(nmc.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
@@ -376,7 +376,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.\n"
         comp_message += "Currently in a git repository, please move elsewhere and try again."
-        comp_message = comp_message.format(dir=self.nmc_obj.module_path)
+        comp_message = comp_message.format(dir=self.nmc_obj._module_path)
 
         with self.assertRaises(nmc.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
@@ -447,7 +447,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj._remote_repo_valid = True
 
-        comp_message = "Directory {dir:s} does not exist.".format(dir=self.nmc_obj.module_path)
+        comp_message = "Directory {dir:s} does not exist.".format(dir=self.nmc_obj._module_path)
 
         with self.assertRaises(nmc.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
@@ -462,7 +462,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj._remote_repo_valid = True
 
-        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=self.nmc_obj.module_path)
+        comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=self.nmc_obj._module_path)
 
         with self.assertRaises(nmc.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
@@ -477,7 +477,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.return_value = False
 
         comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.\n"
-        comp_message = comp_message.format(dir=self.nmc_obj.module_path)
+        comp_message = comp_message.format(dir=self.nmc_obj._module_path)
         comp_message += "error"
         comp_message = comp_message.rstrip()
 
@@ -539,7 +539,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         self.nmc_obj.create_local_module()
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj.cwd)]
+        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
         self.mock_os.path.isdir.assert_called_once_with(self.nmc_obj.disk_dir)
         self.mock_os.chdir.assert_has_calls(call_list)
@@ -553,7 +553,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         self.nmc_obj.create_local_module()
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj.cwd)]
+        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
         self.mock_os.path.isdir.assert_called_once_with(self.nmc_obj.disk_dir)
         self.mock_os.chdir.assert_has_calls(call_list)
@@ -617,7 +617,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj.push_repo_to_remote()
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj.server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
 
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
@@ -636,7 +636,45 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj.push_repo_to_remote()
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj.server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
+
+
+class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_mt = patch('dls_ade.new_module_creator.ModuleTemplate')
+        self.addCleanup(self.patch_mt.stop)
+        self.mock_mt = self.patch_mt.start()
+
+    def test_given_reasonable_input_then_initialisation_is_successful(self):
+
+        nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+
+    @patch('os.getlogin', return_value='test_login')
+    def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
+
+        expected_dict = {'module_name': "test_module",
+                         'module_path': "test_module",
+                         'user_login': "test_login",
+                         'app_name': "test_app",
+                         'additional': "value"}
+
+        base_c = nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app", {'additional': "value"})
+
+        self.mock_mt.assert_called_once_with(expected_dict)
+
+    @patch('os.getlogin', return_value='test_login')
+    def test_given_no_extra_placeholders_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
+
+        expected_dict = {'module_name': "test_module",
+                         'module_path': "test_module",
+                         'user_login': "test_login",
+                         'app_name': "test_app"}
+
+        base_c = nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+
+        self.mock_mt.assert_called_once_with(expected_dict)
 
 
 class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
@@ -657,7 +695,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
     def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
 
         self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        self.nmc_obj.server_repo_path = "notinrepo"
+        self.nmc_obj._server_repo_path = "notinrepo"
 
         comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
 
@@ -669,7 +707,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
     def test_given_app_exists_in_remote_repo_path_then_exception_raised_with_correct_error_message(self):
 
         self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        self.nmc_obj.server_repo_path = "inrepo1"
+        self.nmc_obj._server_repo_path = "inrepo1"
         self.mock_check_if_remote_repo_has_app.side_effect = [True, False, True]
 
         comp_message = "The repositories {paths:s} have apps that conflict with {app_name:s}".format(paths=", ".join(["inrepo1", "inrepo3"]), app_name="test_app")
@@ -682,7 +720,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
     def test_given_all_checks_passed_then_remote_repo_valid_set_true(self):
 
         self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        self.nmc_obj.server_repo_path = "inrepo1"
+        self.nmc_obj._server_repo_path = "inrepo1"
         self.mock_check_if_remote_repo_has_app.return_value = False
 
         self.nmc_obj.verify_remote_repo()
@@ -880,9 +918,9 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
         self.nmc_obj.create_local_module()
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj.cwd)]
+        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
-        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj.server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
@@ -893,9 +931,9 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
         self.nmc_obj.create_local_module()
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj.cwd)]
+        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
-        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj.server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
@@ -917,17 +955,24 @@ class ModuleTemplateSetPlaceholdersTest(unittest.TestCase):
 
     def setUp(self):
 
+        self.patch_verify_placeholders = patch('dls_ade.new_module_creator.ModuleTemplate._verify_placeholders')
+
+        self.addCleanup(self.patch_verify_placeholders.stop)
+
+        self.mock_verify_placeholders = self.patch_verify_placeholders.start()
+
         self.mt_obj = nmc.ModuleTemplate({})
 
         self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
 
-    def test_given_update_false_then_placeholders_overwritten_correctly(self):
+    def test_given_update_false_then_placeholders_overwritten_correctly_and_verified(self):
 
         self.mt_obj.set_placeholders({'arg3': "argument3"})
 
         self.assertEqual(self.mt_obj._placeholders['arg3'], "argument3")
 
         self.assertTrue(all(arg not in self.mt_obj._placeholders for arg in ['arg1', 'arg2']))
+        self.assertTrue(self.mock_verify_placeholders.called)
 
     def test_given_update_true_then_placeholders_updated_correctly(self):
 
@@ -975,7 +1020,7 @@ class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
 
         self.mt_obj._required_placeholders = ['arg1']
 
-        self.mt_obj.verify_placeholders()
+        self.mt_obj._verify_placeholders()
 
     def test_given_required_placeholders_not_present_then_error_raised_with_correct_message(self):
 
@@ -984,7 +1029,7 @@ class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
         err_message = "All required placeholders must be supplied: arg1, arg3"
 
         with self.assertRaises(nmc.VerificationError) as e:
-            self.mt_obj.verify_placeholders()
+            self.mt_obj._verify_placeholders()
 
         self.assertEqual(str(e.exception), err_message)
 

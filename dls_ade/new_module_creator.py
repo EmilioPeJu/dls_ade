@@ -202,14 +202,14 @@ class NewModuleCreator(object):
     """Abstract base class for the management of the creation of new modules.
 
     Attributes:
-        cwd: The current working directory upon initialisation.
-        module_name: The base name of the module path.
+        _cwd: The current working directory upon initialisation.
+        _module_name: The base name of the module path.
         module_path: The relative module path.
             Used in messages and exceptions for user-friendliness.
         disk_dir: The absolute module path.
             Used for system and git commands.
-        server_repo_path: The git repository server path for module.
-        module_template: Object that handles file and user message creation.
+        _server_repo_path: The git repository server path for module.
+        _module_template: Object that handles file and user message creation.
         extra_placeholders: Additional placeholders for module creation.
 
     Raises:
@@ -233,26 +233,27 @@ class NewModuleCreator(object):
 
         """
         self._area = area  #: The 'area' of the module to be created.
-        self.cwd = os.getcwd()
+        self._cwd = os.getcwd()
 
-        self.module_path = ""
-        self.module_name = ""
-        self.module_path = module_path
-        self.module_name = os.path.basename(os.path.normpath(self.module_path))
+        self._module_path = ""
+        self._module_name = ""
+        self._module_path = module_path
+        self._module_name = os.path.basename(os.path.normpath(
+                                             self._module_path))
 
         self.disk_dir = ""
-        self.server_repo_path = ""
-        self.disk_dir = os.path.join(self.cwd, self.module_path)
-        self.server_repo_path = pathf.devModule(self.module_path, self._area)
+        self._server_repo_path = ""
+        self.disk_dir = os.path.join(self._cwd, self._module_path)
+        self._server_repo_path = pathf.devModule(self._module_path, self._area)
 
-        placeholders = {'module_name': self.module_name,
-                        'module_path': self.module_path,
+        placeholders = {'module_name': self._module_name,
+                        'module_path': self._module_path,
                         'user_login': os.getlogin()}
 
         if extra_placeholders:
             placeholders.update(extra_placeholders)
 
-        self.module_template = module_template_cls(placeholders)
+        self._module_template = module_template_cls(placeholders)
 
         self._remote_repo_valid = False
         """bool: Specifies whether there are conflicting server file paths.
@@ -324,13 +325,13 @@ class NewModuleCreator(object):
 
         """
         # Intended initial destination for module
-        server_repo_path = self.server_repo_path
+        server_repo_path = self._server_repo_path
 
         # Vendor location for module
-        vendor_path = pathf.vendorModule(self.module_path, self._area)
+        vendor_path = pathf.vendorModule(self._module_path, self._area)
 
         # Production location for module
-        prod_path = pathf.prodModule(self.module_path, self._area)
+        prod_path = pathf.prodModule(self._module_path, self._area)
 
         dir_list = [server_repo_path, vendor_path, prod_path]
 
@@ -369,7 +370,7 @@ class NewModuleCreator(object):
                 err_list.append("Currently in a git repository, "
                                 "please move elsewhere and try again.")
 
-            err_message = "\n".join(err_list).format(dir=self.module_path)
+            err_message = "\n".join(err_list).format(dir=self._module_path)
 
             self._can_create_local_module = False
             raise VerificationError(err_message)
@@ -412,7 +413,7 @@ class NewModuleCreator(object):
                                 "Unable to push to remote repository.")
                 valid = False
 
-        err_list = [err.format(dir=self.module_path) for err in err_list]
+        err_list = [err.format(dir=self._module_path) for err in err_list]
 
         # This allows us to retain the remote_repo_valid error message
         if not self._remote_repo_valid:
@@ -448,7 +449,7 @@ class NewModuleCreator(object):
 
         self._can_create_local_module = False
 
-        print("Making clean directory structure for " + self.module_path)
+        print("Making clean directory structure for " + self._module_path)
 
         if not os.path.isdir(self.disk_dir):
             os.makedirs(self.disk_dir)
@@ -457,15 +458,15 @@ class NewModuleCreator(object):
         # files are created is in order to remain compatible with
         # makeBaseApp.pl, used for IOC and Support modules
         os.chdir(self.disk_dir)
-        self.module_template.create_files()
-        os.chdir(self.cwd)
+        self._module_template.create_files()
+        os.chdir(self._cwd)
 
         vcs_git.init_repo(self.disk_dir)
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
-        self.module_template.print_message()
+        self._module_template.print_message()
 
     def add_contact(self):
         """Add the current user as primary module contact"""
@@ -491,30 +492,40 @@ class NewModuleCreator(object):
         self._can_push_repo_to_remote = False
         self._remote_repo_valid = False
 
-        vcs_git.add_new_remote_and_push(self.server_repo_path, self.disk_dir)
+        vcs_git.add_new_remote_and_push(self._server_repo_path, self.disk_dir)
 
 
 class NewModuleCreatorWithApps(NewModuleCreator):
     """Abstract class for the management of the creation of app-based modules.
 
     Attributes:
-        app_name: The name of the app for the new module.
+        _app_name: The name of the app for the new module.
             This is a separate folder in each git repository, corresponding to
             the newly created module.
 
     """
 
-    def __init__(self, module_path, area, module_template, app_name):
+    def __init__(self, module_path, area, module_template, app_name,
+                 extra_placeholders=None):
         """Initialise variables.
 
         Args:
             app_name: The name of the app for the new module.
         """
-        super(NewModuleCreatorWithApps, self).__init__(module_path, area,
-                                                       module_template,
-                                                       {'app_name': app_name})
+        placeholders = {}
+        placeholders['app_name'] = app_name
 
-        self.app_name = app_name
+        if extra_placeholders:
+            placeholders.update(extra_placeholders)
+
+        super(NewModuleCreatorWithApps, self).__init__(
+            module_path,
+            area,
+            module_template,
+            placeholders
+        )
+
+        self._app_name = app_name
 
 
 class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
@@ -563,10 +574,10 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
         """
         existing_remote_repo_paths = self._get_existing_remote_repo_paths()
 
-        if self.server_repo_path not in existing_remote_repo_paths:
+        if self._server_repo_path not in existing_remote_repo_paths:
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
-            err_message = err_message.format(path=self.server_repo_path)
+            err_message = err_message.format(path=self._server_repo_path)
             raise VerificationError(err_message)
 
         conflicting_paths = []
@@ -580,7 +591,7 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
                            " conflict with {app_name:s}")
             err_message = err_message.format(
                 paths=", ".join(conflicting_paths),
-                app_name=self.app_name
+                app_name=self._app_name
             )
             raise VerificationError(err_message)
 
@@ -610,7 +621,7 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
                            "clone to determine if there is an app_name "
                            "conflict with {app_name:s}")
             err_message = err_message.format(repo=remote_repo_path,
-                                             app_name=self.app_name)
+                                             app_name=self._app_name)
             raise Error(err_message)
 
         temp_dir = ""
@@ -619,7 +630,7 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
             temp_dir = tempfile.mkdtemp()
             vcs_git.clone(remote_repo_path, temp_dir)
 
-            if os.path.exists(os.path.join(temp_dir, self.app_name + "App")):
+            if os.path.exists(os.path.join(temp_dir, self._app_name + "App")):
                 exists = True
 
         finally:
@@ -639,13 +650,13 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
 
         self._can_create_local_module = False
 
-        print("Cloning module to " + self.module_path)
+        print("Cloning module to " + self._module_path)
 
-        vcs_git.clone(self.server_repo_path, self.disk_dir)
+        vcs_git.clone(self._server_repo_path, self.disk_dir)
 
         os.chdir(self.disk_dir)
-        self.module_template.create_files()
-        os.chdir(self.cwd)
+        self._module_template.create_files()
+        os.chdir(self._cwd)
 
         vcs_git.stage_all_files_and_commit(self.disk_dir)
 
@@ -697,8 +708,6 @@ class ModuleTemplate(object):
         # placeholders given contain the required ones.
         self.set_placeholders(placeholders)
 
-        self.verify_placeholders()
-
     def set_placeholders(self, extra_placeholders, update=False):
         """Set the placeholders using the given dictionary.
 
@@ -711,6 +720,7 @@ class ModuleTemplate(object):
             self._placeholders.update(extra_placeholders)
         else:
             self._placeholders = extra_placeholders
+            self._verify_placeholders()
 
     def set_template_files(self, extra_template_files, update=False):
         """Set the template files using the given dictionary.
@@ -725,7 +735,7 @@ class ModuleTemplate(object):
         else:
             self._template_files = extra_template_files
 
-    def verify_placeholders(self):
+    def _verify_placeholders(self):
         """Verify that the placeholders fulfill the template requirements.
 
         Raises:
@@ -880,7 +890,7 @@ class ModuleTemplateTools(ModuleTemplate):
             'module_name', 'module_path'
         ]
 
-        self.verify_placeholders()
+        self._verify_placeholders()
 
         self._set_template_files_from_area("tools")
 
@@ -906,7 +916,7 @@ class ModuleTemplatePython(ModuleTemplate):
             'module_name', 'module_path', 'user_login'
         ]
 
-        self.verify_placeholders()
+        self._verify_placeholders()
 
         self._set_template_files_from_area("python")
 
@@ -945,7 +955,7 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
             'module_path', 'app_name'
         ]
 
-        self.verify_placeholders()
+        self._verify_placeholders()
 
         self._set_template_files_from_area("default")
 
