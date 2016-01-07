@@ -473,12 +473,6 @@ class NewModuleCreator(object):
         """Prints a message to detail the user's next steps."""
         self._module_template.print_message()
 
-    def add_contact(self):
-        """Add the current user as primary module contact"""
-        # TODO(Martin) Will have to work out how this works
-        # What checks should this method perform?
-        raise NotImplementedError
-
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server.
 
