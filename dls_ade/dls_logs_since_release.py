@@ -3,6 +3,7 @@
 
 import os
 import sys
+import shutil
 from argument_parser import ArgParser
 from dls_environment import environment
 import path_functions as pathf
@@ -128,6 +129,7 @@ def main():
 
     e = environment()
 
+    # If earlier_releases and later_releases both provided then check that later_* comes after earlier_*
     if args.earlier_release and args.later_release:
         test_list = e.sortReleases([args.earlier_release, args.later_release])
         if args.later_release == test_list[0] and args.later_release != 'HEAD':
@@ -138,16 +140,13 @@ def main():
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
         # Get the list of releases from the repo
-        if os.path.isdir('./' + args.module_name):
-            repo = vcs_git.git.Repo(args.module_name)
-            releases = create_release_list(repo)
-        else:
-            # >>> Use temp_clone once merged
-            # repo = vcs_git.temp_clone(source, module)
-            vcs_git.clone(source, args.module_name)
-            repo = vcs_git.git.Repo(args.module_name)
-            # <<<
-            releases = create_release_list(repo)
+        # >>> Use temp_clone once merged
+        # repo = vcs_git.temp_clone(source, module)
+        print("Cloning " + args.module_name + " from " + args.area + " area...")
+        vcs_git.clone(source, args.module_name)
+        repo = vcs_git.git.Repo(args.module_name)
+        # <<<
+        releases = create_release_list(repo)
         logging.debug(releases)
     else:
         parser.error("Module " + args.module_name + " doesn't exist in " + source)
@@ -275,6 +274,8 @@ def main():
 
     for log in formatted_logs:
         print(log)
+
+    shutil.rmtree(args.module_name)
 
 
 if __name__ == "__main__":
