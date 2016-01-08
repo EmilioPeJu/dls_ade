@@ -145,7 +145,7 @@ def import_from_csv(modules, args, parser):
     for row in csv_file:
         # Check for header row and skip
         if row[0] != "Module":
-            # CSV file format should be: [Module],[Contact],Contact Name,[CC],CC Name
+            # CSV file format should be: Module,Contact,Contact Name,CC,CC Name
             if len(row) > 1:
                 module = row[0].strip()
                 contact = row[1].strip()
