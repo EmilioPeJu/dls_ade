@@ -167,15 +167,17 @@ def import_from_csv(modules, args, parser):
     return contacts
 
 
-def edit_contact_info(module, repo, contact='', cc=''):
+def edit_contact_info(repo, contact='', cc=''):
 
     # Check that FED-IDs exist, if they don't lookup...() will (possibly) hang and raise an exception
     if contact:
         contact = contact.strip()
         lookup_contact_name(contact)
-    if contact:
+    if cc:
         cc = cc.strip()
         lookup_contact_name(cc)
+
+    module = repo.working_tree_dir.split('/')[-1]
 
     git_attr_file = open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb')
 
@@ -201,7 +203,6 @@ def main():
     if args.modules:
         for module in args.modules:
             modules.append(module)
-    # If modules not specified, list entire area
     else:
         for module in get_repo_module_list(args.area):
             modules.append(module)
@@ -221,7 +222,7 @@ def main():
             cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
 
             if args.csv:
-                output_csv_format(contact, cc_contact, repo, module)
+                output_csv_format(contact, cc_contact, module)
             else:
                 print("Contact: " + contact + " (CC: " + cc_contact + ")")
 
@@ -255,7 +256,7 @@ def main():
         # vcs_git.clone(source, module)
         repo = vcs_git.git.Repo(module)
 
-        edit_contact_info(module, repo, contact, cc,)
+        edit_contact_info(repo, contact, cc,)
 
         # git add, commit, push
         # shutil.rmtree(module)
