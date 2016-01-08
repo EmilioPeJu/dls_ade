@@ -6,7 +6,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-import dls_ade.new_module_creator as nmc
+import dls_ade.new_module_creator as new_c
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, mock_open, call, mock_open
@@ -62,46 +62,46 @@ class GetNewModuleCreatorTest(unittest.TestCase):
     def test_given_unsupported_area_then_exception_raised(self):
 
         with self.assertRaises(Exception):
-            nmc.get_new_module_creator("test_module", "fake_area")
+            new_c.get_new_module_creator("test_module", "fake_area")
 
     def test_given_area_is_ioc_then_get_new_module_creator_ioc_called(self):
 
-        new_ioc_creator = nmc.get_new_module_creator("test_module", "ioc", fullname=True)
+        new_ioc_creator = new_c.get_new_module_creator("test_module", "ioc", fullname=True)
 
         self.mock_get_new_ioc.assert_called_once_with("test_module", True)
 
     def test_given_area_is_python_with_invalid_name_then_new_module_creator_python_not_returned(self):
 
         with self.assertRaises(Exception):
-            new_py_creator = nmc.get_new_module_creator("test_module", "python")
+            new_py_creator = new_c.get_new_module_creator("test_module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
         with self.assertRaises(Exception):
-            new_py_creator = nmc.get_new_module_creator("dls_test-module", "python")
+            new_py_creator = new_c.get_new_module_creator("dls_test-module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
         with self.assertRaises(Exception):
-            new_py_creator = nmc.get_new_module_creator("dls_test.module", "python")
+            new_py_creator = new_c.get_new_module_creator("dls_test.module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
     def test_given_area_is_python_with_valid_name_then_new_module_creator_returned_with_correct_args(self):
 
-        new_py_creator = nmc.get_new_module_creator("dls_test_module", "python")
+        new_py_creator = new_c.get_new_module_creator("dls_test_module", "python")
 
         self.mock_nmc_base.assert_called_once_with("dls_test_module", "python", self.mt_mocks['Python'])
 
     def test_given_area_is_support_then_new_module_creator_returned_with_correct_args(self):
 
-        new_sup_creator = nmc.get_new_module_creator("test_module")  # Area automatically support
+        new_sup_creator = new_c.get_new_module_creator("test_module")  # Area automatically support
 
         self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'], "test_module")
 
     def test_given_area_is_tools_then_new_module_creator_returned_with_correct_args(self):
 
-        new_tools_creator = nmc.get_new_module_creator("test_module", "tools")
+        new_tools_creator = new_c.get_new_module_creator("test_module", "tools")
 
         self.mock_nmc_base.assert_called_once_with("test_module", "tools", self.mt_mocks['Tools'])
 
@@ -143,33 +143,33 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         comp_message = "Need a name with dashes or hyphens in it, got test_module"
 
-        with self.assertRaises(nmc.Error) as e:
-            new_ioc_creator = nmc.get_new_module_creator_ioc("test_module")
+        with self.assertRaises(new_c.Error) as e:
+            new_ioc_creator = new_c.get_new_module_creator_ioc("test_module")
 
         self.assertEqual(str(e.exception), comp_message)
 
     def test_given_not_BL_and_dash_separated_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
-        new_ioc_creator = nmc.get_new_module_creator_ioc("test-module-IOC-01")
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test-module-IOC-01")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
-        new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=True)
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=True)
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
-        new_ioc_creator = nmc.get_new_module_creator_ioc("test/module", fullname=True)
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module", fullname=True)
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self, mock_is_repo_path):
 
-        new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/01", fullname=False)
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
@@ -177,20 +177,20 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self, mock_is_repo_path):
 
-        new_ioc_creator = nmc.get_new_module_creator_ioc("test/module/02", fullname=False)
+        new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
-        new_tools_creator = nmc.get_new_module_creator_ioc("test/BL")
+        new_tools_creator = new_c.get_new_module_creator_ioc("test/BL")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", self.mt_mocks['IOCBL'], "test")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
-        new_tools_creator = nmc.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
+        new_tools_creator = new_c.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], "test-BL-IOC-01")
 
@@ -205,7 +205,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        nmc.NewModuleCreator("test_module", "test_area", self.mock_mt)
+        new_c.NewModuleCreator("test_module", "test_area", self.mock_mt)
 
     @patch('os.getlogin', return_value='test_login')
     def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
@@ -215,7 +215,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
                          'user_login': "test_login",
                          'additional': "value"}
 
-        base_c = nmc.NewModuleCreator("test_module", "test_area", self.mock_mt, {'additional': "value"})
+        base_c = new_c.NewModuleCreator("test_module", "test_area", self.mock_mt, {'additional': "value"})
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
@@ -226,7 +226,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
                          'module_path': "test_module",
                          'user_login': "test_login"}
 
-        base_c = nmc.NewModuleCreator("test_module", "test_area", self.mock_mt)
+        base_c = new_c.NewModuleCreator("test_module", "test_area", self.mock_mt)
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
@@ -241,14 +241,14 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
         self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_get_existing_remote_repo_paths_returns_non_empty_list_then_exception_raised_with_correct_message(self):
 
         self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
         comp_message = ("The paths {dirs:s} already exist on gitolite, cannot continue").format(dirs=", ".join(["inrepo1", "inrepo2", "inrepo3"]))
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -275,7 +275,7 @@ class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
         self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
         self.mock_is_repo_path = self.patch_is_repo_path.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_one_of_dir_list_exists_then_directory_returned_in_list(self):
 
@@ -310,7 +310,7 @@ class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value='vendor_module')
     def test_correct_dir_list_returned(self, mock_vend):
 
-        nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
         dir_list = nmc_obj._get_remote_dir_list()
 
         self.assertEqual(dir_list, [nmc_obj._server_repo_path, 'vendor_module'])
@@ -329,7 +329,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_is_git_dir = self.patch_is_git_dir.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
 
@@ -347,7 +347,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=self.nmc_obj._module_path)
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -361,7 +361,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
         comp_message = "Currently in a git repository, please move elsewhere and try again.".format(dir=os.path.join("./", self.nmc_obj.disk_dir))
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -377,7 +377,7 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         comp_message += "Currently in a git repository, please move elsewhere and try again."
         comp_message = comp_message.format(dir=self.nmc_obj._module_path)
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -401,7 +401,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
         self.mock_verify_remote_repo = self.patch_verify_remote_repo.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
 
@@ -428,12 +428,12 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj._remote_repo_valid = False
 
-        self.mock_verify_remote_repo.side_effect = nmc.VerificationError("error")
+        self.mock_verify_remote_repo.side_effect = new_c.VerificationError("error")
 
         self.mock_exists.return_value = True
         self.mock_is_git_root_dir.return_value = True
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), "error")
@@ -448,7 +448,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         comp_message = "Directory {dir:s} does not exist.".format(dir=self.nmc_obj._module_path)
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -463,7 +463,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.".format(dir=self.nmc_obj._module_path)
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -471,7 +471,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
     def test_given_module_folder_is_not_repo_and_remote_repo_false_then_flag_set_false_and_error_returned_is_correct(self):
 
-        self.mock_verify_remote_repo.side_effect = nmc.VerificationError('error')
+        self.mock_verify_remote_repo.side_effect = new_c.VerificationError('error')
         self.mock_exists.return_value = True
         self.mock_is_git_root_dir.return_value = False
 
@@ -480,7 +480,7 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         comp_message += "error"
         comp_message = comp_message.rstrip()
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -511,7 +511,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         # self.mock_os.return_value = "Example"
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", self.mock_module_template_cls)
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", self.mock_module_template_cls)
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -524,7 +524,7 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
     def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_create_local_module = False
-        self.mock_verify_can_create_local_module.side_effect = nmc.VerificationError("error")
+        self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
             self.nmc_obj.create_local_module()
@@ -600,7 +600,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
         self.mock_add_new_remote_and_push = self.patch_add_new_remote_and_push.start()
 
-        self.nmc_obj = nmc.NewModuleCreator("test_module", "test_area", MagicMock())
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -621,7 +621,7 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_push_repo_to_remote = False
-        self.mock_verify_can_push_repo_to_remote.side_effect = nmc.VerificationError("error")
+        self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
             self.nmc_obj.push_repo_to_remote()
@@ -648,7 +648,7 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+        new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
 
     @patch('os.getlogin', return_value='test_login')
     def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
@@ -659,7 +659,7 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
                          'app_name': "test_app",
                          'additional': "value"}
 
-        base_c = nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app", {'additional': "value"})
+        base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app", {'additional': "value"})
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
@@ -671,7 +671,7 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
                          'user_login': "test_login",
                          'app_name': "test_app"}
 
-        base_c = nmc.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+        base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
@@ -689,7 +689,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
         self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
 
@@ -698,7 +698,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
         comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -711,7 +711,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
         comp_message = "The repositories {paths:s} have apps that conflict with {app_name:s}".format(paths=", ".join(["inrepo1", "inrepo3"]), app_name="test_app")
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -746,7 +746,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_rmtree = self.patch_rmtree.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
 
@@ -756,7 +756,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
                         "clone to determine if there is an app_name "
                         "conflict with {app_name:s}".format(repo="test_repo_path", app_name="test_app"))
 
-        with self.assertRaises(nmc.Error) as e:
+        with self.assertRaises(new_c.Error) as e:
             self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -829,7 +829,7 @@ class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
         self.mock_push_to_remote = self.patch_push_to_remote.start()
 
-        self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -850,7 +850,7 @@ class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
     def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_push_repo_to_remote = False
-        self.mock_verify_can_push_repo_to_remote.side_effect = nmc.VerificationError("error")
+        self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
             self.nmc_obj.push_repo_to_remote()
@@ -890,7 +890,7 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
             # self.mock_os.return_value = "Example"
 
-            self.nmc_obj = nmc.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, "test_app")
+            self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, "test_app")
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -903,9 +903,9 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
     def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_create_local_module = False
-        self.mock_verify_can_create_local_module.side_effect = nmc.VerificationError("error")
+        self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.create_local_module()
 
         self.assertFalse(self.mock_vcs_git.clone.called)
@@ -943,7 +943,7 @@ class ModuleTemplateCreateFilesTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplate._create_files_from_template_dict')
     def test_create_files_from_template_dict_called(self, mock_create_files_from_template):
 
-        mt_obj = nmc.ModuleTemplate({})
+        mt_obj = new_c.ModuleTemplate({})
 
         mt_obj.create_files()
 
@@ -960,7 +960,7 @@ class ModuleTemplateSetPlaceholdersTest(unittest.TestCase):
 
         self.mock_verify_placeholders = self.patch_verify_placeholders.start()
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
 
         self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
 
@@ -986,7 +986,7 @@ class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
 
         self.mt_obj._template_files = {'arg1': "argument1", 'arg2': "argument2"}
 
@@ -1011,7 +1011,7 @@ class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
 
         self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
 
@@ -1027,7 +1027,7 @@ class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
 
         err_message = "All required placeholders must be supplied: arg1, arg3"
 
-        with self.assertRaises(nmc.VerificationError) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.mt_obj._verify_placeholders()
 
         self.assertEqual(str(e.exception), err_message)
@@ -1049,7 +1049,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         self.mock_os.path.join = os.path.join
         self.mock_os.path.dirname = os.path.dirname
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
 
     def test_given_template_folder_does_not_exist_then_exception_raised_with_correct_message(self):
 
@@ -1059,7 +1059,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         comp_message = ("Template folder test_dir/new_module_templates/non_existent does not exist. "
                         "\nNote: This exception means there is a bug in the ModuleTemplate subclass code.")
 
-        with self.assertRaises(nmc.Error) as e:
+        with self.assertRaises(new_c.Error) as e:
             self.mt_obj._set_template_files_from_area("non_existent")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -1093,7 +1093,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isdir.return_value = False
         self.mock_isfile.return_value = False
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
         self.mt_obj._placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
@@ -1253,7 +1253,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         self.mock_os = self.patch_os.start()
 
-        self.mt_obj = nmc.ModuleTemplate({})
+        self.mt_obj = new_c.ModuleTemplate({})
 
         self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
 
@@ -1264,7 +1264,7 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
         comp_message = "The template folder {template_folder:s} does not exist".format(template_folder="test_template_folder")
 
         with patch.object(builtins, 'open', self.open_mock):
-            with self.assertRaises(nmc.Error) as e:
+            with self.assertRaises(new_c.Error) as e:
                 self.mt_obj._set_template_files_from_folder("test_template_folder")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -1400,7 +1400,7 @@ class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateTools({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateTools({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
                                           'user_login': "test_login"})
 
@@ -1418,7 +1418,7 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplatePython({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplatePython({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
                                           'user_login': "test_login"})
 
@@ -1441,7 +1441,7 @@ class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateSupportAndIOC({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateSupportAndIOC({'module_name': "test_module_name",
                                                   'module_path': "test_module_path",
                                                   'user_login': "test_login",
                                                   'app_name': "test_app_name"})
@@ -1468,7 +1468,7 @@ class ModuleTemplateSupportCreateFilesTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateSupport._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
 
-        mt_obj = nmc.ModuleTemplateSupport({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateSupport({'module_name': "test_module_name",
                                             'module_path': "test_module_path",
                                             'user_login': "test_login",
                                             'app_name': "test_app_name"})
@@ -1488,7 +1488,7 @@ class NewModuleCreatorIOCCreateFilesTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateIOC._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
 
-        mt_obj = nmc.ModuleTemplateIOC({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateIOC({'module_name': "test_module_name",
                                         'module_path': "test_module_path",
                                         'user_login': "test_login",
                                         'app_name': "test_app_name"})
@@ -1508,7 +1508,7 @@ class NewModuleCreatorIOCBLCreateFilesTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.ModuleTemplateIOCBL._create_files_from_template_dict')
     def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
 
-        mt_obj = nmc.ModuleTemplateIOCBL({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
                                           'user_login': "test_login",
                                           'app_name': "test_app_name"})
@@ -1524,7 +1524,7 @@ class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
     @patch('dls_ade.new_module_creator.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = nmc.ModuleTemplateIOCBL({'module_name': "test_module_name",
+        mt_obj = new_c.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
                                           'user_login': "test_login",
                                           'app_name': "test_app_name"})
@@ -1553,7 +1553,7 @@ class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest
 
     def test_default_files_equal(self):
 
-        mt_obj = nmc.ModuleTemplate({})
+        mt_obj = new_c.ModuleTemplate({})
 
         mt_obj._set_template_files_from_area("default")
 
@@ -1561,7 +1561,7 @@ class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest
 
     def test_python_files_equal(self):
 
-        mt_obj = nmc.ModuleTemplate({})
+        mt_obj = new_c.ModuleTemplate({})
 
         mt_obj._set_template_files_from_area("python")
 
@@ -1569,7 +1569,7 @@ class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest
 
     def test_tools_files_equal(self):
 
-        mt_obj = nmc.ModuleTemplate({})
+        mt_obj = new_c.ModuleTemplate({})
 
         mt_obj._set_template_files_from_area("tools")
 

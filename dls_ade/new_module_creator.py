@@ -511,8 +511,7 @@ class NewModuleCreatorWithApps(NewModuleCreator):
         Args:
             app_name: The name of the app for the new module.
         """
-        placeholders = {}
-        placeholders['app_name'] = app_name
+        placeholders = {'app_name': app_name}
 
         if extra_placeholders:
             placeholders.update(extra_placeholders)
