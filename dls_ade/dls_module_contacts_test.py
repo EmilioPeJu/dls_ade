@@ -121,28 +121,6 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
 
-class GetModuleListTest(unittest.TestCase):
-
-    def setUp(self):
-        self.args = MagicMock()
-        self.args.modules = ['module_1', 'module_2', 'module_3']
-
-    def test_given_modules_then_returned(self):
-
-        module_list = dls_module_contacts.get_module_list(self.args)
-
-        self.assertEqual(module_list, self.args.modules)
-
-    @patch('dls_ade.dls_module_contacts.get_repo_module_list',
-           return_value=['repo_module_1', 'repo_module_2', 'repo_module_3'])
-    def test_not_given_modules_then_repo_list_returned(self, _1):
-        self.args.modules = []
-
-        module_list = dls_module_contacts.get_module_list(self.args)
-
-        self.assertEqual(module_list, ['repo_module_1', 'repo_module_2', 'repo_module_3'])
-
-
 class LookupContactNameTest(unittest.TestCase):
     pass
 
@@ -152,35 +130,20 @@ class OutputContactInfoTest(unittest.TestCase):
     def setUp(self):
         self.args = MagicMock()
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
-    @patch('dls_ade.vcs_git.git')
-    @patch('dls_ade.vcs_git.clone')
-    def test_given_module_then_clone_and_check_attr(self, mock_clone, mock_git, _2):
-        module = "test_module"
-
-        repo_inst = MagicMock()
-        mock_git.Repo.return_value = repo_inst
-
-        dls_module_contacts.output_contact_info(self.args, repo_inst, module)
-
-        repo_inst.git.check_attr.assert_called_with(ANY, ANY)
-        call_args = repo_inst.git.check_attr.call_args_list
-        self.assertEqual(call_args[0][0], ("module-contact", "."))
-        self.assertEqual(call_args[1][0], ("module-cc", "."))
-
     @patch('dls_ade.dls_module_contacts.lookup_contact_name', side_effect=["test_contact_name", "test_cc_name"])
     @patch('dls_ade.vcs_git.git')
     @patch('dls_ade.vcs_git.clone')
-    def test_given_csv_then_print_csv_format(self, mock_clone, mock_git, _2):
+    def test_given_contacts_then_print_csv_format(self, mock_clone, mock_git, _2):
         self.args.csv = True
         module = "test_module"
+        contact = "test_contact"
+        cc = "test_cc"
 
         repo_inst = MagicMock()
         mock_git.Repo.return_value = repo_inst
-        repo_inst.git.check_attr.side_effect = ["test_contact", "test_cc"]
 
         with patch.object(builtins, 'print') as mock_print:
-            dls_module_contacts.output_contact_info(self.args, repo_inst, module)
+            dls_module_contacts.output_csv_format(contact, cc, module)
 
         call_args = mock_print.call_args_list
         # This needs to be compared as a tuple to match properly
@@ -253,7 +216,7 @@ class ImportFromCSVTest(unittest.TestCase):
         modules = ["test_module"]
         self.args.area = "test_area"
         expected_error_message = \
-            "Module test_module defined twice"
+            "Module test_module defined twice in CSV file"
         mock_csv.reader.return_value = \
             [["Module", "Contact", "Contact Name", "CC", "CC Name"],
              ["test_module", "user"], ["test_module", "other_user"]]

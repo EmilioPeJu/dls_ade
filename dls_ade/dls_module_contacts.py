@@ -80,20 +80,6 @@ def get_repo_module_list(area):
     return modules
 
 
-def get_module_list(args):
-
-    modules = []
-    if args.modules:
-        for module in args.modules:
-            modules.append(module)
-    # If modules not specified, list entire area
-    else:
-        for module in get_repo_module_list(args.area):
-            modules.append(module)
-
-    return modules
-
-
 def lookup_contact_name(fed_id):
 
     # Set up ldap search parameters
@@ -103,47 +89,44 @@ def lookup_contact_name(fed_id):
     search_attribute = ["givenName", "sn"]
     search_scope = ldap.SCOPE_SUBTREE
 
-    # Perform search
+    # Perform search, print message so user knows where program hangs
+    # The lookup can hang at l.result() if the FED-ID does not exist.
+    print("Performing search for " + fed_id + "...")
     l.simple_bind_s()
     ldap_result_id = l.search(basedn, search_scope, search_filter, search_attribute)
     ldap_output = l.result(ldap_result_id, 0)
     logging.debug(ldap_output)
-    # ldap_output has form:
-    # (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk', {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
+    # ldap_output has the form: (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
+    #                                   {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
+
+    if ldap_output[0] == 115:
+        # If the FED-ID does not exist, ldap_output will look like:
+        # (115, [(None, ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
+        raise Exception(fed_id + " is not an existing contact")
 
     # Extract contact name from output
     name_info_dict = ldap_output[1][0][1]
-    # {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
-    if isinstance(name_info_dict, dict):
-        contact_name = name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
-    else:
-        raise Exception(fed_id + " is not an existing contact")
+    # name_info_dict: {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
+    contact_name = name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
 
     return contact_name
 
 
-def output_contact_info(args, repo, module):
+def output_csv_format(contact, cc_contact, module):
 
-    contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-    cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
-
-    if args.csv:
-
-        # Check if <FED-ID>s are specified in repo, if not don't run lookup function
-        if contact != 'unspecified':
-            contact_name = lookup_contact_name(contact)
-        else:
-            contact_name = contact
-        if cc_contact != 'unspecified':
-            cc_name = lookup_contact_name(cc_contact)
-        else:
-            cc_name = cc_contact
-
-        print("{module},{contact},{contact_name},{cc},{cc_name}".format(
-            module=module, contact=contact, contact_name=contact_name,
-            cc=cc_contact, cc_name=cc_name))
+    # Check if <FED-ID>s are specified in repo, if not don't run lookup function
+    if contact != 'unspecified':
+        contact_name = lookup_contact_name(contact)
     else:
-        print("Contact: " + contact + " (CC: " + cc_contact + ")")
+        contact_name = contact
+    if cc_contact != 'unspecified':
+        cc_name = lookup_contact_name(cc_contact)
+    else:
+        cc_name = cc_contact
+
+    print("{module},{contact},{contact_name},{cc},{cc_name}".format(
+        module=module, contact=contact, contact_name=contact_name,
+        cc=cc_contact, cc_name=cc_name))
 
 
 def import_from_csv(modules, args, parser):
@@ -155,61 +138,53 @@ def import_from_csv(modules, args, parser):
         csv_file.append(row)
     logging.debug(csv_file)
 
-    if csv_file:
-        contacts = []
-        for row in csv_file:
-            if row[0] != "Module":
-                if len(row) > 1:
-                    module = row[0].strip()
-                    contact = row[1].strip()
-                else:
-                    parser.error("Module {} has no corresponding contact in CSV file".format(row[0]))
-                    return
-                if len(row) > 3:
-                    cc = row[3].strip()
-                else:
-                    cc = "Not Assigned"
-
-                if module not in modules:
-                    parser.error("Module " + module + " not in {1} area".format(module, args.area))
-                if module in [x[0] for x in contacts]:
-                    parser.error("Module {} defined twice".format(module))
-
-                contacts.append((module, contact, cc))
-    else:
+    if not csv_file:
         parser.error("CSV file is empty")
+
+    contacts = []
+    for row in csv_file:
+        # Check for header row and skip
+        if row[0] != "Module":
+            # CSV file format should be: [Module],[Contact],Contact Name,[CC],CC Name
+            if len(row) > 1:
+                module = row[0].strip()
+                contact = row[1].strip()
+            else:
+                parser.error("Module {} has no corresponding contact in CSV file".format(row[0]))
+                return
+            if len(row) > 3:
+                cc = row[3].strip()
+            else:
+                cc = "unspecified"
+
+            if module not in modules:
+                parser.error("Module {module} not in {area} area".format(module=module, area=args.area))
+            if module in [x[0] for x in contacts]:
+                parser.error("Module {} defined twice in CSV file".format(module))
+
+            contacts.append((module, contact, cc))
 
     return contacts
 
 
-def edit_contact_info(parser, contact, cc, module, repo):
+def edit_contact_info(module, repo, contact='', cc=''):
 
-    current_contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-    current_cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+    # Check that FED-IDs exist, if they don't lookup...() will (possibly) hang and raise an exception
+    if contact:
+        contact = contact.strip()
+        lookup_contact_name(contact)
+    if contact:
+        cc = cc.strip()
+        lookup_contact_name(cc)
 
     git_attr_file = open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb')
 
-    fed_reg_ex = re.compile(r"^[a-z]{2,6}[0-9]{2,6}$")
-    if not re.match(fed_reg_ex, contact):
-        parser.error(contact + " is not a valid FED-ID")
-    if not re.match(fed_reg_ex, cc):
-        parser.error(cc + " is not a valid FED-ID")
-
-    if contact and re.match(fed_reg_ex, contact):
-        contact = contact.strip()
+    if contact:
         print("{0}: Setting contact to {1}".format(module, contact))
         git_attr_file.write("* module-contact={}\n".format(contact))
-    else:
-        print(contact + " is not a valid FED-ID, leaving contact unchanged")
-        git_attr_file.write("* module-contact={}\n".format(current_contact))
-
-    if cc and re.match(fed_reg_ex, cc):
-        cc = cc.strip()
+    if cc:
         print("{0}: Setting cc to {1}".format(module, cc))
         git_attr_file.write("* module-cc={}\n".format(cc))
-    else:
-        print(cc + " is not a valid FED-ID, leaving contact unchanged")
-        git_attr_file.write("* module-cc={}\n".format(current_cc_contact))
 
     git_attr_file.close()
 
@@ -221,20 +196,34 @@ def main():
 
     check_parsed_args_compatible(parser, args)
 
-    # Create the list of modules from args or the gitolite server if none provided
-    modules = get_module_list(args)
+    # Create the list of modules from args, or the gitolite server if none provided
+    modules = []
+    if args.modules:
+        for module in args.modules:
+            modules.append(module)
+    # If modules not specified, list entire area
+    else:
+        for module in get_repo_module_list(args.area):
+            modules.append(module)
 
     if not (args.contact or args.cc or args.imp):
-        # Print/save requested contacts and end script
+        # Print requested contacts and end script
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")
         for module in modules:
-            # >>> Use temp_clone once merged
             source = pathf.devModule(module, args.area)
+            # >>> Use temp_clone once merged
             # vcs_git.clone(source, module)
             repo = vcs_git.git.Repo(module)
 
-            output_contact_info(args, repo, module)
+            # Retrieve contact info
+            contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
+            cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+
+            if args.csv:
+                output_csv_format(contact, cc_contact, repo, module)
+            else:
+                print("Contact: " + contact + " (CC: " + cc_contact + ")")
 
             # shutil.rmtree(module)
         return 0
@@ -266,7 +255,7 @@ def main():
         # vcs_git.clone(source, module)
         repo = vcs_git.git.Repo(module)
 
-        edit_contact_info(contact, cc, module, repo)
+        edit_contact_info(module, repo, contact, cc,)
 
         # git add, commit, push
         # shutil.rmtree(module)
