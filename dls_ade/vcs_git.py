@@ -24,10 +24,6 @@ def is_repo_path(server_repo_path):
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
-    # list_cmd_output is some heading text followed by a module list in the form:
-    # R   W 	(alan.greer)	controls/support/ADAndor
-    # R   W 	(ronaldo.mercado)	controls/support/ethercat
-    # This is split to give a list that includes the module file paths, then checked against <server_repo_path>
 
     return server_repo_path in list_cmd_output
 
@@ -41,6 +37,10 @@ def get_repository_list():
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
+    # list_cmd_output is some heading text followed by a module list in the form:
+    # R   W 	(alan.greer)	controls/support/ADAndor
+    # R   W 	(ronaldo.mercado)	controls/support/ethercat
+    # This is split and entries with a '/' are added to a list of the module file paths
     split_list = []
     for entry in list_cmd_output.split():
         if '/' in entry:
