@@ -188,11 +188,22 @@ def main():
         raw = True
     else:
         raw = False
-    
+
+    # Find longest author name to pad all lines to the same length
+    log_summary = repo.git.shortlog(start + ".." + end, '-s', '-n').split('\n')
+    # ['   129\tRonaldo Mercado', '     9\tJames Rowland', '     5\tIan Gillingham']
+    author_list = []
+    for entry in log_summary:
+        author_list.append(entry.split('\t')[1])
+    max_author_length = 0
+    for author in author_list:
+        if len(author) > max_author_length:
+            max_author_length = len(author)
+
     # Add formatting parameters
     if args.verbose:
         max_line_length = 60
-        message_padding = 51
+        message_padding = 50
     else:
         max_line_length = 80
         message_padding = 30
@@ -202,7 +213,7 @@ def main():
     prev_commit = ''
     for entry in logs:
         commit_hash = entry.split()[0]
-        name = '{:<20}'.format(entry.split('\n')[1])
+        name = '{:<{}}'.format(entry.split('\n')[1], max_author_length)
 
         # Add commit subject message
         commit_message = filter(None, entry.split('\n')[2])
