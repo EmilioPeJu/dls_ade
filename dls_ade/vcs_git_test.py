@@ -191,7 +191,7 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
-        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
+        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls/'
 
         with self.assertRaises(Exception):
             vcs_git.Git("FakeModuleNumberOne", FakeOptions())
