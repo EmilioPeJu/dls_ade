@@ -16,9 +16,7 @@ Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
 from the revision number when <earlier_release> was done, to the revision
 when <later_release> was done. If not specified, <earlier_release> defaults to
-revision 0, and <later_release> defaults to the head revision. If
-<earlier_release> is given an invalid value (like 'latest') if will be set
-to the latest release.
+revision the most recent release, and <later_release> defaults to the head revision.
 """
 
 
@@ -36,14 +34,14 @@ def make_parser():
         "module_name", type=str, default=None,
         help="name of module")
     parser.add_argument(
-        "earlier_release", type=str, default='0',
+        "-e", "--earlier_release", action="store", dest="earlier_release", type=str,
         help="start point of log messages")
     parser.add_argument(
-        "later_release", type=str, default='1',
+        "-l", "--later_release", action="store", dest="later_release", type=str,
         help="end point of log messages")
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose",
-        help="Print lots of log information")
+        help="Adds date, time and file diff information to logs")
     parser.add_argument(
         "-r", "--raw", action="store_true", dest="raw",
         help="Print raw text (not in colour)")
@@ -130,9 +128,10 @@ def main():
 
     e = environment()
 
-    test_list = e.sortReleases([args.earlier_release, args.later_release])
-    if args.later_release == test_list[0] and args.later_release != 'HEAD':
-        parser.error("<later_release> must be more recent than <earlier_release>")
+    if args.earlier_release and args.later_release:
+        test_list = e.sortReleases([args.earlier_release, args.later_release])
+        if args.later_release == test_list[0] and args.later_release != 'HEAD':
+            parser.error("<later_release> must be more recent than <earlier_release>")
 
     pathf.check_technical_area_valid(args, parser)
 
@@ -154,6 +153,11 @@ def main():
         parser.error("Module " + args.module_name + " doesn't exist in " + source)
         # return so 'releases' can't be referenced before assignment
         return 1
+
+    if not args.earlier_release:
+        args.earlier_release = releases[-1]
+    if not args.later_release:
+        args.later_release = 'HEAD'
 
     if args.earlier_release in releases:
         start = args.earlier_release
