@@ -7,9 +7,16 @@ version = os.environ.get("MODULEVER", "0.0")
 # find the build scripts
 savecwd=os.getcwd()
 os.chdir("dls_ade")
+
 build_scripts = []
 for root, subFolders, files in os.walk("dlsbuild_scripts"):
     build_scripts += [os.path.join(root, x) for x in files if x.endswith(".bat") or x.endswith(".sh") ]
+
+template_files = []
+for root, _, files in os.walk("new_module_templates"):
+    template_files += [os.path.join(root, x) for x in files]
+
+additional_files = build_scripts + template_files
 os.chdir(savecwd)
 
 setup(
@@ -29,7 +36,7 @@ setup(
     license='APACHE',
     install_requires = ['GitPython>=0.3.2', 'python-ldap>=2.3.12', 'six'],
     packages = ["dls_ade","dls_environment"],
-    package_data = {"dls_ade": build_scripts, "dls_ade": ['new_module_templates/*']},
+    package_data = {"dls_ade": additional_files},
     # define console_scripts
     entry_points = { 'console_scripts':
                          ['dls-release.py = dls_ade.dls_release:main',] },
