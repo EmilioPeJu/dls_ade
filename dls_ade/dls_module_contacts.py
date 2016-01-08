@@ -20,14 +20,14 @@ logging.basicConfig(level=logging.DEBUG)
 usage = """
 Default <area> is 'support'.
 Utility for setting and showing primary contact (contact) and seconday contact
-(cc) properties. If any <module_name_N> are specified, only show and set
+(cc) properties. If any <modules> are specified, only show and set
 properties on those modules, otherwise operate on the entire area.
 
 e.g.
 %prog ip autosave calc
-# View the contacts for the ip, autosave and calc modules
+# View the contacts for the ip, autosave and calc modules in support area
 
-%prog -a support -s
+%prog -s
 # View all the module contacts and ccs in the support area in csv format
 
 %prog -c tmc43 -d jr76 -p pysvn
@@ -35,7 +35,7 @@ e.g.
 
 %prog -m /tmp/module_contacts_backup.csv
 # Import the module contacts and cc from the csv file and set them in svn.
-# The csv file is the same format as produced by the -s command, but
+# The csv file must be in the same format as produced by the -s command, but
 # any specified contact and cc names are ignored, only fed-ids are used.
 """
 
@@ -206,8 +206,8 @@ def main():
         for module in get_repo_module_list(args.area):
             modules.append(module)
 
+    # If no contacts or csv file provided to edit, default script operation: print contacts
     if not (args.contact or args.cc or args.imp):
-        # Print requested contacts and end script
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")
         for module in modules:
@@ -230,7 +230,7 @@ def main():
 
     # If we get to this point, we are assigning contacts
 
-    # Confirm user intention to set all contacts/cc in an area to one person
+    # Confirm user intention to set all modules in an area to one contact/cc
     if not args.modules and (args.contact or args.cc):
         answer = raw_input("Are you sure you want to set the contacts and cc for all modules in area "
                            "{0}, from file {1}? Enter Y or N: ".format(args.area, args.imp))
