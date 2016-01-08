@@ -122,16 +122,22 @@ def get_new_module_creator_ioc(module_name, fullname=False):
 
     """
     area = "ioc"
-    cols = re.split(r'[-/]', module_name)
+
+    cols = module_name.split('/')
+    dash_separated = False
 
     if len(cols) <= 1 or not cols[1]:
-        err_message = ("Need a name with dashes or hyphens in it, got "
-                       "{module:s}")
-        raise Error(err_message.format(module=module_name))
+        cols = module_name.split('-')
+        dash_separated = True
+
+        # This has different check to retain compatibility with old svn script.
+        if len(cols) <= 1:
+            err_message = ("Need a name with dashes or hyphens in it, got "
+                           "{module:s}")
+            raise Error(err_message.format(module=module_name))
 
     domain = cols[0]
     technical_area = cols[1]
-    dash_separated = "/" not in module_name
 
     if technical_area == "BL":
         module_template_cls = ModuleTemplateIOCBL
@@ -333,11 +339,6 @@ class NewModuleCreator(object):
         # TODO(Martin) vendor modules are stored on gitolite.
         vendor_path = pathf.vendorModule(self._module_path, self._area)
 
-        # Production location for module
-        # NOTE: No longer applies with git, as the releases are now indicated
-        # by tags on the git repository.
-        # prod_path = pathf.prodModule(self._module_path, self._area)
-
         dir_list = [server_repo_path, vendor_path]
 
         return dir_list
@@ -362,7 +363,7 @@ class NewModuleCreator(object):
         """
 
         mod_dir_exists = os.path.exists(self.disk_dir)
-        cwd_is_repo = vcs_git.is_git_dir()
+        cwd_is_repo = vcs_git.is_git_dir(self._cwd)
 
         if mod_dir_exists or cwd_is_repo:
             err_list = []

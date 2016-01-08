@@ -64,7 +64,7 @@ def main():
     nmc_obj.print_message()
 
     if not no_import:
-        #nmc_obj.push_repo_to_remote()
+        # nmc_obj.push_repo_to_remote()
         print("push_repo_to_remote")
         # I want to test push_repo_to_remote() properly before I uncomment this
     else:
@@ -72,5 +72,5 @@ def main():
 
 
 if __name__ == "__main__":
-    #sys.exit(main())
+    # sys.exit(main())
     sys.exit()  # Stops us from running incomplete version!
