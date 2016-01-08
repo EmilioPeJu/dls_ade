@@ -9,7 +9,7 @@ import path_functions as pathf
 import vcs_git
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 
 usage = """
 Default <area> is 'support'.
@@ -154,10 +154,16 @@ def main():
         # return so 'releases' can't be referenced before assignment
         return 1
 
-    if not args.earlier_release:
-        args.earlier_release = releases[-1]
+    # Set earlier_releases and later_releases to defaults if not provided
     if not args.later_release:
         args.later_release = 'HEAD'
+    if not args.earlier_release:
+        # If later_release specified then print from first release to that point.
+        # If later_release is not specified, print logs since (most recent) release
+        if args.later_release == 'HEAD':
+            args.earlier_release = releases[-1]
+        else:
+            args.earlier_release = releases[0]
 
     if args.earlier_release in releases:
         start = args.earlier_release
@@ -195,22 +201,30 @@ def main():
 
     # Find longest author name to pad all lines to the same length
     log_summary = repo.git.shortlog(start + ".." + end, '-s', '-n').split('\n')
+    logging.debug(log_summary)
     # ['   129\tRonaldo Mercado', '     9\tJames Rowland', '     5\tIan Gillingham']
     author_list = []
     for entry in log_summary:
         author_list.append(entry.split('\t')[1])
     max_author_length = 0
     for author in author_list:
+        logging.debug(author)
         if len(author) > max_author_length:
             max_author_length = len(author)
+            logging.debug(max_author_length)
+    # Add a space before the ':' on the longest author (Just for appearance)
+    max_author_length += 1
 
     # Add formatting parameters
+    screen_width = 100
     if args.verbose:
-        max_line_length = 60
-        message_padding = 50
+        # len("e38e73a 01 May 2015 16:20:46 " + ": ") = 31
+        overflow_message_padding = max_author_length + 31
+        max_line_length = screen_width - overflow_message_padding
     else:
-        max_line_length = 80
-        message_padding = 30
+        # len("e38e73a " + ": ") = 10
+        overflow_message_padding = max_author_length + 10
+        max_line_length = screen_width - overflow_message_padding
 
     # Make list of logs
     formatted_logs = []
@@ -225,15 +239,16 @@ def main():
             commit_message = format_message_width(commit_message, max_line_length)
             formatted_message = commit_message[0]
             for line in commit_message[1:]:
-                formatted_message += '\n' + '{:<{}}'.format('...', message_padding) + line
+                formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
         else:
             formatted_message = commit_message
 
         # Check if there is a commit message body and append it
         if len(filter(None, entry.split('\n'))) > 4:
+            # The +/- 5 adds an offset for the message body, while maintaining message length
             commit_body = format_message_width(filter(None, entry.split('\n')[3:]), max_line_length - 5)
             for line in commit_body:
-                formatted_message += '\n' + '{:<{}}'.format('>>>', message_padding + 5) + line
+                formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
 
         # Add date, time and diff info if verbose
         if args.verbose:
@@ -254,8 +269,6 @@ def main():
         else:
             formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
                                   colour(name, green, raw) + ': ' + formatted_message)
-
-    # .format in the message padding once we know what the longest name is?
 
     print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
 
