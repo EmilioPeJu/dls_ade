@@ -263,17 +263,14 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
     def setUp(self):
         self.patch_is_git_root_dir = patch('dls_ade.vcs_git.is_git_root_dir')
         self.patch_create_remote_repo = patch('dls_ade.vcs_git.create_remote_repo')
-        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
         self.patch_git = patch('dls_ade.vcs_git.git')
 
         self.addCleanup(self.patch_is_git_root_dir.stop)
         self.addCleanup(self.patch_create_remote_repo.stop)
-        self.addCleanup(self.patch_is_repo_path.stop)
         self.addCleanup(self.patch_git.stop)
 
         self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
         self.mock_create_remote_repo = self.patch_create_remote_repo.start()
-        self.mock_is_repo_path = self.patch_is_repo_path.start()
         self.mock_git = self.patch_git.start()
 
     def test_given_is_git_root_dir_false_then_exception_raised_with_correct_message(self):
@@ -330,23 +327,6 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_is_repo_path_true_then_exception_raised_with_correct_message(self):
-
-        self.mock_is_git_root_dir.return_value = True
-        branches_list = [self.BranchEntry("test_branch")]
-        mock_repo = self.StubGitRepo(branches_list, [], MagicMock(), MagicMock())
-        self.mock_git.Repo.return_value = mock_repo
-
-        self.mock_is_repo_path.return_value = True
-
-        comp_message = "{dest:s} already exists".format(dest="test_destination")
-
-        with self.assertRaises(Exception) as e:
-            vcs_git.add_new_remote_and_push("test_destination", branch_name="test_branch")
-
-        self.mock_is_repo_path.assert_called_once_with("test_destination")
-        self.assertEqual(str(e.exception), comp_message)
-
     def test_given_all_checks_pass_then_function_runs_correctly(self):
 
         mock_remote = MagicMock()  # Mock to represent the 'remote' local variable
@@ -356,7 +336,6 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         branches_list = [self.BranchEntry("test_branch")]
         mock_repo = self.StubGitRepo(branches_list, [], mock_remote, mock_create_remote)
         self.mock_git.Repo.return_value = mock_repo
-        self.mock_is_repo_path.return_value = False
 
         vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
@@ -373,7 +352,6 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         branches_list = [self.BranchEntry("master")]
         mock_repo = self.StubGitRepo(branches_list, [], mock_remote, mock_create_remote)
         self.mock_git.Repo.return_value = mock_repo
-        self.mock_is_repo_path.return_value = False
 
         vcs_git.add_new_remote_and_push("test_destination")
 
@@ -385,16 +363,31 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
 class CreateRemoteRepoTest(unittest.TestCase):
 
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('dls_ade.vcs_git.tempfile.mkdtemp', return_value = 'tempdir')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.shutil.rmtree')
-    def test_given_arguments_reasonable_then_function_runs_correctly(self, mock_rmtree, mock_clone_from, mock_mkdtemp):
+    def test_given_arguments_reasonable_then_function_runs_correctly(self, mock_rmtree, mock_clone_from, mock_mkdtemp, mock_is_repo_path):
 
         vcs_git.create_remote_repo("test_destination")
 
         mock_mkdtemp.assert_called_once_with()
         mock_clone_from.assert_called_once_with(os.path.join(vcs_git.GIT_SSH_ROOT, "test_destination"), "tempdir")
         mock_rmtree.assert_called_once_with("tempdir")
+
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp', return_value = 'tempdir')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.shutil.rmtree')
+    def test_given_is_repo_path_true_then_exception_raised_with_correct_message(self, mock_rmtree, mock_clone_from, mock_mkdtemp, mock_is_repo_path):
+
+        comp_message = "{dest:s} already exists".format(dest="test_destination")
+
+        with self.assertRaises(Exception) as e:
+            vcs_git.create_remote_repo("test_destination")
+
+        mock_is_repo_path.assert_called_once_with("test_destination")
+        self.assertEqual(str(e.exception), comp_message)
 
 
 class PushToRemoteTest(unittest.TestCase):
@@ -666,9 +659,10 @@ class GitClassInitTest(unittest.TestCase):
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
+    def test_given_args_for_real_repo_then_do_not_raise_exception(self, mock_is_repo_path, _1, _2):
 
         try:
             vcs_git.Git('dummy', FakeOptions())
