@@ -204,8 +204,8 @@ def main():
     logging.debug(log_summary)
     # ['   129\tRonaldo Mercado', '     9\tJames Rowland', '     5\tIan Gillingham']
     author_list = []
-    for entry in log_summary:
-        author_list.append(entry.split('\t')[1])
+    for log_entry in log_summary:
+        author_list.append(log_entry.split('\t')[1])
     max_author_length = 0
     for author in author_list:
         logging.debug(author)
@@ -229,12 +229,13 @@ def main():
     # Make list of logs
     formatted_logs = []
     prev_commit = ''
-    for entry in logs:
-        commit_hash = entry.split()[0]
-        name = '{:<{}}'.format(entry.split('\n')[1], max_author_length)
+    for log_entry in logs:
+        log_lines = log_entry.split('\n')
+        commit_hash = log_lines[0].split()[0]
+        name = '{:<{}}'.format(log_lines[1], max_author_length)
 
         # Add commit subject message
-        commit_message = filter(None, entry.split('\n')[2])
+        commit_message = filter(None, log_lines[2])
         if len(commit_message) > max_line_length:
             commit_message = format_message_width(commit_message, max_line_length)
             formatted_message = commit_message[0]
@@ -244,17 +245,17 @@ def main():
             formatted_message = commit_message
 
         # Check if there is a commit message body and append it
-        if len(filter(None, entry.split('\n'))) > 4:
+        if len(filter(None, log_lines)) > 4:
             # The +/- 5 adds an offset for the message body, while maintaining message length
-            commit_body = format_message_width(filter(None, entry.split('\n')[3:]), max_line_length - 5)
+            commit_body = format_message_width(filter(None, log_lines[3:]), max_line_length - 5)
             for line in commit_body:
                 formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
 
         # Add date, time and diff info if verbose
         if args.verbose:
             # Add '0' to front of day if only one digit, to keep consistent length
-            date = '{:0>2}'.format(entry.split()[2]) + ' ' + entry.split()[3] + ' ' + entry.split()[4]
-            time = entry.split()[5]
+            date = '{:0>2}'.format(log_entry.split()[2]) + ' ' + log_entry.split()[3] + ' ' + log_entry.split()[4]
+            time = log_entry.split()[5]
 
             formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
                                   colour(date, cyan, raw) + ' ' +
