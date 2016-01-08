@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
 class Error(Exception):
@@ -50,7 +51,8 @@ def is_git_root_dir(path="."):
 
 def is_repo_path(server_repo_path):
 
-    list_cmd = "ssh " + GIT_ROOT + " expand controls"
+    list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
+    list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
     list_cmd_output = subprocess.check_output(list_cmd.split())
 
     return server_repo_path in list_cmd_output
