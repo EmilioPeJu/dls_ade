@@ -191,6 +191,10 @@ def main():
     # Sort logs from earliest to latest
     logs.reverse()
 
+    if not logs:
+        print("No changes have been made to " + args.module_name + " since most recent release " + releases[-1])
+        return 0
+
     # Don't write coloured text if args.raw is True
     if args.raw or \
             (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
@@ -229,20 +233,21 @@ def main():
     formatted_logs = []
     prev_commit = ''
     for log_entry in logs:
-        log_lines = log_entry.split('\n')
+        log_lines = filter(None, log_entry.split('\n'))
+        logging.debug(log_lines)
         commit_hash = log_lines[0].split()[0]
         name = '{:<{}}'.format(log_lines[1], max_author_length)
 
         # Add commit subject message
-        commit_message = format_message_width(filter(None, log_lines[2]), max_line_length)
+        commit_message = format_message_width(log_lines[2], max_line_length)
         formatted_message = commit_message[0]
         for line in commit_message[1:]:
             formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
 
         # Check if there is a commit message body and append it
-        if len(filter(None, log_lines)) > 4:
+        if len(log_lines) > 4:
             # The +/- 5 adds an offset for the message body, while maintaining message length
-            commit_body = format_message_width(filter(None, log_lines[3:]), max_line_length - 5)
+            commit_body = format_message_width(log_lines[3:], max_line_length - 5)
             for line in commit_body:
                 formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
 
