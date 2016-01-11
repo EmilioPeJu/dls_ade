@@ -164,6 +164,7 @@ def main():
         else:
             args.earlier_release = releases[0]
 
+    # Check that given releases exist
     if args.earlier_release in releases:
         start = args.earlier_release
     else:
@@ -182,7 +183,6 @@ def main():
     #       %s[(re-apply changeset 131625)]
     #       %b[GenericADC cycle parameter default now blank
     #       to prevent accidental "None" strings in startup script][<END>]
-
     logs = repo.git.log(start + ".." + end, "--format=%h %aD %n%cn %n%s%n%b%n<END>")
     # Add log for start; end is included in start..end but start is not
     logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
@@ -191,7 +191,7 @@ def main():
     # Sort logs from earliest to latest
     logs.reverse()
 
-    # don't write coloured text if args.raw is True
+    # Don't write coloured text if args.raw is True
     if args.raw or \
             (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
         raw = True
@@ -234,14 +234,10 @@ def main():
         name = '{:<{}}'.format(log_lines[1], max_author_length)
 
         # Add commit subject message
-        commit_message = filter(None, log_lines[2])
-        if len(commit_message) > max_line_length:
-            commit_message = format_message_width(commit_message, max_line_length)
-            formatted_message = commit_message[0]
-            for line in commit_message[1:]:
-                formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
-        else:
-            formatted_message = commit_message
+        commit_message = format_message_width(filter(None, log_lines[2]), max_line_length)
+        formatted_message = commit_message[0]
+        for line in commit_message[1:]:
+            formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
 
         # Check if there is a commit message body and append it
         if len(filter(None, log_lines)) > 4:
