@@ -122,7 +122,49 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
 
 
 class LookupContactNameTest(unittest.TestCase):
-    pass
+
+    @patch('dls_ade.dls_module_contacts.ldap')
+    def test_search_parameters_correct(self, mock_ldap):
+        fed_id = "fed123"
+        basedn = "dc=fed,dc=cclrc,dc=ac,dc=uk"
+        search_filter = "(&(cn={}))".format(fed_id)
+        search_attribute = ["givenName", "sn"]
+        mock_ldap.SCOPE_SUBTREE.return_value = "test_scope_subtree"
+        search_scope = mock_ldap.SCOPE_SUBTREE
+
+        ldap_inst = MagicMock()
+        mock_ldap.initialize.return_value = ldap_inst
+
+        dls_module_contacts.lookup_contact_name(fed_id)
+
+        mock_ldap.initialize.assert_called_once_with("ldap://altfed.cclrc.ac.uk")
+        ldap_inst.search.assert_called_once_with(basedn, search_scope, search_filter, search_attribute)
+
+    @patch('dls_ade.dls_module_contacts.ldap')
+    def test_given_unsuccessful_fed_id_search_then_error_raised(self, mock_ldap):
+        fed_id = "not_a_fed123"
+
+        ldap_inst = MagicMock()
+        mock_ldap.initialize.return_value = ldap_inst
+        ldap_inst.result.return_value = \
+            (115, [(None, ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
+
+        with self.assertRaises(Exception):
+            dls_module_contacts.lookup_contact_name(fed_id)
+
+    @patch('dls_ade.dls_module_contacts.ldap')
+    def test_given_successful_fed_id_search_then_no_error_raised(self, mock_ldap):
+        fed_id = "fed123"
+
+        ldap_inst = MagicMock()
+        mock_ldap.initialize.return_value = ldap_inst
+        ldap_inst.result.return_value = \
+            (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
+                    {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
+
+        contact_name = dls_module_contacts.lookup_contact_name(fed_id)
+
+        self.assertEqual(contact_name, "<FirstName> <Surname>")
 
 
 class OutputContactInfoTest(unittest.TestCase):
@@ -146,8 +188,7 @@ class OutputContactInfoTest(unittest.TestCase):
             dls_module_contacts.output_csv_format(contact, cc, module)
 
         call_args = mock_print.call_args_list
-        # This needs to be compared as a tuple to match properly
-        self.assertEqual(call_args[0][0], ("test_module,test_contact,test_contact_name,test_cc,test_cc_name", ))
+        self.assertEqual(call_args[0][0][0], "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
 
 
 class ImportFromCSVTest(unittest.TestCase):
@@ -229,12 +270,14 @@ class ImportFromCSVTest(unittest.TestCase):
 
 class EditContactInfoTest(unittest.TestCase):
 
-    def test_given_contact_then_set(self):
-        pass
-        # repo_inst = MagicMock()
-        #
-        # with patch.object(builtins, 'open') as mock_file:
-        #     dls_module_contacts.edit_contact_info("user123", "user456", "test_module", repo_inst)
-        #     output = mock_file.read()
-        #
-        # self.assertEqual(output, "* module-contact=" + "user123\n" + "* module-cc=user456/n")
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    def test_given_contact_then_set(self, _1):
+        repo_inst = MagicMock()
+        repo_inst.working_tree_dir.return_value = "test/test_module"
+
+        with patch.object(builtins, 'open', mock_open(read_data='test_data')):
+            with open('test_file') as mock_file:
+                dls_module_contacts.edit_contact_info(repo_inst, "user123", "user456")
+
+        self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user123\n")
+        self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
