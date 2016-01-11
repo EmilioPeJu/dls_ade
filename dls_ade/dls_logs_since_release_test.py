@@ -132,7 +132,7 @@ class FormatMessageWidthTest(unittest.TestCase):
 
         formatted_message = dls_logs_since_release.format_message_width(message, max_len)
 
-        self.assertEqual(formatted_message, ["/dls_sw/prod/R3.14.11", "/support/"])
+        self.assertEqual(formatted_message, ["/dls_sw/prod/R3.14.1", "1/support/"])
 
     def test_given_list_too_long_no_spaces_then_formatted_with_no_removal(self):
         message = ["/dls_sw/prod/R3.14.11/support/"]
@@ -140,4 +140,4 @@ class FormatMessageWidthTest(unittest.TestCase):
 
         formatted_message = dls_logs_since_release.format_message_width(message, max_len)
 
-        self.assertEqual(formatted_message, ["/dls_sw/prod/R3.14.11", "/support/"])
+        self.assertEqual(formatted_message, ["/dls_sw/prod/R3.14.1", "1/support/"])
