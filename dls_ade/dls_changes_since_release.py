@@ -50,13 +50,10 @@ def main():
         parser.error("Repository does not contain " + source)
 
     if vcs_git.is_repo_path(source):
-        if os.path.isdir('./' + module):
-            repo = vcs_git.git.Repo(module)
-            releases = vcs_git.list_module_releases(repo)
-        else:
-            vcs_git.clone(source, module)
-            repo = vcs_git.git.Repo(module)
-            releases = vcs_git.list_module_releases(repo)
+        # Use temp_clone
+        vcs_git.clone(source, module)
+        repo = vcs_git.git.Repo(module)
+        releases = vcs_git.list_module_releases(repo)
 
         if releases:
             last_release_num = releases[-1]
@@ -69,6 +66,8 @@ def main():
         # return so repo can't be referenced before assignment
         return
 
+    # Get a single log between last release and HEAD
+    # If there is one, then changes have been made
     logs = repo.git.log(last_release_num + "..HEAD", '-1')
     if logs:
         print("Changes have been made to " + module + " since release " + last_release_num)
