@@ -103,6 +103,29 @@ def clone(source, module):
     return repo
 
 
+def temp_clone(source):
+    """
+    Clones repo to /tmp directory and returns the path to the repo instance to access information
+
+    Args:
+        source: URL of remote repo to clone
+
+    Returns:
+        Path to repo
+    """
+    if not is_repo_path(source):
+        raise Exception("Repository does not contain " + source)
+
+    if source[-1] == '/':
+        source = source[:-1]
+
+    path = os.path.join("/tmp", 'temp_module')
+
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), path)
+
+    return repo
+
+
 def clone_multi(source):
     """
     Checks if source is valid, then clones all repositories in source
@@ -147,8 +170,9 @@ def list_remote_branches(repo):
     for ref in repo.references:
         if ref not in repo.branches + repo.tags:
             remote = str(ref).split('/')[1]
-            if remote not in ['master', 'HEAD']:
+            if remote not in ['HEAD']:
                 branches.append(remote)
+
     return branches
 
 

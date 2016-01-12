@@ -73,6 +73,35 @@ class CloneTest(unittest.TestCase):
         mock_clone.assert_called_once_with(ANY)
 
 
+class TempCloneTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
+    @patch('git.Repo.clone_from')
+    def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
+        source = "/does/not/exist"
+
+        with self.assertRaises(Exception):
+            vcs_git.temp_clone(source)
+
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
+    @patch('git.Repo.clone_from')
+    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
+        source = "/does/exist"
+
+        vcs_git.temp_clone(source)
+
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
+    @patch('git.Repo.clone_from')
+    def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
+                                                              mock_is_repo_path):
+        root = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+        source = "test/source"
+
+        vcs_git.temp_clone(source)
+
+        mock_clone_from.assert_called_once_with(root + source, "/tmp/temp_module")
+
+
 class CloneMultiTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
@@ -132,8 +161,8 @@ class ListRemoteBranchesTest(unittest.TestCase):
 
         repo_inst = MagicMock()
         repo_inst.references = ["origin/HEAD", "origin/master",
-                                                 "origin/1-5-8fixes", "master",
-                                                 "waveforms", "1-0, 2-1"]
+                                "origin/1-5-8fixes", "master",
+                                "waveforms", "1-0, 2-1"]
         repo_inst.branches = ["master", "waveforms"]
         repo_inst.tags = ["1-0, 2-1"]
 
@@ -141,7 +170,7 @@ class ListRemoteBranchesTest(unittest.TestCase):
 
         self.assertNotIn('->', branches)
         self.assertNotIn('HEAD', branches)
-        self.assertNotIn('master', branches)
+        self.assertIn('master', branches)
         self.assertNotIn('1-0', branches)
         self.assertNotIn('2-1', branches)
 
@@ -153,6 +182,7 @@ class ListRemoteBranchesTest(unittest.TestCase):
         mock_git.Repo = repo
         repo.references = ["origin/1-5-8fixes", "origin/3-x-branch",
                                         "origin/3104_rev14000a_support"]
+
 
         branches = vcs_git.list_remote_branches(repo)
 
