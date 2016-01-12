@@ -121,9 +121,9 @@ def temp_clone(source):
 
     path = os.path.join("/tmp", 'temp_module')
 
-    git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), path)
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), path)
 
-    return path
+    return repo
 
 
 def clone_multi(source):
