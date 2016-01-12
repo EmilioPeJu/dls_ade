@@ -170,7 +170,7 @@ def list_remote_branches(repo):
     for ref in repo.references:
         if ref not in repo.branches + repo.tags:
             remote = str(ref).split('/')[1]
-            if remote not in ['master', 'HEAD']:
+            if remote not in ['HEAD']:
                 branches.append(remote)
 
     return branches

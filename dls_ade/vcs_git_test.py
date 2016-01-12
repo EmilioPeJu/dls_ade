@@ -161,8 +161,8 @@ class ListRemoteBranchesTest(unittest.TestCase):
 
         repo_inst = MagicMock()
         repo_inst.references = ["origin/HEAD", "origin/master",
-                                                 "origin/1-5-8fixes", "master",
-                                                 "waveforms", "1-0, 2-1"]
+                                "origin/1-5-8fixes", "master",
+                                "waveforms", "1-0, 2-1"]
         repo_inst.branches = ["master", "waveforms"]
         repo_inst.tags = ["1-0, 2-1"]
 
@@ -170,7 +170,7 @@ class ListRemoteBranchesTest(unittest.TestCase):
 
         self.assertNotIn('->', branches)
         self.assertNotIn('HEAD', branches)
-        self.assertNotIn('master', branches)
+        self.assertIn('master', branches)
         self.assertNotIn('1-0', branches)
         self.assertNotIn('2-1', branches)
 
