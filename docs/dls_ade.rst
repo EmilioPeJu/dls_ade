@@ -11,6 +11,11 @@
 .. automodule:: dls_ade.dls_checkout_module
     :members:
 
+:mod:`dls_ade.dls_start_new_module` module
+--------------------------------------------
+.. automodule:: dls_ade.dls_start_new_module
+    :members:
+
 :mod:`dls_ade.dls_release` module
 --------------------------------------
 .. automodule:: dls_ade.dls_release

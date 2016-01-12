@@ -28,7 +28,17 @@ usage = ("Default <area> is 'support'."
 
 
 def make_parser():
+    """
+    Returns default parser with additional, module-specific arguments.
 
+    The additional parser arguments are:
+        - module_name
+        - --no-import
+        - --fullname.
+
+    Returns:
+        An ArgumentParser instance with additional arguments
+    """
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None,

@@ -1,6 +1,7 @@
 # py_files: initial files for a python module
 # tools_files: initial files for a tools module
-# Escape braces { with an extra brace of the same type. This is for the 'format' string method
+# Escape braces { with an extra brace of the same type.
+# This is for the 'format' string method
 # eg. "dict = {}" -> "dict = {{}}"
 
 py_files = {}

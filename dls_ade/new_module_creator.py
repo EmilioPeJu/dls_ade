@@ -225,7 +225,7 @@ class NewModuleCreator(object):
     """
 
     def __init__(self, module_path, area, module_template_cls,
-                **kwargs):
+                 **kwargs):
         """Default initialisation of all object attributes.
 
         Args:
@@ -254,8 +254,8 @@ class NewModuleCreator(object):
         self._server_repo_path = pathf.devModule(self._module_path, self._area)
 
         template_args = {'module_name': self._module_name,
-                        'module_path': self._module_path,
-                        'user_login': os.getlogin()}
+                         'module_path': self._module_path,
+                         'user_login': os.getlogin()}
 
         if kwargs:
             template_args.update(kwargs)
