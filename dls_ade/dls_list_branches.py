@@ -1,7 +1,6 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-import os
 import sys
 import shutil
 from argument_parser import ArgParser
@@ -59,14 +58,14 @@ def main():
 
     print("Branches of " + args.module_name + ":\n")
 
-    path_to_repo = vcs_git.temp_clone(source)
+    repo = vcs_git.temp_clone(source)
 
-    branches = vcs_git.list_remote_branches(path_to_repo)
+    branches = vcs_git.list_remote_branches(repo)
     for branch in branches:
         print branch
     print("")
 
-    shutil.rmtree(path_to_repo)
+    shutil.rmtree(repo.working_tree_dir)
 
 
 if __name__ == "__main__":
