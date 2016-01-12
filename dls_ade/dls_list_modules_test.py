@@ -33,19 +33,21 @@ class PrintModuleListTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_subprocess_called_with_correct_list(self, mock_sub):
-        source = "/test/source"
+        source = "test/source"
+        area = "test/area"
         list_cmd = "ssh " + dls_list_modules.vcs_git.GIT_ROOT + " expand controls"
 
-        dls_list_modules.print_module_list(source)
+        dls_list_modules.print_module_list(source, area)
 
         mock_sub.assert_called_once_with(list_cmd.split())
 
     @patch('dls_ade.vcs_git.subprocess.check_output', return_value="/test/source/module")
     def test_print_called(self, mock_sub):
-        source = "/test/source"
+        source = "test/source"
+        area = "test/area"
         mock_print = MagicMock()
 
         with patch.object(builtins, 'print', mock_print):
-            dls_list_modules.print_module_list(source)
+            dls_list_modules.print_module_list(source, area)
 
-        mock_print.assert_called_once_with(ANY)
+        mock_print.assert_called_twice_with(ANY)

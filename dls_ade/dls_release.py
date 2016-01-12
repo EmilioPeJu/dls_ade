@@ -4,34 +4,51 @@ require('python-ldap')
 
 import sys
 import re
+import logging
 from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
-from argument_parser import ArgParser
+from dls_ade.argument_parser import ArgParser
 
-usage = """Default <area> is 'support'.
-Release <module_name> at version <release_#> from <area>.
+logging.basicConfig(level=logging.DEBUG)
+
+usage = """
+Default <area> is 'support'.
+Release <module_name> at version <release> from <area>.
 This script will do a test build of the module, and if it succeeds, will create
 the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
-prod."""
+prod.
+"""
 
-
-# set default variables
 log_mess = "%s: Released version %s. %s"
 
 
 def make_parser():
+    """
+    Takes default parser and adds:
+    * module_name
+    * release
+    * --branch
+    * --force
+    * --no-test-build
+    * --local-build-only
+    * --epics_version
+    * --message
+    * --next_version
+    * --git
+    * --rhel_version or --windows arguments
 
-    ''' helper method containing arguments and help text '''
-
+    Returns:
+        ArgumentParser instance
+    """
     parser = ArgParser(usage)
 
     parser.add_argument(
         "module_name", type=str, default=None,
         help="name of module to release")
     parser.add_argument(
-        "release_#", type=str, default=None,
+        "release", type=str, default=None,
         help="release number of module to release")
     parser.add_argument(
         "-b", "--branch", action="store", type=str, dest="branch",
@@ -62,7 +79,7 @@ def make_parser():
         default="",
         help="Add user message to the end of the default svn commit message. "
         "The message will be '%s'" %
-        (log_mess % ("<module_name>", "<release_#>", "<message>")))
+        (log_mess % ("<module_name>", "<release>", "<message>")))
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
@@ -100,8 +117,15 @@ def make_parser():
 
 
 def create_build_object(args):
-    ''' Uses parsed arguments to select appropriate build architecture,
-    default is local system os '''
+    """
+    Uses parsed arguments to select appropriate build architecture, default is local system os
+
+    Args:
+        args(argparse Namespace): Parser arguments
+
+    Returns:
+        Either a Windows or RedHat build object
+    """
     if args.rhel_version:
         build_object = dlsbuild.RedhatBuild(
             args.rhel_version,
@@ -121,8 +145,16 @@ def create_build_object(args):
 
 
 def create_vcs_object(module, args):
-    ''' specific vcs class depends on flags in args, use module and
-    arguments to construct the objects '''
+    """
+    Creates either a Git or Svn object depending on flags in args, use module and arguments to construct the objects
+
+    Args:
+        module(str): Name of module to be released
+        args(argparse Namespace): Parser arguments
+
+    Returns:
+        Git or Svn object
+    """
     if args.git:
         return vcs_git.Git(module, args)
     else:
@@ -130,28 +162,60 @@ def create_vcs_object(module, args):
 
 
 def check_parsed_arguments_valid(args,  parser):
-    '''All checks that invoke parser errors.'''
+    """
+    Checks that incorrect arguments invoke parser errors
+
+    Args:
+        args(argparse Namespace): Parser arguments
+        parser(ArgumentParser: Parser instance
+
+    Raises:
+        Error: Module name not specified
+        Error: Module version not specified
+        Error: Cannot release etc/build or etc/redirector as modules - use configure system instead
+        Error: When git is specified, version number must be provided
+        Error: args.area area not supported by git
+    """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
-    if not args['module_name']:
+    if not args.module_name:
         parser.error("Module name not specified")
-    elif args['module_name'] and 'next_version' not in args:
+        logging.debug(args.module_name)
+        logging.debug(args.next_version)
+    elif not args.release and not args.next_version:
         parser.error("Module version not specified")
-    elif args['area'] is 'etc' and args['module_name'] in ['build', 'redirector']:
+    elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
-    elif args['next_version'] and args['git']:
+    elif args.next_version and args.git:
         parser.error("When git is specified, version number must be provided")
-    elif args['git'] and args['area'] not in git_supported_areas:
-        parser.error("%s area not supported by git" % args['area'])
+    elif args.git and args.area not in git_supported_areas:
+        parser.error("%s area not supported by git" % args.area)
 
 
 def format_argument_version(arg_version):
-    ''' helper method formatting version taken from command line arguments '''
+    """
+    Replaces '.' with '-' throughout arg_version to match formatting requirements for log message
+
+    Args:
+        arg_version(str): Version tag to be formatted
+
+    Returns:
+        Formatted version tag
+    """
     return arg_version.replace(".", "-")
 
 
 def next_version_number(releases, module=None):
-    ''' return appropriate version number for an incremental release '''
+    """
+    Generates appropriate version number for an incremental release
+
+    Args:
+        releases(list): Previous release numbers
+        module(str): Name of module to be released
+
+    Returns: Incremented version number
+
+    """
     if len(releases) == 0:
         version = "0-1"
     else:
@@ -163,14 +227,29 @@ def next_version_number(releases, module=None):
 
 
 def get_last_release(releases):
-    ''' from a list of strings, return the latest version number '''
+    """
+    Returns the most recent release number
+
+    Args:
+        releases(list): Previous release numbers
+
+    Returns: Most recent release number
+    """
     from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
     return last_release
 
 
 def increment_version_number(last_release):
-    ''' increment the most minor non-zero part of the version number '''
+    """
+    Increment the most minor non-zero part of the version number
+
+    Args:
+        last_release(str): Most recent previous release number
+
+    Returns:
+        Minimally incremented version number
+    """
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
     for i in reversed(range(0, len(tokens))):
@@ -182,7 +261,18 @@ def increment_version_number(last_release):
 
 
 def construct_info_message(module, args, version, build_object):
-    ''' helper method gathering info to a string to display during release '''
+    """
+    Gathers info to display during release
+
+    Args:
+        module(str): Module to be released
+        args(argparser Namespace): Parser arguments
+        version(str): Release version
+        build_object(Builder): Either a Windows or RedHat build object
+
+    Returns:
+        Info message
+    """
     info = str()
     if args.branch:
         btext = "branch %s" % args.branch
@@ -196,6 +286,18 @@ def construct_info_message(module, args, version, build_object):
 
 
 def check_epics_version_consistent(module_epics, option_epics, build_epics):
+    """
+    Checks if epics version is consistent between release and environment, allows user to force build if not consistent
+
+    Args:
+        module_epics(str): Epics version of previous release
+        option_epics(str): Epics version to change to
+        build_epics(str): Epics version of environment
+
+    Returns:
+        True if the build can continue, False if not
+
+    """
     build_epics = build_epics.replace("_64", "")
     if not option_epics and module_epics != build_epics:
         question = (
@@ -209,10 +311,30 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
 
 
 def ask_user_input(question):
+    """
+    Wrapper for raw_input function
+
+    Args:
+        question(str): Question for the user to respond to
+
+    Returns:
+        User input
+
+    """
     return raw_input(question)
 
 
 def get_module_epics_version(vcs):
+    """
+    Get epics version of most recent release
+
+    Args:
+        vcs(Git/Svn): Git or Svn version control system instance
+
+    Returns:
+        Epics version of most recent release
+
+    """
     conf_release = vcs.cat("configure/RELEASE")
     module_epics = re.findall(
         r"/dls_sw/epics/(R\d(?:\.\d+)+)/base", conf_release)
@@ -222,7 +344,17 @@ def get_module_epics_version(vcs):
 
 
 def perform_test_build(build_object, args, vcs):
+    """
+    Test build the module and return whether it was successful
 
+    Args:
+        build_object(Builder): Either a windows or RedHat builder
+        args(argparse Namespace): Parser arguments
+        vcs(Git/Svn): Git or Svn version control system instance
+
+    Returns:
+        Message to explaining how the test build went, True or False for whether it failed or not
+    """
     message = ''
     test_fail = False
 
@@ -243,13 +375,9 @@ def perform_test_build(build_object, args, vcs):
 def main():
 
     parser = make_parser()
-    # parser.parse_args is an argparse.Namespace containing module_name
-    # release_# and other args; vars() converts it to a dictionary
     args = parser.parse_args()
 
-    print args
-
-    check_parsed_arguments_valid(vars(args), parser)
+    check_parsed_arguments_valid(args, parser)
     module = args.module_name
 
     build = create_build_object(args)
@@ -262,7 +390,7 @@ def main():
         releases = vcs.list_releases()
         version = next_version_number(releases, module=module)
     else:
-        version = format_argument_version(vars(args)['release_#'])
+        version = format_argument_version(args.release)
     vcs.set_version(version)
 
     vcs.set_log_message(
