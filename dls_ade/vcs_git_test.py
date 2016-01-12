@@ -340,7 +340,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         self.mock_create_remote_repo.assert_called_once_with("test_destination")
-        mock_create_remote.assert_called_once_with("test_remote", "test_destination")
+        mock_create_remote.assert_called_once_with("test_remote", "ssh://dascgitolite@dasc-git.diamond.ac.uk/test_destination")
         mock_remote.push.assert_called_once_with("test_branch")
 
     def test_given_only_destination_given_then_sensible_defaults_applied(self):
@@ -357,7 +357,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         self.mock_is_git_root_dir.assert_called_once_with("./")
         self.mock_create_remote_repo.assert_called_once_with("test_destination")
-        mock_create_remote.assert_called_once_with("origin", "test_destination")
+        mock_create_remote.assert_called_once_with("origin", "ssh://dascgitolite@dasc-git.diamond.ac.uk/test_destination")
         mock_remote.push.assert_called_once_with("master")
 
 
@@ -421,6 +421,10 @@ class PushToRemoteTest(unittest.TestCase):
                 return {self.remote_name: self.mock_remote}
 
     def setUp(self):
+
+        self.temp_git_ssh_root = vcs_git.GIT_SSH_ROOT
+        vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
+
         self.patch_is_git_root_dir = patch('dls_ade.vcs_git.is_git_root_dir')
         self.patch_create_remote_repo = patch('dls_ade.vcs_git.create_remote_repo')
         self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
@@ -488,6 +492,20 @@ class PushToRemoteTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
+    def test_given_remote_url_does_not_start_with_git_ssh_root_then_exception_raised_with_correct_message(self):
+
+        self.mock_is_git_root_dir.return_value = True
+        branches_list = [self.BranchEntry("test_branch")]
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo = self.StubGitRepo(branches_list, remotes_list, MagicMock(), "test_remote", "ssh://GIT_FAKE_SSH_ROOT/test_URL")
+        self.mock_git.Repo.return_value = mock_repo
+
+        comp_message = "Remote repository URL {remoteURL:s} does not begin with the gitolite server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
+
+        with self.assertRaises(Exception) as e:
+            vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
+        self.assertEqual(str(e.exception), comp_message)
+
     def test_given_is_repo_path_true_then_exception_raised_with_correct_message(self):
 
         mock_remote = MagicMock()
@@ -495,12 +513,12 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "test_URL")
+        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         self.mock_is_repo_path.return_value = False
 
-        comp_message = "Remote repository URL {remoteURL:s} does not currently exist".format(remoteURL="test_URL")
+        comp_message = "Server repo path {s_repo_path:s} does not currently exist".format(s_repo_path="test_URL")
 
         with self.assertRaises(Exception) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
@@ -515,7 +533,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "test_URL")
+        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         self.mock_is_repo_path.return_value = True
@@ -531,13 +549,17 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.return_value = True
         branches_list = [self.BranchEntry("master")]  # Set these to the function's default values
         remotes_list = [self.RemoteEntry("origin")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "origin")
+        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "origin", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         vcs_git.push_to_remote()
 
         self.mock_is_git_root_dir.assert_called_once_with("./")
         mock_remote.push.assert_called_once_with("master")
+
+    def tearDown(self):
+
+        vcs_git.GIT_SSH_ROOT = self.temp_git_ssh_root
 
 
 class CloneTest(unittest.TestCase):
@@ -593,6 +615,13 @@ class CloneTest(unittest.TestCase):
 
 class TempCloneTest(unittest.TestCase):
 
+    def setUp(self):
+        self.patch_mkdtemp = patch('dls_ade.vcs_git.tempfile.mkdtemp')
+        self.addCleanup(self.patch_mkdtemp.stop)
+        self.mock_mkdtemp = self.patch_mkdtemp.start()
+
+        self.mock_mkdtemp.return_value = "tempdir"
+
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
@@ -617,7 +646,7 @@ class TempCloneTest(unittest.TestCase):
 
         vcs_git.temp_clone(source)
 
-        mock_clone_from.assert_called_once_with(root + source, "/tmp/temp_module")
+        mock_clone_from.assert_called_once_with(root + source, "tempdir")
 
 
 class CloneMultiTest(unittest.TestCase):

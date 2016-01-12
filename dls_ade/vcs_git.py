@@ -181,7 +181,7 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
 
     create_remote_repo(dest)
     print("Adding remote to repo...")
-    remote = repo.create_remote(remote_name, dest)
+    remote = repo.create_remote(remote_name, os.path.join(GIT_SSH_ROOT, dest))
     print("Pushing repo to destination...")
     remote.push(branch_name)
 
@@ -253,10 +253,19 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
 
     # They have overloaded the dictionary lookup to compare string with .name
     remote = repo.remotes[remote_name]
-    if not is_repo_path(remote.url):
+
+    if not remote.url.startswith(GIT_SSH_ROOT):
         err_message = ("Remote repository URL {remoteURL:s} does not "
-                       "currently exist")
+                       "begin with the gitolite server path")
         raise Error(err_message.format(remoteURL=remote.url))
+
+    # Removes initial GIT_SSH_ROOT (with slash at end)
+    server_repo_path = remote.url[len(GIT_SSH_ROOT):]
+
+    if not is_repo_path(server_repo_path):
+        err_message = ("Server repo path {s_repo_path:s} does not "
+                       "currently exist")
+        raise Error(err_message.format(s_repo_path=server_repo_path))
 
     print("Pushing repo to destination...")
     remote.push(branch_name)
@@ -304,9 +313,9 @@ def temp_clone(source):
     if source[-1] == '/':
         source = source[:-1]
 
-    path = os.path.join("/tmp", 'temp_module')
+    tempdir = tempfile.mkdtemp()
 
-    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), path)
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source), tempdir)
 
     return repo
 

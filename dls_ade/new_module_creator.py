@@ -624,14 +624,14 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
         temp_dir = ""
         exists = False
         try:
-            temp_dir = tempfile.mkdtemp()
-            vcs_git.clone(remote_repo_path, temp_dir)
+            repo = vcs_git.temp_clone(remote_repo_path)
+            temp_dir = repo.working_tree_dir
 
             if os.path.exists(os.path.join(temp_dir, self._app_name + "App")):
                 exists = True
 
         finally:
-            if temp_dir:  # If mkdtemp worked
+            if temp_dir:  # If temp_clone worked
                 shutil.rmtree(temp_dir)
 
         return exists

@@ -735,6 +735,11 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_rmtree = self.patch_rmtree.start()
 
+        self.mock_repo = MagicMock()
+        self.mock_vcs_git.temp_clone.return_value = self.mock_repo
+
+        self.mock_repo.working_tree_dir = "tempdir"
+
         self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
     def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
@@ -750,7 +755,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_remote_repo_exists_on_server_then_mkdtemp_and_clone_called_correctly(self):
+    def test_given_remote_repo_exists_on_server_then_temp_clone_called_correctly(self):
 
         self.mock_vcs_git.is_repo_path.return_value = True
 
@@ -759,8 +764,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         except:
             pass
 
-        self.mock_mkdtemp.assert_called_once_with()
-        self.mock_vcs_git.clone.assert_called_once_with("test_repo_path", "tempdir")
+        self.mock_vcs_git.temp_clone.assert_called_once_with("test_repo_path")
 
     def test_given_app_exists_then_return_value_is_true(self):
 
@@ -782,9 +786,9 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.assertFalse(exists)
         self.mock_exists.assert_called_once_with("tempdir/test_appApp")
 
-    def test_given_exception_raised_in_mkdtemp_then_rmtree_not_called(self):
+    def test_given_exception_raised_in_temp_clone_then_rmtree_not_called(self):
 
-        self.mock_mkdtemp.side_effect = Exception("test_exception")
+        self.mock_vcs_git.temp_clone.side_effect = Exception("test_exception")
         self.mock_vcs_git.is_repo_path.return_value = True
 
         with self.assertRaises(Exception) as e:
@@ -795,7 +799,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_exception_raised_after_mkdtemp_then_rmtree_called(self):
 
-        self.mock_vcs_git.clone.side_effect = Exception("test_exception")
+        self.mock_exists.side_effect = Exception("test_exception")
         self.mock_vcs_git.is_repo_path.return_value = True
 
         with self.assertRaises(Exception) as e:
