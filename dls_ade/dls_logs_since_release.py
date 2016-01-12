@@ -103,14 +103,15 @@ def format_message_width(message, line_len):
         message = [message]
     for i, part in enumerate(message):
         if len(message[i]) > line_len:
-            # Find first ' ' before line_len cut-off
-            line_end = line_len - message[i][line_len::-1].find(' ')
             # Insert second section to separate list entry
             if ' ' in message[i][line_len::-1]:
+                # Find first ' ' before line_len cut-off
+                line_end = line_len - message[i][line_len::-1].find(' ')
                 # line_end+1 means the ' ' is not printed at the start of the new line
                 message.insert(i+1, message[i][line_end+1:])
             else:
-                # Keep string as is if there are no spaces (e.g. long file paths)
+                # Don't remove characters if there are no spaces (e.g. long file paths)
+                line_end = line_len
                 message.insert(i+1, message[i][line_end:])
             # Cut off end of line in original entry
             message[i] = message[i][:line_end]
@@ -188,11 +189,13 @@ def main():
     logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
     # There is an extra line space in the split because one is appended to the front of each entry automatically
     logs = logs.split('\n<END>\n')
-    # Sort logs from earliest to latest
-    logs.reverse()
+
+    # # Sort logs from earliest to latest
+    # logs.reverse()
 
     if not logs:
-        print("No changes have been made to " + args.module_name + " since most recent release " + releases[-1])
+        print("No logs for " + args.module_name + " between releases " +
+              args.earlier_release + " and " + args.later_release)
         return 0
 
     # Don't write coloured text if args.raw is True
@@ -206,17 +209,22 @@ def main():
     log_summary = repo.git.shortlog(start + ".." + end, '-s', '-n').split('\n')
     logging.debug(log_summary)
     # ['   129\tRonaldo Mercado', '     9\tJames Rowland', '     5\tIan Gillingham']
-    author_list = []
-    for log_entry in log_summary:
-        author_list.append(log_entry.split('\t')[1])
-    max_author_length = 0
-    for author in author_list:
-        logging.debug(author)
-        if len(author) > max_author_length:
-            max_author_length = len(author)
-            logging.debug(max_author_length)
-    # Add a space before the ':' on the longest author (Just for appearance)
-    max_author_length += 1
+    if filter(None, log_summary):
+        author_list = []
+        logging.debug(author_list)
+        for log_entry in log_summary:
+            author_list.append(log_entry.split('\t')[1])
+        max_author_length = 0
+        for author in author_list:
+            logging.debug(author)
+            if len(author) > max_author_length:
+                max_author_length = len(author)
+                logging.debug(max_author_length)
+        # Add a space before the ':' on the longest author (Just for appearance)
+        max_author_length += 1
+    else:
+        # If no author information is generated, set length to default
+        max_author_length = 20
 
     # Add formatting parameters
     screen_width = 100
@@ -234,18 +242,21 @@ def main():
     prev_commit = ''
     for log_entry in logs:
         log_lines = filter(None, log_entry.split('\n'))
-        logging.debug(log_lines)
+        # logging.debug(log_lines)
         commit_hash = log_lines[0].split()[0]
         name = '{:<{}}'.format(log_lines[1], max_author_length)
 
         # Add commit subject message
-        commit_message = format_message_width(log_lines[2], max_line_length)
-        formatted_message = commit_message[0]
-        for line in commit_message[1:]:
-            formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
+        if len(log_lines) > 2:
+            commit_message = format_message_width(log_lines[2], max_line_length)
+            formatted_message = commit_message[0]
+            for line in commit_message[1:]:
+                formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
+        else:
+            formatted_message = '\n'
 
         # Check if there is a commit message body and append it
-        if len(log_lines) > 4:
+        if len(log_lines) > 3:
             # The +/- 5 adds an offset for the message body, while maintaining message length
             commit_body = format_message_width(log_lines[3:], max_line_length - 5)
             for line in commit_body:
@@ -276,7 +287,7 @@ def main():
     for log in formatted_logs:
         print(log)
 
-    shutil.rmtree(args.module_name)
+    # shutil.rmtree(args.module_name)
 
 
 if __name__ == "__main__":
