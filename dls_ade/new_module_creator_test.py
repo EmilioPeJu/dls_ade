@@ -1535,31 +1535,3 @@ class NewModuleCreatorIOCBLPrintMessageTest(unittest.TestCase):
         mt_obj.print_message()
 
         mock_print.assert_called_once_with(comp_message)
-
-
-# TODO(Martin) Remove temporary tests below for new_module_templates folder
-class CompareTemplateFilesCreatedFromDictWithThoseCreatedFromFolderTest(unittest.TestCase):
-
-    def test_default_files_equal(self):
-
-        mt_obj = new_c.ModuleTemplate({})
-
-        mt_obj._set_template_files_from_area("default")
-
-        self.assertEqual(mt_obj._template_files, default_files)
-
-    def test_python_files_equal(self):
-
-        mt_obj = new_c.ModuleTemplate({})
-
-        mt_obj._set_template_files_from_area("python")
-
-        self.assertEqual(mt_obj._template_files, py_files)
-
-    def test_tools_files_equal(self):
-
-        mt_obj = new_c.ModuleTemplate({})
-
-        mt_obj._set_template_files_from_area("tools")
-
-        self.assertEqual(mt_obj._template_files, tools_files)
