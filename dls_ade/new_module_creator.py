@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import re
 import path_functions as pathf
 import shutil
 import tempfile

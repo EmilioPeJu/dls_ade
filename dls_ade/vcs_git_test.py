@@ -708,10 +708,6 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
 
 class GitClassInitTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.os.getenv', return_value="controls")
-    def setUp(self, mock_getenv):
-        reload(vcs_git)
-
     def test_given_nonsense_module_options_args_then_class_instance_should_fail(self):
 
         with self.assertRaises(Exception):
@@ -720,7 +716,7 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
-        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls/'
+        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controlstest/'
 
         with self.assertRaises(Exception):
             vcs_git.Git("FakeModuleNumberOne", FakeOptions())

@@ -171,7 +171,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
+        mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
@@ -179,7 +179,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with("controls/ioc/test/module")
+        mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):

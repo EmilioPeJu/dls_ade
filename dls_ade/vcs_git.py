@@ -235,12 +235,6 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
         Error: If there is an issue with the operation.
 
     """
-
-    '''
-    This will push the given local repository to its remote <remote_name> on
-    branch <branch_name>.
-    '''
-
     if not is_git_root_dir(path):
         err_message = "Path {path:s} is not a git repository"
         raise Error(err_message.format(path=path))

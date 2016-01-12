@@ -38,7 +38,7 @@ class AreaTest(unittest.TestCase):
 
         path = path_functions.area(area)
 
-        self.assertEqual(path, "controls/" + area)
+        self.assertEqual(path, "controlstest/" + area)
 
 
 class ModuleAreaTests(unittest.TestCase):
@@ -77,5 +77,5 @@ class ModuleAreaTests(unittest.TestCase):
 
         path = path_functions.vendorModule(module, area)
 
-        self.assertEqual(path, "controls/" + area + "/" + module)
+        self.assertEqual(path, "controlstest/" + area + "/" + module)
 
