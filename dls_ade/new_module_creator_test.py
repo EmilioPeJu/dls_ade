@@ -578,6 +578,20 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_os.makedirs.assert_called_once_with(self.nmc_obj.disk_dir)
 
 
+class NewModuleCreatorPrintMessageTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mock_module_template = MagicMock()
+        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", self.mock_module_template)
+
+    def test_given_function_called_then_module_template_print_message_called(self):
+
+        self.nmc_obj.print_message()
+
+        self.mock_module_template.print_message_assert_called_once_with()
+
+
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
@@ -803,6 +817,24 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
         self.assertEqual(str(e.exception), "test_exception")
         self.mock_rmtree.assert_called_once_with("tempdir")
+
+    def test_given_app_exists_then_true_returned(self):
+
+        self.mock_exists.return_value = True
+        self.mock_vcs_git.is_repo_path.return_value = True
+
+        exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertTrue(exists)
+
+    def test_given_app_does_not_exist_then_false_returned(self):
+
+        self.mock_exists.return_value = False
+        self.mock_vcs_git.is_repo_path.return_value = True
+
+        exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
+
+        self.assertFalse(exists)
 
 
 class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
@@ -1383,6 +1415,17 @@ class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
 
         self.assertEqual(comp_dict, self.mt_obj._template_files)
 
+
+class ModuleTemplatePrintMessageTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mt_obj = new_c.ModuleTemplate({})
+
+    def test_given_print_message_called_then_not_implemented_error_raised(self):
+
+        with self.assertRaises(NotImplementedError):
+            self.mt_obj.print_message()
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
