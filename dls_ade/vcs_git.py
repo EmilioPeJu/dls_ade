@@ -10,17 +10,23 @@ import git
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
 def is_repo_path(server_repo_path):
     """
-    Checks if path exists on repository.
-    :param server_repo_path: Path to module to check for.
-    :type server_repo_path: str
-    :return: True or False if path does or does not exist, respectively.
-    :rtype: bool
+    Checks if path exists on repository
+
+    Args:
+        server_repo_path(str): Path to module to check for
+
+    Returns:
+        bool: True if path does exist False if not
     """
-    list_cmd = "ssh " + GIT_ROOT + " expand controls"
+
+    list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
+    list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
+
     list_cmd_output = subprocess.check_output(list_cmd.split())
 
     return server_repo_path in list_cmd_output
@@ -28,12 +34,17 @@ def is_repo_path(server_repo_path):
 
 def get_repository_list():
     """
-    Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command.
-    :return: Reduced 'expand controls' output.
-    :rtype: list
+    Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command
+
+    Returns:
+        list: Reduced 'expand controls' output
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
+    # list_cmd_output is some heading text followed by a module list in the form:
+    # R   W 	(alan.greer)	controls/support/ADAndor
+    # R   W 	(ronaldo.mercado)	controls/support/ethercat
+    # This is split and entries with a '/' are added to a list of the module file paths
     split_list = []
     for entry in list_cmd_output.split():
         if '/' in entry:
@@ -50,7 +61,7 @@ def temp(area, module):
         pass
 
     path = "./"
-    target = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/" + area + module
+    target = os.path.join(GIT_SSH_ROOT, "controls", area, module)
 
     print("Initialising repo...")
     repo = git.Repo.init(path)
@@ -68,12 +79,15 @@ def temp(area, module):
 
 def clone(source, module):
     """
-    Checks if source is valid and that module doesn't already exist locally, then clones repo.
-    :param source: URL of remote repo to clone
-    :type source: str
-    :param module: Name of module to clone
-    :type module: str
-    :return: Null
+    Checks if source is valid and that module doesn't already exist locally, then clones repo
+
+    Args:
+        source(str): Suffix of URL for remote repo to clone
+        module(str): Name of module to clone
+
+    Raises:
+        Exception: Repository does not contain <source>
+        Exception: <module> already exists in current directory
     """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
@@ -83,8 +97,10 @@ def clone(source, module):
     if source[-1] == '/':
         source = source[:-1]
 
-    git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
-                        os.path.join("./", module))
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
+                               os.path.join("./", module))
+
+    return repo
 
 
 def temp_clone(source):
@@ -112,13 +128,13 @@ def temp_clone(source):
 
 def clone_multi(source):
     """
-    Checks if source is valid, then clones all
-    repositories in source.
-    :param source: URL of remote repo area to clone
-    :type source: str
-    :param module: Name of module to clone
-    :type module: str
-    :return: Null
+    Checks if source is valid, then clones all repositories in source
+
+    Args:
+        source(str): Suffix of URL for remote repo area to clone
+
+    Raises:
+        Exception: Repository does not contain <source>
     """
     if not is_repo_path(source):
         raise Exception("Repository does not contain " + source)
@@ -139,36 +155,38 @@ def clone_multi(source):
                 print(target_path + " already exists in current directory")
 
 
-def list_remote_branches(path_to_repo):
+def list_remote_branches(repo):
     """
-    Lists remote branches of git repo specified
+    Lists remote branches of current git repository
 
     Args:
-        path_to_repo: File path to git repo
+        repo: Repository instance
 
     Returns:
-        List of branches
+        list: Branches of current git repository
+
     """
-    g = git.Git(path_to_repo)
     branches = []
-    for entry in g.branch("-r").split():
-        if "->" not in entry and "HEAD" not in entry:
-            # remove 'origin/' from front of branches
-            branches.append(entry[7:])
+    for ref in repo.references:
+        if ref not in repo.branches + repo.tags:
+            remote = str(ref).split('/')[1]
+            if remote not in ['master', 'HEAD']:
+                branches.append(remote)
+
     return branches
 
 
-def checkout_remote_branch(branch):
+def checkout_remote_branch(branch, repo):
     """
-    Creates a new local branch and links it to a remote of the current repo.
-    :param branch: Remote branch to create locally.
-    :type branch: str
-    :return: Null
+    Creates a new local branch and links it to a remote of the current repo
+
+    Args:
+        branch(str): Remote branch to create locally
+        repo: Repository instance
     """
-    g = git.Git()
-    if branch in list_remote_branches():
+    if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
-        g.checkout("-b", branch, "origin/" + branch)
+        repo.git.checkout("-b", branch, "origin/" + branch)
 
 
 class Git(BaseVCS):
@@ -208,10 +226,13 @@ class Git(BaseVCS):
         return self._version
 
     def cat(self, filename):
-        '''
-        Fetch contents of file in repository, if version not set then uses
-        master.
-        '''
+        """
+        Fetch contents of file in repository, if version not set then uses master.
+
+        :param filename: File to fetch from
+        :return: Contents of file
+        :rtype: str
+        """
         tag = 'master'
         if self._version:
             if self.check_version_exists(self._version):
@@ -219,7 +240,12 @@ class Git(BaseVCS):
         return self.client.git.cat_file('-p', tag + ':' + filename)
 
     def list_releases(self):
-        '''Return list of release tags of module.'''
+        """
+        Return list of release tags of module.
+
+        :return: Release tags of module
+        :rtype: list
+        """
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
@@ -227,16 +253,35 @@ class Git(BaseVCS):
         return self.releases
 
     def set_log_message(self, message):
-        '''Git support will not do a commit, so log message not needed.'''
+        """
+        Git support will not do a commit, so log message not needed.
+
+        :param message:
+        :return:
+        """
         return None
 
     def check_version_exists(self, version):
+        """
+        Check if version corresponds to a previous release.
+
+        :param version: Release tag to check for
+        :return: True or False for whether the version exists or not
+        :rtype: bool
+        """
         return version in self.list_releases()
 
     def set_branch(self, branch):
         raise NotImplementedError('branch handling for git not implemented')
 
     def set_version(self, version):
+        """
+        Set version release tag.
+
+        :param version: Version release tag
+        :type version: str
+        :return: Null
+        """
         if not self.check_version_exists(version):
             raise Exception('version does not exist')
         self._version = version

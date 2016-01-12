@@ -2,6 +2,7 @@ import os
 import vcs_git
 
 GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
+GIT_ROOT_DIR = vcs_git.GIT_ROOT_DIR
 
 
 def root():
@@ -11,6 +12,7 @@ def root():
     return root_v
 
 
+# TODO Sort out paths for etc, epics, tools (root() replaced with GIT_ROOT_DIR)
 def area(area_v):
 
     if area_v is "etc":
@@ -20,7 +22,7 @@ def area(area_v):
     elif area_v is "tools":
         return os.path.join(root(), "diamond", "build_scripts")
     else:
-        return os.path.join("controls", area_v)
+        return os.path.join(GIT_ROOT_DIR, area_v)
 
 
 def devArea(area_v="support"):

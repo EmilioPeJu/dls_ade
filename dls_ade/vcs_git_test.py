@@ -153,61 +153,69 @@ class CloneMultiTest(unittest.TestCase):
         mock_clone.assert_called_once_with(ANY)
 
 
-class ListBranchesTest(unittest.TestCase):
+class ListRemoteBranchesTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.os.chdir')
     @patch('dls_ade.vcs_git.git')
     def test_given_module_with_invalid_entries_then_removed(self, mock_git, _2):
 
-        git_inst = MagicMock()
-        mock_git.Git.return_value = git_inst
-        git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
+        repo_inst = MagicMock()
+        repo_inst.references = ["origin/HEAD", "origin/master",
+                                                 "origin/1-5-8fixes", "master",
+                                                 "waveforms", "1-0, 2-1"]
+        repo_inst.branches = ["master", "waveforms"]
+        repo_inst.tags = ["1-0, 2-1"]
 
-        branches = vcs_git.list_remote_branches("test_path")
+        branches = vcs_git.list_remote_branches(repo_inst)
 
         self.assertNotIn('->', branches)
         self.assertNotIn('HEAD', branches)
-        git_inst.branch.assert_called_once_with("-r")
+        self.assertNotIn('master', branches)
+        self.assertNotIn('1-0', branches)
+        self.assertNotIn('2-1', branches)
 
     @patch('dls_ade.vcs_git.os.chdir')
     @patch('dls_ade.vcs_git.git')
     def test_given_module_with_valid_entries_then_not_removed(self, mock_git, _2):
 
-        git_inst = MagicMock()
-        mock_git.Git.return_value = git_inst
-        git_inst.branch.return_value = "origin/HEAD -> origin/master origin/test_module"
-
-        branches = vcs_git.list_remote_branches("test_path")
-
-        self.assertIn('test_module', branches)
-        git_inst.branch.assert_called_once_with("-r")
+        repo = MagicMock()
+        mock_git.Repo = repo
+        repo.references = ["origin/1-5-8fixes", "origin/3-x-branch",
+                                        "origin/3104_rev14000a_support"]
 
 
-class CheckoutBranchTest(unittest.TestCase):
+        branches = vcs_git.list_remote_branches(repo)
+
+        self.assertIn('1-5-8fixes', branches)
+        self.assertIn('3-x-branch', branches)
+        self.assertIn('3104_rev14000a_support', branches)
+
+
+class CheckoutRemoteBranchTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
     def test_given_valid_branch_then_checkout_called(self, mock_git, _2):
         branch = "test_module"
 
-        git_inst = MagicMock()
-        mock_git.Git.return_value = git_inst
+        repo = MagicMock()
+        mock_git.Repo = repo
 
-        vcs_git.checkout_remote_branch(branch)
+        vcs_git.checkout_remote_branch(branch, repo)
 
-        git_inst.checkout.assert_called_once_with(ANY, ANY, ANY)
+        repo.git.checkout.assert_called_once_with("-b", branch, "origin/" + branch)
 
     @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
     def test_given_invalid_branch_then_checkout_not_called(self, mock_git, _2):
         branch = "not_a_module"
 
-        git_inst = MagicMock()
-        mock_git.Git.return_value = git_inst
+        repo = MagicMock()
+        mock_git.Repo = repo
 
-        vcs_git.checkout_remote_branch(branch)
+        vcs_git.checkout_remote_branch(branch, repo)
 
-        self.assertFalse(git_inst.checkout.call_count)
+        self.assertFalse(repo.git.checkout.call_count)
 
 
 class GitClassInitTest(unittest.TestCase):
@@ -220,16 +228,17 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
-        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls'
+        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls/'
 
         with self.assertRaises(Exception):
             vcs_git.Git("FakeModuleNumberOne", FakeOptions())
 
         mock_check.assert_called_once_with(repo_list_cmd.split())
 
+    @patch('dls_ade.vcs_git.is_repo_path', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
+    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2, mock_is_repo):
 
         try:
             vcs_git.Git('dummy', FakeOptions())
