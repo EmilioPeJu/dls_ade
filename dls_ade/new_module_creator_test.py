@@ -97,7 +97,7 @@ class GetNewModuleCreatorTest(unittest.TestCase):
 
         new_sup_creator = new_c.get_new_module_creator("test_module")  # Area automatically support
 
-        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'], "test_module")
+        self.mock_nmc_with_apps.assert_called_once_with("test_module", "support", self.mt_mocks['Support'], app_name="test_module")
 
     def test_given_area_is_tools_then_new_module_creator_returned_with_correct_args(self):
 
@@ -152,19 +152,19 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test-module-IOC-01")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=True)
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module", fullname=True)
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self, mock_is_repo_path):
@@ -172,7 +172,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
-        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self, mock_is_repo_path):
@@ -180,19 +180,19 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
 
         mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
-        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], "test-module-IOC-02")
+        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = new_c.get_new_module_creator_ioc("test/BL")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", self.mt_mocks['IOCBL'], "test")
+        self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", self.mt_mocks['IOCBL'], app_name="test")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
 
         new_tools_creator = new_c.get_new_module_creator_ioc("test-BL-IOC-01", "ioc")
 
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], "test-BL-IOC-01")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], app_name="test-BL-IOC-01")
 
 
 class NewModuleCreatorClassInitTest(unittest.TestCase):
@@ -208,19 +208,19 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
         new_c.NewModuleCreator("test_module", "test_area", self.mock_mt)
 
     @patch('os.getlogin', return_value='test_login')
-    def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
+    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self, mock_getlogin):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
                          'user_login': "test_login",
                          'additional': "value"}
 
-        base_c = new_c.NewModuleCreator("test_module", "test_area", self.mock_mt, {'additional': "value"})
+        base_c = new_c.NewModuleCreator("test_module", "test_area", self.mock_mt, additional="value")
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
     @patch('os.getlogin', return_value='test_login')
-    def test_given_no_extra_placeholders_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
+    def test_given_no_extra_template_args_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
@@ -579,14 +579,6 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_os.makedirs.assert_called_once_with(self.nmc_obj.disk_dir)
 
 
-
-
-# TODO(Martin) -----------------------------------------------------------------------------------------------------------------
-class NewModuleCreatorAddContactTest(unittest.TestCase):
-    pass
-# TODO(Martin) -----------------------------------------------------------------------------------------------------------------
-
-
 class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
@@ -648,10 +640,10 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
-        new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+        new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, app_name="test_app")
 
     @patch('os.getlogin', return_value='test_login')
-    def test_given_extra_placeholders_then_module_template_initialisation_includes_them(self, mock_getlogin):
+    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self, mock_getlogin):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
@@ -659,21 +651,18 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
                          'app_name': "test_app",
                          'additional': "value"}
 
-        base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app", {'additional': "value"})
+        base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, app_name="test_app", additional="value")
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
-    @patch('os.getlogin', return_value='test_login')
-    def test_given_no_extra_placeholders_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
+    def test_given_no_app_name_then_exception_raised_with_correct_message(self):
 
-        expected_dict = {'module_name': "test_module",
-                         'module_path': "test_module",
-                         'user_login': "test_login",
-                         'app_name': "test_app"}
+        comp_message = "app_name must be provided as keyword argument."
 
-        base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, "test_app")
+        with self.assertRaises(new_c.Error) as e:
+            base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, additional="value")
 
-        self.mock_mt.assert_called_once_with(expected_dict)
+        self.assertEqual(str(e.exception), comp_message)
 
 
 class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
@@ -689,7 +678,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
         self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
 
-        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
     def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
 
@@ -746,7 +735,7 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.mock_exists = self.patch_exists.start()
         self.mock_rmtree = self.patch_rmtree.start()
 
-        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
     def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
 
@@ -829,7 +818,7 @@ class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
         self.mock_push_to_remote = self.patch_push_to_remote.start()
 
-        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), "test_app")
+        self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
     def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
 
@@ -890,7 +879,7 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
             # self.mock_os.return_value = "Example"
 
-            self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, "test_app")
+            self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, app_name="test_app")
 
     def test_given_can_create_local_module_true_then_flag_set_false(self):
 
@@ -950,36 +939,36 @@ class ModuleTemplateCreateFilesTest(unittest.TestCase):
         mock_create_files_from_template.assert_called_once_with()
 
 
-class ModuleTemplateSetPlaceholdersTest(unittest.TestCase):
+class ModuleTemplateSetTemplateArgsTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_verify_placeholders = patch('dls_ade.new_module_creator.ModuleTemplate._verify_placeholders')
+        self.patch_verify_template_args = patch('dls_ade.new_module_creator.ModuleTemplate._verify_template_args')
 
-        self.addCleanup(self.patch_verify_placeholders.stop)
+        self.addCleanup(self.patch_verify_template_args.stop)
 
-        self.mock_verify_placeholders = self.patch_verify_placeholders.start()
+        self.mock_verify_template_args = self.patch_verify_template_args.start()
 
         self.mt_obj = new_c.ModuleTemplate({})
 
-        self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
+        self.mt_obj._template_args = {'arg1': "argument1", 'arg2': "argument2"}
 
-    def test_given_update_false_then_placeholders_overwritten_correctly_and_verified(self):
+    def test_given_update_false_then_template_args_overwritten_correctly_and_verified(self):
 
-        self.mt_obj.set_placeholders({'arg3': "argument3"})
+        self.mt_obj.set_template_args({'arg3': "argument3"})
 
-        self.assertEqual(self.mt_obj._placeholders['arg3'], "argument3")
+        self.assertEqual(self.mt_obj._template_args['arg3'], "argument3")
 
-        self.assertTrue(all(arg not in self.mt_obj._placeholders for arg in ['arg1', 'arg2']))
-        self.assertTrue(self.mock_verify_placeholders.called)
+        self.assertTrue(all(arg not in self.mt_obj._template_args for arg in ['arg1', 'arg2']))
+        self.assertTrue(self.mock_verify_template_args.called)
 
-    def test_given_update_true_then_placeholders_updated_correctly(self):
+    def test_given_update_true_then_template_args_updated_correctly(self):
 
-        self.mt_obj.set_placeholders({'arg3': "argument3"}, update=True)
+        self.mt_obj.set_template_args({'arg3': "argument3"}, update=True)
 
-        self.assertEqual(self.mt_obj._placeholders['arg1'], "argument1")
-        self.assertEqual(self.mt_obj._placeholders['arg2'], "argument2")
-        self.assertEqual(self.mt_obj._placeholders['arg3'], "argument3")
+        self.assertEqual(self.mt_obj._template_args['arg1'], "argument1")
+        self.assertEqual(self.mt_obj._template_args['arg2'], "argument2")
+        self.assertEqual(self.mt_obj._template_args['arg3'], "argument3")
 
 
 class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
@@ -1007,28 +996,28 @@ class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
         self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
 
 
-class ModuleTemplateVerifyPlaceholdersTest(unittest.TestCase):
+class ModuleTemplateVerifyTemplateArgsTest(unittest.TestCase):
 
     def setUp(self):
 
         self.mt_obj = new_c.ModuleTemplate({})
 
-        self.mt_obj._placeholders = {'arg1': "argument1", 'arg2': "argument2"}
+        self.mt_obj._template_args = {'arg1': "argument1", 'arg2': "argument2"}
 
-    def test_given_required_placeholders_present_then_no_error_raised(self):
+    def test_given_required_template_args_present_then_no_error_raised(self):
 
-        self.mt_obj._required_placeholders = ['arg1']
+        self.mt_obj._required_template_args = ['arg1']
 
-        self.mt_obj._verify_placeholders()
+        self.mt_obj._verify_template_args()
 
-    def test_given_required_placeholders_not_present_then_error_raised_with_correct_message(self):
+    def test_given_required_template_args_not_present_then_error_raised_with_correct_message(self):
 
-        self.mt_obj._required_placeholders = ['arg1', 'arg3']
+        self.mt_obj._required_template_args = ['arg1', 'arg3']
 
-        err_message = "All required placeholders must be supplied: arg1, arg3"
+        err_message = "All required template arguments must be supplied: arg1, arg3"
 
         with self.assertRaises(new_c.VerificationError) as e:
-            self.mt_obj._verify_placeholders()
+            self.mt_obj._verify_template_args()
 
         self.assertEqual(str(e.exception), err_message)
 
@@ -1094,7 +1083,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.mock_isfile.return_value = False
 
         self.mt_obj = new_c.ModuleTemplate({})
-        self.mt_obj._placeholders = {"arg1": "argument_1", "arg2": "argument_2"}
+        self.mt_obj._template_args = {"arg1": "argument_1", "arg2": "argument_2"}
         self.open_mock = mock_open()  # mock_open is function designed to help mock the 'open' built-in function
 
     def test_given_folder_name_in_template_files_then_exception_raised_with_correct_message(self):
@@ -1197,7 +1186,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
     def test_given_single_file_with_placeholder_in_name_then_file_created_and_correctly_written_to(self):
 
         self.mt_obj._template_files = {"{arg:s}.txt": "Written contents"}
-        self.mt_obj._placeholders = {'arg': "my_argument"}
+        self.mt_obj._template_args = {'arg': "my_argument"}
 
         with patch.object(builtins, 'open', self.open_mock):
             self.mt_obj._create_files_from_template_dict()
@@ -1422,7 +1411,7 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
                                           'module_path': "test_module_path",
                                           'user_login': "test_login"})
 
-        mt_obj._placeholders.update({'module_path': "test_module_path",
+        mt_obj._template_args.update({'module_path': "test_module_path",
                                     'area': "test_area"})
         message_dict = {'module_path': "test_module_path",
                         'setup_path': "test_module_path/setup.py"}

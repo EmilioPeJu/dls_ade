@@ -77,7 +77,7 @@ def get_new_module_creator(module_name, area="support", fullname=False):
     elif area == "support":
         module_template_cls = ModuleTemplateSupport
         return NewModuleCreatorWithApps(module_name, area, module_template_cls,
-                                        module_name)
+                                        app_name=module_name)
 
     elif area == "tools":
         module_template_cls = ModuleTemplateTools
@@ -148,7 +148,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             module_path = domain + "/" + technical_area
 
         return NewModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        app_name)
+                                        app_name=app_name)
 
     module_template_cls = ModuleTemplateIOC
 
@@ -156,7 +156,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
         app_name = module_name
         module_path = domain + "/" + app_name
         return NewModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        app_name)
+                                        app_name=app_name)
 
     if len(cols) == 3 and cols[2]:
         ioc_number = cols[2]
@@ -168,7 +168,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
     if fullname:
         module_path = domain + "/" + app_name
         return NewModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        app_name)
+                                        app_name=app_name)
     else:
         # This part is here to retain compatibility with "old-style" modules,
         # in which a single repo (or module) named "domain/technical_area"
@@ -185,13 +185,14 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             # already exists on the remote server.
             return NewModuleCreatorAddAppToModule(module_path, area,
                                                   module_template_cls,
-                                                  app_name)
+                                                  app_name=app_name)
         else:
             # Otherwise, the behaviour is exactly the same as that given
             # by the ordinary IOC class as module_path is the only thing
             # that is different
             return NewModuleCreatorWithApps(module_path, area,
-                                            module_template_cls, app_name)
+                                            module_template_cls,
+                                            app_name=app_name)
 
 
 class VerificationError(Error):
@@ -224,7 +225,7 @@ class NewModuleCreator(object):
     """
 
     def __init__(self, module_path, area, module_template_cls,
-                 extra_placeholders=None):
+                **kwargs):
         """Default initialisation of all object attributes.
 
         Args:
@@ -235,7 +236,7 @@ class NewModuleCreator(object):
                 created as well as affecting the repository server path.
             module_template_cls: Class for module_template object.
                 Must be a non-abstract subclass of ModuleTemplate.
-            extra_placeholders: Additional placeholders for module creation.
+           kwargs: Additional arguments for module creation.
 
         """
         self._area = area
@@ -252,14 +253,14 @@ class NewModuleCreator(object):
         self.disk_dir = os.path.join(self._cwd, self._module_path)
         self._server_repo_path = pathf.devModule(self._module_path, self._area)
 
-        placeholders = {'module_name': self._module_name,
+        template_args = {'module_name': self._module_name,
                         'module_path': self._module_path,
                         'user_login': os.getlogin()}
 
-        if extra_placeholders:
-            placeholders.update(extra_placeholders)
+        if kwargs:
+            template_args.update(kwargs)
 
-        self._module_template = module_template_cls(placeholders)
+        self._module_template = module_template_cls(template_args)
 
         self._remote_repo_valid = False
         """bool: Specifies whether there are conflicting server file paths.
@@ -504,26 +505,24 @@ class NewModuleCreatorWithApps(NewModuleCreator):
 
     """
 
-    def __init__(self, module_path, area, module_template, app_name,
-                 extra_placeholders=None):
+    def __init__(self, module_path, area, module_template, **kwargs):
         """Initialise variables.
 
         Args:
-            app_name: The name of the app for the new module.
+            kwargs: Must include app_name.
         """
-        placeholders = {'app_name': app_name}
 
-        if extra_placeholders:
-            placeholders.update(extra_placeholders)
+        if 'app_name' not in kwargs:
+            raise Error("app_name must be provided as keyword argument.")
 
         super(NewModuleCreatorWithApps, self).__init__(
             module_path,
             area,
             module_template,
-            placeholders
+            **kwargs
         )
 
-        self._app_name = app_name
+        self._app_name = kwargs['app_name']
 
 
 class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
@@ -684,7 +683,7 @@ class ModuleTemplate(object):
 
     """
 
-    def __init__(self, placeholders):
+    def __init__(self, template_args):
         """Default initialisation of all object attributes.
 
         """
@@ -695,36 +694,36 @@ class ModuleTemplate(object):
         {template_arg:s} for use with the string .format() method, each
         evaluated using the `template_args` attribute."""
 
-        self._required_placeholders = []
-        """List[str]: List of all required placeholders."""
+        self._required_template_args = []
+        """List[str]: List of all required template_args."""
 
-        self._placeholders = {}
+        self._template_args = {}
         """dict: Dictionary for module-specific phrases in template_files.
         Used for including module-specific phrases such as `module_name`"""
 
         # The following code ought to be used in subclasses to ensure that the
-        # placeholders given contain the required ones.
-        self.set_placeholders(placeholders)
+        # template_args given contain the required ones.
+        self.set_template_args(template_args)
 
-    def set_placeholders(self, extra_placeholders, update=False):
-        """Set the placeholders using the given dictionary.
+    def set_template_args(self, extra_template_args, update=False):
+        """Set the template args using the given dictionary.
 
         Args:
-            extra_placeholders: List of additional placeholders to include.
+            extra_template_args: List of additional template_args to include.
             update: If True, the dictionary should be updated, not overwritten.
 
         """
         if update:
-            self._placeholders.update(extra_placeholders)
+            self._template_args.update(extra_template_args)
         else:
-            self._placeholders = extra_placeholders
-            self._verify_placeholders()
+            self._template_args = extra_template_args
+            self._verify_template_args()
 
     def set_template_files(self, extra_template_files, update=False):
         """Set the template files using the given dictionary.
 
         Args:
-            extra_template_files: List of additional placeholders to include.
+            extra_template_files: List of additional template_args to include.
             update: If True, the dictionary should be updated, not overwritten.
 
         """
@@ -733,18 +732,19 @@ class ModuleTemplate(object):
         else:
             self._template_files = extra_template_files
 
-    def _verify_placeholders(self):
-        """Verify that the placeholders fulfill the template requirements.
+    def _verify_template_args(self):
+        """Verify that the template_args fulfill the template requirements.
 
         Raises:
             VerificationError: If a required placeholder is missing.
 
         """
-        if not all(key in self._placeholders
-                   for key in self._required_placeholders):
-            raise VerificationError("All required placeholders must be "
-                                    "supplied: " +
-                                    str(", ".join(self._required_placeholders)))
+        if not all(key in self._template_args
+                   for key in self._required_template_args):
+            raise VerificationError(
+                "All required template arguments must be supplied: " +
+                str(", ".join(self._required_template_args))
+            )
 
     def _set_template_files_from_area(self, template_area):
         """Sets `template_files` from the templates folder in dls_ade.
@@ -789,7 +789,7 @@ class ModuleTemplate(object):
 
         Args:
             template_folder: The relative or absolute path to template folder.
-                Inside, all files and folders can use {value:s} placeholders
+                Inside, all files and folders can use {value:s} template_args
                 to allow completion using `template_args` attribute.
             update: If True, `_template_files` will be updated
 
@@ -827,10 +827,10 @@ class ModuleTemplate(object):
         self._create_files_from_template_dict()
 
     def _create_files_from_template_dict(self):
-        """Creates files from `_template_files` and `_placeholders`
+        """Creates files from `_template_files` and `_template_args`
 
-        This uses the `_template_files` and `_placeholders` attributes for file
-        creation by default.
+        This uses the `_template_files` and `_template_args` attributes for
+        file creation by default.
 
         Raises:
             Error: If key in `_template_files` is a directory, not a file.
@@ -839,7 +839,7 @@ class ModuleTemplate(object):
         # dictionary keys are the relative file paths for the documents
         for path in self._template_files:
             # Using template_args allows us to insert eg. module_name
-            rel_path = path.format(**self._placeholders)
+            rel_path = path.format(**self._template_args)
             logging.debug("rel_path: " + rel_path)
 
             dir_path = os.path.dirname(rel_path)
@@ -863,7 +863,7 @@ class ModuleTemplate(object):
                 os.makedirs(dir_path)
 
             open(rel_path, "w").write(self._template_files[path].format(
-                **self._placeholders))
+                **self._template_args))
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
@@ -873,7 +873,7 @@ class ModuleTemplate(object):
 class ModuleTemplateTools(ModuleTemplate):
     """Class for the management of the creation of new Tools modules.
 
-    For this class to work properly, the following placeholders must be
+    For this class to work properly, the following template arguments must be
     specified upon initialisation:
         - module_name
         - module_path
@@ -881,20 +881,20 @@ class ModuleTemplateTools(ModuleTemplate):
 
     """
 
-    def __init__(self, placeholders):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplateTools, self).__init__(placeholders)
+    def __init__(self, template_args):
+        """Initialise template args and default template files."""
+        super(ModuleTemplateTools, self).__init__(template_args)
 
-        self._required_placeholders = [
+        self._required_template_args = [
             'module_name', 'module_path', 'user_login'
         ]
 
-        self._verify_placeholders()
+        self._verify_template_args()
 
         self._set_template_files_from_area("tools")
 
     def print_message(self):
-        message_dict = {'module_path': self._placeholders['module_path']}
+        message_dict = {'module_path': self._template_args['module_path']}
 
         message = ("\nPlease add your patch files to the {module_path:s} "
                    "\ndirectory and edit {module_path:s}/build script "
@@ -907,20 +907,20 @@ class ModuleTemplateTools(ModuleTemplate):
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
 
-    def __init__(self, placeholders):
-        """Initialise placeholders and default template files."""
-        super(ModuleTemplatePython, self).__init__(placeholders)
+    def __init__(self, template_args):
+        """Initialise template args and default template files."""
+        super(ModuleTemplatePython, self).__init__(template_args)
 
-        self._required_placeholders = [
+        self._required_template_args = [
             'module_name', 'module_path', 'user_login'
         ]
 
-        self._verify_placeholders()
+        self._verify_template_args()
 
         self._set_template_files_from_area("python")
 
     def print_message(self):
-        module_path = self._placeholders['module_path']
+        module_path = self._template_args['module_path']
         message_dict = {'module_path': module_path,
                         'setup_path': os.path.join(module_path, "setup.py")
                         }
@@ -938,7 +938,7 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
     Ensure you use this with :class:`NewModuleCreatorWithApps`, in order to
     ensure that the `app_name` value exists.
 
-    For this class to work properly, the following placeholders must be
+    For this class to work properly, the following template arguments must be
     specified upon initialisation:
         - module_path
         - user_login
@@ -946,21 +946,21 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
 
     """
 
-    def __init__(self, placeholders):
-        super(ModuleTemplateSupportAndIOC, self).__init__(placeholders)
+    def __init__(self, template_args):
+        super(ModuleTemplateSupportAndIOC, self).__init__(template_args)
 
-        self._required_placeholders = [
+        self._required_template_args = [
             'module_path', 'app_name', 'user_login'
         ]
 
-        self._verify_placeholders()
+        self._verify_template_args()
 
         self._set_template_files_from_area("default")
 
     def print_message(self):
         # This message is shared between support and IOC
-        module_path = self._placeholders['module_path']
-        app_name = self._placeholders['app_name']
+        module_path = self._template_args['module_path']
+        app_name = self._template_args['app_name']
 
         message_dict = {
             'RELEASE': os.path.join(module_path, 'configure/RELEASE'),
@@ -997,7 +997,7 @@ class ModuleTemplateSupport(ModuleTemplateSupportAndIOC):
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
-            app_name=self._placeholders['app_name']))
+            app_name=self._template_args['app_name']))
         os.system('dls-make-etc-dir.py && make clean uninstall')
         self._create_files_from_template_dict()
 
@@ -1017,10 +1017,10 @@ class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
-            **self._placeholders))
+            **self._template_args))
         os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
-            **self._placeholders))
-        shutil.rmtree(os.path.join(self._placeholders['app_name'] + 'App',
+            **self._template_args))
+        shutil.rmtree(os.path.join(self._template_args['app_name'] + 'App',
                                    'opi'))
         self._create_files_from_template_dict()
 
@@ -1029,8 +1029,8 @@ class ModuleTemplateIOCBL(ModuleTemplateSupportAndIOC):
     """Class for the management of the creation of new IOC BL modules."""
 
     def print_message(self):
-        module_path = self._placeholders['module_path']
-        app_name = self._placeholders['app_name']
+        module_path = self._template_args['module_path']
+        app_name = self._template_args['app_name']
         message_dict = {
             'RELEASE': os.path.join(module_path, "configure/RELEASE"),
             'srcMakefile': os.path.join(
@@ -1059,6 +1059,6 @@ class ModuleTemplateIOCBL(ModuleTemplateSupportAndIOC):
         _create_files_from_template_dict method for file creation.
 
         """
-        os.system('makeBaseApp.pl -t dlsBL ' + self._placeholders['app_name'])
+        os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])
         self._create_files_from_template_dict()
 
