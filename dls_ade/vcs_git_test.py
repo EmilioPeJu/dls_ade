@@ -8,6 +8,9 @@ require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 
+def setUpModule():
+    vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
+
 class IsGitDirTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
@@ -340,7 +343,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         self.mock_create_remote_repo.assert_called_once_with("test_destination")
-        mock_create_remote.assert_called_once_with("test_remote", "ssh://dascgitolite@dasc-git.diamond.ac.uk/test_destination")
+        mock_create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_destination")
         mock_remote.push.assert_called_once_with("test_branch")
 
     def test_given_only_destination_given_then_sensible_defaults_applied(self):
@@ -357,7 +360,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         self.mock_is_git_root_dir.assert_called_once_with("./")
         self.mock_create_remote_repo.assert_called_once_with("test_destination")
-        mock_create_remote.assert_called_once_with("origin", "ssh://dascgitolite@dasc-git.diamond.ac.uk/test_destination")
+        mock_create_remote.assert_called_once_with("origin", "ssh://GIT_SSH_ROOT/test_destination")
         mock_remote.push.assert_called_once_with("master")
 
 
@@ -421,9 +424,6 @@ class PushToRemoteTest(unittest.TestCase):
                 return {self.remote_name: self.mock_remote}
 
     def setUp(self):
-
-        self.temp_git_ssh_root = vcs_git.GIT_SSH_ROOT
-        vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
 
         self.patch_is_git_root_dir = patch('dls_ade.vcs_git.is_git_root_dir')
         self.patch_create_remote_repo = patch('dls_ade.vcs_git.create_remote_repo')
@@ -557,10 +557,6 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_git_root_dir.assert_called_once_with("./")
         mock_remote.push.assert_called_once_with("master")
 
-    def tearDown(self):
-
-        vcs_git.GIT_SSH_ROOT = self.temp_git_ssh_root
-
 
 class CloneTest(unittest.TestCase):
 
@@ -641,7 +637,7 @@ class TempCloneTest(unittest.TestCase):
     @patch('git.Repo.clone_from')
     def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
                                                               mock_is_repo_path):
-        root = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+        root = "ssh://GIT_SSH_ROOT/"
         source = "test/source"
 
         vcs_git.temp_clone(source)
@@ -826,7 +822,7 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_exists_then_git_clone_called(self, mock_clone, _, mock_check):
 
-        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
+        repo_url = "ssh://GIT_SSH_ROOT/controls/support/dummy"
         module = "dummy"
         options = FakeOptions()
 
@@ -840,7 +836,7 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_exists_then_git_clone_called_with_remote_url_and_tempdir_args(self, mock_clone, mock_check):
 
-        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/support/dummy"
+        repo_url = "ssh://GIT_SSH_ROOT/controls/support/dummy"
         module = "dummy"
         options = FakeOptions()
 
@@ -860,7 +856,7 @@ class GitClassInitTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone, mock_check):
 
-        repo_url = "ssh://dascgitolite@dasc-git.diamond.ac.uk/controls/ioc/domain/mod"
+        repo_url = "ssh://GIT_SSH_ROOT/controls/ioc/domain/mod"
         module = "domain/mod"
         options = FakeOptions(area="ioc")
 
@@ -1033,7 +1029,7 @@ class ApiInterrogateTest(unittest.TestCase):
 
     def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self):
 
-        expected_source_repo = 'ssh://dascgitolite@dasc-git.diamond.ac.uk/'
+        expected_source_repo = 'ssh://GIT_SSH_ROOT/'
         expected_source_repo += 'controls/'+self.options.area+'/'+self.module
 
         source_repo = self.vcs.source_repo
