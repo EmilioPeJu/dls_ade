@@ -10,7 +10,6 @@ import dls_ade.new_module_creator as new_c
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, mock_open, call, mock_open
-from new_module_templates import py_files, tools_files, default_files
 
 from sys import version_info
 if version_info.major == 2:
@@ -721,17 +720,14 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
     def setUp(self):
 
         self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-        self.patch_mkdtemp = patch('dls_ade.new_module_creator.tempfile.mkdtemp', return_value='tempdir')
         self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
         self.patch_rmtree = patch('dls_ade.new_module_creator.shutil.rmtree')
 
         self.addCleanup(self.patch_vcs_git.stop)
-        self.addCleanup(self.patch_mkdtemp.stop)
         self.addCleanup(self.patch_exists.stop)
         self.addCleanup(self.patch_rmtree.stop)
 
         self.mock_vcs_git = self.patch_vcs_git.start()
-        self.mock_mkdtemp = self.patch_mkdtemp.start()
         self.mock_exists = self.patch_exists.start()
         self.mock_rmtree = self.patch_rmtree.start()
 

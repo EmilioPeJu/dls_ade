@@ -2,7 +2,6 @@ from __future__ import print_function
 import os
 import path_functions as pathf
 import shutil
-import tempfile
 import logging
 import vcs_git
 
