@@ -7,7 +7,7 @@ from pkg_resources import require
 from dls_ade import dls_checkout_module
 
 require("mock")
-from mock import patch
+from mock import patch, MagicMock
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
@@ -36,64 +36,43 @@ class MakeParserTest(unittest.TestCase):
         self.assertIn("--force", option.option_strings)
 
 
-class CheckParsedArgumentsValidTest(unittest.TestCase):
-
-    def setUp(self):
-        self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-    def test_given_empty_module_name_then_error_raised(self):
-        args = {}
-        expected_error_msg = "Module name required"
-
-        dls_checkout_module.check_parsed_arguments_valid(args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
-    def test_given_module_name_then_no_error_raised(self):
-        args = {'module_name': ""}
-
-        dls_checkout_module.check_parsed_arguments_valid(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-
 class CheckTechnicalAreaTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
+        self.args = MagicMock()
+        self.args.module_name = "test_module"
+        self.args.area = "support"
 
     def test_given_area_not_ioc_then_no_error_raised(self):
-        args = {'module_name': "test_module", 'area': "support"}
-
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_given_area_ioc_module_everything_then_no_error_raised(self):
-        args = {'module_name': "everything", 'area': "ioc"}
+        self.args.module_name = "everything"
+        self.args.area = "ioc"
 
-        dls_checkout_module.check_technical_area(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-    def test_given_area_ioc_module_split_more_than_one_then_no_error_raised(self):
-        args = {'module_name': "modules/test_module", 'area': "ioc"}
-
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_area_ioc_module_split_less_than_one_then_no_error_raised(self):
-        args = {'module_name': "test_module", 'area': "ioc"}
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
+        self.args.module_name = "modules/test_module"
+        self.args.area = "ioc"
+
+        dls_checkout_module.check_technical_area(self.args, self.parser)
+
+        self.assertFalse(self.mock_error.call_count)
+
+    def test_given_area_ioc_module_split_less_than_two_then_error_raised(self):
+        self.args.area = "ioc"
         expected_error_msg = "Missing Technical Area under Beamline"
 
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
@@ -102,11 +81,11 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
-    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=True)
     def test_given_valid_source_then_no_error_raised(self, mock_in_repo):
         source = "controls/python/dls_release"
 
@@ -114,7 +93,7 @@ class CheckSourceFilePathValidTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    @patch('dls_checkout_module.vcs_git.is_repo_path', return_value=False)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=False)
     def test_given_invalid_source_then_error_raised(self, mock_in_repo):
         source = "controls/python/doesnotexist"
         expected_error_msg = \
@@ -129,11 +108,11 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_checkout_module.ArgParser.error')
+        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
 
-    @patch('dls_checkout_module.os.path.isdir', return_value=False)
+    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=False)
     def test_given_valid_module_then_no_error_raised(self, mock_isdir):
         module = "doesnotexistyet"
 
@@ -141,7 +120,7 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    @patch('dls_checkout_module.os.path.isdir', return_value=True)
+    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=True)
     def test_given_existing_module_then_error_raised(self, mock_isdir):
         module = "dls_checkout_module_test.py"
         expected_error_msg = "Path already exists: " + module
@@ -152,6 +131,5 @@ class CheckModuleFilePathValidTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-
     # buffer option suppresses stdout generated from tested code
     unittest.main(buffer=True)

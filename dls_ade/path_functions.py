@@ -12,15 +12,13 @@ def root():
     return root_v
 
 
-# TODO Sort out paths for etc, epics, tools (root() replaced with GIT_ROOT_DIR)
+# TODO Sort out paths for etc, epics (root() replaced with GIT_ROOT_DIR)
 def area(area_v):
 
     if area_v is "etc":
         return os.path.join(root(), area_v, "prod")
     elif area_v is "epics":
         return os.path.join(root(), area_v)
-    elif area_v is "tools":
-        return os.path.join(root(), "diamond", "build_scripts")
     else:
         return os.path.join(GIT_ROOT_DIR, area_v)
 
