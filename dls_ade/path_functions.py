@@ -1,7 +1,6 @@
 import os
-import vcs_git
 
-GIT_ROOT_DIR = vcs_git.GIT_ROOT_DIR
+GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
 def area(area_v):

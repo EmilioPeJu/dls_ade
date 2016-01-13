@@ -10,11 +10,13 @@ from pkg_resources import require
 require('GitPython')
 import git
 
+import path_functions as pathf
+
 logging.basicConfig(level=logging.DEBUG)
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
-GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
+GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
 
 
 class Error(Exception):
@@ -385,7 +387,7 @@ class Git(BaseVCS):
         self._module = module
         self.area = options.area
 
-        server_repo_path = 'controls/' + self.area + '/' + self._module
+        server_repo_path = pathf.devModule(self._module, self.area)
 
         if not is_repo_path(server_repo_path):
             raise Exception('repo not found on gitolite server')
