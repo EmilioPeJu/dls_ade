@@ -650,50 +650,40 @@ class CloneMultiTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "does/not/exist"
-        module = "test_module"
+        source = "/does/not/exist"
 
         with self.assertRaises(Exception):
-            vcs_git.clone(source, module)
+            vcs_git.clone_multi(source)
 
+    @patch('dls_ade.vcs_git.get_repository_list')
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "does/exist"
-        module = "test_module"
+    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, _1):
+        source = "/does/exist"
 
-        vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('os.path.isdir', return_value=True)
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
+    @patch('os.listdir', return_value=["test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_existing_module_name_then_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
-        source = "test/source"
-        module = "already_exists"
+    def test_given_existing_module_name_then_not_cloned(self, mock_clone_from, mock_is_repo_path, _1, _2):
+        source = "area/test_module"
 
-        with self.assertRaises(Exception):
-            vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('os.path.isdir', return_value=False)
+        self.assertFalse(mock_clone_from.call_count)
+
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
+    @patch('os.listdir', return_value=["not_test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_module_name_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
-        source = "test/source"
-        module = "test_module"
+    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1, _2):
+        source = "area/test_module"
 
-        vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
-    @patch('dls_ade.vcs_git.os.path.isdir', return_value=False)
-    @patch('git.Repo.clone_from')
-    def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
-                                                              mock_is_repo_path, mock_clone):
-        source = "test/source"
-        module = "test_module"
-
-        vcs_git.clone(source, module)
-
-        mock_clone.assert_called_once_with(ANY)
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + "controls/" + source, "./test_module")
 
 
 class ListRemoteBranchesTest(unittest.TestCase):

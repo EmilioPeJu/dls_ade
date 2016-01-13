@@ -339,14 +339,13 @@ def clone_multi(source):
     split_list = get_repository_list()
     for path in split_list:
         if source in path:
-            source_length = len(source) + 1
-            target_path = path[source_length:]
-            if target_path not in os.listdir("./"):
+            module = path.split('/')[-1]
+            if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")
                 git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
-                                    os.path.join("./", target_path))
+                                    os.path.join("./", module))
             else:
-                print(target_path + " already exists in current directory")
+                print(module + " already exists in current directory")
 
 
 def list_module_releases(repo):
