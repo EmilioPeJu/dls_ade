@@ -4,6 +4,10 @@ import unittest
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
+def setUpModule():
+    path_functions.GIT_ROOT_DIR = "controlstest"
+
+
 class RootTest(unittest.TestCase):
 
     def test_return_value(self):
