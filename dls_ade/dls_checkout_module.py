@@ -63,7 +63,7 @@ def check_source_file_path_valid(source, parser):
         error: Repository does not contain <source>
     """
     if not vcs_git.is_repo_path(source):
-        parser.error()
+        parser.error("Repository does not contain " + source)
 
 
 def check_module_file_path_valid(module, parser):
