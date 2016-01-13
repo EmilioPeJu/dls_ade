@@ -353,11 +353,13 @@ def list_module_releases(repo):
     """
     Return list of release tags of module.
 
-    :param repo: Git repository instance
-    :type repo: git.Repo
-    :return: Releases of module corresponding to repo
-    :rtype: list
+    Args:
+        repo: Git repository instance
+
+    Returns:
+        Release tags of module corresponding to repo
     """
+
     releases = []
     for tag in repo.tags:
         releases.append(tag.name)
