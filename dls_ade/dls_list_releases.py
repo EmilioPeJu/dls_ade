@@ -11,7 +11,7 @@ import path_functions as pathf
 import vcs_git
 
 e = environment()
-logging.basicConfig(filename='./list_releases.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 usage = """
@@ -116,32 +116,22 @@ def main():
     check_epics_version(args, parser)
     check_technical_area(args, parser)
 
-# >>> Not sure what this is for
-    # Force options.svn if no releases in the file system
-    if args.area in ["etc", "tools", "epics"]:
-        args.git = True
-# >>>
+    # >>> Not sure what this is for
+    # # Force options.svn if no releases in the file system
+    # if args.area in ["etc", "tools", "epics"]:
+    #     args.git = True
 
     # Check for the existence of releases of this module/IOC    
     releases = []
     if args.git:
         # List branches of repository
         target = "the repository"
-        source = pathf.devModule(args.module, args.area)
-# >>>>
-        # repo = vcs_git.temp_clone(source)
-        # releases = vcs_git.list_module_releases(repo)
-# >>>> To replace
-        if vcs_git.is_repo_path(source):
-            if os.path.isdir('./' + args.module):
-                repo = vcs_git.git.Repo(args.module)
-                releases = vcs_git.list_module_releases(repo)
-            else:
-                vcs_git.clone(source, args.module)
-                repo = vcs_git.git.Repo(args.module)
-                releases = vcs_git.list_module_releases(repo)
-                shutil.rmtree(args.module)
-# >>>> once merged with list-branches branch with temp_clone function
+        source = pathf.devModule(args.module_name, args.area)
+
+        repo = vcs_git.temp_clone(source)
+        releases = vcs_git.list_module_releases(repo)
+        shutil.rmtree(repo.working_tree_dir)
+
     else:
         # List branches from prod
         target = "prod"
@@ -150,33 +140,30 @@ def main():
             prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
                                                                    platform.machine()))
             logging.debug(prodArea)
-        release_dir = os.path.join(prodArea, args.module)
+        release_dir = os.path.join(prodArea, args.module_name)
 
         if os.path.isdir(release_dir):
             for p in os.listdir(release_dir):
                 if os.path.isdir(os.path.join(release_dir, p)):
                     releases.append(p)
 
-    # check some releases have been made
+    # Check some releases have been made
     if len(releases) == 0:
         if args.git:
-            msg = "No releases made in git"
+            print(args.module_name + ": No releases made in git")
         else:
-            # >>> Prints "No releases made for None" if epics_version not set
-            msg = "No releases made for {0}".format(args.epics_version)
-        print(args.module + ": " + msg)
+            print(args.module_name + ": No releases made for " + args.epics_version)
         return 1
 
-    # sort the releases
     releases = e.sortReleases(releases)
 
     if args.latest:
-        print("The latest release for " + args.module + " in " + target +
+        print("The latest release for " + args.module_name + " in " + target +
               " is: " + releases[-1])
     else:
-        print("Previous releases for " + args.module + " in " + target + ":")
-        for path in releases:
-            print(path)
+        print("Previous releases for " + args.module_name + " in " + target + ":")
+        for release in releases:
+            print(release)
 
 if __name__ == "__main__":
     sys.exit(main())
