@@ -5,18 +5,23 @@ import subprocess
 import tempfile
 import shutil
 
-# Make sure env var is set.(PYTHONPATH and PATH must also be set, but cannot
+
+class Error(Exception):
+    pass
+
+
+# Make sure env var is set.(PYTHONPATH must also be set, but cannot
 # easily test it is correct)
 try:
     os.environ['GIT_ROOT_DIR']
 except KeyError:
-    raise Exception("GIT_ROOT_DIR must be set")
+    raise Error("GIT_ROOT_DIR must be set")
 
 try:
     from dls_ade import vcs_git
 except ImportError:
     vcs_git = None
-    raise Exception("PYTHONPATH must contain the dls_ade package")
+    raise ImportError("PYTHONPATH must contain the dls_ade package")
 
 
 def call_script(script_name, arguments=""):
@@ -37,7 +42,7 @@ def process_call(call_args):
     return out, err
 
 
-def check_stderror_for_exception(exception_type, exception_string, stderr):
+def check_stderr_for_exception(exception_type, exception_string, stderr):
     expected_string = "\n{exc_t:s}: {exc_s:s}\n"
     expected_string = expected_string.format(exc_t=exception_type,
                                              exc_s=exception_string)
@@ -47,12 +52,12 @@ def check_stderror_for_exception(exception_type, exception_string, stderr):
     return exception_found
 
 
-def check_repository_exists(server_repo_path):
+def is_server_repo(server_repo_path):
 
     return vcs_git.is_repo_path(server_repo_path)
 
 
-def check_git_attributes_exist(local_repo_path, attributes_dict):
+def check_git_attrs_exist(local_repo_path, attributes_dict):
     # This is very fragile. When the additional functions located in other
     # branches are pulled in, this can use the much more useful getattr stuff
     # in vcs_git. Just keep the functionality the same!
@@ -72,24 +77,21 @@ def check_git_attributes_exist(local_repo_path, attributes_dict):
 
 def get_local_temp_clone(server_repo_path):
 
-    if not vcs_git.is_repo_path(server_repo_path):
-        raise Exception("The given repository does not exist.")
+    repo = vcs_git.temp_clone(server_repo_path)
 
-    tempdir = tempfile.mkdtemp()
-
-    vcs_git.clone(server_repo_path, tempdir)
+    tempdir = repo.working_tree_dir
 
     return tempdir
 
 
-def delete_repository(local_repo_path):
+def delete_temp_repo(local_repo_path):
 
     if not os.path.realpath(local_repo_path).startswith(tempfile.gettempdir()):
-        raise Exception("This function will only delete a temporary folder.")
+        raise Error("This function will only delete a temporary folder.")
 
     # Replace with more appropriate vcs_git function - it is currently on
     # start_new_module!
-    if not os.path.isdir(os.path.join(local_repo_path, ".git")):
-        raise Exception("This function will only delete a git repository.")
+    if not vcs_git.is_git_root_dir(local_repo_path):
+        raise Error("This function will only delete a git repository.")
 
     shutil.rmtree(local_repo_path)
