@@ -33,7 +33,7 @@ def is_git_dir(path="./"):
         else:
             return True
     else:
-        raise Exception("Path is not valid")
+        raise Error("Path is not valid")
 
 
 def is_git_root_dir(path="."):
@@ -278,13 +278,13 @@ def clone(source, module):
         module(str): Name of module to clone
 
     Raises:
-        Exception: Repository does not contain <source>
-        Exception: <module> already exists in current directory
+        Error: Repository does not contain <source>
+        Error: <module> already exists in current directory
     """
     if not is_repo_path(source):
-        raise Exception("Repository does not contain " + source)
+        raise Error("Repository does not contain " + source)
     elif os.path.isdir(module):
-        raise Exception(module + " already exists in current directory")
+        raise Error(module + " already exists in current directory")
 
     if source[-1] == '/':
         source = source[:-1]
@@ -306,7 +306,7 @@ def temp_clone(source):
         Path to repo
     """
     if not is_repo_path(source):
-        raise Exception("Repository does not contain " + source)
+        raise Error("Repository does not contain " + source)
 
     if source[-1] == '/':
         source = source[:-1]
@@ -326,10 +326,10 @@ def clone_multi(source):
         source(str): Suffix of URL for remote repo area to clone
 
     Raises:
-        Exception: Repository does not contain <source>
+        Error: Repository does not contain <source>
     """
     if not is_repo_path(source):
-        raise Exception("Repository does not contain " + source)
+        raise Error("Repository does not contain " + source)
 
     if source[-1] == '/':
         source = source[:-1]
@@ -390,7 +390,7 @@ class Git(BaseVCS):
         server_repo_path = pathf.devModule(self._module, self.area)
 
         if not is_repo_path(server_repo_path):
-            raise Exception('repo not found on gitolite server')
+            raise Error('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
         self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
@@ -413,7 +413,7 @@ class Git(BaseVCS):
     @property
     def version(self):
         if not self._version:
-            raise Exception('version not set')
+            raise Error('version not set')
         return self._version
 
     def cat(self, filename):
@@ -474,7 +474,7 @@ class Git(BaseVCS):
         :return: Null
         """
         if not self.check_version_exists(version):
-            raise Exception('version does not exist')
+            raise Error('version does not exist')
         self._version = version
 
     def release_version(self, version):
