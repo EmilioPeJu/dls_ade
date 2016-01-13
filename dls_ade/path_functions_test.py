@@ -62,13 +62,3 @@ class ModuleAreaTests(unittest.TestCase):
         path = path_functions.branchModule(module, area)
 
         self.assertEqual(path, "controlstest/" + area + "/" + module)
-
-    def test_vendorModule(self):
-
-        area = "other"
-        module = "test_module"
-
-        path = path_functions.vendorModule(module, area)
-
-        self.assertEqual(path, "controlstest/" + area + "/" + module)
-
