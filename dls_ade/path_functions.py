@@ -51,13 +51,3 @@ def branchArea(area_v="support"):
 def branchModule(module, area_v="support"):
     """Return the path for module in branch section a particular area"""
     return os.path.join(branchArea(area_v), module)
-
-
-def vendorArea(area_v="support"):
-    """Return the path for the vendor section of a particular area"""
-    return area(area_v)
-
-
-def vendorModule(module, area_v="support"):
-    """Return the path for module in vendor section a particular area"""
-    return os.path.join(vendorArea(area_v), module)

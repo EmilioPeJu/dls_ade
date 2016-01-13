@@ -289,58 +289,16 @@ class NewModuleCreator(object):
             VerificationError: If there is a name conflict with the server.
 
         """
-        existing_remote_repo_paths = self._get_existing_remote_repo_paths()
+        remote_repo_exists = vcs_git.is_repo_path(self._server_repo_path)
 
-        if existing_remote_repo_paths:
-            err_message = ("The paths {dirs:s} already exist on gitolite,"
+        if remote_repo_exists:
+            err_message = ("The path {dir:s} already exists on gitolite,"
                            " cannot continue")
             raise VerificationError(
-                err_message.format(
-                    dirs=", ".join(existing_remote_repo_paths))
+                err_message.format(dir=self._server_repo_path)
             )
 
         self._remote_repo_valid = True
-
-    def _get_existing_remote_repo_paths(self):
-        """Gets a list of existing remote repository paths relating to module.
-
-        This checks whether any paths relating to the new module exist on
-        gitolite, returning a list of all of them.
-
-        Returns:
-            List[str]: A list of all existing remote repository paths
-
-        """
-        dir_list = self._get_remote_dir_list()
-        existing_dir_paths = []
-
-        for d in dir_list:
-            if vcs_git.is_repo_path(d):
-                existing_dir_paths.append(d)
-
-        return existing_dir_paths
-
-    def _get_remote_dir_list(self):
-        """Returns a list of paths with which to check for naming collisions.
-
-        Aside from the intended server destination for the module, there should
-        be no conflicts with eg. vendor module paths.
-
-        Returns:
-            List[str]: A list of all potentially conflicting paths.
-
-        """
-        # Intended initial destination for module
-        server_repo_path = self._server_repo_path
-
-        # Vendor location for module
-        # TODO(Martin) Determine if this will still be included; it may be that
-        # TODO(Martin) vendor modules are stored on gitolite.
-        vendor_path = pathf.vendorModule(self._module_path, self._area)
-
-        dir_list = [server_repo_path, vendor_path]
-
-        return dir_list
 
     def verify_can_create_local_module(self):
         """Verifies that conditions are suitable for creating a local module.
@@ -568,25 +526,21 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
                 This should never be raised. There is a bug if it is!
 
         """
-        existing_remote_repo_paths = self._get_existing_remote_repo_paths()
-
-        if self._server_repo_path not in existing_remote_repo_paths:
+        if not vcs_git.is_repo_path(self._server_repo_path):
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
             err_message = err_message.format(path=self._server_repo_path)
             raise VerificationError(err_message)
 
-        conflicting_paths = []
+        conflicting_path = self._check_if_remote_repo_has_app(
+            self._server_repo_path
+        )
 
-        for path in existing_remote_repo_paths:
-            if self._check_if_remote_repo_has_app(path):
-                conflicting_paths.append(path)
-
-        if conflicting_paths:
-            err_message = ("The repositories {paths:s} have apps that"
-                           " conflict with {app_name:s}")
+        if conflicting_path:
+            err_message = ("The repository {path:s} has an app that conflicts "
+                           "with app name: {app_name:s}")
             err_message = err_message.format(
-                paths=", ".join(conflicting_paths),
+                path=self._server_repo_path,
                 app_name=self._app_name
             )
             raise VerificationError(err_message)
