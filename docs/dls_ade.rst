@@ -11,6 +11,11 @@
 .. automodule:: dls_ade.dls_checkout_module
     :members:
 
+:mod:`dls_ade.dls_start_new_module` module
+--------------------------------------------
+.. automodule:: dls_ade.dls_start_new_module
+    :members:
+
 :mod:`dls_ade.dls_release` module
 --------------------------------------
 .. automodule:: dls_ade.dls_release
@@ -29,4 +34,9 @@
 :mod:`dls_ade.vcs_git` module
 --------------------------------------
 .. automodule:: dls_ade.vcs_git
+    :members:
+
+:mod:`dls_ade.new_module_creator` module
+--------------------------------------
+.. automodule:: dls_ade.new_module_creator
     :members:
