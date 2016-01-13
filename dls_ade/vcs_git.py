@@ -12,8 +12,6 @@ import git
 
 import path_functions as pathf
 
-logging.basicConfig(level=logging.DEBUG)
-
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
@@ -24,33 +22,63 @@ class Error(Exception):
     pass
 
 
+# TODO(Martin): is_in_local_repo
 def is_git_dir(path="./"):
-    if os.path.isdir(path):
-        try:
-            git.Repo(path)
-        except git.exc.InvalidGitRepositoryError:
-            return False
-        else:
-            return True
-    else:
+    """Returns whether or not the local path is inside a git repository.
+
+    Args:
+        path: The path to check.
+            This is the current working directory by default.
+
+    Returns:
+        bool: True if the path is inside a git repository, false otherwise.
+
+    Raises:
+        Error: If the path given is not a local directory.
+
+    """
+    if not os.path.isdir(path):
         raise Error("Path is not valid")
 
-
-def is_git_root_dir(path="."):
-    if is_git_dir(path):
-        git_repo = git.Repo(path)
-        top_level_path = os.path.normpath(
-            git_repo.git.rev_parse("--show-toplevel")
-        )
-        full_path = os.path.abspath(path)
-        if full_path == top_level_path:
-            return True
-        else:
-            return False
+    try:
+        git.Repo(path)
+    except git.exc.InvalidGitRepositoryError:
+        return False
     else:
+        return True
+
+
+# TODO(Martin): is_local_repo_root
+def is_git_root_dir(path="."):
+    """Returns whether or not the local path is the root of a git repository.
+
+    Args:
+        path: The path to check.
+            This is the current working directory by default.
+
+    Returns:
+        bool: True if the path is inside a git repository, false otherwise.
+
+    Raises:
+        Error: If the path given is not a local directory (from is_git_dir).
+
+    """
+    if not is_git_dir(path):
         return False
 
+    git_repo = git.Repo(path)
+    top_level_path = os.path.normpath(
+        git_repo.git.rev_parse("--show-toplevel")
+    )
+    full_path = os.path.abspath(path)
 
+    return full_path == top_level_path
+
+
+# TODO(Martin): Rename this and all instances of its use to is_server_repo
+# TODO(Martin): and change to match exact path only (use get_repository_list)
+# TODO(Martin): But remember to alter dls_list_modules and clone_multi to use
+# TODO(Martin): this current function renamed to is_server_path
 def is_repo_path(server_repo_path):
     """
     Checks if path exists on repository
@@ -60,6 +88,7 @@ def is_repo_path(server_repo_path):
 
     Returns:
         bool: True if path does exist False if not
+
     """
     list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
     list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
@@ -69,12 +98,14 @@ def is_repo_path(server_repo_path):
     return server_repo_path in list_cmd_output
 
 
+# TODO(Martin): get_remote_repo_list
 def get_repository_list():
     """
     Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command
 
     Returns:
         list: Reduced 'expand controls' output
+
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
     list_cmd_output = subprocess.check_output(list_cmd.split())
@@ -269,41 +300,43 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
     remote.push(branch_name)
 
 
-def clone(source, module):
+def clone(server_repo_path, local_repo_path):
     """
-    Checks if source is valid and that module doesn't already exist locally, then clones repo
+    Clones a repository on the server to a local directory.
 
     Args:
-        source(str): Suffix of URL for remote repo to clone
-        module(str): Name of module to clone
+        server_repo_path(str): Suffix of URL for remote repo to clone
+        local_repo_path(str): Name of module to clone
 
     Raises:
         Error: Repository does not contain <source>
         Error: <module> already exists in current directory
+
     """
-    if not is_repo_path(source):
-        raise Error("Repository does not contain " + source)
-    elif os.path.isdir(module):
-        raise Error(module + " already exists in current directory")
+    if not is_repo_path(server_repo_path):
+        raise Error("Repository does not contain " + server_repo_path)
+    elif os.path.isdir(local_repo_path):
+        raise Error(local_repo_path + " already exists in current directory")
 
-    if source[-1] == '/':
-        source = source[:-1]
+    if server_repo_path[-1] == '/':
+        server_repo_path = server_repo_path[:-1]
 
-    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, source),
-                               os.path.join("./", module))
+    repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, server_repo_path),
+                               os.path.join("./", local_repo_path))
 
     return repo
 
 
 def temp_clone(source):
     """
-    Clones repo to /tmp directory and returns the path to the repo instance to access information
+    Clones repo to /tmp directory and returns the relevant git.Repo object.
 
     Args:
-        source: URL of remote repo to clone
+        source: server repository path to clone
 
     Returns:
-        Path to repo
+        git.Repo object
+
     """
     if not is_repo_path(source):
         raise Error("Repository does not contain " + source)
