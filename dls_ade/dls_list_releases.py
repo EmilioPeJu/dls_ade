@@ -49,7 +49,7 @@ def make_parser():
     """
     parser = ArgParser(usage)
     parser.add_argument(
-        "module_name", type=str, default=None, help="name of module to release")
+        "module_name", type=str, default=None, help="Name of module to list releases for")
     parser.add_argument(
         "-l", "--latest", action="store_true", dest="latest",
         help="Only print the latest release")
@@ -58,12 +58,12 @@ def make_parser():
         help="Print releases available in git")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="change the epics version, default is " + e.epicsVer() +
+        help="Change the epics version, default is " + e.epicsVer() +
              " (from your environment)")
     parser.add_argument(
         "-r", "--rhel_version", action="store", type=int, dest="rhel_version",
         default=get_rhel_version(),
-        help="change the rhel version of the " + "environment, default is " +
+        help="Change the rhel version of the environment, default is " +
              get_rhel_version() + " (from your system)")
 
     return parser
