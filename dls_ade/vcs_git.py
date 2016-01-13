@@ -59,7 +59,6 @@ def is_repo_path(server_repo_path):
     Returns:
         bool: True if path does exist False if not
     """
-
     list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
     list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
 
@@ -121,7 +120,6 @@ def stage_all_files_and_commit(path="./"):
         Error: If the path is not a git repository.
 
     """
-
     if not os.path.isdir(path):
         raise Error("Path {path:s} is not a directory".format(path=path))
 
@@ -161,7 +159,6 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
         Error: If there is an issue with the operation.
 
     """
-
     if not is_git_root_dir(path):
         err_message = "Path {path:s} is not a git repository"
         raise Error(err_message.format(path=path))
@@ -196,7 +193,6 @@ def create_remote_repo(dest):
         Error: If a git repository already exists on the destination path.
 
     """
-
     if is_repo_path(dest):
         raise Error("{dest:s} already exists".format(dest=dest))
 
