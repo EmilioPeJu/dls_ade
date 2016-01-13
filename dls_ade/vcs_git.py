@@ -4,7 +4,6 @@ import subprocess
 import os
 import tempfile
 import shutil
-import logging
 
 from pkg_resources import require
 require('GitPython')
@@ -13,7 +12,7 @@ import git
 import path_functions as pathf
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
-GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
+GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
 
 
