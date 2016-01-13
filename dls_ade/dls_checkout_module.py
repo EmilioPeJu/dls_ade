@@ -3,9 +3,9 @@
 # new branch
 import os
 import sys
-import vcs_git
-from argument_parser import ArgParser
-import path_functions as path
+from dls_ade import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as path
 
 usage = """
 Default <area> is 'support'.
@@ -16,57 +16,51 @@ If you enter "everything" as <module_name>, the whole <area> area will be checke
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name, --branch and --force.
-    :return: Parser with relevant arguments
-    :rtype: ArgumentParser
+    Creates default parser and adds module_name, --branch and --force arguments
+
+    Args:
+
+    Returns:
+        An ArgumentParser instance with relevant arguments
     """
     parser = ArgParser(usage)
     parser.add_argument("module_name", type=str, default="",
                         help="name of module to checkout")
     parser.add_argument("-b", "--branch", action="store", type=str, dest="branch",
-                        help="Checkout a branch rather than master")
+                        help="Checkout a specific named branch rather than the default (master)")
     parser.add_argument("-f", "--force", action="store_true", dest="force",
                         help="force the checkout, disable warnings")
     return parser
 
 
-def check_parsed_arguments_valid(args, parser):
-    """
-    Checks if module_name has been provided and raises a parser error if not.
-    :param args: Parser arguments
-    :type args: dict
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
-    """
-    if 'module_name' not in args:
-        parser.error("Module name required")
-
-
 def check_technical_area(args, parser):
     """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
-     name or that the technical area is also provided. Raises parser error if not.
-    :param args: Parser arguments
-    :type args: dict
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
+    or that the technical area is also provided
+
+    Args:
+        args(dict): Parser arguments
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Missing Technical Area under Beamline
     """
-    if args['area'] == "ioc" \
-            and args['module_name'] != "everything" \
-            and len(args['module_name'].split('/')) < 2:
+    if args.area == "ioc" \
+            and args.module_name != "everything" \
+            and len(args.module_name.split('/')) < 2:
         parser.error("Missing Technical Area under Beamline")
 
 
 def check_source_file_path_valid(source, parser):
     """
-    Checks if given source path exists on the repository and raises a parser error if it does not.
-    :param source: Path to module to be cloned
-    :type source: str
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Checks if given source path exists on the repository
+
+    Args:
+        source(str): Path to module to be cloned
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Repository does not contain <source>
     """
     if not vcs_git.is_repo_path(source):
         parser.error("Repository does not contain " + source)
@@ -74,12 +68,14 @@ def check_source_file_path_valid(source, parser):
 
 def check_module_file_path_valid(module, parser):
     """
-    Checks if the given module already exists in the current directory. Raises error if so.
-    :param module: Name of module to clone
-    :type module: str
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Checks if the given module already exists in the current directory
+
+    Args:
+        module(str): Name of module to clone
+        parser(ArgumentParser): Parser instance
+
+    Raises:
+        error: Path already exists: <module>
     """
     if os.path.isdir(module):
         parser.error("Path already exists: " + module)
@@ -96,13 +92,15 @@ def main():
         if answer.upper() != "Y":
             return
 
-    check_technical_area(vars(args), parser)
+    check_technical_area(args, parser)
 
     module = args.module_name
 
     if module == "everything":
+        # Set source to area folder
         source = path.devArea(args.area)
     else:
+        # Set source to module in area folder
         source = path.devModule(module, args.area)
 
     if module == "everything":
@@ -110,24 +108,19 @@ def main():
         vcs_git.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        vcs_git.clone(source, module)
+        repo = vcs_git.clone(source, module)
 
-    if args.branch:
-        os.chdir(args.module_name)
-        branches = vcs_git.list_remote_branches()
-        if args.branch in branches:
-            vcs_git.checkout_remote_branch(args.branch)
-        else:
-            print("Branch '" + args.branch + "' does not exist in " + source +
-                  "\nBranch List:\n")
-            for entry in branches:
-                print(entry)
-            print("\nWhich branch would you like to checkout?")
-            branch = raw_input("Enter branch: ")
-            if branch in branches and branch != "master":
-                vcs_git.checkout_remote_branch(branch)
+        if args.branch:
+            # Get branches list
+            branches = vcs_git.list_remote_branches(repo)
+            if args.branch in branches:
+                vcs_git.checkout_remote_branch(args.branch, repo)
             else:
-                print("\nmaster branch checked out by default")
+                # Invalid branch name, print branches list and exit
+                print("Branch '" + args.branch + "' does not exist in " + source +
+                      "\nBranch List:\n")
+                for entry in branches:
+                    print(entry)
 
 
 if __name__ == "__main__":
