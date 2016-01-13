@@ -4,6 +4,8 @@
 import os
 import sys
 import shutil
+import time
+from operator import itemgetter
 from argument_parser import ArgParser
 from dls_environment import environment
 import path_functions as pathf
@@ -156,44 +158,95 @@ def main():
 
     # Set earlier_releases and later_releases to defaults if not provided
     if not args.later_release:
-        args.later_release = 'HEAD'
+        later = 'HEAD'
+    else:
+        later = args.later_release
     if not args.earlier_release:
         # If later_release specified then print from first release to that point.
         # If later_release is not specified, print logs since (most recent) release
-        if args.later_release == 'HEAD':
-            args.earlier_release = releases[-1]
+        if later == 'HEAD':
+            earlier = releases[-1]
         else:
-            args.earlier_release = releases[0]
+            earlier = releases[0]
+    else:
+        earlier = args.earlier_release
 
     # Check that given releases exist
-    if args.earlier_release in releases:
-        start = args.earlier_release
+    if earlier in releases:
+        start = earlier
     else:
         parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
-    if args.later_release in releases or args.later_release == 'HEAD':
-        end = args.later_release
+    if later in releases or later == 'HEAD':
+        end = later
     else:
         parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
 
-    # Get logs between start and end releases in a custom format
-    # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
-    # %b: commit message body
-    # E.g.:
-    #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000]
-    #       %cn[Ronaldo Mercado]
-    #       %s[(re-apply changeset 131625)]
-    #       %b[GenericADC cycle parameter default now blank
-    #       to prevent accidental "None" strings in startup script][<END>]
-    logs = repo.git.log(start + ".." + end, "--format=%h %aD %n%cn %n%s%n%b%n<END>")
-    # Add log for start; end is included in start..end but start is not
-    logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
-    # There is an extra line space in the split because one is appended to the front of each entry automatically
-    logs = logs.split('\n<END>\n')
+    # Get list of tag objects in required range
+    tags = []
+    tag_refs = []
+    for tag in repo.tags:
+        tag_refs.append(tag)
+        tags.append(str(tag))
+    if later == 'HEAD':
+        tags_range = tag_refs[tags.index(start):tags.index(releases[-1])+1]
+    else:
+        tags_range = tag_refs[tags.index(start):tags.index(end)+1]
 
-    # # Sort logs from earliest to latest
-    # logs.reverse()
+    logging.debug(tags_range)
 
-    if not logs:
+    logs = []
+    for commit in repo.iter_commits(rev=start + ".." + end):
+        sha = commit.hexsha
+        author = commit.author
+        message = commit.summary
+        time_stamp = commit.authored_date
+
+        ti = time.localtime(commit.authored_date)
+        formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
+                         '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
+
+        logs.append([time_stamp, sha, author, formatted_time, message])
+
+    for tag in tags_range:
+        sha = tag.object.hexsha
+        if hasattr(tag.object, 'author'):
+            author = str(tag.object.author)
+            time_stamp = tag.object.committed_date
+            summary = tag.object.summary + ' (' + tag.name + ')'
+            message = tag.object.message[len(summary):]
+        elif hasattr(tag.object.object, 'author'):
+            author = str(tag.object.object.author)
+            time_stamp = tag.object.object.committed_date
+            summary = tag.object.object.summary + ' (' + tag.name + ')'
+            message = tag.object.object.message[len(summary):]
+
+        ti = time.localtime(time_stamp)
+        formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
+                         '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
+
+        logs.append([time_stamp, sha, author, formatted_time, summary, message])
+
+    sorted_logs = sorted(logs, key=itemgetter(0))
+
+    # # Get logs between start and end releases in a custom format
+    # # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
+    # # %b: commit message body
+    # # E.g.:
+    # #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000]
+    # #       %cn[Ronaldo Mercado]
+    # #       %s[(re-apply changeset 131625)]
+    # #       %b[GenericADC cycle parameter default now blank
+    # #       to prevent accidental "None" strings in startup script][<END>]
+    # logs = repo.git.log(start + ".." + end, "--format=%h %aD %n%cn %n%s%n%b%n<END>")
+    # # Add log for start; end is included in start..end but start is not
+    # logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
+    # # There is an extra line space in the split because one is appended to the front of each entry automatically
+    # logs = logs.split('\n<END>\n')
+    #
+    # # # Sort logs from earliest to latest
+    # # logs.reverse()
+
+    if not sorted_logs:
         print("No logs for " + args.module_name + " between releases " +
               args.earlier_release + " and " + args.later_release)
         return 0
@@ -229,49 +282,47 @@ def main():
     # Add formatting parameters
     screen_width = 100
     if args.verbose:
-        # len("e38e73a 01 May 2015 16:20:46 " + ": ") = 31
-        overflow_message_padding = max_author_length + 31
+        # len("e38e73a 01/05/2015 17:20:46 " + ": ") = 30
+        overflow_message_padding = max_author_length + 30
         max_line_length = screen_width - overflow_message_padding
     else:
         # len("e38e73a " + ": ") = 10
         overflow_message_padding = max_author_length + 10
         max_line_length = screen_width - overflow_message_padding
 
+    # logs.append([time_stamp, sha, author, formatted_time, summary, message])
+
     # Make list of logs
     formatted_logs = []
     prev_commit = ''
-    for log_entry in logs:
-        log_lines = filter(None, log_entry.split('\n'))
-        # logging.debug(log_lines)
-        commit_hash = log_lines[0].split()[0]
-        name = '{:<{}}'.format(log_lines[1], max_author_length)
+    for log_entry in sorted_logs:
+        commit_hash = log_entry[1][:7]
+        name = '{:<{}}'.format(log_entry[2], max_author_length)
 
         # Add commit subject message
-        if len(log_lines) > 2:
-            commit_message = format_message_width(log_lines[2], max_line_length)
+        if log_entry[4]:
+            commit_message = format_message_width(log_entry[4], max_line_length)
             formatted_message = commit_message[0]
             for line in commit_message[1:]:
                 formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
         else:
             formatted_message = '\n'
 
-        # Check if there is a commit message body and append it
-        if len(log_lines) > 3:
-            # The +/- 5 adds an offset for the message body, while maintaining message length
-            commit_body = format_message_width(log_lines[3:], max_line_length - 5)
-            for line in commit_body:
-                formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
-
         # Add date, time and diff info if verbose
         if args.verbose:
-            # Add '0' to front of day if only one digit, to keep consistent length
-            date = '{:0>2}'.format(log_entry.split()[2]) + ' ' + log_entry.split()[3] + ' ' + log_entry.split()[4]
-            time = log_entry.split()[5]
+            date_and_time = log_entry[3]
 
             formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
-                                  colour(date, cyan, raw) + ' ' +
-                                  colour(time, cyan, raw) + ' ' +
+                                  colour(date_and_time, cyan, raw) + ' ' +
                                   colour(name, green, raw) + ': ' + formatted_message)
+
+            # Check if there is a commit message body and append it
+            if log_entry[5]:
+                # The +/- 5 adds an offset for the message body, while maintaining message length
+                commit_body = format_message_width(log_entry[5], max_line_length - 5)
+                for line in commit_body:
+                    formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
+
             if prev_commit:
                 diff = repo.git.diff("--name-status", prev_commit, commit_hash)
                 if diff:
@@ -287,7 +338,7 @@ def main():
     for log in formatted_logs:
         print(log)
 
-    # shutil.rmtree(args.module_name)
+    shutil.rmtree(args.module_name)
 
 
 if __name__ == "__main__":
