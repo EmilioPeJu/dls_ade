@@ -4,8 +4,6 @@ import unittest
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 import dls_ade.new_module_creator as new_c
 from pkg_resources import require
 require("mock")
@@ -16,6 +14,8 @@ if version_info.major == 2:
     import __builtin__ as builtins  # Allows for Python 2/3 compatibility, 'builtins' is namespace for inbuilt functions
 else:
     import builtins
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class GetNewModuleCreatorTest(unittest.TestCase):
@@ -109,6 +109,8 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
     def setUp(self):
 
+        self.git_root_dir = new_c.vcs_git.GIT_ROOT_DIR
+
         nmc_classes_to_patch = [
             'CreatorWithApps',
             'CreatorAddAppToModule'
@@ -170,7 +172,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
+        mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
@@ -178,7 +180,7 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with("controlstest/ioc/test/module")
+        mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
@@ -234,85 +236,33 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreator._get_existing_remote_repo_paths')
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
 
-        self.addCleanup(self.patch_get_existing_remote_repo_paths.stop)
+        self.addCleanup(self.patch_is_repo_path.stop)
 
-        self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
 
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
-    def test_given_get_existing_remote_repo_paths_returns_non_empty_list_then_exception_raised_with_correct_message(self):
+    def test_given_remote_repo_path_exists_then_exception_raised_with_correct_message(self):
 
-        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        comp_message = ("The paths {dirs:s} already exist on gitolite, cannot continue").format(dirs=", ".join(["inrepo1", "inrepo2", "inrepo3"]))
+        server_repo_path = self.nmc_obj._server_repo_path
+
+        self.mock_is_repo_path.return_value = True
+        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir=server_repo_path)
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_get_existing_remote_repo_paths_returns_empty_list_then_remote_repo_valid_set_true(self):
+    def test_given_remote_repo_does_not_exist_then_remote_repo_valid_set_true(self):
 
-        self.mock_get_existing_remote_repo_paths.return_value = []
+        self.mock_is_repo_path.return_value = False
 
         self.nmc_obj.verify_remote_repo()
 
         self.assertTrue(self.nmc_obj._remote_repo_valid)
-
-
-class NewModuleCreatorGetExistingRemoteRepoPathsTest(unittest.TestCase):
-
-    def setUp(self):
-
-        self.patch_get_remote_dir_list = patch('dls_ade.new_module_creator.NewModuleCreator._get_remote_dir_list')
-        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
-
-        self.addCleanup(self.patch_get_remote_dir_list.stop)
-        self.addCleanup(self.patch_is_repo_path.stop)
-
-        self.mock_get_remote_dir_list = self.patch_get_remote_dir_list.start()
-        self.mock_is_repo_path = self.patch_is_repo_path.start()
-
-        self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
-
-    def test_given_one_of_dir_list_exists_then_directory_returned_in_list(self):
-
-        self.mock_get_remote_dir_list.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        self.mock_is_repo_path.return_value = True
-
-        existing_dir_paths = self.nmc_obj._get_existing_remote_repo_paths()
-
-        self.assertEqual(existing_dir_paths, ["inrepo1", "inrepo2", "inrepo3"])
-
-    def test_given_none_in_dir_list_exist_then_list_returned_is_empty(self):
-
-        self.mock_get_remote_dir_list.return_value = ["notinrepo1", "notinrepo2", "notinrepo3"]
-        self.mock_is_repo_path.return_value = False
-
-        existing_dir_paths = self.nmc_obj._get_existing_remote_repo_paths()
-
-        self.assertFalse(existing_dir_paths)
-
-    def test_given_one_dir_does_exist_then_list_returned_is_correct(self):
-
-        self.mock_get_remote_dir_list.return_value = ["notinrepo1", "inrepo2", "notinrepo3"]
-        self.mock_is_repo_path.side_effect = [False, True, False]
-
-        existing_dir_paths = self.nmc_obj._get_existing_remote_repo_paths()
-
-        self.assertEqual(existing_dir_paths, ["inrepo2"])
-
-
-class NewModuleCreatorGetRemoteDirListTest(unittest.TestCase):
-
-    @patch('dls_ade.new_module_creator.pathf.vendorModule', return_value='vendor_module')
-    def test_correct_dir_list_returned(self, mock_vend):
-
-        nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
-        dir_list = nmc_obj._get_remote_dir_list()
-
-        self.assertEqual(dir_list, [nmc_obj._server_repo_path, 'vendor_module'])
 
 
 class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
@@ -682,20 +632,20 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_get_existing_remote_repo_paths = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._get_existing_remote_repo_paths')
         self.patch_check_if_remote_repo_has_app = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
+        self.patch_is_repo_path = patch('dls_ade.new_module_creator.vcs_git.is_repo_path')
 
-        self.addCleanup(self.patch_get_existing_remote_repo_paths.stop)
         self.addCleanup(self.patch_check_if_remote_repo_has_app.stop)
+        self.addCleanup(self.patch_is_repo_path.stop)
 
-        self.mock_get_existing_remote_repo_paths = self.patch_get_existing_remote_repo_paths.start()
         self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
 
         self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
-    def test_given_server_repo_path_not_in_existing_remote_repo_paths_then_exception_raised_with_correct_message(self):
+    def test_given_server_repo_path_does_not_exist_then_exception_raised_with_correct_message(self):
 
-        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        self.mock_is_repo_path.return_value = False
         self.nmc_obj._server_repo_path = "notinrepo"
 
         comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
@@ -705,13 +655,13 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_app_exists_in_remote_repo_path_then_exception_raised_with_correct_error_message(self):
+    def test_given_app_exists_in_server_repo_then_exception_raised_with_correct_error_message(self):
 
-        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
+        self.mock_is_repo_path.return_value = True
         self.nmc_obj._server_repo_path = "inrepo1"
-        self.mock_check_if_remote_repo_has_app.side_effect = [True, False, True]
+        self.mock_check_if_remote_repo_has_app.return_value = True
 
-        comp_message = "The repositories {paths:s} have apps that conflict with {app_name:s}".format(paths=", ".join(["inrepo1", "inrepo3"]), app_name="test_app")
+        comp_message = "The repository {path:s} has an app that conflicts with app name: {app_name:s}".format(path="inrepo1", app_name="test_app")
 
         with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
@@ -720,8 +670,7 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def test_given_all_checks_passed_then_remote_repo_valid_set_true(self):
 
-        self.mock_get_existing_remote_repo_paths.return_value = ["inrepo1", "inrepo2", "inrepo3"]
-        self.nmc_obj._server_repo_path = "inrepo1"
+        self.mock_is_repo_path.return_value = True
         self.mock_check_if_remote_repo_has_app.return_value = False
 
         self.nmc_obj.verify_remote_repo()

@@ -1,5 +1,3 @@
-#!/bin/env dls-python
-
 from dls_ade import vcs_git
 import os
 import unittest
@@ -10,13 +8,15 @@ from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 def setUpModule():
     vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
+    vcs_git.GIT_ROOT_DIR = "controlstest"
+
 
 class IsGitDirTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
         path = "/not/a/path"
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             vcs_git.is_git_dir(path)
 
     def test_given_not_git_dir_then_returns_false(self):
@@ -140,7 +140,7 @@ class InitRepoTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a directory".format(path="fake_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.init_repo("fake_path")
 
         self.mock_is_dir.assert_called_once_with("fake_path")
@@ -153,7 +153,7 @@ class InitRepoTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is already a git repository".format(path="non_repo_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.init_repo("non_repo_path")
 
         self.mock_is_dir.assert_called_once_with("non_repo_path")
@@ -203,7 +203,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a directory".format(path="fake_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.stage_all_files_and_commit("fake_path")
 
         self.mock_is_dir.assert_called_once_with("fake_path")
@@ -216,7 +216,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a git repository".format(path="non_repo_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.stage_all_files_and_commit("non_repo_path")
 
         self.mock_is_dir.assert_called_once_with("non_repo_path")
@@ -283,7 +283,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         comp_message = "Path {path:s} is not a git repository"
         comp_message = comp_message.format(path="test_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.add_new_remote_and_push("test_destination", path="test_path")
 
         self.mock_is_git_root_dir.assert_called_once_with("test_path")
@@ -309,7 +309,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.add_new_remote_and_push("test_destination", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -325,7 +325,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         comp_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
         comp_message = comp_message.format(remote="test_remote")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -386,7 +386,7 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
         comp_message = "{dest:s} already exists".format(dest="test_destination")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.create_remote_repo("test_destination")
 
         mock_is_repo_path.assert_called_once_with("test_destination")
@@ -446,7 +446,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a git repository".format(path="test_path")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.push_to_remote(path="test_path")
 
         self.mock_is_git_root_dir.assert_called_once_with("test_path")
@@ -472,7 +472,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.push_to_remote(branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -487,7 +487,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Local repository does not have remote {remote:s}".format(remote="test_remote")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -502,7 +502,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Remote repository URL {remoteURL:s} does not begin with the gitolite server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
@@ -520,7 +520,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Server repo path {s_repo_path:s} does not currently exist".format(s_repo_path="test_URL")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(vcs_git.Error) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
@@ -566,7 +566,7 @@ class CloneTest(unittest.TestCase):
         source = "does/not/exist"
         module = "test_module"
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             vcs_git.clone(source, module)
 
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
@@ -584,7 +584,7 @@ class CloneTest(unittest.TestCase):
         source = "test/source"
         module = "already_exists"
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=False)
@@ -623,7 +623,7 @@ class TempCloneTest(unittest.TestCase):
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
         source = "/does/not/exist"
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             vcs_git.temp_clone(source)
 
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
@@ -650,50 +650,40 @@ class CloneMultiTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "does/not/exist"
-        module = "test_module"
+        source = "/does/not/exist"
 
-        with self.assertRaises(Exception):
-            vcs_git.clone(source, module)
+        with self.assertRaises(vcs_git.Error):
+            vcs_git.clone_multi(source)
 
+    @patch('dls_ade.vcs_git.get_repository_list')
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path):
-        source = "does/exist"
-        module = "test_module"
+    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, _1):
+        source = "/does/exist"
 
-        vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('os.path.isdir', return_value=True)
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
+    @patch('os.listdir', return_value=["test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_existing_module_name_then_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
-        source = "test/source"
-        module = "already_exists"
+    def test_given_existing_module_name_then_not_cloned(self, mock_clone_from, mock_is_repo_path, _1, _2):
+        source = "area/test_module"
 
-        with self.assertRaises(Exception):
-            vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('os.path.isdir', return_value=False)
+        self.assertFalse(mock_clone_from.call_count)
+
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
+    @patch('os.listdir', return_value=["not_test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_module_name_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, mock_isdir):
-        source = "test/source"
-        module = "test_module"
+    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1, _2):
+        source = "area/test_module"
 
-        vcs_git.clone(source, module)
+        vcs_git.clone_multi(source)
 
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
-    @patch('dls_ade.vcs_git.os.path.isdir', return_value=False)
-    @patch('git.Repo.clone_from')
-    def test_given_valid_inputs_then_clone_from_function_called(self, mock_clone_from,
-                                                              mock_is_repo_path, mock_clone):
-        source = "test/source"
-        module = "test_module"
-
-        vcs_git.clone(source, module)
-
-        mock_clone.assert_called_once_with(ANY)
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + "controls/" + source, "./test_module")
 
 
 class ListRemoteBranchesTest(unittest.TestCase):
@@ -763,35 +753,34 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
 
 class GitClassInitTest(unittest.TestCase):
 
+    def setUp(self):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
     def test_given_nonsense_module_options_args_then_class_instance_should_fail(self):
 
         with self.assertRaises(Exception):
             vcs_git.Git(1, 2)
 
-    @patch('dls_ade.vcs_git.subprocess.check_output')
-    def test_given_any_module_and_options_args_then_subprocess_called_to_list_repos(self, mock_check):
 
-        repo_list_cmd = 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controlstest/'
-
-        with self.assertRaises(Exception):
-            vcs_git.Git("FakeModuleNumberOne", FakeOptions())
-
-        mock_check.assert_called_once_with(repo_list_cmd.split())
-
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_args_for_real_repo_then_do_not_raise_exception(self, mock_is_repo_path, _1, _2):
+    def test_given_args_for_real_repo_then_do_not_raise_exception(self, _1, _2):
+
+        self.mock_is_repo_path.return_value = True
 
         try:
             vcs_git.Git('dummy', FakeOptions())
-        except Exception, e:
+        except vcs_git.Error, e:
             self.fail(e)
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_repo_exists_then_create_temp_dir_to_clone_into(self, mock_clone, mock_temp, _):
+    def test_given_repo_exists_then_create_temp_dir_to_clone_into(self, mock_clone, mock_temp):
+
+        self.mock_is_repo_path.return_value = True
 
         module = "dummy"
         options = FakeOptions()
@@ -800,15 +789,16 @@ class GitClassInitTest(unittest.TestCase):
 
         mock_temp.assert_called_once_with(suffix="_dummy")
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['dummy'])
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_repo_does_not_exist_then_git_clone_should_not_be_called(self, mock_clone, mock_temp, mock_check):
+    def test_given_repo_does_not_exist_then_git_clone_should_not_be_called(self, mock_clone, mock_temp):
+
+        self.mock_is_repo_path.return_value = False
 
         module = "dummy"
         options = FakeOptions()
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             vcs_git.Git(module, options)
 
         n_clone_calls = mock_clone.call_count
@@ -817,10 +807,11 @@ class GitClassInitTest(unittest.TestCase):
         self.assertEqual(0, n_clone_calls)
         self.assertEqual(0, n_temp_calls)
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_repo_exists_then_git_clone_called(self, mock_clone, _, mock_check):
+    def test_given_repo_exists_then_git_clone_called(self, mock_clone, _):
+
+        self.mock_is_repo_path.return_value = True
 
         repo_url = "ssh://GIT_SSH_ROOT/controls/support/dummy"
         module = "dummy"
@@ -832,9 +823,10 @@ class GitClassInitTest(unittest.TestCase):
 
         self.assertEqual(1, n_clone_calls)
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_repo_exists_then_git_clone_called_with_remote_url_and_tempdir_args(self, mock_clone, mock_check):
+    def test_given_repo_exists_then_git_clone_called_with_remote_url_and_tempdir_args(self, mock_clone):
+
+        self.mock_is_repo_path.return_value = True
 
         repo_url = "ssh://GIT_SSH_ROOT/controls/support/dummy"
         module = "dummy"
@@ -852,9 +844,10 @@ class GitClassInitTest(unittest.TestCase):
         self.assertTrue(target_dir.endswith("_" + module))
         self.assertGreater(len(target_dir), len(module)+9)
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/ioc/domain/mod'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone, mock_check):
+    def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone):
+
+        self.mock_is_repo_path.return_value = True
 
         repo_url = "ssh://GIT_SSH_ROOT/controls/ioc/domain/mod"
         module = "domain/mod"
@@ -873,10 +866,15 @@ class GitClassInitTest(unittest.TestCase):
 
 class GitCatTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)  # @UndefinedVariable
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheckout):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         client_cat_patch = patch('dls_ade.vcs_git.git.Repo.git')
         self.addCleanup(client_cat_patch.stop)
@@ -931,10 +929,15 @@ class GitCatTest(unittest.TestCase):
 
 class GitListReleasesTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
@@ -964,10 +967,15 @@ class GitListReleasesTest(unittest.TestCase):
 
 class GitSetLogMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
@@ -983,10 +991,15 @@ class GitSetLogMessageTest(unittest.TestCase):
 
 class GitCheckVersionTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
@@ -1012,10 +1025,15 @@ class GitCheckVersionTest(unittest.TestCase):
 
 class ApiInterrogateTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, _1, _2, _3):
+    def setUp(self, _1, _2):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
@@ -1030,7 +1048,7 @@ class ApiInterrogateTest(unittest.TestCase):
     def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self):
 
         expected_source_repo = 'ssh://GIT_SSH_ROOT/'
-        expected_source_repo += 'controls/'+self.options.area+'/'+self.module
+        expected_source_repo += 'controlstest/'+self.options.area+'/'+self.module
 
         source_repo = self.vcs.source_repo
 
@@ -1039,10 +1057,15 @@ class ApiInterrogateTest(unittest.TestCase):
 
 class GitSettersTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
@@ -1056,7 +1079,7 @@ class GitSettersTest(unittest.TestCase):
 
     def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             self.vcs.version
 
     @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
@@ -1073,16 +1096,21 @@ class GitSettersTest(unittest.TestCase):
 
         version = '0-2'
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(vcs_git.Error):
             self.vcs.set_version(version);
 
 
 class GitReleaseVersionTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/support/dummy'])
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone, mcheck):
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
+        self.addCleanup(self.patch_is_repo_path.stop)
+        self.mock_is_repo_path = self.patch_is_repo_path.start()
+
+        self.mock_is_repo_path.return_value = True
 
         self.module = 'dummy'
         self.options = FakeOptions()
