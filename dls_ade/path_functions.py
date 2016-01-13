@@ -1,26 +1,12 @@
 import os
 import vcs_git
 
-GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
 GIT_ROOT_DIR = vcs_git.GIT_ROOT_DIR
 
 
-def root():
-    """Return the root for subversion (SVN_ROOT variable in the environment)"""
-    root_v = GIT_SSH_ROOT
-    # assert os.environ["SVN_ROOT"], "'SVN_ROOT' environment variable must be set"
-    return root_v
-
-
-# TODO Sort out paths for etc, epics (root() replaced with GIT_ROOT_DIR)
 def area(area_v):
-
-    if area_v is "etc":
-        return os.path.join(root(), area_v, "prod")
-    elif area_v is "epics":
-        return os.path.join(root(), area_v)
-    else:
-        return os.path.join(GIT_ROOT_DIR, area_v)
+    """Return the full file path for the given area."""
+    return os.path.join(GIT_ROOT_DIR, area_v)
 
 
 def devArea(area_v="support"):
