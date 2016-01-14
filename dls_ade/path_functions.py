@@ -4,21 +4,21 @@ import vcs_git
 GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
 
 
-def check_technical_area_valid(args, parser):
+def check_technical_area_valid(area, module):
     """
     Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
     raises a parser error if not
 
     Args:
-        args (ArgumentParser Namespace): Parser arguments
-        parser (ArgumentParser): Parser instance
+        area: Area of repository
+        module: Module to check
 
     Raises:
-        Parser error if <area> ioc and <module_name> not valid
+        "Missing Technical Area Under Beamline"
     """
 
-    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
-        parser.error("Missing Technical Area Under Beamline")
+    if area == "ioc" and len(module.split('/')) < 2:
+        raise Exception("Missing Technical Area Under Beamline")
 
 
 def root():
