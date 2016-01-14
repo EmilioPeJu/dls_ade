@@ -25,7 +25,7 @@ from ConfigParser import SafeConfigParser
 logging.basicConfig(level=logging.DEBUG)
 
 
-class environment:
+class environment(object):
     """
     A class representing the epics environment of a site.
 
