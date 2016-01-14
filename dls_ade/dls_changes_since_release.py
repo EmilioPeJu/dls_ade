@@ -39,7 +39,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    pathf.check_technical_area_valid(args, parser)
+    pathf.check_technical_area_valid(args.area, args.module_name)
 
     module = args.module_name
     source = pathf.devModule(module, args.area)
@@ -50,9 +50,7 @@ def main():
         parser.error("Repository does not contain " + source)
 
     if vcs_git.is_repo_path(source):
-        # Use temp_clone
-        vcs_git.clone(source, module)
-        repo = vcs_git.git.Repo(module)
+        repo = vcs_git.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
 
         if releases:
