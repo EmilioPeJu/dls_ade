@@ -69,27 +69,24 @@ def make_parser():
     return parser
 
 
-def check_epics_version(args, parser):
+def check_epics_version(epics_version):
     """
     Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
     Then checks if the epics version matches the reg ex. Then sets environment epics version.
 
     Args:
-        args(ArgumentParser Namespace): Parser arguments
-        parser(ArgumentParser): Parser instance
+        epics_version: Epics version to check
 
     Raises:
-        Error: "Expected epics version like R3.14.8.2, got: args.epics_version"
-
+        Expected epics version like R3.14.8.2, got: <epics_version>
     """
-    if args.epics_version:
-        if not args.epics_version.startswith("R"):
-            args.epics_version = "R{0}".format(args.epics_version)
-        if e.epics_ver_re.match(args.epics_version):
-            e.setEpics(args.epics_version)
+    if epics_version:
+        if not epics_version.startswith("R"):
+            epics_version = "R{0}".format(epics_version)
+        if e.epics_ver_re.match(epics_version):
+            e.setEpics(epics_version)
         else:
-            parser.error("Expected epics version like R3.14.8.2, got: " +
-                         args.epics_version)
+            raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
 
 
 def check_technical_area(area, module):
@@ -114,8 +111,8 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_epics_version(args, parser)
-    check_technical_area(args, parser)
+    check_epics_version(args.epics_version)
+    check_technical_area(args.area, args.module_name)
 
     # >>> Not sure what this is for
     # # Force options.svn if no releases in the file system
