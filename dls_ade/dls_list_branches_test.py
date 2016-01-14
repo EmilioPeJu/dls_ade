@@ -25,32 +25,24 @@ class MakeParserTest(unittest.TestCase):
 
 class CheckTechnicalAreaTest(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_list_branches.make_parser()
-        parse_error_patch = patch('dls_ade.dls_list_branches.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-        self.args = MagicMock()
-        self.args.module_name = 'test_module'
-        self.args.area = 'ioc'
-
     def test_given_area_not_ioc_then_no_error_raised(self):
-        self.args.area = "support"
+        area = "support"
+        module = "test_module"
 
-        dls_list_branches.check_technical_area(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_list_branches.check_technical_area(area, module)
 
     def test_given_area_ioc_module_split_two_then_no_error_raised(self):
-        self.args.module_name = "modules/test_module"
+        area = "ioc"
+        module = "modules/test_module"
 
-        dls_list_branches.check_technical_area(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_list_branches.check_technical_area(area, module)
 
     def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
+        area = "ioc"
+        module = "test_module"
         expected_error_msg = "Missing Technical Area under Beamline"
 
-        dls_list_branches.check_technical_area(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
+        try:
+            dls_list_branches.check_technical_area(area, module)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_msg)
