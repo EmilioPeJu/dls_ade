@@ -4,6 +4,8 @@ import os
 import subprocess
 import tempfile
 import shutil
+from pkg_resources import require
+require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
 
@@ -31,7 +33,9 @@ def process_call(call_args):
                                stderr=subprocess.PIPE)
     std_out, std_err = process.communicate()
 
-    return std_out, std_err
+    return_code = process.returncode
+
+    return std_out, std_err, return_code
 
 
 def is_server_repo(server_repo_path):
@@ -66,6 +70,7 @@ class SystemsTest(object):
         self.script = script
         self.std_out = ""
         self.std_err = ""
+        self.return_code = None
         self.local_repo_path = ""
         self.description = ""
 
@@ -105,7 +110,7 @@ class SystemsTest(object):
         # Call the script and return the output and error
         call_args = (self.script + " " + self.arguments).split()
 
-        self.std_out, self.std_err = process_call(call_args)
+        self.std_out, self.std_err, self.return_code = process_call(call_args)
 
     def check_std_err_for_exception(self):
 
@@ -114,6 +119,11 @@ class SystemsTest(object):
                 return
             raise Error("Both exception_type and exception_string must "
                         "be provided.")
+
+        if self.return_code == 0:
+            # Function must have succeeded:
+            raise Error("Function succeeded, no exception to compare to.")
+
 
         expected_string = "\n{exc_t:s}: {exc_s:s}\n"
         expected_string = expected_string.format(exc_t=self.exception_type,
