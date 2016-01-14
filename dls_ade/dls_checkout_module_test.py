@@ -7,7 +7,7 @@ from pkg_resources import require
 from dls_ade import dls_checkout_module
 
 require("mock")
-from mock import patch
+from mock import patch, MagicMock
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
@@ -36,30 +36,6 @@ class MakeParserTest(unittest.TestCase):
         self.assertIn("--force", option.option_strings)
 
 
-class CheckParsedArgumentsValidTest(unittest.TestCase):
-
-    def setUp(self):
-        self.parser = dls_checkout_module.make_parser()
-        parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-    def test_given_empty_module_name_then_error_raised(self):
-        args = {}
-        expected_error_msg = "Module name required"
-
-        dls_checkout_module.check_parsed_arguments_valid(args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
-    def test_given_module_name_then_no_error_raised(self):
-        args = {'module_name': ""}
-
-        dls_checkout_module.check_parsed_arguments_valid(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-
 class CheckTechnicalAreaTest(unittest.TestCase):
 
     def setUp(self):
@@ -67,33 +43,36 @@ class CheckTechnicalAreaTest(unittest.TestCase):
         parse_error_patch = patch('dls_ade.dls_checkout_module.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
+        self.args = MagicMock()
+        self.args.module_name = "test_module"
+        self.args.area = "support"
 
     def test_given_area_not_ioc_then_no_error_raised(self):
-        args = {'module_name': "test_module", 'area': "support"}
-
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_given_area_ioc_module_everything_then_no_error_raised(self):
-        args = {'module_name': "everything", 'area': "ioc"}
+        self.args.module_name = "everything"
+        self.args.area = "ioc"
 
-        dls_checkout_module.check_technical_area(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-    def test_given_area_ioc_module_split_more_than_one_then_no_error_raised(self):
-        args = {'module_name': "modules/test_module", 'area': "ioc"}
-
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_area_ioc_module_split_less_than_one_then_no_error_raised(self):
-        args = {'module_name': "test_module", 'area': "ioc"}
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
+        self.args.module_name = "modules/test_module"
+        self.args.area = "ioc"
+
+        dls_checkout_module.check_technical_area(self.args, self.parser)
+
+        self.assertFalse(self.mock_error.call_count)
+
+    def test_given_area_ioc_module_split_less_than_two_then_error_raised(self):
+        self.args.area = "ioc"
         expected_error_msg = "Missing Technical Area under Beamline"
 
-        dls_checkout_module.check_technical_area(args, self.parser)
+        dls_checkout_module.check_technical_area(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 

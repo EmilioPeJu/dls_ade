@@ -33,20 +33,12 @@ class AreaTest(unittest.TestCase):
         #
         # self.assertEqual(path, GIT_SSH_ROOT + area)
 
-    def test_given_area_tools_then_path_to_build_scripts(self):
-        pass
-        # area = "tools"
-        #
-        # path = path_functions.area(area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + "diamond/build_scripts")
-
-    def test_given_area_tools_then_path_to_area(self):
+    def test_given_area_other_then_path_to_area(self):
         area = "other"
 
         path = path_functions.area(area)
 
-        self.assertEqual(path, "controls/" + area)
+        self.assertEqual(path, "controlstest/" + area)
 
 
 class ModuleAreaTests(unittest.TestCase):
@@ -70,20 +62,10 @@ class ModuleAreaTests(unittest.TestCase):
         # self.assertEqual(path, GIT_SSH_ROOT + area + "/" + module)
 
     def test_branchModule(self):
-        pass
-        # area = "tools"
-        # module = "test_module"
-        #
-        # path = path_functions.branchModule(module, area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + "diamond/build_scripts/" + module)
 
-    def test_vendorModule(self):
-
-        area = "other"
+        area = "tools"
         module = "test_module"
 
-        path = path_functions.vendorModule(module, area)
+        path = path_functions.branchModule(module, area)
 
-        self.assertEqual(path, "controls/" + area + "/" + module)
-
+        self.assertEqual(path, "controlstest/" + area + "/" + module)

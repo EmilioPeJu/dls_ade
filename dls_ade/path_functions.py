@@ -2,6 +2,7 @@ import os
 import vcs_git
 
 GIT_SSH_ROOT = vcs_git.GIT_SSH_ROOT
+GIT_ROOT_DIR = vcs_git.GIT_ROOT_DIR
 
 
 def check_technical_area_valid(area, module):
@@ -28,27 +29,16 @@ def root():
     return root_v
 
 
-def area(area_v, type_v=None):
-
-    if type_v and type_v not in ['release', 'vendor']:
-        raise Exception("Type must be release or vendor")
+# TODO Sort out paths for etc, epics (root() replaced with GIT_ROOT_DIR)
+def area(area_v):
 
     if area_v is "etc":
         raise NotImplementedError
         # return os.path.join(root(), area_v, "prod")
     elif area_v is "epics":
-        raise NotImplementedError
-        # return os.path.join(root(), area_v)
-    elif area_v is "tools":
-        raise NotImplementedError
-        # return os.path.join(root(), "diamond", "build_scripts")
+        return os.path.join(root(), area_v)
     else:
-        if type_v is None:
-            return os.path.join("controls", area_v)
-        elif type_v is 'release':
-            raise NotImplementedError
-        elif type_v is 'vendor':
-            raise NotImplementedError
+        return os.path.join(GIT_ROOT_DIR, area_v)
 
 
 def devArea(area_v="support"):
@@ -79,13 +69,3 @@ def branchArea(area_v="support"):
 def branchModule(module, area_v="support"):
     """Return the path for module in branch section a particular area"""
     return os.path.join(branchArea(area_v), module)
-
-
-def vendorArea(area_v="support"):
-    """Return the path for the vendor section of a particular area"""
-    return area(area_v)
-
-
-def vendorModule(module, area_v="support"):
-    """Return the path for module in vendor section a particular area"""
-    return os.path.join(vendorArea(area_v), module)
