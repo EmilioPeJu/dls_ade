@@ -138,23 +138,17 @@ def main():
         if args.later_release == test_list[0] and args.later_release != 'HEAD':
             parser.error("<later_release> must be more recent than <earlier_release>")
 
-    pathf.check_technical_area_valid(args, parser)
+    pathf.check_technical_area_valid(args.area, args.module_name)
 
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
         # Get the list of releases from the repo
-        # >>> Use temp_clone once merged
-        # repo = vcs_git.temp_clone(source, module)
         print("Cloning " + args.module_name + " from " + args.area + " area...")
-        vcs_git.clone(source, args.module_name)
-        repo = vcs_git.git.Repo(args.module_name)
-        # <<<
+        repo = vcs_git.temp_clone(source)
         releases = create_release_list(repo)
         logging.debug(releases)
     else:
-        parser.error("Module " + args.module_name + " doesn't exist in " + source)
-        # return so 'releases' can't be referenced before assignment
-        return 1
+        raise Exception("Module " + args.module_name + " doesn't exist in " + source)
 
     # Set earlier_releases and later_releases to defaults if not provided
     if not args.later_release:
@@ -175,11 +169,11 @@ def main():
     if earlier in releases:
         start = earlier
     else:
-        parser.error("Module " + args.module_name + " does not have a release " + args.earlier_release)
+        raise Exception("Module " + args.module_name + " does not have a release " + args.earlier_release)
     if later in releases or later == 'HEAD':
         end = later
     else:
-        parser.error("Module " + args.module_name + " does not have a release " + args.later_release)
+        raise Exception("Module " + args.module_name + " does not have a release " + args.later_release)
 
     # Get list of tag objects in required range
     tags = []
@@ -188,10 +182,10 @@ def main():
         tag_refs.append(tag)
         tags.append(str(tag))
     if later == 'HEAD':
+        # If later is HEAD then just go to most recent release
         tags_range = tag_refs[tags.index(start):tags.index(releases[-1])+1]
     else:
         tags_range = tag_refs[tags.index(start):tags.index(end)+1]
-
     logging.debug(tags_range)
 
     logs = []
@@ -227,24 +221,6 @@ def main():
         logs.append([time_stamp, sha, author, formatted_time, summary, message])
 
     sorted_logs = sorted(logs, key=itemgetter(0))
-
-    # # Get logs between start and end releases in a custom format
-    # # %h: commit hash, %aD: author date, %cn: committer name, %n: line space, %s: commit message subject,
-    # # %b: commit message body
-    # # E.g.:
-    # #       %h[dfdc111] %aD[Fri, 1 May 2015 14:58:17 +0000]
-    # #       %cn[Ronaldo Mercado]
-    # #       %s[(re-apply changeset 131625)]
-    # #       %b[GenericADC cycle parameter default now blank
-    # #       to prevent accidental "None" strings in startup script][<END>]
-    # logs = repo.git.log(start + ".." + end, "--format=%h %aD %n%cn %n%s%n%b%n<END>")
-    # # Add log for start; end is included in start..end but start is not
-    # logs = logs + '\n' + repo.git.show(start, "--format=%h %aD %n%cn %n%s%n%b")
-    # # There is an extra line space in the split because one is appended to the front of each entry automatically
-    # logs = logs.split('\n<END>\n')
-    #
-    # # # Sort logs from earliest to latest
-    # # logs.reverse()
 
     if not sorted_logs:
         print("No logs for " + args.module_name + " between releases " +
@@ -338,7 +314,7 @@ def main():
     for log in formatted_logs:
         print(log)
 
-    shutil.rmtree(args.module_name)
+    shutil.rmtree(repo.working_tree_dir)
 
 
 if __name__ == "__main__":
