@@ -109,34 +109,24 @@ class CheckEpicsVersionTest(unittest.TestCase):
 
 class CheckTechnicalAreaTest(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_list_releases.make_parser()
-        parse_error_patch = patch('dls_ade.dls_list_releases.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-        self.args = MagicMock()
-        self.args.module_name = 'test_module'
-        self.args.area = 'support'
-
     def test_given_area_not_ioc_then_no_error_raised(self):
+        area = "support"
+        module = "test_module"
 
-        dls_list_releases.check_technical_area(self.args, self.parser)
+        dls_list_releases.check_technical_area(area, module)
 
-        self.assertFalse(self.mock_error.call_count)
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
+        area = "ioc"
+        module = "modules/test_module"
 
-    def test_given_area_ioc_module_split_more_than_one_then_no_error_raised(self):
-        self.args.module_name = "modules/test_module"
-        self.args.area = "ioc"
-
-        dls_list_releases.check_technical_area(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_list_releases.check_technical_area(area, module)
 
     def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
-        self.args.area = "ioc"
+        area = "ioc"
+        module = "test_module"
         expected_error_msg = "Missing Technical Area under Beamline"
 
-        dls_list_releases.check_technical_area(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
+        try:
+            dls_list_releases.check_technical_area(area, module)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_msg)

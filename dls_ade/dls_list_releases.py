@@ -92,20 +92,21 @@ def check_epics_version(args, parser):
                          args.epics_version)
 
 
-def check_technical_area(args, parser):
+def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that the technical area is also provided.
 
     Args:
-        args(ArgumentParser Namespace): Parser arguments
-        parser(ArgumentParser): Parser instance
+        area: Area of repository
+        module: Module to check
 
     Raises:
-        Error: "Missing Technical Area under Beamline"
+        "Missing Technical Area under Beamline"
     """
-    if args.area == "ioc" \
-            and len(args.module_name.split('/')) < 2:
-        parser.error("Missing Technical Area under Beamline")
+
+    if area == "ioc" \
+            and len(module.split('/')) < 2:
+        raise Exception("Missing Technical Area under Beamline")
 
 
 def main():
