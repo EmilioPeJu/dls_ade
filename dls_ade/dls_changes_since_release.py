@@ -47,7 +47,7 @@ def main():
 
     # Check for existence of this module in various places in the repository and note revisions
     if not vcs_git.is_repo_path(source):
-        parser.error("Repository does not contain " + source)
+        raise Exception("Repository does not contain " + source)
 
     if vcs_git.is_repo_path(source):
         repo = vcs_git.temp_clone(source)
@@ -58,11 +58,9 @@ def main():
         else:
             print("No release has been done for " + module)
             # return so last_release_num can't be referenced before assignment
-            return
+            return 1
     else:
-        parser.error(source + "does not exist on the repository.")
-        # return so repo can't be referenced before assignment
-        return
+        raise Exception(source + "does not exist on the repository.")
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made
