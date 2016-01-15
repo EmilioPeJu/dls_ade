@@ -117,6 +117,17 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
             self.assertEqual(error.message, expected_error_message)
 
 
+class GetAreaModuleListTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/support/ADCore', 'controls/support/ethercat', 'controls/support/vacuum'])
+    def test_given_area_then_return_final_element_of_list(self, _1):
+        area = "support"
+
+        module_list = dls_module_contacts.get_area_module_list(area)
+
+        self.assertEqual(module_list, ['ADCore', 'ethercat', 'vacuum'])
+
+
 class LookupContactNameTest(unittest.TestCase):
 
     @patch('dls_ade.dls_module_contacts.ldap')
