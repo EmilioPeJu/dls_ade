@@ -88,6 +88,27 @@ def create_release_list(repo):
     return release_list
 
 
+def get_file_changes(commit, prev_commit):
+
+    changed_files = []
+    for diff in commit.diff(prev_commit):
+        # b_blob corresponds to commit and a_blob to prev_commit
+        if diff.b_blob:
+            if diff.new_file:
+                changed_files.append('A ' + diff.b_blob.path + '\n')
+                if diff.renamed:
+                    changed_files.append(' (Renamed)')
+            else:
+                changed_files.append('M ' + diff.b_blob.path + '\n')
+
+        if diff.a_blob and diff.deleted_file:
+            changed_files.append('D ' + diff.a_blob.path + '\n')
+            if diff.renamed:
+                changed_files.append(' (Renamed)')
+
+    return changed_files
+
+
 def format_message_width(message, line_len):
     """
     Takes message and formats each line to be shorter than <line_len>, splits a line into
@@ -188,40 +209,58 @@ def main():
         tags_range = tag_refs[tags.index(start):tags.index(end)+1]
     logging.debug(tags_range)
 
+    # Generate commit messages
     logs = []
+    commit_objects = {}
+    max_author_length = 0
     for commit in repo.iter_commits(rev=start + ".." + end):
-        sha = commit.hexsha
+        sha = commit.hexsha[:7]
         author = commit.author
-        message = commit.summary
+        summary = commit.summary.replace('\n', ' ')
         time_stamp = commit.authored_date
+        message = commit.message[len(summary):].replace('\n', ' ')
 
         ti = time.localtime(commit.authored_date)
         formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
                          '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
 
-        logs.append([time_stamp, sha, author, formatted_time, message])
+        logs.append([time_stamp, sha, author, summary, formatted_time, message])
 
+        commit_objects[sha] = commit
+
+        # Find longest author name to pad all lines to the same length
+        if len(str(author)) > max_author_length:
+            max_author_length = len(str(author))
+
+    # Generate tag messages
     for tag in tags_range:
-        sha = tag.object.hexsha
+        # Find where info is stored (depends on whether annotated or lightweight tag)
         if hasattr(tag.object, 'author'):
-            author = str(tag.object.author)
-            time_stamp = tag.object.committed_date
-            summary = tag.object.summary + ' (' + tag.name + ')'
-            message = tag.object.message[len(summary):]
+            tag_info = tag.object
         elif hasattr(tag.object.object, 'author'):
-            author = str(tag.object.object.author)
-            time_stamp = tag.object.object.committed_date
-            summary = tag.object.object.summary + ' (' + tag.name + ')'
-            message = tag.object.object.message[len(summary):]
+            tag_info = tag.object.object
+        else:
+            # >>> I don't think it will ever get here, but if it does it will be easier to fix with this message.
+            raise Exception("Can't find tag info")
+
+        sha = tag.object.hexsha[:7]
+        author = str(tag_info.author)
+        time_stamp = tag_info.committed_date
+        summary = tag_info.summary.replace('\n', ' ') + ' (' + tag.name + ')'
+        message = tag_info.message[len(summary):].replace('\n', ' ')
 
         ti = time.localtime(time_stamp)
         formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
                          '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
 
-        logs.append([time_stamp, sha, author, formatted_time, summary, message])
+        logs.append([time_stamp, sha, author, summary, formatted_time, message])
 
+        commit_objects[sha] = tag.commit
+
+    # Sort tags and commits chronologically by the UNIX time stamp in index 0
     sorted_logs = sorted(logs, key=itemgetter(0))
 
+    # Check if there are any logs, exit if not
     if not sorted_logs:
         print("No logs for " + args.module_name + " between releases " +
               args.earlier_release + " and " + args.later_release)
@@ -234,27 +273,6 @@ def main():
     else:
         raw = False
 
-    # Find longest author name to pad all lines to the same length
-    log_summary = repo.git.shortlog(start + ".." + end, '-s', '-n').split('\n')
-    logging.debug(log_summary)
-    # ['   129\tRonaldo Mercado', '     9\tJames Rowland', '     5\tIan Gillingham']
-    if filter(None, log_summary):
-        author_list = []
-        logging.debug(author_list)
-        for log_entry in log_summary:
-            author_list.append(log_entry.split('\t')[1])
-        max_author_length = 0
-        for author in author_list:
-            logging.debug(author)
-            if len(author) > max_author_length:
-                max_author_length = len(author)
-                logging.debug(max_author_length)
-        # Add a space before the ':' on the longest author (Just for appearance)
-        max_author_length += 1
-    else:
-        # If no author information is generated, set length to default
-        max_author_length = 20
-
     # Add formatting parameters
     screen_width = 100
     if args.verbose:
@@ -266,51 +284,54 @@ def main():
         overflow_message_padding = max_author_length + 10
         max_line_length = screen_width - overflow_message_padding
 
-    # logs.append([time_stamp, sha, author, formatted_time, summary, message])
-
-    # Make list of logs
+    # Make printable list of logs
     formatted_logs = []
-    prev_commit = ''
+    prev_sha = ''
     for log_entry in sorted_logs:
-        commit_hash = log_entry[1][:7]
+        commit_sha = log_entry[1][:7]
         name = '{:<{}}'.format(log_entry[2], max_author_length)
 
-        # Add commit subject message
-        if log_entry[4]:
-            commit_message = format_message_width(log_entry[4], max_line_length)
+        # Add commit subject summary
+        if log_entry[3]:
+            commit_message = format_message_width(log_entry[3], max_line_length)
             formatted_message = commit_message[0]
             for line in commit_message[1:]:
                 formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
         else:
             formatted_message = '\n'
 
-        # Add date, time and diff info if verbose
+        # If verbose add date, time, message body and diff info, then add to logs
         if args.verbose:
-            date_and_time = log_entry[3]
+            date_and_time = log_entry[4]
 
-            formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
+            # Check if there is a commit message and append it
+            if log_entry[5].strip():
+                # The +/- 5 adds an offset for the message body, while maintaining message length
+                commit_body = format_message_width(log_entry[5].strip(), max_line_length)
+                for line in commit_body:
+                    formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
+
+            # Get diff information for each commit >>> Diff info separate from formatted message
+            if prev_sha:
+                changed_files = get_file_changes(commit_objects[commit_sha], commit_objects[prev_sha])
+                if changed_files:
+                    formatted_message += "\nChanges:\n"
+                    for file_change in changed_files:
+                        formatted_message += file_change
+            prev_sha = commit_sha
+
+            formatted_logs.append(colour(commit_sha, blue, raw) + ' ' +
                                   colour(date_and_time, cyan, raw) + ' ' +
                                   colour(name, green, raw) + ': ' + formatted_message)
-
-            # Check if there is a commit message body and append it
-            if log_entry[5]:
-                # The +/- 5 adds an offset for the message body, while maintaining message length
-                commit_body = format_message_width(log_entry[5], max_line_length - 5)
-                for line in commit_body:
-                    formatted_message += '\n' + '{:<{}}'.format('>>>', overflow_message_padding + 5) + line
-
-            if prev_commit:
-                diff = repo.git.diff("--name-status", prev_commit, commit_hash)
-                if diff:
-                    formatted_logs.append("Changes:\n" + diff + '\n')
-            prev_commit = commit_hash
-        # Otherwise just add to list
+        # Otherwise, add to logs
         else:
-            formatted_logs.append(colour(commit_hash, blue, raw) + ' ' +
+            formatted_logs.append(colour(commit_sha, blue, raw) + ' ' +
                                   colour(name, green, raw) + ': ' + formatted_message)
 
-    print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
+    # Switch to reverse chronological order
+    formatted_logs.reverse()
 
+    print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
     for log in formatted_logs:
         print(log)
 
