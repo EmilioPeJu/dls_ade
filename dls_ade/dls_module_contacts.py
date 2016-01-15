@@ -12,7 +12,7 @@ from argument_parser import ArgParser
 import path_functions as pathf
 import vcs_git
 from pkg_resources import require
-require("python_ldap==2.3.12")
+require("python_ldap>=2.3.12")
 import ldap
 
 logging.basicConfig(level=logging.DEBUG)
