@@ -40,204 +40,112 @@ class MakeParserTest(unittest.TestCase):
 
 class CheckAreaTest(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_tar_module.make_parser()
-        parse_error_patch = patch('dls_ade.dls_tar_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
     def test_given_invalid_area_then_error_raised(self):
-        args = MagicMock()
-        args.area = "not_an_area"
-        dls_tar_module.check_area(args, self.parser)
+        area = "not_an_area"
+        try:
+            dls_tar_module.check_area_archivable(area)
+        except Exception as error:
+            self.assertEqual(error.message, "Modules in area " + area + " cannot be archived")
 
-        self.mock_error.assert_called_once_with("Modules in area " + args.area + " cannot be archived")
+    def test_given_support_area_then_no_error_raised(self):
+        area = 'support'
 
-    def test_given_support_area_then_error_raised(self):
-        args = MagicMock()
-        args.area = 'support'
-        dls_tar_module.check_area(args, self.parser)
+        dls_tar_module.check_area_archivable(area)
 
-        self.assertFalse(self.mock_error.call_count)
+    def test_given_ioc_area_then_no_error_raised(self):
+        area = 'ioc'
 
-    def test_given_ioc_area_then_error_raised(self):
-        args = MagicMock()
-        args.area = 'ioc'
-        dls_tar_module.check_area(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_tar_module.check_area_archivable(area)
 
     def test_given_python_area_then_error_raised(self):
-        args = MagicMock()
-        args.area = 'python'
-        dls_tar_module.check_area(args, self.parser)
+        area = 'python'
 
-        self.assertFalse(self.mock_error.call_count)
+        dls_tar_module.check_area_archivable(area)
 
     def test_given_matlab_area_then_error_raised(self):
-        args = MagicMock()
-        args.area = 'matlab'
-        dls_tar_module.check_area(args, self.parser)
+        area = 'matlab'
 
-        self.assertFalse(self.mock_error.call_count)
+        dls_tar_module.check_area_archivable(area)
 
 
 class SetUpEpicsEnvironmentTest(unittest.TestCase):
-
-    def setUp(self):
-        self.parser = dls_tar_module.make_parser()
-        parse_error_patch = patch('dls_ade.dls_tar_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-    def test_given_invalid_epics_version_then_error_raised(self):
-        args = MagicMock()
-        args.epics_version = "not_an_epics_version"
-
-        dls_tar_module.set_up_epics_environment(args, self.parser)
-
-        self.mock_error.assert_called_once_with("Expected epics version like R3.14.8.2, got: " +
-                                                args.epics_version)
-
-    def test_given_valid_epics_version_then_no_error_raised(self):
-        args = MagicMock()
-        args.epics_version = 'R3.14.8.2.1.1'
-
-        dls_tar_module.set_up_epics_environment(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-    def test_given_valid_epics_version_without_R_then_no_error_raised(self):
-        args = MagicMock()
-        args.epics_version = '3.14.8.2.1.1'
-
-        dls_tar_module.set_up_epics_environment(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+    # Tests in list releases, to be moved to dls_environment
+    pass
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):
-
-    def setUp(self):
-        self.parser = dls_tar_module.make_parser()
-        parse_error_patch = patch('dls_ade.dls_tar_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-    def test_given_not_ioc_then_no_error_raised(self):
-        args = MagicMock()
-        args.area = 'not_ioc'
-
-        dls_tar_module.check_technical_area(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-    def test_given_area_ioc_and_length_module_two_then_no_error_raised(self):
-        args = MagicMock()
-        args.area = 'ioc'
-        args.module_name = 'test/module'
-
-        dls_tar_module.check_technical_area(args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
-    def test_given_area_ioc_and_length_module_less_than_two_then_error_raised(self):
-        args = MagicMock()
-        args.area = 'ioc'
-        args.module_name = 'test'
-        expected_error_message = "Missing Technical Area under Beamline"
-
-        dls_tar_module.check_technical_area(args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+    # Tests in list releases, to be moved to path_functions
+    pass
 
 
 class CheckFilePaths(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_tar_module.make_parser()
-        parse_error_patch = patch('dls_ade.dls_tar_module.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=False)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=True)
     def test_given_not_untar_and_paths_valid_then_no_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = False
-
+        untar = False
         release_dir = "valid_release"
         archive = "valid_release.tar.gz"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_tar_module.check_file_paths(release_dir, archive, untar)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=True)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=True)
     def test_given_not_untar_and_archive_exists_then_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = False
-
+        untar = False
         release_dir = "valid_release"
         archive = "already_exists"
         expected_error_message = "Archive '" + archive + "' already exists"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+        try:
+            dls_tar_module.check_file_paths(release_dir, archive, untar)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=False)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=False)
     def test_given_not_untar_and_release_dir_doesnt_exist_then_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = False
-
+        untar = False
         release_dir = "doesnt_exist"
         archive = "valid_release.tar.gz"
         expected_error_message = "Path '" + release_dir + "' doesn't exist"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+        try:
+            dls_tar_module.check_file_paths(release_dir, archive, untar)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=True)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=False)
     def test_given_untar_and_paths_valid_then_no_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = True
-
+        untar = True
         release_dir = "valid_release"
         archive = "valid_release.tar.gz"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_tar_module.check_file_paths(release_dir, archive, untar)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=False)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=False)
-    def test_given_untar_and_archive_doesnt_exist_then_no_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = True
-
+    def test_given_untar_and_archive_doesnt_exist_then_error_raised(self, _1, _2):
+        untar = True
         release_dir = "valid_release"
         archive = "doesnt_exist"
         expected_error_message = "Archive '" + archive + "' doesn't exist"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+        try:
+            dls_tar_module.check_file_paths(release_dir, archive, untar)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=True)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=True)
     def test_given_untar_and_release_dir_exist_then_no_error_raised(self, _1, _2):
-        args = MagicMock()
-        args.untar = True
-
+        untar = True
         release_dir = "already_exists"
         archive = "valid_release.tar.gz"
         expected_error_message = "Path '" + release_dir + "' already exists"
 
-        dls_tar_module.check_file_paths(release_dir, archive, args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+        try:
+            dls_tar_module.check_file_paths(release_dir, archive, untar)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
