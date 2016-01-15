@@ -4,30 +4,15 @@ import unittest
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
-class RootTest(unittest.TestCase):
-
-    def test_return_value(self):
-        self.assertEqual(path_functions.root(), GIT_SSH_ROOT)
+def setUpModule():
+    path_functions.GIT_ROOT_DIR = "controlstest"
 
 
 class AreaTest(unittest.TestCase):
 
-    def test_given_area_etc_then_path_to_prod(self):
-        area = "etc"
+    def test_given_area_then_path_to_area_returned(self):
 
-        path = path_functions.area(area)
-
-        self.assertEqual(path, GIT_SSH_ROOT + area + "/prod")
-
-    def test_given_area_epics_then_path_to_type(self):
-        area = "epics"
-
-        path = path_functions.area(area)
-
-        self.assertEqual(path, GIT_SSH_ROOT + area)
-
-    def test_given_area_other_then_path_to_area(self):
-        area = "other"
+        area = "any"
 
         path = path_functions.area(area)
 
@@ -43,7 +28,7 @@ class ModuleAreaTests(unittest.TestCase):
 
         path = path_functions.devModule(module, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + area + "/prod/" + module)
+        self.assertEqual(path, "controlstest/" + area + "/" + module)
 
     def test_prodModule(self):
 
@@ -52,7 +37,7 @@ class ModuleAreaTests(unittest.TestCase):
 
         path = path_functions.prodModule(module, area)
 
-        self.assertEqual(path, GIT_SSH_ROOT + area + "/" + module)
+        self.assertEqual(path, "controlstest/" + area + "/" + module)
 
     def test_branchModule(self):
 
