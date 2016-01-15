@@ -67,15 +67,14 @@ def check_parsed_args_compatible(imp, contact, cc):
         raise Exception("--import cannot be used with --contact or --cc")
 
 
-# >>> In vcs_git already
-def get_repo_module_list(area):
+def get_area_module_list(area):
 
-    split_list = vcs_git.get_repository_list()
+    repo_list = vcs_git.get_repository_list()
+
     modules = []
-    prefix = "controls/" + area + "/"
-    for module in split_list:
-        if prefix in module:
-            modules.append(module[len(prefix):])
+    for path in repo_list:
+        if area in path:
+            modules.append(path.split('/')[-1])
 
     return modules
 
@@ -181,14 +180,19 @@ def edit_contact_info(repo, contact='', cc=''):
 
     git_attr_file = open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb')
 
+    commit_message = ''
     if contact:
         print("{0}: Setting contact to {1}".format(module, contact))
+        commit_message += "Set contact to {}. ".format(contact)
         git_attr_file.write("* module-contact={}\n".format(contact))
     if cc:
         print("{0}: Setting cc to {1}".format(module, cc))
+        commit_message += "Set cc to {}.".format(cc)
         git_attr_file.write("* module-cc={}\n".format(cc))
 
     git_attr_file.close()
+
+    return commit_message
 
 
 def main():
@@ -204,7 +208,7 @@ def main():
         for module in args.modules:
             modules.append(module)
     else:
-        for module in get_repo_module_list(args.area):
+        for module in get_area_module_list(args.area):
             modules.append(module)
 
     # If no contacts or csv file provided to edit, default script operation: print contacts
@@ -213,9 +217,7 @@ def main():
             print("Module,Contact,Contact Name,CC,CC Name")
         for module in modules:
             source = pathf.devModule(module, args.area)
-            # >>> Use temp_clone once merged
-            # vcs_git.clone(source, module)
-            repo = vcs_git.git.Repo(module)
+            repo = vcs_git.temp_clone(source)
 
             # Retrieve contact info
             contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
@@ -226,7 +228,7 @@ def main():
             else:
                 print("Contact: " + contact + " (CC: " + cc_contact + ")")
 
-            # shutil.rmtree(module)
+            shutil.rmtree(repo.working_tree_dir)
         return 0
 
     # If we get to this point, we are assigning contacts
@@ -250,16 +252,17 @@ def main():
     # Checkout modules and change contacts
     for module, contact, cc in contacts:
 
-        source = pathf.devModule(module, args.area)
         print("Cloning " + module + " from " + args.area + " area...")
-        # >>> temp_clone
-        # vcs_git.clone(source, module)
-        repo = vcs_git.git.Repo(module)
+        source = pathf.devModule(module, args.area)
+        repo = vcs_git.temp_clone(source)
 
-        edit_contact_info(repo, contact, cc,)
+        commit_message = edit_contact_info(repo, contact, cc,)
 
-        # git add, commit, push
-        # shutil.rmtree(module)
+        repo.git.add('.gitattributes')
+        repo.git.commit(m=commit_message)
+        repo.git.push("origin", repo.active_branch)
+
+        shutil.rmtree(repo.working_tree_dir)
 
 
 if __name__ == "__main__":
