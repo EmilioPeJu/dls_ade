@@ -412,8 +412,17 @@ def checkout_remote_branch(branch, repo):
         repo.git.checkout("-b", branch, "origin/" + branch)
 
 
-# TODO(Martin) Docs and unit tests
 def check_git_attributes(local_repo_path, attributes_dict):
+    """Checks the given local repository for the attributes listed.
+
+    Args:
+        local_repo_path: The path to the local repository.
+        attributes_dict(dict): A dictionary of key-value pairs for attributes.
+
+    Returns:
+        bool: True if all attributes present, False otherwise.
+
+    """
     repo = git.Repo(local_repo_path)
 
     for attr in attributes_dict:

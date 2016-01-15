@@ -751,6 +751,76 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
         self.assertFalse(repo.git.checkout.call_count)
 
 
+class CheckGitAttributesTest(unittest.TestCase):
+
+    @staticmethod
+    def check_attr_side_effect(argument):
+        if argument == "attr1 -- .".split():
+            return ".: attr1: Valueofattr1"
+        elif argument == "attr2 -- .".split():
+            return ".: attr2: Now_with_spaces"
+        elif argument == "attr3-name -- .".split():
+            return ".: attr3-name: But_spaces_arent_really_allowed"
+        elif argument == "attr-not-exist -- .".split():
+            return ".: attr-not-exist: unspecified"
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_all_attributes_exist_then_function_returns_true(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_then_function_returns_false(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "I_do_not_exist"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertFalse(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_but_we_set_value_to_unspecified_then_function_returns_True(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "unspecified"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+
 class GitClassInitTest(unittest.TestCase):
 
     def setUp(self):
