@@ -7,25 +7,6 @@ require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 
-class ProcessCallTest(unittest.TestCase):
-
-    @patch('systems_testing.subprocess.Popen')
-    def test_given_function_called_then_popen_called_correctly(self, mock_popen):
-        mock_process = MagicMock()
-        mock_process.communicate.return_value = ("test_out", "test_err")
-
-        mock_popen.return_value = mock_process
-
-        out, err = st.process_call("test call arguments")
-
-        mock_popen.assert_called_once_with("test call arguments",
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE)
-
-        self.assertEqual(out, "test_out")
-        self.assertEqual(err, "test_err")
-
-
 class IsServerRepoTest(unittest.TestCase):
 
     @patch('systems_testing.vcs_git.is_repo_path', return_value=False)
@@ -62,14 +43,299 @@ class GetLocalTempCloneTest(unittest.TestCase):
 
         self.assertEqual(return_value, "test_working_tree_dir")
 
-#
-# class DeleteTempRepoTest(unittest.TestCase):
-#
-#     @patch()
+
+class DeleteTempRepoTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_gettempdir = patch('systems_testing.tempfile.gettempdir')
+        self.patch_is_git_root_dir = patch('systems_testing.vcs_git.is_git_root_dir')
+        self.patch_rmtree = patch('systems_testing.shutil.rmtree')
+
+        self.addCleanup(self.patch_gettempdir.stop)
+        self.addCleanup(self.patch_is_git_root_dir.stop)
+        self.addCleanup(self.patch_rmtree.stop)
+
+        self.mock_gettempdir = self.patch_gettempdir.start()
+        self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
+        self.mock_rmtree = self.patch_rmtree.start()
+
+        self.mock_gettempdir.return_value = "/tmp"
+
+    def test_given_repo_not_in_temp_dir_then_exception_raised_with_correct_message(self):
+
+        comp_message = "/usr/bin/not_in_tempdir is not a temporary folder, cannot delete."
+
+        with self.assertRaises(st.Error) as e:
+            st.delete_temp_repo("/usr/bin/not_in_tempdir")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_repo_not_git_root_dir_then_exception_raised_with_correct_message(self):
+
+        self.mock_is_git_root_dir.return_value = False
+
+        comp_message = "/tmp/not_git_root_dir is not a git root directory, cannot delete."
+
+        with self.assertRaises(st.Error) as e:
+            st.delete_temp_repo("/tmp/not_git_root_dir")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_both_tests_pass_then_shutil_rmtree_called_on_given_file_path(self):
+
+        self.mock_is_git_root_dir.return_value = True
+
+        st.delete_temp_repo("/tmp/git_root_dir")
+
+        self.mock_rmtree.assert_called_once_with("/tmp/git_root_dir")
 
 
-#
-#
+class CheckIfFoldersEqualTest(unittest.TestCase):
+
+    @patch('systems_testing.subprocess.check_output')
+    def test_subprocess_check_output_given_correct_input(self, mock_check_output):
+
+        st.check_if_folders_equal("local_path_one", "local_path_two")
+
+        mock_check_output.assert_called_once_with(["diff", "-rq", "local_path_one", "local_path_two"])
+
+    @patch('systems_testing.subprocess.check_output')
+    def test_given_subprocess_returns_output_then_function_returns_false(self, mock_check_output):
+        mock_check_output.return_value = "I indicate differences between the two folders."
+
+        return_value = st.check_if_folders_equal("path1", "path2")
+
+        self.assertFalse(return_value)
+
+    @patch('systems_testing.subprocess.check_output')
+    def test_given_subprocess_returns_no_output_then_function_returns_true(self, mock_check_output):
+        mock_check_output.return_value = ""
+
+        return_value = st.check_if_folders_equal("path1", "path2")
+
+        self.assertTrue(return_value)
+
+
+class SystemsTestLoadSettingsTest(unittest.TestCase):
+
+    def test_given_dictionary_contains_only_items_in_settings_list_then_dict_updated_with_all(self):
+
+        settings = {
+            'arguments': "--area python test_module_name",
+            'std_out_compare_method': "manual_comp",
+            'std_out_compare_string': "test_output"
+        }
+
+        st_obj = st.SystemsTest("test_script.py", "test_name")
+
+        st_obj.load_settings(settings)
+
+        self.assertEqual(st_obj.arguments, "--area python test_module_name")
+        self.assertEqual(st_obj.std_out_compare_method, "manual_comp")
+        self.assertEqual(st_obj.std_out_compare_string, "test_output")
+
+    def test_given_dictionary_contains_items_that_do_not_exist_in_settings_list_then_dict_only_updated_with_those_that_are(self):
+
+        settings = {
+            'arguments': "--area python test_module_name",
+            'std_out_compare_method': "manual_comp",
+            'std_out_compare_string': "test_output",
+            'std_out': "this should not get updated"
+        }
+
+        st_obj = st.SystemsTest("test_script.py", "test_name")
+
+        st_obj.load_settings(settings)
+
+        self.assertEqual(st_obj.arguments, "--area python test_module_name")
+        self.assertEqual(st_obj.std_out_compare_method, "manual_comp")
+        self.assertEqual(st_obj.std_out_compare_string, "test_output")
+        self.assertNotEqual(st_obj.std_out, "this should not get updated")
+
+
+class SystemsTestCallScriptTest(unittest.TestCase):
+
+    @patch('systems_testing.subprocess.Popen')
+    def test_given_function_called_then_popen_called_correctly(self, mock_popen):
+        mock_process = MagicMock(returncode=1)
+        mock_process.communicate.return_value = ("test_out", "test_err")
+        mock_popen.return_value = mock_process
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.load_settings(
+                {
+                    'arguments': "--area python test_server_repo_path"
+                }
+        )
+
+        st_obj.call_script()
+
+        mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE)
+
+        self.assertEqual(st_obj.std_out, "test_out")
+        self.assertEqual(st_obj.std_err, "test_err")
+        self.assertEqual(st_obj.return_code, 1)
+
+
+class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
+
+    def test_given_neither_exception_type_nor_message_then_test_passes(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        st_obj.check_std_err_for_exception()
+
+    def test_given_type_provided_but_no_message_then_exception_raised_with_correct_message(self):
+
+        comp_message = ("Both exception_type and exception_string must be provided.")
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        st_obj.load_settings({
+            'exception_type': "test_exception_type"
+        })
+
+        with self.assertRaises(st.Error) as e:
+            st_obj.check_std_err_for_exception()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_message_provided_but_no_type_then_exception_raised_with_correct_message(self):
+
+        comp_message = ("Both exception_type and exception_string must be provided.")
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        st_obj.load_settings({
+            'exception_string': "test exception string"
+        })
+
+        with self.assertRaises(st.Error) as e:
+            st_obj.check_std_err_for_exception()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_return_code_0_then_exception_raised_with_correct_message(self):
+
+        comp_message = ("Function succeeded, no exception raised.")
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.return_code = 0
+
+        st_obj.load_settings({
+            'exception_type': "test_exception_type",
+            'exception_string': "test exception string"
+        })
+
+        with self.assertRaises(st.Error) as e:
+            st_obj.check_std_err_for_exception()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_exception_not_raised_in_script_then_test_fails(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.return_code = 1
+        st_obj.std_err = "\nother_exception_type: other exception string\n"
+
+        st_obj.load_settings({
+            'exception_type': "test_exception_type",
+            'exception_string': "test exception string"
+        })
+
+        with self.assertRaises(AssertionError):
+            st_obj.check_std_err_for_exception()
+
+    def test_given_exception_raised_in_script_then_test_passes(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.return_code = 1
+        st_obj.std_err = "\ntest_exception_type: test exception string\n"
+
+        st_obj.load_settings({
+            'exception_type': "test_exception_type",
+            'exception_string': "test exception string"
+        })
+
+        st_obj.check_std_err_for_exception()
+
+
+class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
+
+    def test_given_no_comparison_string_then_exception_raised_with_correct_message(self):
+
+        comp_message = "A std_out comparison string must be provided."
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        with self.assertRaises(st.Error) as e:
+            st_obj.compare_std_out_to_string()
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_std_out_equal_to_comparison_string_then_test_passes(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.std_out = "String to test for."
+
+        st_obj.load_settings({
+            'std_out_compare_string': "String to test for."
+        })
+
+        st_obj.compare_std_out_to_string()
+
+    def test_given_std_out_not_equal_to_comparison_string_then_test_fails(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.std_out = "String to test for."
+
+        st_obj.load_settings({
+            'std_out_compare_string': "A different string."
+        })
+
+        with self.assertRaises(AssertionError):
+            st_obj.compare_std_out_to_string()
+
+
+class SystemsTestCompareStdOutManuallyTest(unittest.TestCase):
+
+    @patch('systems_testing.get_input')
+    def test_given_input_returns_y_or_Y_then_test_passes(self, mock_input):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        mock_input.return_value = "y"
+
+        st_obj.compare_std_out_manually()
+
+        mock_input.return_value = "Y"
+
+        st_obj.compare_std_out_manually()
+
+    @patch('systems_testing.get_input')
+    def test_given_input_returns_anything_else_then_test_fails(self, mock_input):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        mock_input.return_value = "n"
+
+        with self.assertRaises(AssertionError):
+            st_obj.compare_std_out_manually()
+
+        mock_input.return_value = "N"
+
+        with self.assertRaises(AssertionError):
+            st_obj.compare_std_out_manually()
+
+        mock_input.return_value = "bw466462q3b6w"
+
+        with self.assertRaises(AssertionError):
+            st_obj.compare_std_out_manually()
+
+
 # class InitRepoTest(unittest.TestCase):
 #
 #     def setUp(self):

@@ -412,6 +412,21 @@ def checkout_remote_branch(branch, repo):
         repo.git.checkout("-b", branch, "origin/" + branch)
 
 
+# TODO(Martin) Docs and unit tests
+def check_git_attributes(local_repo_path, attributes_dict):
+    repo = git.Repo(local_repo_path)
+
+    for attr in attributes_dict:
+        output = repo.git.check_attr((attr + " -- .").split())
+        exp_out = ".: {attr:s}: {value:s}"
+        exp_out = exp_out.format(attr=attr, value=attributes_dict[attr])
+
+        if not exp_out == output:
+            return False
+
+    return True
+
+
 class Git(BaseVCS):
 
     def __init__(self, module, options):
