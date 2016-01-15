@@ -89,22 +89,38 @@ def create_release_list(repo):
 
 
 def get_file_changes(commit, prev_commit):
+    """
+    Perform a diff object between two commit objects and extract the changed files from it
+
+    Args:
+        commit: Commit object for commit with file changes
+        prev_commit: Commit object for commit to compare against
+
+    Returns:
+        A list of the changed files between he two commits
+    """
 
     changed_files = []
     for diff in commit.diff(prev_commit):
         # b_blob corresponds to commit and a_blob to prev_commit
         if diff.b_blob:
             if diff.new_file:
-                changed_files.append('A ' + diff.b_blob.path + '\n')
+                changed_files.append('A ' + diff.b_blob.path)
+
                 if diff.renamed:
-                    changed_files.append(' (Renamed)')
+                    changed_files[-1] += ' (Renamed)\n'
+                else:
+                    changed_files[-1] += '\n'
             else:
                 changed_files.append('M ' + diff.b_blob.path + '\n')
 
         if diff.a_blob and diff.deleted_file:
-            changed_files.append('D ' + diff.a_blob.path + '\n')
+            changed_files.append('D ' + diff.a_blob.path)
+
             if diff.renamed:
-                changed_files.append(' (Renamed)')
+                changed_files[-1] += ' (Renamed)\n'
+            else:
+                changed_files[-1] += '\n'
 
     return changed_files
 
@@ -186,7 +202,7 @@ def main():
     else:
         earlier = args.earlier_release
 
-    # Check that given releases exist
+    # Check that given releases exist and set range to log for
     if earlier in releases:
         start = earlier
     else:
@@ -203,7 +219,7 @@ def main():
         tag_refs.append(tag)
         tags.append(str(tag))
     if later == 'HEAD':
-        # If later is HEAD then just go to most recent release
+        # If later is HEAD then just go up to most recent release
         tags_range = tag_refs[tags.index(start):tags.index(releases[-1])+1]
     else:
         tags_range = tag_refs[tags.index(start):tags.index(end)+1]
@@ -226,6 +242,7 @@ def main():
 
         logs.append([time_stamp, sha, author, summary, formatted_time, message])
 
+        # Add to dictionary of commit objects for creating diff info later
         commit_objects[sha] = commit
 
         # Find longest author name to pad all lines to the same length
@@ -240,7 +257,6 @@ def main():
         elif hasattr(tag.object.object, 'author'):
             tag_info = tag.object.object
         else:
-            # >>> I don't think it will ever get here, but if it does it will be easier to fix with this message.
             raise Exception("Can't find tag info")
 
         sha = tag.object.hexsha[:7]
@@ -312,17 +328,17 @@ def main():
                     formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
 
             # Get diff information for each commit >>> Diff info separate from formatted message
+            diff_info = ''
             if prev_sha:
                 changed_files = get_file_changes(commit_objects[prev_sha], commit_objects[commit_sha])
                 if changed_files:
-                    formatted_message += "\n\nChanges:\n"
+                    diff_info = "\n\nChanges:\n"
                     for file_change in changed_files:
-                        formatted_message += file_change
+                        diff_info += file_change
             prev_sha = commit_sha
 
-            formatted_logs.append(colour(commit_sha, blue, raw) + ' ' +
-                                  colour(date_and_time, cyan, raw) + ' ' +
-                                  colour(name, green, raw) + ': ' + formatted_message)
+            formatted_logs.append(colour(commit_sha, blue, raw) + ' ' + colour(date_and_time, cyan, raw) + ' ' +
+                                  colour(name, green, raw) + ': ' + formatted_message + diff_info)
         # Otherwise, add to logs
         else:
             formatted_logs.append(colour(commit_sha, blue, raw) + ' ' +

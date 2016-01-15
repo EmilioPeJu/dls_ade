@@ -92,6 +92,61 @@ class CreateReleaseListTest(unittest.TestCase):
         self.assertFalse(releases)
 
 
+class GetFileChangesTest(unittest.TestCase):
+
+    def setUp(self):
+        self.diff_inst = MagicMock()
+        self.commit_inst_1 = MagicMock()
+        self.commit_inst_1.diff.return_value = [self.diff_inst]
+        self.commit_inst_2 = MagicMock()
+        self.diff_inst.new_file = False
+        self.diff_inst.deleted_file = False
+        self.diff_inst.renamed = False
+
+    def test_no_diff_then_return_empty_list(self):
+        self.diff_inst.a_blob = False
+        self.diff_inst.b_blob = False
+
+        diff = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
+
+        self.assertFalse(diff)
+
+    def test_new_file_then_return_A(self):
+        self.diff_inst.new_file = True
+        self.diff_inst.b_blob.path = "new_file"
+
+        diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
+
+        self.assertEqual(diffs, ['A new_file\n'])
+
+    def test_modified_file_then_return_M(self):
+        self.diff_inst.b_blob.path = "old_file"
+
+        diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
+
+        self.assertEqual(diffs, ['M old_file\n'])
+
+    def test_deleted_file_then_return_D(self):
+        self.diff_inst.a_blob.path = "old_file"
+        self.diff_inst.b_blob = False
+        self.diff_inst.deleted_file = True
+
+        diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
+
+        self.assertEqual(diffs, ['D old_file\n'])
+
+    def test_renamed_file_then_return_renamed(self):
+        self.diff_inst.a_blob.path = "old_file"
+        self.diff_inst.b_blob.path = "new_file"
+        self.diff_inst.deleted_file = True
+        self.diff_inst.new_file = True
+        self.diff_inst.renamed = True
+
+        diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
+
+        self.assertEqual(diffs, ['A new_file (Renamed)\n', 'D old_file (Renamed)\n'])
+
+
 class FormatMessageWidthTest(unittest.TestCase):
 
     def test_given_length_OK_then_returned_as_list(self):
