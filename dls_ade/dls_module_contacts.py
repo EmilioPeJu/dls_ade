@@ -62,9 +62,9 @@ def make_parser():
     return parser
 
 
-def check_parsed_args_compatible(parser, args):
-    if args.imp and (args.cc or args.contact):
-        parser.error("--import cannot be used with --contact or --cc")
+def check_parsed_args_compatible(imp, contact, cc):
+    if imp and (contact or cc):
+        raise Exception("--import cannot be used with --contact or --cc")
 
 
 # >>> In vcs_git already
@@ -129,9 +129,9 @@ def output_csv_format(contact, cc_contact, module):
         cc=cc_contact, cc_name=cc_name))
 
 
-def import_from_csv(modules, args, parser):
+def import_from_csv(modules, area, imp):
 
-    reader = csv.reader(open(args.imp, "rb"))
+    reader = csv.reader(open(imp, "rb"))
     # Extract data from reader object
     csv_file = []
     for row in reader:
@@ -139,7 +139,7 @@ def import_from_csv(modules, args, parser):
     logging.debug(csv_file)
 
     if not csv_file:
-        parser.error("CSV file is empty")
+        raise Exception("CSV file is empty")
 
     contacts = []
     for row in csv_file:
@@ -150,17 +150,17 @@ def import_from_csv(modules, args, parser):
                 module = row[0].strip()
                 contact = row[1].strip()
             else:
-                parser.error("Module {} has no corresponding contact in CSV file".format(row[0]))
-                return
+                raise Exception("Module {} has no corresponding contact in CSV file".format(row[0]))
+
             if len(row) > 3:
                 cc = row[3].strip()
             else:
                 cc = "unspecified"
 
             if module not in modules:
-                parser.error("Module {module} not in {area} area".format(module=module, area=args.area))
+                raise Exception("Module {module} not in {area} area".format(module=module, area=area))
             if module in [x[0] for x in contacts]:
-                parser.error("Module {} defined twice in CSV file".format(module))
+                raise Exception("Module {} defined twice in CSV file".format(module))
 
             contacts.append((module, contact, cc))
 
@@ -196,7 +196,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_parsed_args_compatible(parser, args)
+    check_parsed_args_compatible(args.imp, args.contact, args.cc)
 
     # Create the list of modules from args, or the gitolite server if none provided
     modules = []
@@ -240,7 +240,7 @@ def main():
             return 1
 
     if args.imp:
-        contacts = import_from_csv(modules, args, parser)
+        contacts = import_from_csv(modules, args.area, args.imp)
     else:
         # If no csv file provided, retrieve contacts from args
         contacts = []
