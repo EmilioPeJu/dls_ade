@@ -313,9 +313,9 @@ def main():
 
             # Get diff information for each commit >>> Diff info separate from formatted message
             if prev_sha:
-                changed_files = get_file_changes(commit_objects[commit_sha], commit_objects[prev_sha])
+                changed_files = get_file_changes(commit_objects[prev_sha], commit_objects[commit_sha])
                 if changed_files:
-                    formatted_message += "\nChanges:\n"
+                    formatted_message += "\n\nChanges:\n"
                     for file_change in changed_files:
                         formatted_message += file_change
             prev_sha = commit_sha
