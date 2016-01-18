@@ -9,32 +9,15 @@ class CheckTechnicalAreaTest(unittest.TestCase):
     pass
 
 
-class RootTest(unittest.TestCase):
-
-    def test_return_value(self):
-        self.assertEqual(path_functions.root(), GIT_SSH_ROOT)
+def setUpModule():
+    path_functions.GIT_ROOT_DIR = "controlstest"
 
 
 class AreaTest(unittest.TestCase):
 
-    def test_given_area_etc_then_path_to_prod(self):
-        pass
-        # area = "etc"
-        #
-        # path = path_functions.area(area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + area + "/prod")
+    def test_given_area_then_path_to_area_returned(self):
 
-    def test_given_area_epics_then_path_to_type(self):
-        pass
-        # area = "epics"
-        #
-        # path = path_functions.area(area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + area)
-
-    def test_given_area_other_then_path_to_area(self):
-        area = "other"
+        area = "any"
 
         path = path_functions.area(area)
 
@@ -44,22 +27,22 @@ class AreaTest(unittest.TestCase):
 class ModuleAreaTests(unittest.TestCase):
 
     def test_devModule(self):
-        pass
-        # area = "etc"
-        # module = "test_module"
-        #
-        # path = path_functions.devModule(module, area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + area + "/prod/" + module)
+
+        area = "etc"
+        module = "test_module"
+
+        path = path_functions.devModule(module, area)
+
+        self.assertEqual(path, "controlstest/" + area + "/" + module)
 
     def test_prodModule(self):
-        pass
-        # area = "epics"
-        # module = "test_module"
-        #
-        # path = path_functions.prodModule(module, area)
-        #
-        # self.assertEqual(path, GIT_SSH_ROOT + area + "/" + module)
+
+        area = "epics"
+        module = "test_module"
+
+        path = path_functions.prodModule(module, area)
+
+        self.assertEqual(path, "controlstest/" + area + "/" + module)
 
     def test_branchModule(self):
 

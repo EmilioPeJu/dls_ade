@@ -33,52 +33,50 @@ def make_parser():
     return parser
 
 
-def check_technical_area(args, parser):
+def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
     or that the technical area is also provided
 
     Args:
-        args(dict): Parser arguments
-        parser(ArgumentParser): Parser instance
+        area(str): Area of repository
+        module(str): Name of module
 
     Raises:
-        error: Missing Technical Area under Beamline
+        Exception: "Missing Technical Area under Beamline"
     """
-    if args.area == "ioc" \
-            and args.module_name != "everything" \
-            and len(args.module_name.split('/')) < 2:
-        parser.error("Missing Technical Area under Beamline")
+    if area == "ioc" \
+            and module != "everything" \
+            and len(module.split('/')) < 2:
+        raise Exception("Missing Technical Area under Beamline")
 
 
-def check_source_file_path_valid(source, parser):
+def check_source_file_path_valid(source):
     """
     Checks if given source path exists on the repository
 
     Args:
         source(str): Path to module to be cloned
-        parser(ArgumentParser): Parser instance
 
     Raises:
-        error: Repository does not contain <source>
+        Exception: Repository does not contain <source>
     """
     if not vcs_git.is_repo_path(source):
-        parser.error("Repository does not contain " + source)
+        raise Exception("Repository does not contain " + source)
 
 
-def check_module_file_path_valid(module, parser):
+def check_module_file_path_valid(module):
     """
     Checks if the given module already exists in the current directory
 
     Args:
         module(str): Name of module to clone
-        parser(ArgumentParser): Parser instance
 
     Raises:
-        error: Path already exists: <module>
+        Exception: Path already exists: <module>
     """
     if os.path.isdir(module):
-        parser.error("Path already exists: " + module)
+        raise Exception("Path already exists: " + module)
 
 
 def main():
@@ -92,7 +90,7 @@ def main():
         if answer.upper() != "Y":
             return
 
-    check_technical_area(args, parser)
+    check_technical_area(args.area, args.module_name)
 
     module = args.module_name
 
@@ -108,6 +106,7 @@ def main():
         vcs_git.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
+        check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
 
         if args.branch:

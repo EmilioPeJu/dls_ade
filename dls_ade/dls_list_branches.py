@@ -27,21 +27,21 @@ def make_parser():
     return parser
 
 
-def check_technical_area(args, parser):
+def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that either 'everything' is given as the module
     name or that the technical area is also provided. Raises parser error if not.
 
     Args:
-        args: Parser arguments
-        parser: Parser
+        area(str): Area of repository
+        module(str): Name of module
 
     Raises:
-        error: Missing Technical Area under Beamline
+        Exception: "Missing Technical Area under Beamline"
     """
 
-    if args.area == "ioc" and len(args.module_name.split('/')) < 2:
-        parser.error("Missing Technical Area under Beamline")
+    if area == "ioc" and len(module.split('/')) < 2:
+        raise Exception("Missing Technical Area under Beamline")
 
 
 def main():
@@ -49,12 +49,12 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_technical_area(args, parser)
+    check_technical_area(args.area, args.module_name)
 
     source = path.devModule(args.module_name, args.area)
 
     if not vcs_git.is_repo_path(source):
-        parser.error(args.module_name + " does not exist on repo")
+        raise Exception(args.module_name + " does not exist on repo")
 
     print("Branches of " + args.module_name + ":\n")
 

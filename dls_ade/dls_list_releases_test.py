@@ -71,72 +71,53 @@ class MakeParserTest(unittest.TestCase):
 
 class CheckEpicsVersionTest(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_list_releases.make_parser()
-        parse_error_patch = patch('dls_ade.dls_list_releases.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
     @patch('dls_ade.dls_list_releases.environment.setEpics')
     def test_given_epics_version_with_R_and_match_then_set(self, mock_set_epics):
-        args = MagicMock()
-        args.epics_version = "R3.14.8.2"
+        epics_version = "R3.14.8.2"
 
-        dls_list_releases.check_epics_version(args, self.parser)
+        dls_list_releases.check_epics_version(epics_version)
 
-        mock_set_epics.assert_called_once_with(args.epics_version)
+        mock_set_epics.assert_called_once_with(epics_version)
 
     @patch('dls_ade.dls_list_releases.environment.setEpics')
     def test_given_epics_version_without_R_and_match_then_set(self, mock_set_epics):
-        args = MagicMock()
-        args.epics_version = "3.14.8.2"
+        epics_version = "3.14.8.2"
 
-        dls_list_releases.check_epics_version(args, self.parser)
+        dls_list_releases.check_epics_version(epics_version)
 
-        mock_set_epics.assert_called_once_with(args.epics_version)\
+        mock_set_epics.assert_called_once_with("R" + epics_version)
 
     @patch('dls_ade.dls_list_releases.environment.setEpics')
     def test_given_epics_version_with_R_and_not_match_then_raise_error(self, mock_set_epics):
-        args = MagicMock()
-        args.epics_version = "R3"
-        expected_error_message = "Expected epics version like R3.14.8.2, got: " + \
-                                 args.epics_version
+        epics_version = "R3"
+        expected_error_message = "Expected epics version like R3.14.8.2, got: " + epics_version
 
-        dls_list_releases.check_epics_version(args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
+        try:
+            dls_list_releases.check_epics_version(epics_version)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = dls_list_releases.make_parser()
-        parse_error_patch = patch('dls_ade.dls_list_releases.ArgParser.error')
-        self.addCleanup(parse_error_patch.stop)
-        self.mock_error = parse_error_patch.start()
-
-        self.args = MagicMock()
-        self.args.module_name = 'test_module'
-        self.args.area = 'support'
-
     def test_given_area_not_ioc_then_no_error_raised(self):
+        area = "support"
+        module = "test_module"
 
-        dls_list_releases.check_technical_area(self.args, self.parser)
+        dls_list_releases.check_technical_area(area, module)
 
-        self.assertFalse(self.mock_error.call_count)
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
+        area = "ioc"
+        module = "modules/test_module"
 
-    def test_given_area_ioc_module_split_more_than_one_then_no_error_raised(self):
-        self.args.module_name = "modules/test_module"
-        self.args.area = "ioc"
-
-        dls_list_releases.check_technical_area(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
+        dls_list_releases.check_technical_area(area, module)
 
     def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
-        self.args.area = "ioc"
+        area = "ioc"
+        module = "test_module"
         expected_error_msg = "Missing Technical Area under Beamline"
 
-        dls_list_releases.check_technical_area(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
+        try:
+            dls_list_releases.check_technical_area(area, module)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_msg)

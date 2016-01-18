@@ -25,7 +25,7 @@ from ConfigParser import SafeConfigParser
 logging.basicConfig(level=logging.DEBUG)
 
 
-class environment:
+class environment(object):
     """
     A class representing the epics environment of a site.
 
@@ -327,22 +327,3 @@ class environment:
             elif len(sections) > 1:
                 module = sections[-1]
         return module, version
-
-
-if __name__ == "__main__":
-    # test
-    e = environment("R3.14.11")
-    print "epics:", e.epicsVer()
-
-    for area in e.areas:
-        print "Production  directory for area %s is %s" % (area, e.prodArea(area))
-        print "Development directory for area %s is %s" % (area, e.devArea(area))
-        print
-        
-    print e.classifyPath("/dls_sw/prod/R3.14.12.3/support/asyn/4-21")
-    print e.classifyArea("/dls_sw/prod/tools/RHEL6-x86_64/boost/1-48-0")
-    print e.classifyPath("/dls_sw/prod/tools/RHEL6-x86_64/boost/1-48-0/prefix")
-    print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/boost/1-48-0")
-    print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/boost/1-48-0/prefix")
-    print e.classifyPath("/dls_sw/work/tools/RHEL6-x86_64/boost")
-    print e.classifyPath("/dls_sw/prod/common/python/RHEL6-x86_64/dls_environment/4-6")
