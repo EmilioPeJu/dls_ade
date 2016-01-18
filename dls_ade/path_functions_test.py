@@ -5,8 +5,28 @@ GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):
-    # >>> Get MagicMock version from other branch
-    pass
+
+    def test_given_area_not_ioc_then_no_error_raised(self):
+        area = "support"
+        module = "test_module"
+
+        path_functions.check_technical_area_valid(area, module)
+
+    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
+        area = "ioc"
+        module = "modules/test_module"
+
+        path_functions.check_technical_area_valid(area, module)
+
+    def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
+        area = "ioc"
+        module = "test_module"
+        expected_error_msg = "Missing Technical Area Under Beamline"
+
+        try:
+            path_functions.check_technical_area_valid(area, module)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_msg)
 
 
 def setUpModule():
