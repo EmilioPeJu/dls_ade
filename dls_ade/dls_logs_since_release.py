@@ -94,7 +94,7 @@ def get_file_changes(commit, prev_commit):
 
     Args:
         commit: Commit object for commit with file changes
-        prev_commit: Commit object for commit to compare against
+        prev_commit: Commit object to compare against
 
     Returns:
         A list of the changed files between he two commits
@@ -105,17 +105,17 @@ def get_file_changes(commit, prev_commit):
         # b_blob corresponds to commit and a_blob to prev_commit
         if diff.b_blob:
             if diff.new_file:
-                changed_files.append('A ' + diff.b_blob.path)
+                changed_files.append('A     ' + diff.b_blob.path)
 
                 if diff.renamed:
                     changed_files[-1] += ' (Renamed)\n'
                 else:
                     changed_files[-1] += '\n'
             else:
-                changed_files.append('M ' + diff.b_blob.path + '\n')
+                changed_files.append('M     ' + diff.b_blob.path + '\n')
 
         if diff.a_blob and diff.deleted_file:
-            changed_files.append('D ' + diff.a_blob.path)
+            changed_files.append('D     ' + diff.a_blob.path)
 
             if diff.renamed:
                 changed_files[-1] += ' (Renamed)\n'
@@ -236,6 +236,7 @@ def main():
         time_stamp = commit.authored_date
         message = commit.message[len(summary):].replace('\n', ' ')
 
+        # Convert time stamp into time and date
         ti = time.localtime(commit.authored_date)
         formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
                          '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
@@ -263,24 +264,27 @@ def main():
         author = str(tag_info.author)
         time_stamp = tag_info.committed_date
         summary = tag_info.summary.replace('\n', ' ') + ' (' + tag.name + ')'
+        # Summary is included in message, so just get extra part
         message = tag_info.message[len(summary):].replace('\n', ' ')
 
+        # Convert time stamp into time and date
         ti = time.localtime(time_stamp)
         formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
                          '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
 
         logs.append([time_stamp, sha, author, summary, formatted_time, message])
 
+        # Add to dictionary of commit objects for creating diff info later
         commit_objects[sha] = tag.commit
 
-    # Sort tags and commits chronologically by the UNIX time stamp in index 0
-    sorted_logs = sorted(logs, key=itemgetter(0))
-
     # Check if there are any logs, exit if not
-    if not sorted_logs:
+    if not logs:
         print("No logs for " + args.module_name + " between releases " +
               args.earlier_release + " and " + args.later_release)
         return 0
+
+    # Sort tags and commits chronologically by the UNIX time stamp in index 0
+    sorted_logs = sorted(logs, key=itemgetter(0))
 
     # Don't write coloured text if args.raw is True
     if args.raw or \
@@ -300,7 +304,7 @@ def main():
         overflow_message_padding = max_author_length + 10
         max_line_length = screen_width - overflow_message_padding
 
-    # Make printable list of logs
+    # Make list of printable log entries
     formatted_logs = []
     prev_sha = ''
     for log_entry in sorted_logs:
@@ -322,14 +326,14 @@ def main():
 
             # Check if there is a commit message and append it
             if log_entry[5].strip():
-                # The +/- 5 adds an offset for the message body, while maintaining message length
                 commit_body = format_message_width(log_entry[5].strip(), max_line_length)
                 for line in commit_body:
                     formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
 
-            # Get diff information for each commit >>> Diff info separate from formatted message
+            # Get diff information for each commit
             diff_info = ''
             if prev_sha:
+                # Pass commit objects corresponding to current and previous commit_sha to get_file_changes
                 changed_files = get_file_changes(commit_objects[prev_sha], commit_objects[commit_sha])
                 if changed_files:
                     diff_info = "\n\nChanges:\n"
@@ -347,7 +351,6 @@ def main():
     # Switch to reverse chronological order
     formatted_logs.reverse()
 
-    print("Log Messages for " + args.module_name + " between releases " + start + " and " + end + ":")
     for log in formatted_logs:
         print(log)
 

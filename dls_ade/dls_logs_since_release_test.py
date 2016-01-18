@@ -117,14 +117,14 @@ class GetFileChangesTest(unittest.TestCase):
 
         diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
 
-        self.assertEqual(diffs, ['A new_file\n'])
+        self.assertEqual(diffs, ['A     new_file\n'])
 
     def test_modified_file_then_return_M(self):
         self.diff_inst.b_blob.path = "old_file"
 
         diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
 
-        self.assertEqual(diffs, ['M old_file\n'])
+        self.assertEqual(diffs, ['M     old_file\n'])
 
     def test_deleted_file_then_return_D(self):
         self.diff_inst.a_blob.path = "old_file"
@@ -133,7 +133,7 @@ class GetFileChangesTest(unittest.TestCase):
 
         diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
 
-        self.assertEqual(diffs, ['D old_file\n'])
+        self.assertEqual(diffs, ['D     old_file\n'])
 
     def test_renamed_file_then_return_renamed(self):
         self.diff_inst.a_blob.path = "old_file"
@@ -144,7 +144,7 @@ class GetFileChangesTest(unittest.TestCase):
 
         diffs = dls_logs_since_release.get_file_changes(self.commit_inst_1, self.commit_inst_2)
 
-        self.assertEqual(diffs, ['A new_file (Renamed)\n', 'D old_file (Renamed)\n'])
+        self.assertEqual(diffs, ['A     new_file (Renamed)\n', 'D     old_file (Renamed)\n'])
 
 
 class FormatMessageWidthTest(unittest.TestCase):
