@@ -15,29 +15,28 @@ e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 """
 
 
-def check_source_file_path_valid(source, parser):
+def check_source_file_path_valid(source):
     """
     Checks if given source path exists on the repository and raises a parser error if it does not.
 
-    :param source: File path to test
-    :type source: str
-    :param parser: Parser
-    :type parser: ArgumentParser
-    :return: Null
+    Args:
+        source: Suffix of URL to check for
+
+    Raises:
+        Exception: Repository does not contain <source>
     """
     if not vcs_git.is_repo_path(source):
-        parser.error("Repository does not contain " + source)
+        raise Exception("Repository does not contain " + source)
 
 
 def print_module_list(source, area):
     """
     Prints the modules in the area of the repository specified by source
 
-    :param source: Path to area of repository
-    :type source: str
-    :param area: Area of the repository to list
-    :type area: str
-    :return: Null
+    Args:
+        source: Suffix of URL to list from
+        area: Area of repository to list
+
     """
     split_list = vcs_git.get_repository_list()
     print("Modules in " + area + ":\n")
@@ -51,8 +50,8 @@ def make_parser():
     """
     Takes default parser arguments and adds domain.
 
-    :return: Parser with relevant arguments
-    :rtype: ArgumentParser
+    Returns:
+        ArgParser instance
     """
     parser = ArgParser(usage)
     parser.add_argument("-d", "--domain", action="store",
@@ -71,7 +70,7 @@ def main():
     else:
         source = path.devArea(args.area)
 
-    check_source_file_path_valid(source, parser)
+    check_source_file_path_valid(source)
 
     print_module_list(source, args.area)
 

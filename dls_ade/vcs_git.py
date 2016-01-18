@@ -378,6 +378,23 @@ def clone_multi(source):
                 print(module + " already exists in current directory")
 
 
+def list_module_releases(repo):
+    """
+    Return list of release tags of module.
+
+    Args:
+        repo: Git repository instance
+
+    Returns:
+        Release tags of module corresponding to repo
+    """
+
+    releases = []
+    for tag in repo.tags:
+        releases.append(tag.name)
+    return releases
+
+
 def list_remote_branches(repo):
     """
     Lists remote branches of current git repository
