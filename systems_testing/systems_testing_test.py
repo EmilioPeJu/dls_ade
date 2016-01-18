@@ -7,25 +7,12 @@ require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 
-class IsServerRepoTest(unittest.TestCase):
+def set_up_mock_(test_case_obj, mock_path):
+    patch_obj = patch(mock_path)
+    test_case_obj.addCleanup(patch_obj.stop)
+    mock_obj = patch_obj.start()
 
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=False)
-    def test_given_is_repo_path_false_then_false_returned(self, mock_is_repo_path):
-
-        exists = st.is_server_repo("test_repo_path")
-
-        mock_is_repo_path.assert_called_once_with("test_repo_path")
-
-        self.assertFalse(exists)
-
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=True)
-    def test_given_is_repo_path_true_then_true_returned(self, mock_is_repo_path):
-
-        exists = st.is_server_repo("test_repo_path")
-
-        mock_is_repo_path.assert_called_once_with("test_repo_path")
-
-        self.assertTrue(exists)
+    return mock_obj
 
 
 class GetLocalTempCloneTest(unittest.TestCase):
@@ -94,6 +81,17 @@ class DeleteTempRepoTest(unittest.TestCase):
 class CheckIfFoldersEqualTest(unittest.TestCase):
 
     @patch('systems_testing.subprocess.check_output')
+    def test_given_a_path_is_empty_then_exception_raised_with_correct_message(self, mock_check_output):
+
+        comp_message = "Two paths must be given to compare folders.\npath 1: , path 2: path_two."
+
+        with self.assertRaises(st.Error) as e:
+            st.check_if_folders_equal("", "path_two")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+
+    @patch('systems_testing.subprocess.check_output')
     def test_subprocess_check_output_given_correct_input(self, mock_check_output):
 
         st.check_if_folders_equal("local_path_one", "local_path_two")
@@ -131,9 +129,9 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
         st_obj.load_settings(settings)
 
-        self.assertEqual(st_obj.arguments, "--area python test_module_name")
-        self.assertEqual(st_obj.std_out_compare_method, "manual_comp")
-        self.assertEqual(st_obj.std_out_compare_string, "test_output")
+        self.assertEqual(st_obj._arguments, "--area python test_module_name")
+        self.assertEqual(st_obj._std_out_compare_method, "manual_comp")
+        self.assertEqual(st_obj._std_out_compare_string, "test_output")
 
     def test_given_dictionary_contains_items_that_do_not_exist_in_settings_list_then_dict_only_updated_with_those_that_are(self):
 
@@ -148,10 +146,10 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
         st_obj.load_settings(settings)
 
-        self.assertEqual(st_obj.arguments, "--area python test_module_name")
-        self.assertEqual(st_obj.std_out_compare_method, "manual_comp")
-        self.assertEqual(st_obj.std_out_compare_string, "test_output")
-        self.assertNotEqual(st_obj.std_out, "this should not get updated")
+        self.assertEqual(st_obj._arguments, "--area python test_module_name")
+        self.assertEqual(st_obj._std_out_compare_method, "manual_comp")
+        self.assertEqual(st_obj._std_out_compare_string, "test_output")
+        self.assertNotEqual(st_obj._std_out, "this should not get updated")
 
 
 class SystemsTestCallScriptTest(unittest.TestCase):
@@ -175,9 +173,9 @@ class SystemsTestCallScriptTest(unittest.TestCase):
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE)
 
-        self.assertEqual(st_obj.std_out, "test_out")
-        self.assertEqual(st_obj.std_err, "test_err")
-        self.assertEqual(st_obj.return_code, 1)
+        self.assertEqual(st_obj._std_out, "test_out")
+        self.assertEqual(st_obj._std_err, "test_err")
+        self.assertEqual(st_obj._return_code, 1)
 
 
 class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
@@ -218,28 +216,24 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_return_code_0_then_exception_raised_with_correct_message(self):
-
-        comp_message = ("Function succeeded, no exception raised.")
+    def test_given_return_code_0_then_assertion_failed(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj.return_code = 0
+        st_obj._return_code = 0
 
         st_obj.load_settings({
             'exception_type': "test_exception_type",
             'exception_string': "test exception string"
         })
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(AssertionError):
             st_obj.check_std_err_for_exception()
-
-        self.assertEqual(str(e.exception), comp_message)
 
     def test_given_exception_not_raised_in_script_then_test_fails(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj.return_code = 1
-        st_obj.std_err = "\nother_exception_type: other exception string\n"
+        st_obj._return_code = 1
+        st_obj._std_err = "\nother_exception_type: other exception string\n"
 
         st_obj.load_settings({
             'exception_type': "test_exception_type",
@@ -252,8 +246,8 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
     def test_given_exception_raised_in_script_then_test_passes(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj.return_code = 1
-        st_obj.std_err = "\ntest_exception_type: test exception string\n"
+        st_obj._return_code = 1
+        st_obj._std_err = "\ntest_exception_type: test exception string\n"
 
         st_obj.load_settings({
             'exception_type': "test_exception_type",
@@ -279,7 +273,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
     def test_given_std_out_equal_to_comparison_string_then_test_passes(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj.std_out = "String to test for."
+        st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
             'std_out_compare_string': "String to test for."
@@ -290,7 +284,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
     def test_given_std_out_not_equal_to_comparison_string_then_test_fails(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj.std_out = "String to test for."
+        st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
             'std_out_compare_string': "A different string."
@@ -334,6 +328,192 @@ class SystemsTestCompareStdOutManuallyTest(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             st_obj.compare_std_out_manually()
+
+
+class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
+
+    def setUp(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj._server_repo_path = "test_repo_path"
+
+    @patch('systems_testing.vcs_git.is_repo_path', return_value=False)
+    def test_given_is_repo_path_false_then_assert_failed(self, mock_is_repo_path):
+
+        with self.assertRaises(AssertionError):
+            self.st_obj.check_remote_repo_exists()
+
+        mock_is_repo_path.assert_called_once_with("test_repo_path")
+
+    @patch('systems_testing.vcs_git.is_repo_path', return_value=True)
+    def test_given_is_repo_path_true_then_no_assertion_failed(self, mock_is_repo_path):
+
+        self.st_obj.check_remote_repo_exists()
+
+        mock_is_repo_path.assert_called_once_with("test_repo_path")
+
+
+class SystemsTestCloneServerRepoTest(unittest.TestCase):
+
+    def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
+
+        repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
+
+        mock_temp_clone = set_up_mock_(self, 'systems_testing.vcs_git.temp_clone')
+        mock_temp_clone.return_value = repo_mock
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj._server_repo_path = "test_repo_path"
+
+        self.st_obj.clone_server_repo()
+
+        mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
+
+
+class SystemsTestRunGitAttributesTest(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_check_git_attributes = set_up_mock_(self, 'systems_testing.vcs_git.check_git_attributes')
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+
+    def test_given_no_attributes_dict_then_function_returns(self):
+
+        self.st_obj._attributes_dict = {}
+        self.st_obj._server_repo_path = "test_srcp"
+        self.st_obj._local_repo_path = "test_lrp"
+
+        self.st_obj.run_git_attributes_tests()
+
+        self.assertFalse(self.mock_check_git_attributes.called)
+
+    def test_given_server_repo_clone_path_has_attributes_then_assertion_passed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._server_repo_clone_path = "test_srcp"
+        self.mock_check_git_attributes.return_value = True
+
+        self.st_obj.run_git_attributes_tests()
+
+        self.mock_check_git_attributes.assert_called_once_with("test_srcp", {'test': "attribute"})
+
+    def test_given_server_repo_clone_path_has_no_attributes_then_assertion_failed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._server_repo_clone_path = "test_srcp"
+        self.mock_check_git_attributes.return_value = False
+
+        with self.assertRaises(AssertionError):
+            self.st_obj.run_git_attributes_tests()
+
+        self.mock_check_git_attributes.assert_called_once_with("test_srcp", {'test': "attribute"})
+
+    def test_given_local_repo_clone_path_has_attributes_then_assertion_passed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._local_repo_path = "test_lrp"
+        self.mock_check_git_attributes.return_value = True
+
+        self.st_obj.run_git_attributes_tests()
+
+        self.mock_check_git_attributes.assert_called_once_with("test_lrp", {'test': "attribute"})
+
+    def test_given_local_repo_clone_path_has_no_attributes_then_assertion_failed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._local_repo_path = "test_lrp"
+        self.mock_check_git_attributes.return_value = False
+
+        with self.assertRaises(AssertionError):
+            self.st_obj.run_git_attributes_tests()
+
+        self.mock_check_git_attributes.assert_called_once_with("test_lrp", {'test': "attribute"})
+
+    def test_given_both_paths_have_attributes_then_assertion_passed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._local_repo_path = "test_lrp"
+        self.st_obj._server_repo_clone_path = "test_lcrp"
+        self.mock_check_git_attributes.return_value = True
+
+        self.st_obj.run_git_attributes_tests()
+
+        self.assertEqual(self.mock_check_git_attributes.call_count, 2)
+
+    def test_given_both_paths_do_not_have_attributes_then_assertion_failed(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+        self.st_obj._local_repo_path = "test_lrp"
+        self.st_obj._server_repo_clone_path = "test_lcrp"
+        self.mock_check_git_attributes.return_value = False
+
+        with self.assertRaises(AssertionError):
+            self.st_obj.run_git_attributes_tests()
+
+        self.assertEqual(self.mock_check_git_attributes.call_count, 1)
+
+
+class SystemsTestRunComparisonTests(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_check_folders_equal = set_up_mock_(self, 'systems_testing.check_if_folders_equal')
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+
+    def test_given_no_repo_comp_method_then_function_returns(self):
+
+        self.st_obj._repo_comp_method = ""
+
+        self.st_obj.run_comparison_tests()
+
+        self.assertFalse(self.mock_check_folders_equal.called)
+
+    def test_given_repo_comp_method_is_local_comp_then_check_folders_equal_called_on_local_paths(self):
+
+        self.st_obj._repo_comp_method = "local_comp"
+        self.st_obj._local_comp_path_one = "local_comp_path_one"
+        self.st_obj._local_comp_path_two = "local_comp_path_two"
+
+        self.st_obj.run_comparison_tests()
+
+        self.mock_check_folders_equal.assert_called_once_with("local_comp_path_one", "local_comp_path_two")
+
+    def test_given_repo_comp_method_is_server_comp_then_check_folders_equal_called_on_local_path_one_and_server_repo_clone_path(self):
+
+        self.st_obj._repo_comp_method = "server_comp"
+        self.st_obj._local_comp_path_one = "local_comp_path_one"
+        self.st_obj._server_repo_clone_path = "server_clone_path"
+
+        self.st_obj.run_comparison_tests()
+
+        self.mock_check_folders_equal.assert_called_once_with("local_comp_path_one", "server_clone_path")
+
+    def test_given_repo_comp_method_is_all_comp_then_check_folders_equal_called_on_all_paths(self):
+
+        self.st_obj._repo_comp_method = "all_comp"
+        self.st_obj._local_comp_path_one = "local_comp_path_one"
+        self.st_obj._local_comp_path_two = "local_comp_path_two"
+        self.st_obj._server_repo_clone_path = "server_clone_path"
+
+        self.st_obj.run_comparison_tests()
+
+        self.mock_check_folders_equal.assert_any_call("local_comp_path_one", "local_comp_path_two")
+        self.mock_check_folders_equal.assert_any_call("local_comp_path_one", "server_clone_path")
+
+    def test_given_comp_method_not_shown_then_error_raised_with_correct_message(self):
+
+        self.st_obj._repo_comp_method = "not_comp"
+
+        comp_message = ("The repo_comp_method must be called using one of "
+                        "the following:"
+                        "\nlocal_comp, server_comp, all_comp."
+                        "\nCurrently got: not_comp")
+
+        with self.assertRaises(st.Error) as e:
+            self.st_obj.run_comparison_tests()
+
+        self.assertEqual(str(e.exception), comp_message)
 
 
 # class InitRepoTest(unittest.TestCase):
