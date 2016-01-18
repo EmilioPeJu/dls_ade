@@ -1,6 +1,7 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
+from __future__ import unicode_literals
 import os
 import sys
 import shutil
@@ -238,7 +239,7 @@ def main():
     max_author_length = 0
     for commit in repo.iter_commits(rev=start + ".." + end):
         sha = commit.hexsha[:7]
-        author = commit.author
+        author = commit.author.name
         summary = commit.summary.replace('\n', ' ')
         time_stamp = commit.authored_date
         message = commit.message[len(summary):].replace('\n', ' ')
@@ -254,8 +255,8 @@ def main():
         commit_objects[sha] = commit
 
         # Find longest author name to pad all lines to the same length
-        if len(str(author)) > max_author_length:
-            max_author_length = len(str(author))
+        if len(author) > max_author_length:
+            max_author_length = len(author)
 
     # Generate tag messages
     for tag in tags_range:
