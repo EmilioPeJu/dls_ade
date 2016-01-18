@@ -88,7 +88,7 @@ def create_release_list(repo):
 
     release_list = []
     for tag in repo.tags:
-        release_list.append(str(tag))
+        release_list.append(tag.name)
     return release_list
 
 
@@ -166,17 +166,25 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
+    e = environment()
 
     blue = 34
     cyan = 36
     green = 32
 
-    e = environment()
+    # Don't write coloured text if args.raw is True
+    if args.raw or \
+            (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
+        raw = True
+    else:
+        raw = False
 
+    # Check parsed arguments are compatible
     if (args.releases and args.earlier_release) or \
             (args.releases and args.later_release) or \
             (args.earlier_release and args.later_release):
-        parser.error("To specify both start and end point, use format (e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
+        parser.error("To specify both start and end point, use format "
+                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
 
     if len(args.releases) == 1:
         parser.error("To specify just start or just end point, use -e or -l flag.")
@@ -190,6 +198,7 @@ def main():
 
     pathf.check_technical_area_valid(args.area, args.module_name)
 
+    # Clone repo from gitolite
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
         # Get the list of releases from the repo
@@ -200,7 +209,7 @@ def main():
     else:
         raise Exception("Module " + args.module_name + " doesn't exist in " + source)
 
-    # Set earlier and later releases, set to defaults if not given
+    # Set start and end releases, set to defaults if not given
     if len(args.releases) == 2:
         start = args.releases[0]
         end = args.releases[1]
@@ -269,7 +278,7 @@ def main():
             raise Exception("Can't find tag info")
 
         sha = tag.object.hexsha[:7]
-        author = str(tag_info.author)
+        author = tag_info.author.name
         time_stamp = tag_info.committed_date
         summary = tag_info.summary.replace('\n', ' ') + ' (' + tag.name + ')'
         # Summary is included in message, so just get extra part
@@ -285,6 +294,10 @@ def main():
         # Add to dictionary of commit objects for creating diff info later
         commit_objects[sha] = tag.commit
 
+        # Find longest author name to pad all lines to the same length
+        if len(author) > max_author_length:
+            max_author_length = len(author)
+
     # Check if there are any logs, exit if not
     if not logs:
         print("No logs for " + args.module_name + " between releases " +
@@ -294,23 +307,16 @@ def main():
     # Sort tags and commits chronologically by the UNIX time stamp in index 0
     sorted_logs = sorted(logs, key=itemgetter(0))
 
-    # Don't write coloured text if args.raw is True
-    if args.raw or \
-            (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
-        raw = True
-    else:
-        raw = False
-
     # Add formatting parameters
     screen_width = 100
     if args.verbose:
         # len("e38e73a 01/05/2015 17:20:46 " + ": ") = 30
         overflow_message_padding = max_author_length + 30
-        max_line_length = screen_width - overflow_message_padding
     else:
         # len("e38e73a " + ": ") = 10
         overflow_message_padding = max_author_length + 10
-        max_line_length = screen_width - overflow_message_padding
+
+    max_line_length = screen_width - overflow_message_padding
 
     # Make list of printable log entries
     formatted_logs = []
@@ -332,13 +338,13 @@ def main():
         if args.verbose:
             date_and_time = log_entry[4]
 
-            # Check if there is a commit message and append it
+            # Check if there is a commit body and append it
             if log_entry[5].strip():
                 commit_body = format_message_width(log_entry[5].strip(), max_line_length)
                 for line in commit_body:
                     formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line
 
-            # Get diff information for each commit
+            # Get diff information for commit
             diff_info = ''
             if prev_sha:
                 # Pass commit objects corresponding to current and previous commit_sha to get_file_changes
