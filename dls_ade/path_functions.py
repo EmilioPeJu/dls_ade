@@ -42,7 +42,7 @@ def devModule(module, area_v="support"):
 # TODO(Martin): different set of devArea and prodArea functions.
 def prodArea(area_v="support"):
     """Return the path for the release section of a particular area"""
-    return area(area_v, type_v='release')
+    return area(area_v)
 
 
 def prodModule(module, area_v="support"):
