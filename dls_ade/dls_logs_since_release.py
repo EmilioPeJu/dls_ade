@@ -35,16 +35,19 @@ def make_parser():
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None,
-        help="name of module")
+        help="Name of module")
+    parser.add_argument(
+        "releases", nargs='*', type=str, default=None,
+        help="Releases range to print logs for")
     parser.add_argument(
         "-e", "--earlier_release", action="store", dest="earlier_release", type=str,
-        help="start point of log messages")
+        help="Start point of log messages")
     parser.add_argument(
         "-l", "--later_release", action="store", dest="later_release", type=str,
-        help="end point of log messages")
+        help="End point of log messages")
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose",
-        help="Adds date, time and file diff information to logs")
+        help="Adds date, time, message body and file diff information to logs")
     parser.add_argument(
         "-r", "--raw", action="store_true", dest="raw",
         help="Print raw text (not in colour)")
@@ -169,11 +172,20 @@ def main():
 
     e = environment()
 
-    # If earlier_releases and later_releases both provided then check that later_* comes after earlier_*
-    if args.earlier_release and args.later_release:
-        test_list = e.sortReleases([args.earlier_release, args.later_release])
-        if args.later_release == test_list[0] and args.later_release != 'HEAD':
-            parser.error("<later_release> must be more recent than <earlier_release>")
+    if (args.releases and args.earlier_release) or \
+            (args.releases and args.later_release) or \
+            (args.earlier_release and args.later_release):
+        parser.error("To specify both start and end point, use format (e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
+
+    if len(args.releases) == 1:
+        parser.error("To specify just start or just end point, use -e or -l flag.")
+    elif len(args.releases) > 2:
+        parser.error("Only two releases can be specified (start and end point)")
+    elif len(args.releases) == 2:
+        # If start and end points both provided then check that later comes after earlier
+        test_list = e.sortReleases([args.releases[0], args.releases[1]])
+        if args.releases[1] == test_list[0] and args.releases[1] != 'HEAD':
+            parser.error("Input releases in correct order")
 
     pathf.check_technical_area_valid(args.area, args.module_name)
 
@@ -187,29 +199,24 @@ def main():
     else:
         raise Exception("Module " + args.module_name + " doesn't exist in " + source)
 
-    # Set earlier_releases and later_releases to defaults if not provided
-    if not args.later_release:
-        later = 'HEAD'
+    # Set earlier and later releases, set to defaults if not given
+    if len(args.releases) == 2:
+        start = args.releases[0]
+        end = args.releases[1]
+    elif args.earlier_release:
+        start = args.earlier_release
+        end = 'HEAD'
+    elif args.later_release:
+        start = releases[0]
+        end = args.later_release
     else:
-        later = args.later_release
-    if not args.earlier_release:
-        # If later_release specified then print from first release to that point.
-        # If later_release is not specified, print logs since (most recent) release
-        if later == 'HEAD':
-            earlier = releases[-1]
-        else:
-            earlier = releases[0]
-    else:
-        earlier = args.earlier_release
+        start = releases[0]
+        end = 'HEAD'
 
-    # Check that given releases exist and set range to log for
-    if earlier in releases:
-        start = earlier
-    else:
+    # Check that releases exist
+    if start not in releases:
         raise Exception("Module " + args.module_name + " does not have a release " + args.earlier_release)
-    if later in releases or later == 'HEAD':
-        end = later
-    else:
+    if end not in releases and end != 'HEAD':
         raise Exception("Module " + args.module_name + " does not have a release " + args.later_release)
 
     # Get list of tag objects in required range
@@ -218,8 +225,8 @@ def main():
     for tag in repo.tags:
         tag_refs.append(tag)
         tags.append(str(tag))
-    if later == 'HEAD':
-        # If later is HEAD then just go up to most recent release
+    if end == 'HEAD':
+        # If end is HEAD then just go up to most recent release with tags
         tags_range = tag_refs[tags.index(start):tags.index(releases[-1])+1]
     else:
         tags_range = tag_refs[tags.index(start):tags.index(end)+1]

@@ -24,12 +24,7 @@ class MakeParserTest(unittest.TestCase):
     def test_earlier_argument_has_correct_attributes(self):
         arguments = self.parser._positionals._actions[5]
         self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'earlier_release')
-
-    def test_later_argument_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[6]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'later_release')
+        self.assertEqual(arguments.dest, 'releases')
 
     def test_verbose_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-v']
