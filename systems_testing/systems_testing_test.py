@@ -130,7 +130,6 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
         st_obj.load_settings(settings)
 
         self.assertEqual(st_obj._arguments, "--area python test_module_name")
-        self.assertEqual(st_obj._std_out_compare_method, "manual_comp")
         self.assertEqual(st_obj._std_out_compare_string, "test_output")
 
     def test_given_dictionary_contains_items_that_do_not_exist_in_settings_list_then_dict_only_updated_with_those_that_are(self):
@@ -147,7 +146,6 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
         st_obj.load_settings(settings)
 
         self.assertEqual(st_obj._arguments, "--area python test_module_name")
-        self.assertEqual(st_obj._std_out_compare_method, "manual_comp")
         self.assertEqual(st_obj._std_out_compare_string, "test_output")
         self.assertNotEqual(st_obj._std_out, "this should not get updated")
 
@@ -259,16 +257,14 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
 class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
-    def test_given_no_comparison_string_then_exception_raised_with_correct_message(self):
-
-        comp_message = "A std_out comparison string must be provided."
+    def test_given_comparison_string_is_none_then_function_returns(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
 
-        with self.assertRaises(st.Error) as e:
-            st_obj.compare_std_out_to_string()
+        st_obj._std_out_compare_string = None
+        st_obj._std_out = "I definitely exist."
 
-        self.assertEqual(str(e.exception), comp_message)
+        st_obj.compare_std_out_to_string()
 
     def test_given_std_out_equal_to_comparison_string_then_test_passes(self):
 
@@ -292,42 +288,6 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             st_obj.compare_std_out_to_string()
-
-
-class SystemsTestCompareStdOutManuallyTest(unittest.TestCase):
-
-    @patch('systems_testing.get_input')
-    def test_given_input_returns_y_or_Y_then_test_passes(self, mock_input):
-
-        st_obj = st.SystemsTest("test_script", "test_name")
-
-        mock_input.return_value = "y"
-
-        st_obj.compare_std_out_manually()
-
-        mock_input.return_value = "Y"
-
-        st_obj.compare_std_out_manually()
-
-    @patch('systems_testing.get_input')
-    def test_given_input_returns_anything_else_then_test_fails(self, mock_input):
-
-        st_obj = st.SystemsTest("test_script", "test_name")
-
-        mock_input.return_value = "n"
-
-        with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_manually()
-
-        mock_input.return_value = "N"
-
-        with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_manually()
-
-        mock_input.return_value = "bw466462q3b6w"
-
-        with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_manually()
 
 
 class SystemsTestCheckRemoteRepoExists(unittest.TestCase):

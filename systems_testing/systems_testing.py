@@ -8,7 +8,6 @@ from pkg_resources import require
 require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
-
 # Make sure env var is set.(PYTHONPATH must also be set, but cannot
 # easily test it is correct)
 try:
@@ -26,19 +25,6 @@ except ImportError:
 class Error(Exception):
     """Class for exceptions relating to systems_testing module."""
     pass
-
-
-def get_input(message):
-    """Get input from the user with the given message.
-
-    Args:
-        message: The message to be shown to the user.
-
-    Returns:
-        str: The raw input given by the user.
-
-    """
-    return raw_input(message)
 
 
 def get_local_temp_clone(server_repo_path):
@@ -165,13 +151,8 @@ class SystemsTest(object):
 
         self._exception_type = ""
         self._exception_string = ""
-        self._std_out_compare_method = ""
-        """string: Specifies the mechanism ny which the standard out is tested.
-        This can be either 'string_comp' to test _std_out against
-        _std_out_compare_string or 'manual_comp' to get a printed output of the
-        script for the user to manually compare with."""
 
-        self._std_out_compare_string = ""
+        self._std_out_compare_string = None
         self._arguments = ""
         self._attributes_dict = {}
 
@@ -198,7 +179,6 @@ class SystemsTest(object):
         self._settings_list = [  # List of valid variables to update.
             'exception_type',
             'exception_string',
-            'std_out_compare_method',
             'std_out_compare_string',
             'arguments',
             'attributes_dict',
@@ -217,7 +197,6 @@ class SystemsTest(object):
         Note: This will only load the following variables:
             - exception_type
             - exception_string
-            - std_out_compare_method
             - std_out_compare_string
             - arguments
             - attributes_dict
@@ -282,24 +261,10 @@ class SystemsTest(object):
             AssertionError: If the test does not pass.
 
         """
-        if not self._std_out_compare_string:
-            raise Error("A std_out comparison string must be provided.")
+        if self._std_out_compare_string is None:
+            return
 
         assert_equal(self._std_out, self._std_out_compare_string)
-
-    def compare_std_out_manually(self):
-        """Compare the standard output with the correct value manually.
-
-        Raises:
-            AssertionError: If the test does not pass.
-                This triggers if the user presses anything but 'y' or 'Y'.
-
-        """
-        print("The following content is the direct output of the script:\n")
-        print(self._std_out)
-        response = get_input("Does this match the expected output? (y/n)")
-
-        assert_true(response.lower() == "y")
 
     def check_remote_repo_exists(self):
         """Check that the server_repo_path exists on the server.
@@ -399,10 +364,7 @@ class SystemsTest(object):
         """
         self.check_std_err_for_exception()
 
-        if self._std_out_compare_method == "string_comp":
-            self.compare_std_out_to_string()
-        elif self._std_out_compare_method == "manual_comp":
-            self.compare_std_out_manually()
+        self.compare_std_out_to_string()
 
     def run_tests(self):
         """Performs the entire test suite.
@@ -415,7 +377,9 @@ class SystemsTest(object):
         """
         self.check_std_out_and_exceptions()
 
-        if not self._server_repo_path:
+        if self._server_repo_path:
+            raise Error("Remove when script fully tested")
+
             self.check_remote_repo_exists()
 
             self.clone_server_repo()
@@ -438,7 +402,6 @@ class SystemsTest(object):
             vcs_git.Error: From run_tests().
 
         """
-        raise Error("Remove when script fully tested")
         self.setup()
         self.call_script()
         self.run_tests()
