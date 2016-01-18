@@ -266,6 +266,21 @@ class SystemsTest(object):
 
         assert_equal(self._std_out, self._std_out_compare_string)
 
+    def check_for_and_clone_remote_repo(self):
+        """Checks server repo path exists and clones it.
+
+        Raises:
+            AssertionError: From check_remote_repo_exists
+            vcs_git.Error: from clone_server_repo
+
+        """
+        if not self._server_repo_path:
+            return
+
+        self.check_remote_repo_exists()
+
+        self.clone_server_repo()
+
     def check_remote_repo_exists(self):
         """Check that the server_repo_path exists on the server.
 
@@ -293,6 +308,11 @@ class SystemsTest(object):
         """
         if not self._attributes_dict:
             return
+
+        if not (self._server_repo_clone_path or self._local_repo_path):
+            raise Error("As an attributes dict has been provided, either the "
+                        "local_repo_path or server_repo_clone_path must be "
+                        "provided.")
 
         if self._server_repo_clone_path:
             return_value = vcs_git.check_git_attributes(
@@ -327,19 +347,19 @@ class SystemsTest(object):
 
         if self._repo_comp_method == "local_comp":
             equal = check_if_folders_equal(self._local_comp_path_one,
-                                           self._local_comp_path_two)
+                                                self._local_comp_path_two)
             assert_true(equal)
 
         elif self._repo_comp_method == "server_comp":
             equal = check_if_folders_equal(self._local_comp_path_one,
-                                           self._server_repo_clone_path)
+                                                self._server_repo_clone_path)
             assert_true(equal)
 
         elif self._repo_comp_method == "all_comp":
             equal_1 = check_if_folders_equal(self._local_comp_path_one,
-                                             self._local_comp_path_two)
+                                                  self._local_comp_path_two)
             equal_2 = check_if_folders_equal(self._local_comp_path_one,
-                                             self._server_repo_clone_path)
+                                                  self._server_repo_clone_path)
             assert_true(equal_1 and equal_2)
 
         else:
@@ -366,6 +386,19 @@ class SystemsTest(object):
 
         self.compare_std_out_to_string()
 
+    def delete_cloned_server_repo(self):
+        """Deletes the clone of the server repository.
+
+        Raises:
+            Error: If the clone's path is not a directory.
+            Error: If the clone's path is not a git repository.
+
+        """
+        if not self._server_repo_clone_path:
+            return
+
+        delete_temp_repo(self._server_repo_clone_path)
+
     def run_tests(self):
         """Performs the entire test suite.
 
@@ -375,21 +408,21 @@ class SystemsTest(object):
             vcs_git.Error: From the tests.
 
         """
-        self.check_std_out_and_exceptions()
 
         if self._server_repo_path:
             raise Error("Remove when script fully tested")
 
-            self.check_remote_repo_exists()
+        self.check_std_out_and_exceptions()
 
-            self.clone_server_repo()
-            # And adds path to server_clone_path.
+        self.check_for_and_clone_remote_repo()
 
         self.run_git_attributes_tests()
         # This should check local_repo and server_repo_path for attributes_dict
 
         self.run_comparison_tests()
         # Filesystem equality checks
+
+        self.delete_cloned_server_repo()
 
     def __call__(self):
         """Defined for the use of nosetests.

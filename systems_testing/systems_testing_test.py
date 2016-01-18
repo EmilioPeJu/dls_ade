@@ -78,7 +78,11 @@ class DeleteTempRepoTest(unittest.TestCase):
         self.mock_rmtree.assert_called_once_with("/tmp/git_root_dir")
 
 
-class CheckIfFoldersEqualTest(unittest.TestCase):
+class SystemsTestCheckIfFoldersEqualTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
 
     @patch('systems_testing.subprocess.check_output')
     def test_given_a_path_is_empty_then_exception_raised_with_correct_message(self, mock_check_output):
@@ -89,7 +93,6 @@ class CheckIfFoldersEqualTest(unittest.TestCase):
             st.check_if_folders_equal("", "path_two")
 
         self.assertEqual(str(e.exception), comp_message)
-
 
     @patch('systems_testing.subprocess.check_output')
     def test_subprocess_check_output_given_correct_input(self, mock_check_output):
@@ -290,6 +293,38 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
             st_obj.compare_std_out_to_string()
 
 
+class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.mock_check_remote_repo_exists = set_up_mock_(
+                self,
+                "systems_testing.SystemsTest.check_remote_repo_exists"
+        )
+
+        self.mock_clone_server_repo = set_up_mock_(
+            self,
+            "systems_testing.SystemsTest.clone_server_repo"
+        )
+
+    def test_given_no_server_repo_path_then_function_returns(self):
+
+        self.st_obj.check_for_and_clone_remote_repo()
+
+        self.assertFalse(self.mock_check_remote_repo_exists.called)
+
+    def test_given_server_repo_path_then_remote_repo_exists_and_clone_called(self):
+
+        self.st_obj._server_repo_path = "test/server/repo/path"
+
+        self.st_obj.check_for_and_clone_remote_repo()
+
+        self.mock_check_remote_repo_exists.assert_called_once_with()
+
+        self.mock_clone_server_repo.assert_called_once_with()
+
+
 class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
 
     def setUp(self):
@@ -347,6 +382,17 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
         self.st_obj.run_git_attributes_tests()
 
         self.assertFalse(self.mock_check_git_attributes.called)
+
+    def test_given_neither_path_is_defined_but_attributes_dict_is_defined_then_exception_raised_with_correct_message(self):
+
+        self.st_obj._attributes_dict = {'test': "attribute"}
+
+        comp_message = "As an attributes dict has been provided, either the local_repo_path or server_repo_clone_path must be provided."
+
+        with self.assertRaises(st.Error) as e:
+            self.st_obj.run_git_attributes_tests()
+
+        self.assertEqual(str(e.exception), comp_message)
 
     def test_given_server_repo_clone_path_has_attributes_then_assertion_passed(self):
 
@@ -474,6 +520,32 @@ class SystemsTestRunComparisonTests(unittest.TestCase):
             self.st_obj.run_comparison_tests()
 
         self.assertEqual(str(e.exception), comp_message)
+
+
+class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
+
+    def setUp(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+
+        self.mock_delete_temp_repo = set_up_mock_(self, "systems_testing.delete_temp_repo")
+
+    def test_given_server_repo_clone_does_not_exist_then_function_returns(self):
+
+        self.st_obj._server_repo_clone_path = ""
+
+        self.st_obj.delete_cloned_server_repo()
+
+        self.assertFalse(self.mock_delete_temp_repo.called)
+
+    def test_given_server_repo_clone_exists_then_delete_temp_repo_called(self):
+
+        self.st_obj._server_repo_clone_path = "test/repo/clone/path"
+
+        self.st_obj.delete_cloned_server_repo()
+
+        self.mock_delete_temp_repo.assert_called_once_with("test/repo/clone/path")
+
 
 
 # class InitRepoTest(unittest.TestCase):
