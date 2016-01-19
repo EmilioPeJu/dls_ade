@@ -30,16 +30,16 @@ def make_parser():
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None,
-        help="name of module to tar")
+        help="Name of module to tar")
     parser.add_argument(
         "release", type=str, default=None,
-        help="release number of module to tar")
+        help="Release number of module to tar")
     parser.add_argument(
         "-u", "--untar", action="store_true", dest="untar",
         help="Untar archive created with dls-archive-module.py")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="change the epics version, default is " + e.epicsVer() + " (from your environment)")
+        help="Change the epics version, default is " + e.epicsVer() + " (from your environment)")
 
     return parser
 
@@ -52,7 +52,7 @@ def check_area_archivable(area):
         area: Area to check
 
     Raises:
-        Exception: "Modules in area <args.area> cannot be archived"
+        ValueError: "Modules in area <args.area> cannot be archived"
     """
     if area not in ["support", "ioc", "python", "matlab"]:
         raise ValueError("Modules in area " + area + " cannot be archived")
@@ -68,7 +68,7 @@ def check_epics_version(epics_version):
         epics_version: Epics version to check
 
     Raises:
-        Expected epics version like R3.14.8.2, got: <epics_version>
+        ValueError: Expected epics version like R3.14.12.3, got: <epics_version>
     """
     if epics_version:
         if not epics_version.startswith("R"):
@@ -76,7 +76,7 @@ def check_epics_version(epics_version):
         if e.epics_ver_re.match(epics_version):
             e.setEpics(epics_version)
         else:
-            raise ValueError("Expected epics version like R3.14.8.2, got: " + epics_version)
+            raise ValueError("Expected epics version like R3.14.12.3, got: " + epics_version)
 
 
 # TODO: Route through path_functions (also in list-releases)
@@ -89,7 +89,7 @@ def check_technical_area(area, module):
         module: Module to check
 
     Raises:
-        "Missing Technical Area under Beamline"
+        ValueError: "Missing Technical Area under Beamline"
     """
 
     if area == "ioc" \
@@ -108,7 +108,7 @@ def check_file_paths(release_dir, archive, untar):
         untar (bool): True if building, False if archiving
 
     Raises:
-        Exception if source does not exist or target already exists
+        IOError: Source does not exist or target already exists
     """
     if untar:
         if not os.path.isfile(archive):
