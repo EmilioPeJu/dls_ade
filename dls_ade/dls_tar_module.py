@@ -55,7 +55,7 @@ def check_area_archivable(area):
         Exception: "Modules in area <args.area> cannot be archived"
     """
     if area not in ["support", "ioc", "python", "matlab"]:
-        raise Exception("Modules in area " + area + " cannot be archived")
+        raise ValueError("Modules in area " + area + " cannot be archived")
 
 
 # TODO: Implement via dls_environment (also in list-releases)
@@ -76,7 +76,7 @@ def check_epics_version(epics_version):
         if e.epics_ver_re.match(epics_version):
             e.setEpics(epics_version)
         else:
-            raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
+            raise ValueError("Expected epics version like R3.14.8.2, got: " + epics_version)
 
 
 # TODO: Route through path_functions (also in list-releases)
@@ -94,7 +94,7 @@ def check_technical_area(area, module):
 
     if area == "ioc" \
             and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area under Beamline")
+        raise ValueError("Missing Technical Area under Beamline")
 
 
 def check_file_paths(release_dir, archive, untar):
@@ -112,14 +112,14 @@ def check_file_paths(release_dir, archive, untar):
     """
     if untar:
         if not os.path.isfile(archive):
-            raise Exception("Archive '{0}' doesn't exist".format(archive))
+            raise IOError("Archive '{0}' doesn't exist".format(archive))
         if os.path.isdir(release_dir):
-            raise Exception("Path '{0}' already exists".format(release_dir))
+            raise IOError("Path '{0}' already exists".format(release_dir))
     else:
         if not os.path.isdir(release_dir):
-            raise Exception("Path '{0}' doesn't exist".format(release_dir))
+            raise IOError("Path '{0}' doesn't exist".format(release_dir))
         if os.path.isfile(archive):
-            raise Exception("Archive '{0}' already exists".format(archive))
+            raise IOError("Archive '{0}' already exists".format(archive))
 
 
 def main():
