@@ -55,15 +55,7 @@ class environment(object):
         epics version is inaccessible
 
         """
-        try:
-            logging.debug(os.environ['DLS_EPICS_RELEASE'])
-            self.epics = os.environ['DLS_EPICS_RELEASE']
-        except KeyError:
-            try:
-                logging.debug(os.environ['EPICS_RELEASE'])
-                self.epics = os.environ['EPICS_RELEASE']
-            except KeyError:
-                self.epics = 'R3.14.12.3'
+        self.epics = os.environ.get('DLS_EPICS_RELEASE', os.environ.get('EPICS_RELEASE', 'R3.14.12.3'))
 
     def copy(self):
         """
