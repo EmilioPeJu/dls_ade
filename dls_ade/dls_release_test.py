@@ -611,7 +611,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
         self.assertTrue(sure)
 
     @patch('dls_ade.dls_release.ask_user_input', return_value='n')
-    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_spcificies_64bit_then_return_true(self, mock_ask):
+    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_specifies_64bit_then_return_true(self, mock_ask):
 
         e_option = None
         e_module = 'R3.14.11'

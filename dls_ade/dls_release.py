@@ -5,7 +5,7 @@ require('python-ldap')
 import sys
 import re
 import logging
-from dls_ade import vcs_svn
+# from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
@@ -301,10 +301,10 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
     if not option_epics and module_epics != build_epics:
         question = (
             "You are trying to release a %s module under %s without "
-            "using the -e flag. Are you sure [y/n]?" %
+            "using the -e flag. Are you sure [Y/N]?" %
             (module_epics, build_epics)).lower()
         answer = ask_user_input(question)
-        return True if answer is "y" else False
+        return False if answer.upper() is not "Y" else True
     else:
         return True
 
