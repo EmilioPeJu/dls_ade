@@ -18,10 +18,14 @@ logging.basicConfig(level=logging.WARNING)
 usage = """
 Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
-from the revision number when <earlier_release> was done, to the revision
-when <later_release> was done. If not specified, <earlier_release> defaults to
-revision the most recent release, and <later_release> defaults to the head revision.
+from the revision number when <release[0]> was done, to the revision
+when <later_release>|<release[1]> was done. If not specified, <release[0]> defaults to
+the first recent release, and <later_release> defaults to the head revision.
 """
+
+blue = 34
+cyan = 36
+green = 32
 
 
 def make_parser():
@@ -32,7 +36,6 @@ def make_parser():
     Returns:
         ArgumentParser: Parser with relevant arguments
     """
-
     parser = ArgParser(usage)
     parser.add_argument(
         "module_name", type=str, default=None,
@@ -54,6 +57,69 @@ def make_parser():
         help="Print raw text (not in colour)")
 
     return parser
+
+
+def set_raw_argument(raw):
+
+    # Don't write coloured text if args.raw is True
+    if raw or \
+            (not raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
+        return True
+    else:
+        return False
+
+
+def check_releases_valid(releases, parser):
+
+    if len(releases) > 2:
+        parser.error("Only two releases can be specified (start and end point)")
+    elif len(releases) == 2:
+        # If start and end points both provided then check that later comes after earlier
+        env = environment()
+        test_list = env.sortReleases([releases[0], releases[1]])
+        if releases[1] == test_list[0] and releases[1] != 'HEAD':
+            parser.error("Input releases in correct order")
+
+
+def set_log_range(module, releases, later, releases_list):
+
+    if releases and len(releases) == 2:
+        start = releases[0]
+        end = releases[1]
+    elif releases and len(releases) == 1:
+        start = releases[0]
+        end = 'HEAD'
+    elif later:
+        start = releases_list[0]
+        end = later
+    else:
+        start = releases_list[0]
+        end = 'HEAD'
+
+    # Check that releases exist
+    if start not in releases_list:
+        raise Exception("Module " + module + " does not have a release " + releases[0])
+    if end not in releases_list and end != 'HEAD':
+        raise Exception("Module " + module + " does not have a release " + later)
+
+    return start, end
+
+
+def get_tags_list(repo, start, end, releases_list):
+
+    tags = []
+    tag_refs = []
+    for tag in repo.tags:
+        tag_refs.append(tag)
+        tags.append(str(tag))
+    if end == 'HEAD':
+        # If end is HEAD then just go up to most recent release with tags
+        tags_range = tag_refs[tags.index(start):tags.index(releases_list[-1])+1]
+    else:
+        tags_range = tag_refs[tags.index(start):tags.index(end)+1]
+    logging.debug(tags_range)
+
+    return tags_range
 
 
 def colour(word, col, raw):
@@ -166,81 +232,22 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
-    e = environment()
 
-    blue = 34
-    cyan = 36
-    green = 32
-
-    # Don't write coloured text if args.raw is True
-    if args.raw or \
-            (not args.raw and (not sys.stdout.isatty() or os.getenv("TERM") is None or os.getenv("TERM") == "dumb")):
-        raw = True
-    else:
-        raw = False
-
-    # Check parsed arguments are compatible
-    if (args.releases and args.earlier_release) or \
-            (args.releases and args.later_release) or \
-            (args.earlier_release and args.later_release):
-        parser.error("To specify both start and end point, use format "
-                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
-
-    if len(args.releases) == 1:
-        parser.error("To specify just start or just end point, use -e or -l flag.")
-    elif len(args.releases) > 2:
-        parser.error("Only two releases can be specified (start and end point)")
-    elif len(args.releases) == 2:
-        # If start and end points both provided then check that later comes after earlier
-        test_list = e.sortReleases([args.releases[0], args.releases[1]])
-        if args.releases[1] == test_list[0] and args.releases[1] != 'HEAD':
-            parser.error("Input releases in correct order")
-
+    raw = set_raw_argument(args.raw)
     pathf.check_technical_area_valid(args.area, args.module_name)
 
-    # Clone repo from gitolite
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
-        # Get the list of releases from the repo
-        print("Cloning " + args.module_name + " from " + args.area + " area...")
         repo = vcs_git.temp_clone(source)
         releases = create_release_list(repo)
         logging.debug(releases)
     else:
         raise Exception("Module " + args.module_name + " doesn't exist in " + source)
 
-    # Set start and end releases, set to defaults if not given
-    if len(args.releases) == 2:
-        start = args.releases[0]
-        end = args.releases[1]
-    elif args.earlier_release:
-        start = args.earlier_release
-        end = 'HEAD'
-    elif args.later_release:
-        start = releases[0]
-        end = args.later_release
-    else:
-        start = releases[0]
-        end = 'HEAD'
+    # Set start and end releases and check they exist, set to defaults if not given
+    start, end = set_log_range(args.module_name, args.releases, args.later_release, releases)
 
-    # Check that releases exist
-    if start not in releases:
-        raise Exception("Module " + args.module_name + " does not have a release " + args.earlier_release)
-    if end not in releases and end != 'HEAD':
-        raise Exception("Module " + args.module_name + " does not have a release " + args.later_release)
-
-    # Get list of tag objects in required range
-    tags = []
-    tag_refs = []
-    for tag in repo.tags:
-        tag_refs.append(tag)
-        tags.append(str(tag))
-    if end == 'HEAD':
-        # If end is HEAD then just go up to most recent release with tags
-        tags_range = tag_refs[tags.index(start):tags.index(releases[-1])+1]
-    else:
-        tags_range = tag_refs[tags.index(start):tags.index(end)+1]
-    logging.debug(tags_range)
+    tags_range = get_tags_list(repo, start, end, releases)
 
     # Generate commit messages
     logs = []
