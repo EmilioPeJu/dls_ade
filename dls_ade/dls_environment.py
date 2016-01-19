@@ -63,7 +63,7 @@ class environment(object):
                 logging.debug(os.environ['EPICS_RELEASE'])
                 self.epics = os.environ['EPICS_RELEASE']
             except KeyError:
-                self.epics = 'R3.14.8.2'
+                self.epics = 'R3.14.12.3'
 
     def copy(self):
         """
