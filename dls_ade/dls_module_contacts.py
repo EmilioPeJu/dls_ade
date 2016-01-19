@@ -178,19 +178,17 @@ def edit_contact_info(repo, contact='', cc=''):
 
     module = repo.working_tree_dir.split('/')[-1]
 
-    git_attr_file = open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb')
+    with open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb') as git_attr_file:
 
-    commit_message = ''
-    if contact:
-        print("{0}: Setting contact to {1}".format(module, contact))
-        commit_message += "Set contact to {}. ".format(contact)
-        git_attr_file.write("* module-contact={}\n".format(contact))
-    if cc:
-        print("{0}: Setting cc to {1}".format(module, cc))
-        commit_message += "Set cc to {}.".format(cc)
-        git_attr_file.write("* module-cc={}\n".format(cc))
-
-    git_attr_file.close()
+        commit_message = ''
+        if contact:
+            print("{0}: Setting contact to {1}".format(module, contact))
+            commit_message += "Set contact to {}. ".format(contact)
+            git_attr_file.write("* module-contact={}\n".format(contact))
+        if cc:
+            print("{0}: Setting cc to {1}".format(module, cc))
+            commit_message += "Set cc to {}.".format(cc)
+            git_attr_file.write("* module-cc={}\n".format(cc))
 
     return commit_message
 
