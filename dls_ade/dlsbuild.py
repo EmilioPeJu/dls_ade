@@ -230,9 +230,9 @@ class Builder:
         dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/", "_"))
         filename = os.path.join(dirname, build_name+self.exten)
         print "Got build file "+filename+" to build module in "+build_dir
-        f = open(filename, "w")
-        f.write(self.build_script(params))
-        f.close()
+        with open(filename, "w") as f:
+            f.write(self.build_script(params))
+
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         print "Created build file "+filename+" to build module in "+build_dir
@@ -267,18 +267,14 @@ class Builder:
         filename = "%s.%s" % (params["build_name"], self.server)
 
         # Submit the build script
-        f = open(os.path.join(pathname, filename), "w")
-        f.write(self.build_script(params))
-        f.close()
+        with open(os.path.join(pathname, filename), "w") as f:
+            f.write(self.build_script(params))
 
         # Create a log of the build
-        f = file(
-            os.path.expanduser(os.path.join("~", ".dls-release-log")),
-            "a")
-        f.write(" ".join([
-            params["build_dir"], params["module"], params["version"],
-            params["build_name"], self.server]) + "\n")
-        f.close()
+        with open(os.path.expanduser(os.path.join("~", ".dls-release-log")), "a") as f:
+            f.write(" ".join([
+                params["build_dir"], params["module"], params["version"],
+                params["build_name"], self.server]) + "\n")
 
         print "Build request file: %s\nCreated in : %s" % (filename, pathname)
 
