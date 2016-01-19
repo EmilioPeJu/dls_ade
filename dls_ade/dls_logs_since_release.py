@@ -18,9 +18,9 @@ logging.basicConfig(level=logging.WARNING)
 usage = """
 Default <area> is 'support'.
 Print all the log messages for module <module_name> in the <area> area of svn
-from the revision number when <release[0]> was done, to the revision
-when <later_release>|<release[1]> was done. If not specified, <release[0]> defaults to
-the first recent release, and <later_release> defaults to the head revision.
+from the revision number when <earlier_release> was done, to the revision
+when <later_release> was done. If not specified, <earlier_release> defaults to
+revision the most recent release, and <later_release> defaults to the head revision.
 """
 
 blue = 34
@@ -71,6 +71,8 @@ def set_raw_argument(raw):
 
 def check_releases_valid(releases, parser):
 
+    if len(releases) == 1:
+        parser.error("To specify just start or just end point, use -e or -l flag.")
     if len(releases) > 2:
         parser.error("Only two releases can be specified (start and end point)")
     elif len(releases) == 2:
@@ -235,6 +237,13 @@ def main():
 
     raw = set_raw_argument(args.raw)
     pathf.check_technical_area_valid(args.area, args.module_name)
+
+    # Check parsed arguments are compatible
+    if (args.releases and args.earlier_release) or \
+            (args.releases and args.later_release) or \
+            (args.earlier_release and args.later_release):
+        parser.error("To specify both start and end point, use format "
+                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
 
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
