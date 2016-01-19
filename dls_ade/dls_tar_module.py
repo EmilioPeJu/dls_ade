@@ -3,10 +3,10 @@
 
 import os
 import sys
+import vcs_git
 from dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_ade import dlsbuild
-# >>> dlsbuild doesn't run because it doesnt' know what ldap is, ldap required for this?
 
 e = environment()
 
@@ -138,14 +138,17 @@ def main():
     check_file_paths(release_dir, archive, args.untar)
     
     # Create build object for release
-    build = dlsbuild.archive_build(args.untar)
+    build = dlsbuild.ArchiveBuild(args.untar)
     
     if args.epics_version:
         build.set_epics(args.epics_version)
     
     build.set_area(args.area)
 
-    build.submit("", args.module_name, args.release)
+    git = vcs_git.Git(args.module_name, args)
+    git.set_version(args.release)
+
+    build.submit(git)
 
 
 if __name__ == "__main__":
