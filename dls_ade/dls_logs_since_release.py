@@ -69,6 +69,15 @@ def set_raw_argument(raw):
         return False
 
 
+def check_parsed_args_compatible(releases, earlier, later, parser):
+
+    if (releases and earlier) or \
+            (releases and later) or \
+            (earlier and later):
+        parser.error("To specify both start and end point, use format "
+                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
+
+
 def check_releases_valid(releases, parser):
 
     if len(releases) == 1:
@@ -237,14 +246,8 @@ def main():
 
     raw = set_raw_argument(args.raw)
     pathf.check_technical_area_valid(args.area, args.module_name)
-
-    # Check parsed arguments are compatible
-    if (args.releases and args.earlier_release) or \
-            (args.releases and args.later_release) or \
-            (args.earlier_release and args.later_release):
-        parser.error("To specify both start and end point, use format "
-                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
-
+    check_parsed_args_compatible(args.releases, args.earlier_release, args.later_release, parser)
+    
     source = pathf.devModule(args.module_name, args.area)
     if vcs_git.is_repo_path(source):
         repo = vcs_git.temp_clone(source)
