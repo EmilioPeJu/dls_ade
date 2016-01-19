@@ -18,6 +18,17 @@ else:
 logging.basicConfig(level=logging.DEBUG)
 
 
+def set_up_mock(test_case_object, path):
+
+    patch_obj = patch(path)
+
+    test_case_object.addCleanup(patch_obj.stop)
+
+    mock_obj = patch_obj.start()
+
+    return mock_obj
+
+
 class GetNewModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
@@ -27,12 +38,9 @@ class GetNewModuleCreatorTest(unittest.TestCase):
             'CreatorWithApps',
         ]
 
-        self.nmc_patches = {}
         self.nmc_mocks = {}
         for cls in nmc_classes_to_patch:
-            self.nmc_patches[cls] = patch('dls_ade.new_module_creator.NewModule' + cls)
-            self.addCleanup(self.nmc_patches[cls].stop)
-            self.nmc_mocks[cls] = self.nmc_patches[cls].start()
+            self.nmc_mocks[cls] = set_up_mock(self, 'dls_ade.new_module_creator.NewModule' + cls)
 
         self.mock_nmc_base = self.nmc_mocks['Creator']
         self.mock_nmc_with_apps = self.nmc_mocks['CreatorWithApps']
@@ -43,18 +51,11 @@ class GetNewModuleCreatorTest(unittest.TestCase):
             'Tools'
         ]
 
-        self.mt_patches = {}
         self.mt_mocks = {}
         for cls in mt_classes_to_patch:
-            self.mt_patches[cls] = patch('dls_ade.module_template.ModuleTemplate' + cls)
-            self.addCleanup(self.mt_patches[cls].stop)
-            self.mt_mocks[cls] = self.mt_patches[cls].start()
+            self.mt_mocks[cls] = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate' + cls)
 
-        self.patch_get_new_ioc = patch('dls_ade.new_module_creator.get_new_module_creator_ioc')
-
-        self.addCleanup(self.patch_get_new_ioc.stop)
-
-        self.mock_get_new_ioc = self.patch_get_new_ioc.start()
+        self.mock_get_new_ioc = set_up_mock(self, 'dls_ade.new_module_creator.get_new_module_creator_ioc')
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
@@ -116,12 +117,9 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
             'CreatorAddAppToModule'
         ]
 
-        self.nmc_patches = {}
         self.nmc_mocks = {}
         for cls in nmc_classes_to_patch:
-            self.nmc_patches[cls] = patch('dls_ade.new_module_creator.NewModule' + cls)
-            self.addCleanup(self.nmc_patches[cls].stop)
-            self.nmc_mocks[cls] = self.nmc_patches[cls].start()
+            self.nmc_mocks[cls] = set_up_mock(self, 'dls_ade.new_module_creator.NewModule' + cls)
 
         self.mock_nmc_with_apps = self.nmc_mocks['CreatorWithApps']
         self.mock_nmc_add_app = self.nmc_mocks['CreatorAddAppToModule']
@@ -131,12 +129,11 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
             'IOCBL'
         ]
 
-        self.mt_patches = {}
         self.mt_mocks = {}
         for cls in mt_classes_to_patch:
-            self.mt_patches[cls] = patch('dls_ade.module_template.ModuleTemplate' + cls)
-            self.addCleanup(self.mt_patches[cls].stop)
-            self.mt_mocks[cls] = self.mt_patches[cls].start()
+            self.mt_mocks[cls] = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate' + cls)
+
+        self.mock_is_repo_path = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.is_repo_path')
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
@@ -167,20 +164,22 @@ class GetNewModuleCreatorIOCTest(unittest.TestCase):
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=False)
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self, mock_is_repo_path):
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_new_module_creator_with_apps_returned_with_correct_args(self):
+
+        self.mock_is_repo_path.return_value = False
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/01", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
-    @patch('dls_ade.new_module_creator.vcs_git.is_repo_path', return_value=True)
-    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self, mock_is_repo_path):
+    def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_new_module_creator_add_to_module_returned_with_correct_args(self):
+
+        self.mock_is_repo_path.return_value = True
 
         new_ioc_creator = new_c.get_new_module_creator_ioc("test/module/02", fullname=False)
 
-        mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_repo_path.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_new_module_creator_with_apps_returned_with_correct_args(self):
@@ -200,16 +199,15 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_mt = patch('dls_ade.module_template.ModuleTemplate')
-        self.addCleanup(self.patch_mt.stop)
-        self.mock_mt = self.patch_mt.start()
+        self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
+        self.mock_getlogin = set_up_mock(self, 'os.getlogin')
+        self.mock_getlogin.return_value = 'test_login'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
         new_c.NewModuleCreator("test_module", "test_area", self.mock_mt)
 
-    @patch('os.getlogin', return_value='test_login')
-    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self, mock_getlogin):
+    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
@@ -220,8 +218,7 @@ class NewModuleCreatorClassInitTest(unittest.TestCase):
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
-    @patch('os.getlogin', return_value='test_login')
-    def test_given_no_extra_template_args_then_module_template_initialisation_behaves_as_normal(self, mock_getlogin):
+    def test_given_no_extra_template_args_then_module_template_initialisation_behaves_as_normal(self):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
@@ -236,13 +233,19 @@ class NewModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_is_repo_path = patch('dls_ade.vcs_git.is_repo_path')
-
-        self.addCleanup(self.patch_is_repo_path.stop)
-
-        self.mock_is_repo_path = self.patch_is_repo_path.start()
+        self.mock_is_repo_path = set_up_mock(self, 'dls_ade.vcs_git.is_repo_path')
 
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
+
+        self.nmc_obj._remote_repo_valid = False
+
+    def test_given_remote_repo_valid_true_then_function_returns_immediately(self):
+
+        self.nmc_obj._remote_repo_valid = True
+
+        self.nmc_obj.verify_remote_repo()
+
+        self.assertFalse(self.mock_is_repo_path.called)
 
     def test_given_remote_repo_path_exists_then_exception_raised_with_correct_message(self):
 
@@ -269,16 +272,20 @@ class NewModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
-        self.patch_is_git_dir = patch('dls_ade.new_module_creator.vcs_git.is_git_dir')
-
-        self.addCleanup(self.patch_exists.stop)
-        self.addCleanup(self.patch_is_git_dir.stop)
-
-        self.mock_exists = self.patch_exists.start()
-        self.mock_is_git_dir = self.patch_is_git_dir.start()
+        self.mock_exists = set_up_mock(self, 'dls_ade.new_module_creator.os.path.exists')
+        self.mock_is_git_dir = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.is_git_dir')
 
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
+
+        self.nmc_obj._can_create_local_module = False
+
+    def test_given_remote_repo_valid_true_then_function_returns_immediately(self):
+
+        self.nmc_obj._can_create_local_module = True
+
+        self.nmc_obj.verify_can_create_local_module()
+
+        self.assertFalse(self.mock_exists.called)
 
     def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
 
@@ -338,19 +345,21 @@ class NewModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
-        self.patch_is_git_root_dir = patch('dls_ade.new_module_creator.vcs_git.is_git_root_dir')
-        self.patch_verify_remote_repo = patch('dls_ade.new_module_creator.NewModuleCreator.verify_remote_repo')
-
-        self.addCleanup(self.patch_exists.stop)
-        self.addCleanup(self.patch_is_git_root_dir.stop)
-        self.addCleanup(self.patch_verify_remote_repo.stop)
-
-        self.mock_exists = self.patch_exists.start()
-        self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
-        self.mock_verify_remote_repo = self.patch_verify_remote_repo.start()
+        self.mock_exists = set_up_mock(self, 'dls_ade.new_module_creator.os.path.exists')
+        self.mock_is_git_root_dir = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.is_git_root_dir')
+        self.mock_verify_remote_repo = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreator.verify_remote_repo')
 
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
+
+        self.nmc_obj._can_push_repo_to_remote = False
+
+    def test_given_remote_repo_valid_true_then_function_returns_immediately(self):
+
+        self.nmc_obj._can_push_repo_to_remote = True
+
+        self.nmc_obj.verify_can_push_repo_to_remote()
+
+        self.assertFalse(self.mock_exists.called)
 
     def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
 
@@ -440,39 +449,25 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_os = patch('dls_ade.new_module_creator.os')
-        self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-        self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
-
-        self.addCleanup(self.patch_os.stop)
-        self.addCleanup(self.patch_vcs_git.stop)
-        self.addCleanup(self.patch_verify_can_create_local_module.stop)
-
-        self.mock_os = self.patch_os.start()
-        self.mock_vcs_git = self.patch_vcs_git.start()
-        self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
+        self.mock_os = set_up_mock(self, 'dls_ade.new_module_creator.os')
+        self.mock_vcs_git = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git')
+        self.mock_verify_can_create_local_module = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
 
         self.mock_module_template_cls = MagicMock()
         self.mock_module_template = MagicMock()
         self.mock_module_template_cls.return_value = self.mock_module_template
         self.mock_create_files = self.mock_module_template.create_files
 
-
-        # self.mock_os.return_value = "Example"
-
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", self.mock_module_template_cls)
 
-    def test_given_can_create_local_module_true_then_flag_set_false(self):
-
-        self.nmc_obj._can_create_local_module = True
+    def test_given_verify_can_create_local_module_passes_then_can_create_local_module_set_false(self):
 
         self.nmc_obj.create_local_module()
 
         self.assertFalse(self.nmc_obj._can_create_local_module)
 
-    def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
+    def test_given_verify_can_create_local_module_fails_then_exception_raised_with_correct_message(self):
 
-        self.nmc_obj._can_create_local_module = False
         self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(Exception) as e:
@@ -483,49 +478,14 @@ class NewModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_can_create_local_module_true_then_rest_of_function_is_run(self):
 
-        self.nmc_obj._can_create_local_module = True
-
         self.nmc_obj.create_local_module()
 
         call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
-        self.mock_os.path.isdir.assert_called_once_with(self.nmc_obj.disk_dir)
         self.mock_os.chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.init_repo.assert_called_once_with(self.nmc_obj.disk_dir)
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
-
-    def test_given_can_create_local_module_originally_false_but_verify_function_does_not_raise_exception_then_rest_of_function_is_run(self):
-
-        self.nmc_obj._can_create_local_module = False
-
-        self.nmc_obj.create_local_module()
-
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
-
-        self.mock_os.path.isdir.assert_called_once_with(self.nmc_obj.disk_dir)
-        self.mock_os.chdir.assert_has_calls(call_list)
-        self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.init_repo.assert_called_once_with(self.nmc_obj.disk_dir)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
-
-    def test_given_can_create_local_module_true_and_disk_dir_already_exists_then_makedirs_is_not_called(self):
-
-        self.nmc_obj._can_create_local_module = True
-        self.mock_os.path.isdir.return_value = True
-
-        self.nmc_obj.create_local_module()
-
-        self.assertFalse(self.mock_os.makedirs.called)
-
-    def test_given_can_create_local_module_false_and_disk_dir_does_not_exist_then_makedirs_is_called(self):
-
-        self.nmc_obj._can_create_local_module = True
-        self.mock_os.path.isdir.return_value = False
-
-        self.nmc_obj.create_local_module()
-
-        self.mock_os.makedirs.assert_called_once_with(self.nmc_obj.disk_dir)
 
 
 class NewModuleCreatorPrintMessageTest(unittest.TestCase):
@@ -546,67 +506,44 @@ class NewModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_push_repo_to_remote')
-        self.patch_add_new_remote_and_push = patch('dls_ade.new_module_creator.vcs_git.add_new_remote_and_push')
-
-        self.addCleanup(self.patch_verify_can_push_repo_to_remote.stop)
-        self.addCleanup(self.patch_add_new_remote_and_push.stop)
-
-        self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
-        self.mock_add_new_remote_and_push = self.patch_add_new_remote_and_push.start()
+        self.mock_verify_can_push_repo_to_remote = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreator.verify_can_push_repo_to_remote')
+        self.mock_add_new_remote_and_push = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.add_new_remote_and_push')
 
         self.nmc_obj = new_c.NewModuleCreator("test_module", "test_area", MagicMock())
 
-    def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
-
-        self.nmc_obj._can_push_repo_to_remote = True
+    def test_given_verify_can_push_repo_to_remote_passes_then_flag_set_false_and_add_new_remote_and_push_called(self):
 
         self.nmc_obj.push_repo_to_remote()
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-    def test_given_can_push_repo_to_remote_true_then_add_new_remote_and_push_called(self):
-
-        self.nmc_obj._can_push_repo_to_remote = True
-
-        self.nmc_obj.push_repo_to_remote()
-
         self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
 
-    def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
+    def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_push_repo_to_remote = False
         self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
 
-        with self.assertRaises(Exception) as e:
+        with self.assertRaises(new_c.VerificationError) as e:
             self.nmc_obj.push_repo_to_remote()
 
         self.assertFalse(self.mock_add_new_remote_and_push.called)
         self.assertEqual(str(e.exception), "error")
-
-    def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_add_new_remote_and_push_called(self):
-
-        self.nmc_obj._can_push_repo_to_remote = False
-
-        self.nmc_obj.push_repo_to_remote()
-
-        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
 
 
 class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_mt = patch('dls_ade.module_template.ModuleTemplate')
-        self.addCleanup(self.patch_mt.stop)
-        self.mock_mt = self.patch_mt.start()
+        self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
+        self.mock_getlogin = set_up_mock(self, 'os.getlogin')
+        self.mock_getlogin.return_value = 'test_login'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
         new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, app_name="test_app")
 
-    @patch('os.getlogin', return_value='test_login')
-    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self, mock_getlogin):
+    def test_given_extra_template_args_then_module_template_initialisation_includes_them(self):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
@@ -622,7 +559,7 @@ class NewModuleCreatorWithAppsClassInitTest(unittest.TestCase):
 
         comp_message = "'app_name' must be provided as keyword argument."
 
-        with self.assertRaises(new_c.ArgumentError) as e:
+        with self.assertRaises(new_c.mt.ArgumentError) as e:
             base_c = new_c.NewModuleCreatorWithApps("test_module", "test_area", self.mock_mt, additional="value")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -632,16 +569,20 @@ class NewModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_check_if_remote_repo_has_app = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
-        self.patch_is_repo_path = patch('dls_ade.new_module_creator.vcs_git.is_repo_path')
-
-        self.addCleanup(self.patch_check_if_remote_repo_has_app.stop)
-        self.addCleanup(self.patch_is_repo_path.stop)
-
-        self.mock_check_if_remote_repo_has_app = self.patch_check_if_remote_repo_has_app.start()
-        self.mock_is_repo_path = self.patch_is_repo_path.start()
+        self.mock_check_if_remote_repo_has_app = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
+        self.mock_is_repo_path = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.is_repo_path')
 
         self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
+
+        self.nmc_obj._remote_repo_valid = False
+
+    def test_given_remote_repo_valid_true_then_function_returns_immediately(self):
+
+        self.nmc_obj._remote_repo_valid = True
+
+        self.nmc_obj.verify_remote_repo()
+
+        self.assertFalse(self.mock_is_repo_path.called)
 
     def test_given_server_repo_path_does_not_exist_then_exception_raised_with_correct_message(self):
 
@@ -682,17 +623,9 @@ class NewModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-        self.patch_exists = patch('dls_ade.new_module_creator.os.path.exists')
-        self.patch_rmtree = patch('dls_ade.new_module_creator.shutil.rmtree')
-
-        self.addCleanup(self.patch_vcs_git.stop)
-        self.addCleanup(self.patch_exists.stop)
-        self.addCleanup(self.patch_rmtree.stop)
-
-        self.mock_vcs_git = self.patch_vcs_git.start()
-        self.mock_exists = self.patch_exists.start()
-        self.mock_rmtree = self.patch_rmtree.start()
+        self.mock_vcs_git = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git')
+        self.mock_exists = set_up_mock(self, 'dls_ade.new_module_creator.os.path.exists')
+        self.mock_rmtree = set_up_mock(self, 'dls_ade.new_module_creator.shutil.rmtree')
 
         self.mock_repo = MagicMock()
         self.mock_vcs_git.temp_clone.return_value = self.mock_repo
@@ -790,34 +723,20 @@ class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_verify_can_push_repo_to_remote = patch('dls_ade.new_module_creator.NewModuleCreatorAddAppToModule.verify_can_push_repo_to_remote')
-        self.patch_push_to_remote = patch('dls_ade.new_module_creator.vcs_git.push_to_remote')
-
-        self.addCleanup(self.patch_verify_can_push_repo_to_remote.stop)
-        self.addCleanup(self.patch_push_to_remote.stop)
-
-        self.mock_verify_can_push_repo_to_remote = self.patch_verify_can_push_repo_to_remote.start()
-        self.mock_push_to_remote = self.patch_push_to_remote.start()
+        self.mock_verify_can_push_repo_to_remote = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreatorAddAppToModule.verify_can_push_repo_to_remote')
+        self.mock_push_to_remote = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git.push_to_remote')
 
         self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
-    def test_given_can_push_repo_to_remote_true_then_flag_set_false(self):
-
-        self.nmc_obj._can_push_repo_to_remote = True
+    def test_given_verify_can_push_repo_to_remote_passes_then_flag_set_false_and_add_new_remote_and_push_called(self):
 
         self.nmc_obj.push_repo_to_remote()
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-    def test_given_can_push_repo_to_remote_true_then_add_new_remote_and_push_called(self):
-
-        self.nmc_obj._can_push_repo_to_remote = True
-
-        self.nmc_obj.push_repo_to_remote()
-
         self.mock_push_to_remote.assert_called_with(self.nmc_obj.disk_dir)
 
-    def test_given_can_push_repo_to_remote_false_then_exception_raised_with_correct_message(self):
+    def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
         self.nmc_obj._can_push_repo_to_remote = False
         self.mock_verify_can_push_repo_to_remote.side_effect = new_c.VerificationError("error")
@@ -828,51 +747,37 @@ class NewModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
         self.assertFalse(self.mock_push_to_remote.called)
         self.assertEqual(str(e.exception), "error")
 
-    def test_given_can_push_repo_to_remote_originally_false_but_verify_function_does_not_raise_exception_then_add_new_remote_and_push_called(self):
-
-        self.nmc_obj._can_push_repo_to_remote = False
-
-        self.nmc_obj.push_repo_to_remote()
-
-        self.mock_push_to_remote.assert_called_with(self.nmc_obj.disk_dir)
-
 
 class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
     def setUp(self):
 
-            self.patch_chdir = patch('dls_ade.new_module_creator.os.chdir')
-            self.patch_vcs_git = patch('dls_ade.new_module_creator.vcs_git')
-            self.patch_verify_can_create_local_module = patch('dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
-
-            self.addCleanup(self.patch_chdir.stop)
-            self.addCleanup(self.patch_vcs_git.stop)
-            self.addCleanup(self.patch_verify_can_create_local_module.stop)
-
-            self.mock_chdir = self.patch_chdir.start()
-            self.mock_vcs_git = self.patch_vcs_git.start()
-            self.mock_verify_can_create_local_module = self.patch_verify_can_create_local_module.start()
+            self.mock_chdir = set_up_mock(self, 'dls_ade.new_module_creator.os.chdir')
+            self.mock_vcs_git = set_up_mock(self, 'dls_ade.new_module_creator.vcs_git')
+            self.mock_verify_can_create_local_module = set_up_mock(self, 'dls_ade.new_module_creator.NewModuleCreator.verify_can_create_local_module')
 
             self.mock_module_template_cls = MagicMock()
             self.mock_module_template = MagicMock()
             self.mock_module_template_cls.return_value = self.mock_module_template
             self.mock_create_files = self.mock_module_template.create_files
 
-            # self.mock_os.return_value = "Example"
-
             self.nmc_obj = new_c.NewModuleCreatorAddAppToModule("test_module", "test_area", self.mock_module_template_cls, app_name="test_app")
 
-    def test_given_can_create_local_module_true_then_flag_set_false(self):
-
-        self.nmc_obj._can_create_local_module = True
+    def test_given_verify_can_create_local_module_passes_then_flag_set_false_and_clone_and_create_files_called(self):
 
         self.nmc_obj.create_local_module()
 
         self.assertFalse(self.nmc_obj._can_create_local_module)
 
-    def test_given_can_create_local_module_false_then_exception_raised_with_correct_message(self):
+        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
 
-        self.nmc_obj._can_create_local_module = False
+        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_chdir.assert_has_calls(call_list)
+        self.assertTrue(self.mock_create_files.called)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
+
+    def test_given_verify_can_create_local_module_fails_then_exception_raised_with_correct_message(self):
+
         self.mock_verify_can_create_local_module.side_effect = new_c.VerificationError("error")
 
         with self.assertRaises(new_c.VerificationError) as e:
@@ -880,29 +785,3 @@ class NewModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
         self.assertFalse(self.mock_vcs_git.clone.called)
         self.assertEqual(str(e.exception), "error")
-
-    def test_given_can_create_local_module_true_then_rest_of_function_is_run(self):
-
-        self.nmc_obj._can_create_local_module = True
-
-        self.nmc_obj.create_local_module()
-
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
-
-        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
-        self.mock_chdir.assert_has_calls(call_list)
-        self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
-
-    def test_given_can_create_local_module_originally_false_but_verify_function_does_not_raise_exception_then_rest_of_function_is_run(self):
-
-        self.nmc_obj._can_create_local_module = False
-
-        self.nmc_obj.create_local_module()
-
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
-
-        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
-        self.mock_chdir.assert_has_calls(call_list)
-        self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)

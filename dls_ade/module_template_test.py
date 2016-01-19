@@ -18,73 +18,31 @@ else:
 logging.basicConfig(level=logging.DEBUG)
 
 
-class ModuleTemplateCreateFilesTest(unittest.TestCase):
+def set_up_mock(test_case_object, path):
 
-    @patch('dls_ade.module_template.ModuleTemplate._create_files_from_template_dict')
-    def test_create_files_from_template_dict_called(self, mock_create_files_from_template):
+    patch_obj = patch(path)
 
-        mt_obj = mt.ModuleTemplate({})
+    test_case_object.addCleanup(patch_obj.stop)
 
-        mt_obj.create_files()
+    mock_obj = patch_obj.start()
 
-        mock_create_files_from_template.assert_called_once_with()
+    return mock_obj
 
 
-class ModuleTemplateSetTemplateArgsTest(unittest.TestCase):
+class ModuleTemplateInitTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_verify_template_args = patch('dls_ade.module_template.ModuleTemplate._verify_template_args')
+        self.mock_verify_template_args = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate._verify_template_args')
 
-        self.addCleanup(self.patch_verify_template_args.stop)
+    def test_given_function_called_then_attributes_set_and_verify_template_args_called_correctly(self):
 
-        self.mock_verify_template_args = self.patch_verify_template_args.start()
+        mt_obj = mt.ModuleTemplate({'arg3': "argument3"}, ['arg2'])
 
-        self.mt_obj = mt.ModuleTemplate({})
+        self.assertEqual(mt_obj._template_args['arg3'], "argument3")
+        self.assertEqual(mt_obj._required_template_args, {'arg2'})
 
-        self.mt_obj._template_args = {'arg1': "argument1", 'arg2': "argument2"}
-
-    def test_given_update_false_then_template_args_overwritten_correctly_and_verified(self):
-
-        self.mt_obj.set_template_args({'arg3': "argument3"})
-
-        self.assertEqual(self.mt_obj._template_args['arg3'], "argument3")
-
-        self.assertTrue(all(arg not in self.mt_obj._template_args for arg in ['arg1', 'arg2']))
         self.assertTrue(self.mock_verify_template_args.called)
-
-    def test_given_update_true_then_template_args_updated_correctly(self):
-
-        self.mt_obj.set_template_args({'arg3': "argument3"}, update=True)
-
-        self.assertEqual(self.mt_obj._template_args['arg1'], "argument1")
-        self.assertEqual(self.mt_obj._template_args['arg2'], "argument2")
-        self.assertEqual(self.mt_obj._template_args['arg3'], "argument3")
-
-
-class ModuleTemplateSetTemplateFilesTest(unittest.TestCase):
-
-    def setUp(self):
-
-        self.mt_obj = mt.ModuleTemplate({})
-
-        self.mt_obj._template_files = {'arg1': "argument1", 'arg2': "argument2"}
-
-    def test_given_update_false_then_template_files_overwritten_correctly(self):
-
-        self.mt_obj.set_template_files({'arg3': "argument3"})
-
-        self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
-
-        self.assertTrue(all(arg not in self.mt_obj._template_files for arg in ['arg1', 'arg2']))
-
-    def test_given_update_true_then_template_files_updated_correctly(self):
-
-        self.mt_obj.set_template_files({'arg3': "argument3"}, update=True)
-
-        self.assertEqual(self.mt_obj._template_files['arg1'], "argument1")
-        self.assertEqual(self.mt_obj._template_files['arg2'], "argument2")
-        self.assertEqual(self.mt_obj._template_files['arg3'], "argument3")
 
 
 class ModuleTemplateVerifyTemplateArgsTest(unittest.TestCase):
@@ -107,7 +65,7 @@ class ModuleTemplateVerifyTemplateArgsTest(unittest.TestCase):
 
         err_message = "All required template arguments must be supplied: arg1, arg3"
 
-        with self.assertRaises(mt.Error) as e:
+        with self.assertRaises(mt.ArgumentError) as e:
             self.mt_obj._verify_template_args()
 
         self.assertEqual(str(e.exception), err_message)
@@ -139,7 +97,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         comp_message = ("Template folder test_dir/new_module_templates/non_existent does not exist. "
                         "\nNote: This exception means there is a bug in the ModuleTemplate subclass code.")
 
-        with self.assertRaises(mt.Error) as e:
+        with self.assertRaises(mt.TemplateFolderError) as e:
             self.mt_obj._set_template_files_from_area("non_existent")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -154,6 +112,122 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         self.mock_set_from_folder.assert_called_once_with("test_dir/new_module_templates/this_folder_exists")
 
 
+class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.patch_os = patch('dls_ade.module_template.os')
+
+        self.addCleanup(self.patch_os.stop)
+
+        self.mock_os = self.patch_os.start()
+
+        self.mt_obj = mt.ModuleTemplate({})
+
+        self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
+
+    def test_given_template_folder_is_not_directory_then_exception_raised_with_correct_message(self):
+
+        self.mock_os.path.isdir.return_value = False
+
+        comp_message = "Template folder test_template_folder does not exist. \nNote: This exception means there is a bug in the ModuleTemplate subclass code.".format(template_folder="test_template_folder")
+
+        with patch.object(builtins, 'open', self.open_mock):
+            with self.assertRaises(mt.TemplateFolderError) as e:
+                self.mt_obj._set_template_files_from_folder("test_template_folder")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_files_directly_in_folder_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
+
+    def test_given_files_nested_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder", "", ["file1.txt", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
+
+    def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
+
+    def test_given_function_called_then_template_dict_does_not_include_non_conflicting_file_names(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mt_obj._template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
+
+        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            self.mt_obj._set_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
+                     "extra_folder1/file2.txt": "file2 text goes here",
+                     "extra_folder2/file3.txt": "file3 text goes here",
+                     "extra_folder2/file4.txt": "file4 text goes here"}
+
+        self.assertEqual(comp_dict, self.mt_obj._template_files)
+
+
+class ModuleTemplateCreateFilesTest(unittest.TestCase):
+
+    @patch('dls_ade.module_template.ModuleTemplate._create_files_from_template_dict')
+    @patch('dls_ade.module_template.ModuleTemplate._create_custom_files')
+    def test_create_files_from_template_dict_called(self, mock_create_custom_files, mock_create_files_from_template):
+
+        mt_obj = mt.ModuleTemplate({})
+
+        mt_obj.create_files()
+
+        mock_create_custom_files.assert_called_once_with()
+        mock_create_files_from_template.assert_called_once_with()
 
 
 class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
@@ -183,7 +257,7 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
         comp_message = "{dir:s} in template dictionary is not a valid file name".format(dir="folder_name")
 
         with patch.object(builtins, 'open', self.open_mock):  # This is to prevent accidental file creation
-            with self.assertRaises(Exception) as e:
+            with self.assertRaises(mt.ArgumentError) as e:
                 self.mt_obj._create_files_from_template_dict()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -323,158 +397,6 @@ class ModuleTemplateCreateFilesFromTemplateDictTest(unittest.TestCase):
         self.assertFalse(self.mock_makedirs.called)
 
 
-class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
-
-    def setUp(self):
-
-        self.patch_os = patch('dls_ade.module_template.os')
-
-        self.addCleanup(self.patch_os.stop)
-
-        self.mock_os = self.patch_os.start()
-
-        self.mt_obj = mt.ModuleTemplate({})
-
-        self.open_mock = mock_open()  # mock_open is a function designed to help mock the 'open' built-in function
-
-    def test_given_template_folder_is_not_directory_then_exception_raised_with_correct_message(self):
-
-        self.mock_os.path.isdir.return_value = False
-
-        comp_message = "The template folder {template_folder:s} does not exist".format(template_folder="test_template_folder")
-
-        with patch.object(builtins, 'open', self.open_mock):
-            with self.assertRaises(mt.Error) as e:
-                self.mt_obj._set_template_files_from_folder("test_template_folder")
-
-        self.assertEqual(str(e.exception), comp_message)
-
-    def test_given_files_directly_in_folder_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.txt", "file2.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"file1.txt": "file1 text goes here", "file2.txt": "file2 text goes here"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-    def test_given_files_nested_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder", "", ["file1.txt", "file2.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"extra_folder/file1.txt": "file1 text goes here", "extra_folder/file2.txt": "file2 text goes here"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-    def test_given_multiple_nested_files_then_template_dict_correctly_created(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder")
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here", "extra_folder1/file2.txt": "file2 text goes here", "extra_folder2/file3.txt": "file3 text goes here", "extra_folder2/file4.txt": "file4 text goes here"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-    def test_given_update_true_then_template_dict_includes_non_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mt_obj._template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder", True)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here",
-                     "non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-    def test_given_update_false_then_template_dict_does_not_include_non_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mt_obj._template_files = {"non_conflicting_file.txt": "I am the non-conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder", False)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-    def test_given_update_true_then_template_dict_overwrites_conflicting_file_names(self):
-
-        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
-        self.mock_os.path.relpath = os.path.relpath
-        self.mock_os.path.isdir.return_value = True
-        file_handle_mock = self.open_mock()
-
-        self.mt_obj._template_files = {"conflicting_file.txt": "I am the original conflicting file text"}
-
-        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["conflicting_file.txt"]], ["test_template_folder/extra_folder1", "", ["file1.txt", "file2.txt"]], ["test_template_folder/extra_folder2", "", ["file3.txt", "file4.txt"]]])
-
-        file_handle_mock.read.side_effect = ["I am the modified conflicting file text", "file1 text goes here", "file2 text goes here", "file3 text goes here", "file4 text goes here"]
-
-        with patch.object(builtins, 'open', self.open_mock):
-            self.mt_obj._set_template_files_from_folder("test_template_folder", True)
-
-        comp_dict = {"extra_folder1/file1.txt": "file1 text goes here",
-                     "extra_folder1/file2.txt": "file2 text goes here",
-                     "extra_folder2/file3.txt": "file3 text goes here",
-                     "extra_folder2/file4.txt": "file4 text goes here",
-                     "conflicting_file.txt": "I am the modified conflicting file text"}
-
-        self.assertEqual(comp_dict, self.mt_obj._template_files)
-
-
 class ModuleTemplatePrintMessageTest(unittest.TestCase):
 
     def setUp(self):
@@ -485,6 +407,7 @@ class ModuleTemplatePrintMessageTest(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             self.mt_obj.print_message()
+
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
@@ -527,12 +450,12 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
         mock_print.assert_called_once_with(comp_message)
 
 
-class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
+class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
     @patch('dls_ade.module_template.print', create=True)
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
-        mt_obj = mt.ModuleTemplateSupportAndIOC({'module_name': "test_module_name",
+        mt_obj = mt.ModuleTemplateWithApps({'module_name': "test_module_name",
                                                   'module_path': "test_module_path",
                                                   'user_login': "test_login",
                                                   'app_name': "test_app_name"})
@@ -553,61 +476,55 @@ class ModuleTemplateSupportAndIOCPrintMessageTest(unittest.TestCase):
         mock_print.assert_called_once_with(comp_message)
 
 
-class ModuleTemplateSupportCreateFilesTest(unittest.TestCase):
+class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
 
     @patch('dls_ade.module_template.os.system')
-    @patch('dls_ade.module_template.ModuleTemplateSupport._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
 
         mt_obj = mt.ModuleTemplateSupport({'module_name': "test_module_name",
                                             'module_path': "test_module_path",
                                             'user_login': "test_login",
                                             'app_name': "test_app_name"})
 
-        mt_obj.create_files()
+        mt_obj._create_custom_files()
 
         os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("dls-make-etc-dir.py && make clean uninstall")]
 
         mock_os_system.assert_has_calls(os_system_call_list)
-        mock_create_from_dict.assert_called_once_with()
 
 
-class ModuleTemplateIOCCreateFilesTest(unittest.TestCase):
+class ModuleTemplateIOCCreateCustomFilesTest(unittest.TestCase):
 
     @patch('dls_ade.module_template.shutil.rmtree')
     @patch('dls_ade.module_template.os.system')
-    @patch('dls_ade.module_template.ModuleTemplateIOC._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system, mock_rmtree):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, mock_rmtree):
 
         mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
                                         'module_path': "test_module_path",
                                         'user_login': "test_login",
                                         'app_name': "test_app_name"})
 
-        mt_obj.create_files()
+        mt_obj._create_custom_files()
 
         os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
 
         mock_rmtree.assert_called_once_with(os.path.join("{app_name:s}App".format(app_name="test_app_name"), 'opi'))
         mock_os_system.assert_has_calls(os_system_call_list)
-        mock_create_from_dict.assert_called_once_with()
 
 
-class ModuleTemplateIOCBLCreateFilesTest(unittest.TestCase):
+class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
     @patch('dls_ade.module_template.os.system')
-    @patch('dls_ade.module_template.ModuleTemplateIOCBL._create_files_from_template_dict')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_create_from_dict, mock_os_system):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
                                           'user_login': "test_login",
                                           'app_name': "test_app_name"})
 
-        mt_obj.create_files()
+        mt_obj._create_custom_files()
 
         mock_os_system.assert_called_once_with("makeBaseApp.pl -t dlsBL {app_name:s}".format(app_name="test_app_name"))
-        mock_create_from_dict.assert_called_once_with()
 
 
 class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):

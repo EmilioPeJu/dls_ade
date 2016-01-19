@@ -5,40 +5,9 @@ import shutil
 import logging
 import vcs_git
 import module_template as mt
+from exceptions import ParsingError, RemoteRepoError, VerificationError
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-class Error(Exception):
-    """Class for errors relating to new_module_creator module."""
-    pass
-
-
-class ParsingError(Error):
-    """Class for errors relating to parsing the given arguments"""
-    pass
-
-
-class RemoteRepoError(Error):
-    """Class for errors relating to issues with the remote repository."""
-    pass
-
-
-class ArgumentError(Error):
-    """Class for errors relating to template argument.
-
-    Template arguments are provided in a dictionary. This exception is raised
-    if said arguments are not provided."""
-    pass
-
-
-class VerificationError(Error):
-    """Class for errors raised by the `verify_` methods of new_module_creator.
-
-    This allows us to handle and concatenate internal verification errors.
-
-    """
-    pass
 
 
 def get_new_module_creator(module_name, area="support", fullname=False):
@@ -97,18 +66,15 @@ def get_new_module_creator(module_name, area="support", fullname=False):
             raise ParsingError("Python module names must start with 'dls_' "
                                "and be valid python identifiers")
 
-        module_template_cls = mt.ModuleTemplatePython
-
-        return NewModuleCreator(module_name, area, module_template_cls)
+        return NewModuleCreator(module_name, area, mt.ModuleTemplatePython)
 
     elif area == "support":
-        module_template_cls = mt.ModuleTemplateSupport
-        return NewModuleCreatorWithApps(module_name, area, module_template_cls,
+        return NewModuleCreatorWithApps(module_name, area,
+                                        mt.ModuleTemplateSupport,
                                         app_name=module_name)
 
     elif area == "tools":
-        module_template_cls = mt.ModuleTemplateTools
-        return NewModuleCreator(module_name, area, module_template_cls)
+        return NewModuleCreator(module_name, area, mt.ModuleTemplateTools)
 
     else:
         raise ParsingError("Don't know how to make a module of type: " + area)
@@ -149,24 +115,10 @@ def get_new_module_creator_ioc(module_name, fullname=False):
     """
     area = "ioc"
 
-    cols = module_name.split('/')
-    dash_separated = False
-
-    if len(cols) <= 1 or not cols[1]:
-        cols = module_name.split('-')
-        dash_separated = True
-
-        # This has different check to retain compatibility with old svn script.
-        if len(cols) <= 1:
-            err_message = ("Need a name with dashes or hyphens in it, got "
-                           "{module:s}")
-            raise ParsingError(err_message.format(module=module_name))
-
-    domain = cols[0]
-    technical_area = cols[1]
+    dash_separated, cols, domain, technical_area = parse_ioc_module_name(
+            module_name)
 
     if technical_area == "BL":
-        module_template_cls = mt.ModuleTemplateIOCBL
         if dash_separated:
             app_name = module_name
             module_path = domain + "/" + app_name
@@ -174,7 +126,8 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             app_name = domain
             module_path = domain + "/" + technical_area
 
-        return NewModuleCreatorWithApps(module_path, area, module_template_cls,
+        return NewModuleCreatorWithApps(module_path, area,
+                                        mt.ModuleTemplateIOCBL,
                                         app_name=app_name)
 
     module_template_cls = mt.ModuleTemplateIOC
@@ -190,7 +143,7 @@ def get_new_module_creator_ioc(module_name, fullname=False):
     else:
         ioc_number = "01"
 
-    app_name = domain + "-" + technical_area + "-IOC-" + ioc_number
+    app_name = "-".join([domain, technical_area, "IOC", ioc_number])
 
     if fullname:
         module_path = domain + "/" + app_name
@@ -220,6 +173,44 @@ def get_new_module_creator_ioc(module_name, fullname=False):
             return NewModuleCreatorWithApps(module_path, area,
                                             module_template_cls,
                                             app_name=app_name)
+
+
+# TODO(Martin) unit tests for function
+def parse_ioc_module_name(module_name):
+    """Parses the module name and returns relevant data.
+
+    Args:
+        module_name: The ioc module's name.
+
+    Returns:
+        bool: True if the string is dash-separated, false otherwise.
+            Based on original svn implementation, if both slashes and dashes
+            appear in the module name, it will default to slash-separated.
+        list[str]: A list of strings that make up the module name.
+        str: The domain of the module.
+        str: The technical area of the module
+
+    Raises:
+        ParsingError: If the module cannot be split by '-' or '/'.
+
+    """
+    cols = module_name.split('/')
+    dash_separated = False
+
+    if len(cols) <= 1 or not cols[1]:
+        cols = module_name.split('-')
+        dash_separated = True
+
+        # This has different check to retain compatibility with old svn script.
+        if len(cols) <= 1:
+            err_message = ("Need a name with dashes or hyphens in it, got "
+                           "{module:s}")
+            raise ParsingError(err_message.format(module=module_name))
+
+    domain = cols[0]
+    technical_area = cols[1]
+
+    return dash_separated, cols, domain, technical_area
 
 
 class NewModuleCreator(object):
@@ -260,14 +251,10 @@ class NewModuleCreator(object):
         self._area = area
         self._cwd = os.getcwd()
 
-        self._module_path = ""
-        self._module_name = ""
         self._module_path = module_path
         self._module_name = os.path.basename(os.path.normpath(
                                              self._module_path))
 
-        self.disk_dir = ""
-        self._server_repo_path = ""
         self.disk_dir = os.path.join(self._cwd, self._module_path)
         self._server_repo_path = pathf.devModule(self._module_path, self._area)
 
@@ -308,9 +295,10 @@ class NewModuleCreator(object):
             VerificationError: If there is a name conflict with the server.
 
         """
-        remote_repo_exists = vcs_git.is_repo_path(self._server_repo_path)
+        if self._remote_repo_valid:
+            return
 
-        if remote_repo_exists:
+        if vcs_git.is_repo_path(self._server_repo_path):
             err_message = ("The path {dir:s} already exists on gitolite,"
                            " cannot continue")
             raise VerificationError(
@@ -337,21 +325,20 @@ class NewModuleCreator(object):
             VerificationError: Local module cannot be created.
 
         """
+        if self._can_create_local_module:
+            return
 
-        mod_dir_exists = os.path.exists(self.disk_dir)
-        cwd_is_repo = vcs_git.is_git_dir(self._cwd)
+        err_list = []
 
-        if mod_dir_exists or cwd_is_repo:
-            err_list = []
+        if os.path.exists(self.disk_dir):
+            err_list.append("Directory {dir:s} already exists, "
+                            "please move elsewhere and try again.")
 
-            if mod_dir_exists:
-                err_list.append("Directory {dir:s} already exists, "
-                                "please move elsewhere and try again.")
+        if vcs_git.is_git_dir(self._cwd):
+            err_list.append("Currently in a git repository, "
+                            "please move elsewhere and try again.")
 
-            if cwd_is_repo:
-                err_list.append("Currently in a git repository, "
-                                "please move elsewhere and try again.")
-
+        if err_list:
             err_message = "\n".join(err_list).format(dir=self._module_path)
 
             self._can_create_local_module = False
@@ -378,22 +365,21 @@ class NewModuleCreator(object):
             VerificationError: Local repository cannot be pushed to remote.
 
         """
-        valid = True
+        if self._can_push_repo_to_remote:
+            return
 
-        mod_dir_exists = os.path.exists(self.disk_dir)
+        self._can_push_repo_to_remote = True
 
         err_list = []
 
-        if not mod_dir_exists:
+        if not os.path.exists(self.disk_dir):
             err_list.append("Directory {dir:s} does not exist.")
-            valid = False
 
         else:
             mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
             if not mod_dir_is_repo:
                 err_list.append("Directory {dir:s} is not a git repository. "
                                 "Unable to push to remote repository.")
-                valid = False
 
         err_list = [err.format(dir=self._module_path) for err in err_list]
 
@@ -403,13 +389,10 @@ class NewModuleCreator(object):
                 self.verify_remote_repo()
             except VerificationError as e:
                 err_list.append(str(e))
-                valid = False
 
-        if not valid:
+        if err_list:
             self._can_push_repo_to_remote = False
             raise VerificationError("\n".join(err_list))
-
-        self._can_push_repo_to_remote = True
 
     def create_local_module(self):
         """Creates the folder structure and files in a new git repository.
@@ -424,23 +407,24 @@ class NewModuleCreator(object):
 
         Raises:
             VerificationError: Local module cannot be created.
+            OSError: The disk_dir already exists (outside interference).
 
         """
-        if not self._can_create_local_module:
-            self.verify_can_create_local_module()
+        self.verify_can_create_local_module()
 
         self._can_create_local_module = False
 
         print("Making clean directory structure for " + self._module_path)
 
-        if not os.path.isdir(self.disk_dir):
-            os.makedirs(self.disk_dir)
+        os.makedirs(self.disk_dir)
 
         # The reason why we have to change directory into the folder where the
         # files are created is in order to remain compatible with
         # makeBaseApp.pl, used for IOC and Support modules
         os.chdir(self.disk_dir)
+
         self._module_template.create_files()
+
         os.chdir(self._cwd)
 
         vcs_git.init_repo(self.disk_dir)
@@ -462,8 +446,7 @@ class NewModuleCreator(object):
             VerificationError: Local repository cannot be pushed to remote.
 
         """
-        if not self._can_push_repo_to_remote:
-            self.verify_can_push_repo_to_remote()
+        self.verify_can_push_repo_to_remote()
 
         self._can_push_repo_to_remote = False
         self._remote_repo_valid = False
@@ -489,8 +472,8 @@ class NewModuleCreatorWithApps(NewModuleCreator):
         """
 
         if 'app_name' not in kwargs:
-            raise ArgumentError("'app_name' must be provided as keyword "
-                                "argument.")
+            raise mt.ArgumentError("'app_name' must be provided as keyword "
+                                   "argument.")
 
         super(NewModuleCreatorWithApps, self).__init__(
             module_path,
@@ -546,6 +529,10 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
                 This should never be raised. There is a bug if it is!
 
         """
+
+        if self._remote_repo_valid:
+            return
+
         if not vcs_git.is_repo_path(self._server_repo_path):
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
@@ -604,8 +591,11 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
                 exists = True
 
         finally:
-            if temp_dir:  # If temp_clone worked
-                shutil.rmtree(temp_dir)
+            try:
+                if temp_dir:
+                    shutil.rmtree(temp_dir)
+            except OSError:
+                pass
 
         return exists
 
@@ -615,8 +605,7 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
         This will use the file creation specified in :meth:`_create_files`.
 
         """
-        if not self._can_create_local_module:
-            self.verify_can_create_local_module()
+        self.verify_can_create_local_module()
 
         self._can_create_local_module = False
 
@@ -640,8 +629,7 @@ class NewModuleCreatorAddAppToModule(NewModuleCreatorWithApps):
             Error: From :meth:`verify_can_push_repo_to_remote`.
 
         """
-        if not self._can_push_repo_to_remote:
-            self.verify_can_push_repo_to_remote()
+        self.verify_can_push_repo_to_remote()
 
         self._can_push_repo_to_remote = False
 

@@ -2,13 +2,8 @@ from __future__ import print_function
 import os
 import shutil
 import logging
-
+from exceptions import ArgumentError, TemplateFolderError
 logging.basicConfig(level=logging.DEBUG)
-
-
-class Error(Exception):
-    """Class for exceptions relating to module_template module."""
-    pass
 
 
 class ModuleTemplate(object):
@@ -19,7 +14,7 @@ class ModuleTemplate(object):
 
     """
 
-    def __init__(self, template_args):
+    def __init__(self, template_args, extra_required_args=list()):
         """Default initialisation of all object attributes.
 
         """
@@ -30,43 +25,18 @@ class ModuleTemplate(object):
         {template_arg:s} for use with the string .format() method, each
         evaluated using the `template_args` attribute."""
 
-        self._required_template_args = []
+        self._required_template_args = set()
+        self._required_template_args.update(extra_required_args)
+
         """List[str]: List of all required template_args."""
 
-        self._template_args = {}
+        self._template_args = template_args
         """dict: Dictionary for module-specific phrases in template_files.
         Used for including module-specific phrases such as `module_name`"""
 
         # The following code ought to be used in subclasses to ensure that the
         # template_args given contain the required ones.
-        self.set_template_args(template_args)
-
-    def set_template_args(self, extra_template_args, update=False):
-        """Set the template args using the given dictionary.
-
-        Args:
-            extra_template_args: List of additional template_args to include.
-            update: If True, the dictionary should be updated, not overwritten.
-
-        """
-        if update:
-            self._template_args.update(extra_template_args)
-        else:
-            self._template_args = extra_template_args
-            self._verify_template_args()
-
-    def set_template_files(self, extra_template_files, update=False):
-        """Set the template files using the given dictionary.
-
-        Args:
-            extra_template_files: List of additional template_args to include.
-            update: If True, the dictionary should be updated, not overwritten.
-
-        """
-        if update:
-            self._template_files.update(extra_template_files)
-        else:
-            self._template_files = extra_template_files
+        self._verify_template_args()
 
     def _verify_template_args(self):
         """Verify that the template_args fulfill the template requirements.
@@ -77,7 +47,7 @@ class ModuleTemplate(object):
         """
         if not all(key in self._template_args
                    for key in self._required_template_args):
-            raise Error(
+            raise ArgumentError(
                 "All required template arguments must be supplied: " +
                 str(", ".join(self._required_template_args))
             )
@@ -110,14 +80,12 @@ class ModuleTemplate(object):
                            "\nNote: This exception means there is a bug in "
                            "the ModuleTemplate subclass code.")
 
-            raise Error(err_message.format(template_path=template_path))
+            raise TemplateFolderError(template_path)
 
         self._set_template_files_from_folder(template_path)
 
-    def _set_template_files_from_folder(self, template_folder, update=False):
+    def _set_template_files_from_folder(self, template_folder):
         """Sets `template_files` from a folder passed to it.
-
-        If update is 'True', then the dictionary is updated, not overwritten.
 
         Note:
             All hidden files and folders (apart from '.' and '..') will be
@@ -127,16 +95,13 @@ class ModuleTemplate(object):
             template_folder: The relative or absolute path to template folder.
                 Inside, all files and folders can use {value:s} template_args
                 to allow completion using `template_args` attribute.
-            update: If True, `_template_files` will be updated
 
         Raises:
-            Error: If `template_folder` does not exist.
+            TemplateFolderError: If `template_folder` does not exist.
 
         """
         if not os.path.isdir(template_folder):
-            err_message = ("The template folder {template_folder:s} "
-                           "does not exist")
-            raise Error(err_message.format(template_folder=template_folder))
+            raise TemplateFolderError(template_folder)
 
         template_files = {}
         for dir_path, _, files in os.walk(template_folder):
@@ -148,7 +113,7 @@ class ModuleTemplate(object):
                 logging.debug("rel path: " + rel_path)
                 template_files.update({rel_path: contents})
 
-        self.set_template_files(template_files, update)
+        self._template_files = template_files
 
     def create_files(self):
         """Creates the folder structure and files in the current directory.
@@ -160,7 +125,16 @@ class ModuleTemplate(object):
             Error: From :meth:`_create_files_from_template_dict`
 
         """
+        self._create_custom_files()
         self._create_files_from_template_dict()
+
+    def _create_custom_files(self):
+        """Creates files specific to the application using external scripts.
+
+        This does not use the template files or args.
+
+        """
+        pass
 
     def _create_files_from_template_dict(self):
         """Creates files from `_template_files` and `_template_args`
@@ -169,7 +143,7 @@ class ModuleTemplate(object):
         file creation by default.
 
         Raises:
-            Error: If key in `_template_files` is a directory, not a file.
+            KeyError: If key in `_template_files` is a directory, not a file.
 
         """
         # dictionary keys are the relative file paths for the documents
@@ -192,7 +166,7 @@ class ModuleTemplate(object):
                 # slash or folder already exists)
                 err_message = ("{dir:s} in template dictionary "
                                "is not a valid file name")
-                raise Error(err_message.format(dir=dir_path))
+                raise ArgumentError(err_message.format(dir=dir_path))
 
             # dir_path = '' (dir_path = False) if eg. "file.txt" given
             if dir_path and not os.path.isdir(dir_path):
@@ -218,15 +192,15 @@ class ModuleTemplateTools(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args):
+    def __init__(self, template_args, additional_required_args=list()):
         """Initialise template args and default template files."""
-        super(ModuleTemplateTools, self).__init__(template_args)
 
-        self._required_template_args = [
-            'module_name', 'module_path', 'user_login'
-        ]
+        required_args = ['module_name', 'module_path', 'user_login']
 
-        self._verify_template_args()
+        super(ModuleTemplateTools, self).__init__(
+                template_args,
+                required_args + additional_required_args
+        )
 
         self._set_template_files_from_area("tools")
 
@@ -244,15 +218,15 @@ class ModuleTemplateTools(ModuleTemplate):
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
 
-    def __init__(self, template_args):
+    def __init__(self, template_args, additional_required_args=list()):
         """Initialise template args and default template files."""
-        super(ModuleTemplatePython, self).__init__(template_args)
 
-        self._required_template_args = [
-            'module_name', 'module_path', 'user_login'
-        ]
+        required_args = ['module_name', 'module_path', 'user_login']
 
-        self._verify_template_args()
+        super(ModuleTemplatePython, self).__init__(
+                template_args,
+                required_args + additional_required_args
+        )
 
         self._set_template_files_from_area("python")
 
@@ -269,7 +243,7 @@ class ModuleTemplatePython(ModuleTemplate):
         print(message)
 
 
-class ModuleTemplateSupportAndIOC(ModuleTemplate):
+class ModuleTemplateWithApps(ModuleTemplate):
     """Abstract class to implement the shared user message for Support and IOC.
 
     Ensure you use this with :class:`NewModuleCreatorWithApps`, in order to
@@ -283,14 +257,14 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args):
-        super(ModuleTemplateSupportAndIOC, self).__init__(template_args)
+    def __init__(self, template_args, additional_required_args=list()):
 
-        self._required_template_args = [
-            'module_path', 'app_name', 'user_login'
-        ]
+        required_args = ['module_path', 'app_name', 'user_login']
 
-        self._verify_template_args()
+        super(ModuleTemplateWithApps, self).__init__(
+                template_args,
+                required_args + additional_required_args
+        )
 
         self._set_template_files_from_area("default")
 
@@ -319,38 +293,35 @@ class ModuleTemplateSupportAndIOC(ModuleTemplate):
         print(message)
 
 
-class ModuleTemplateSupport(ModuleTemplateSupportAndIOC):
+class ModuleTemplateSupport(ModuleTemplateWithApps):
     """Class for the management of the creation of new Support modules.
 
     These have apps with the same name as the module.
 
     """
 
-    def create_files(self):
+    def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program alongside the
-        :meth:`_create_files_from_template_dict` method for file creation.
+        This uses makeBaseApp.pl program for file creation.
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
             app_name=self._template_args['app_name']))
         os.system('dls-make-etc-dir.py && make clean uninstall')
-        self._create_files_from_template_dict()
 
 
-class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
+class ModuleTemplateIOC(ModuleTemplateWithApps):
     """Class for the management of the creation of new IOC modules.
 
     These have apps with a different name to the module.
 
     """
 
-    def create_files(self):
+    def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program alongside the
-        _create_files_from_template_dict method for file creation.
+        This uses makeBaseApp.pl program for file creation.
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
@@ -359,10 +330,9 @@ class ModuleTemplateIOC(ModuleTemplateSupportAndIOC):
             **self._template_args))
         shutil.rmtree(os.path.join(self._template_args['app_name'] + 'App',
                                    'opi'))
-        self._create_files_from_template_dict()
 
 
-class ModuleTemplateIOCBL(ModuleTemplateSupportAndIOC):
+class ModuleTemplateIOCBL(ModuleTemplateWithApps):
     """Class for the management of the creation of new IOC BL modules."""
 
     def print_message(self):
@@ -389,12 +359,10 @@ class ModuleTemplateIOCBL(ModuleTemplateSupportAndIOC):
 
         print(message)
 
-    def create_files(self):
+    def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program alongside the
-        _create_files_from_template_dict method for file creation.
+        This uses makeBaseApp.pl program for file creation.
 
         """
         os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])
-        self._create_files_from_template_dict()
