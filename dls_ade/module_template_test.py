@@ -533,9 +533,9 @@ class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
     def test_given_print_message_called_then_message_printed(self, mock_print):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
-                                          'module_path': "test_module_path",
-                                          'user_login': "test_login",
-                                          'app_name': "test_app_name"})
+                                         'module_path': "test_module_path",
+                                         'user_login': "test_login",
+                                         'app_name': "test_app_name"})
 
         message_dict = {
             'RELEASE': "test_module_path/configure/RELEASE",

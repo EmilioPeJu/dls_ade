@@ -246,7 +246,10 @@ class ModuleTemplatePython(ModuleTemplate):
 
 
 class ModuleTemplateWithApps(ModuleTemplate):
-    """Abstract class to implement the shared user message for Support and IOC.
+    """Abstract class to implement the 'app_name' attribute.
+
+    This also includes the app-dependent print message, used by IOC and
+    Support ModuleTemplate subclasses
 
     Ensure you use this with :class:`NewModuleCreatorWithApps`, in order to
     ensure that the `app_name` value exists.
@@ -343,6 +346,17 @@ class ModuleTemplateIOC(ModuleTemplateWithApps):
 class ModuleTemplateIOCBL(ModuleTemplateWithApps):
     """Class for the management of the creation of new IOC BL modules."""
 
+    def _create_custom_files(self):
+        """Creates the folder structure and files in the current directory.
+
+        This uses makeBaseApp.pl program for file creation.
+
+        Raises:
+            OSError: If system call fails.
+
+        """
+        os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])
+
     def print_message(self):
         module_path = self._template_args['module_path']
         app_name = self._template_args['app_name']
@@ -366,14 +380,3 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
         message = message.format(**message_dict)
 
         print(message)
-
-    def _create_custom_files(self):
-        """Creates the folder structure and files in the current directory.
-
-        This uses makeBaseApp.pl program for file creation.
-
-        Raises:
-            OSError: If system call fails.
-
-        """
-        os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])
