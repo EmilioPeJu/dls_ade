@@ -55,7 +55,7 @@ class ModuleTemplate(object):
     def _set_template_files_from_area(self, template_area):
         """Sets `template_files` from the templates folder in dls_ade.
 
-        Uses the new_module_templates folder to set the `template_files`.
+        Uses the module_templates folder to set the `template_files`.
 
         Note:
             "default" template contains a basic .gitignore file that can be
@@ -68,7 +68,7 @@ class ModuleTemplate(object):
             TemplateFolderError: If template folder does not exist.
 
         """
-        templates_folder = "new_module_templates"
+        templates_folder = "module_templates"
         template_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             templates_folder,
@@ -76,10 +76,6 @@ class ModuleTemplate(object):
         )
 
         if not os.path.isdir(template_path):
-            err_message = ("Template folder {template_path:s} does not exist. "
-                           "\nNote: This exception means there is a bug in "
-                           "the ModuleTemplate subclass code.")
-
             raise TemplateFolderError(template_path)
 
         self._set_template_files_from_folder(template_path)
@@ -158,7 +154,7 @@ class ModuleTemplate(object):
 
             # Stops us from overwriting files in folder (eg .gitignore and
             # .gitattributes when adding to Old-Style IOC modules
-            # (NewModuleCreatorAddAppToModule))
+            # (ModuleCreatorAddAppToModule))
             if os.path.isfile(rel_path):
                 logging.debug("File already exists: " + rel_path)
                 continue
@@ -251,7 +247,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
     This also includes the app-dependent print message, used by IOC and
     Support ModuleTemplate subclasses
 
-    Ensure you use this with :class:`NewModuleCreatorWithApps`, in order to
+    Ensure you use this with :class:`ModuleCreatorWithApps`, in order to
     ensure that the `app_name` value exists.
 
     For this class to work properly, the following template arguments must be
