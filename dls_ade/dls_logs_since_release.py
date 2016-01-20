@@ -335,11 +335,19 @@ def format_log_messages(log_info, raw, verbose):
     formatted_logs = []
     prev_sha = ''
     for log_entry in logs:
-        commit_sha = log_entry[1][:7]
-        name = '{:<{}}'.format(log_entry[2], max_author_length)
+
+        if len(log_entry) > 1:
+            commit_sha = log_entry[1][:7]
+        else:
+            commit_sha = 'no sha'
+
+        if len(log_entry) > 2:
+            name = '{:<{}}'.format(log_entry[2], max_author_length)
+        else:
+            name = 'no name'
 
         # Add commit subject summary
-        if log_entry[3]:
+        if len(log_entry) > 3:
             commit_message = format_message_width(log_entry[3], max_line_length)
             formatted_message = commit_message[0]
             for line in commit_message[1:]:
@@ -349,10 +357,13 @@ def format_log_messages(log_info, raw, verbose):
 
         # If verbose add date, time, message body and diff info, then add to logs
         if verbose:
-            date_and_time = log_entry[4]
+            if len(log_entry) > 4:
+                date_and_time = log_entry[4]
+            else:
+                date_and_time = 'no date/time'
 
             # Check if there is a commit body and append it
-            if log_entry[5].strip():
+            if len(log_entry) > 5 and log_entry[5].strip():
                 commit_body = format_message_width(log_entry[5].strip(), max_line_length)
                 for line in commit_body:
                     formatted_message += '\n' + '{:<{}}'.format('...', overflow_message_padding) + line

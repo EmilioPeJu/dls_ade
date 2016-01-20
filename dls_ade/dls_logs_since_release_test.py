@@ -479,6 +479,22 @@ class FormatLogMessagesTest(unittest.TestCase):
                                  u'\', u\'M     ethercatApp/src/ecAsyn.h\n'
                                  u'\'')
 
+    def test_given_bad_entries_no_error(self):
+        log_info = {u'commit_objects': {}, u'max_author_length': 0,
+                    u'logs': [[]]}
+
+        log = dls_logs_since_release.format_log_messages(log_info, raw=True, verbose=False)
+
+        self.assertEqual(log, [u'no sha no name: \n'])
+
+    def test_given_bad_entries_verbose_no_error(self):
+        log_info = {u'commit_objects': {}, u'max_author_length': 0,
+                    u'logs': [[]]}
+
+        log = dls_logs_since_release.format_log_messages(log_info, raw=True, verbose=True)
+
+        self.assertEqual(log, [u'no sha no date/time no name: \n'])
+
 
 class ColourTest(unittest.TestCase):
 
