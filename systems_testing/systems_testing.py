@@ -48,7 +48,7 @@ def get_local_temp_clone(server_repo_path):
             This will always be located in a temporary folder.
 
     Raises:
-        vcs_git.Error: From vcs_git.temp_clone.
+        VCSGitError: From vcs_git.temp_clone.
 
     """
     repo = vcs_git.temp_clone(server_repo_path)
@@ -65,8 +65,8 @@ def delete_temp_repo(local_repo_path):
         local_repo_path: The path to the temporary directory.
 
     Raises:
-        Error: If the path given is not a temporary folder.
-        Error: If the path given is not for a git repository.
+        TempdirError: If the path given is not a temporary folder.
+        TempdirError: If the path given is not for a git repository.
 
     """
     if not os.path.realpath(local_repo_path).startswith(tempfile.gettempdir()):
@@ -98,7 +98,7 @@ def check_if_folders_equal(path_1, path_2):
         bool: True if the directories are equal, False otherwise.
 
     Raises:
-        Error: If either of the two paths are blank.
+        SettingsError: If either of the two paths are blank.
 
     """
     if not (path_1 and path_2):
@@ -233,6 +233,9 @@ class SystemsTest(object):
 
     def call_script(self):
         """Call the script and store output, error and return code.
+
+        Raises:
+            ValueError: From Popen().
         """
         call_args = (self._script + " " + self._arguments).split()
 
@@ -250,7 +253,7 @@ class SystemsTest(object):
         """Check the standard error for the exception information.
 
         Raises:
-            Error: If either the exception type or string is blank.
+            SettingsError: If either the exception type or string is blank.
             AssertionError: If the test does not pass.
 
         """
@@ -272,7 +275,6 @@ class SystemsTest(object):
         """Compare the standard output to std_out_compare_string.
 
         Raises:
-            Error: If the comparison string is not provided.
             AssertionError: If the test does not pass.
 
         """
@@ -286,7 +288,7 @@ class SystemsTest(object):
 
         Raises:
             AssertionError: From check_remote_repo_exists
-            vcs_git.Error: from clone_server_repo
+            VCSGitError: from clone_server_repo
 
         """
         if not self._server_repo_path:
@@ -309,7 +311,7 @@ class SystemsTest(object):
         """Clone the server_repo_path to a temp dir and return the path.
 
         Raises:
-            vcs_git.Error: From vcs_git.temp_clone()
+            VCSGitError: From vcs_git.temp_clone()
         """
         repo = vcs_git.temp_clone(self._server_repo_path)
         self._server_repo_clone_path = repo.working_tree_dir
@@ -318,6 +320,7 @@ class SystemsTest(object):
         """Perform the git attributes tests.
 
         Raises:
+            SettingsError: If no path is provided given an attributes dict.
             AssertionError: If the test does not pass.
 
         """
@@ -352,8 +355,8 @@ class SystemsTest(object):
             - all_comp: compares all three paths against one another.
 
         Raises:
-            Error: From check_if_folders_equal
-            Error: If the repo_comp_method has an unexpected value.
+            SettingsError: From check_if_folders_equal
+            SettingsError: If the repo_comp_method has an unexpected value.
             AssertionError: If the test does not pass.
 
         """
@@ -392,9 +395,9 @@ class SystemsTest(object):
         This includes exception testing.
 
         Raises:
-            Error: From the comparison tests.
+            SettingsError: From the comparison tests.
             AssertionError: From the comparison tests.
-            vcs_git.Error: From the comparison tests.
+            VCSGitError: From the comparison tests.
 
         """
         self.check_std_err_for_exception()
@@ -405,8 +408,8 @@ class SystemsTest(object):
         """Deletes the clone of the server repository.
 
         Raises:
-            Error: If the clone's path is not a directory.
-            Error: If the clone's path is not a git repository.
+            TempdirError: If the clone's path is not a directory.
+            TempdirError: If the clone's path is not a git repository.
 
         """
         if not self._server_repo_clone_path:
@@ -418,9 +421,10 @@ class SystemsTest(object):
         """Performs the entire test suite.
 
         Raises:
-            Error: From the tests.
+            SettingsError: From the tests.
+            TempdirError: From :meth:`delete_cloned_server_repo()`
             AssertionError: From the tests.
-            vcs_git.Error: From the tests.
+            VCSGitError: From the tests.
 
         """
 
@@ -445,9 +449,10 @@ class SystemsTest(object):
         This is considered the test function.
 
         Raises:
-            Error: From run_tests().
+            SettingsError: From run_tests().
+            TempdirError: From run_tests()
             AssertionError: From run_tests().
-            vcs_git.Error: From run_tests().
+            VCSGitError: From run_tests().
 
         """
         self.setup()
