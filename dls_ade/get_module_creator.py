@@ -115,7 +115,7 @@ def get_module_creator_ioc(module_name, fullname=False):
     """
     area = "ioc"
 
-    dash_separated, cols = parse_ioc_module_name(module_name)
+    dash_separated, cols = split_ioc_module_name(module_name)
 
     domain = cols[0]
     technical_area = cols[1]
@@ -177,8 +177,7 @@ def get_module_creator_ioc(module_name, fullname=False):
                                             app_name=app_name)
 
 
-# TODO(Martin) unit tests for function
-def parse_ioc_module_name(module_name):
+def split_ioc_module_name(module_name):
     """Parses the module name and returns split module_name and split type.
 
     Args:

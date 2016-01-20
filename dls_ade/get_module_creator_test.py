@@ -4,6 +4,7 @@ import unittest
 import logging
 
 import dls_ade.get_module_creator as get_mc
+from exceptions import ParsingError
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, call
@@ -60,7 +61,7 @@ class GetModuleCreatorTest(unittest.TestCase):
 
     def test_given_unsupported_area_then_exception_raised(self):
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ParsingError):
             get_mc.get_module_creator("test_module", "fake_area")
 
     def test_given_area_is_ioc_then_get_module_creator_ioc_called(self):
@@ -71,17 +72,17 @@ class GetModuleCreatorTest(unittest.TestCase):
 
     def test_given_area_is_python_with_invalid_name_then_module_creator_python_not_returned(self):
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ParsingError):
             new_py_creator = get_mc.get_module_creator("test_module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ParsingError):
             new_py_creator = get_mc.get_module_creator("dls_test-module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ParsingError):
             new_py_creator = get_mc.get_module_creator("dls_test.module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
@@ -133,19 +134,22 @@ class GetModuleCreatorIOCTest(unittest.TestCase):
             self.mt_mocks[cls] = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate' + cls)
 
         self.mock_is_repo_path = set_up_mock(self, 'dls_ade.vcs_git.is_repo_path')
+        self.mock_split_ioc_module_name = set_up_mock(self, 'dls_ade.get_module_creator.split_ioc_module_name')
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
-    def test_given_module_name_with_no_slash_or_dash_then_exception_raised_with_correct_message(self):
+    def test_given_module_name_with_invalid_separators_then_exception_raised_with_correct_message(self):
 
-        comp_message = "Need a name with dashes or hyphens in it, got test_module"
+        self.mock_split_ioc_module_name.side_effect = ParsingError("error_message")
 
-        with self.assertRaises(get_mc.ParsingError) as e:
+        with self.assertRaises(ParsingError) as e:
             new_ioc_creator = get_mc.get_module_creator_ioc("test_module")
 
-        self.assertEqual(str(e.exception), comp_message)
+        self.assertEqual(str(e.exception), "error_message")
 
     def test_given_not_BL_and_dash_separated_then_module_creator_with_apps_returned_with_correct_args(self):
+
+        self.mock_split_ioc_module_name.return_value = True, ["test", "module", "IOC", "01"]
 
         new_ioc_creator = get_mc.get_module_creator_ioc("test-module-IOC-01")
 
@@ -153,17 +157,23 @@ class GetModuleCreatorIOCTest(unittest.TestCase):
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_then_module_creator_with_apps_returned_with_correct_args(self):
 
+        self.mock_split_ioc_module_name.return_value = False, ["test", "module", "02"]
+
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=True)
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_true_but_no_ioc_number_then_module_creator_with_apps_returned_with_correct_args(self):
 
+        self.mock_split_ioc_module_name.return_value = False, ["test", "module"]
+
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module", fullname=True)
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_module_creator_with_apps_returned_with_correct_args(self):
+
+        self.mock_split_ioc_module_name.return_value = False, ["test", "module", "01"]
 
         self.mock_is_repo_path.return_value = False
 
@@ -174,6 +184,8 @@ class GetModuleCreatorIOCTest(unittest.TestCase):
 
     def test_given_area_is_ioc_and_not_BL_and_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_module_creator_add_to_module_returned_with_correct_args(self):
 
+        self.mock_split_ioc_module_name.return_value = False, ["test", "module", "02"]
+
         self.mock_is_repo_path.return_value = True
 
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=False)
@@ -183,12 +195,58 @@ class GetModuleCreatorIOCTest(unittest.TestCase):
 
     def test_given_area_is_ioc_and_tech_area_is_BL_slash_form_then_module_creator_with_apps_returned_with_correct_args(self):
 
+        self.mock_split_ioc_module_name.return_value = False, ["test", "BL"]
+
         new_tools_creator = get_mc.get_module_creator_ioc("test/BL")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/BL", "ioc", self.mt_mocks['IOCBL'], app_name="test")
 
     def test_given_area_is_ioc_and_tech_area_is_BL_dash_form_then_module_creator_with_apps_returned_with_correct_args(self):
 
+        self.mock_split_ioc_module_name.return_value = True, ["test", "BL", "IOC", "01"]
+
         new_tools_creator = get_mc.get_module_creator_ioc("test-BL-IOC-01", "ioc")
 
         self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'], app_name="test-BL-IOC-01")
+
+
+class SplitIOCModuleNameTest(unittest.TestCase):
+
+    def test_given_module_splits_by_slash_with_second_part_not_empty_then_function_returns_correctly(self):
+
+        dash_sep, cols = get_mc.split_ioc_module_name("part_one/part_two")
+
+        self.assertFalse(dash_sep)
+        self.assertEqual(cols, ["part_one", "part_two"])
+
+    def test_given_module_splits_by_slash_with_second_part_empty_then_function_raises_exception_with_correct_message(self):
+
+        comp_message = "Need a name with dashes or hyphens in it, got part_one/"
+
+        with self.assertRaises(ParsingError) as e:
+            get_mc.split_ioc_module_name("part_one/")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_module_splits_by_hyphen_with_second_part_not_empty_then_function_returns_correctly(self):
+
+        dash_sep, cols = get_mc.split_ioc_module_name("part_one-part_two")
+
+        self.assertTrue(dash_sep)
+        self.assertEqual(cols, ["part_one", "part_two"])
+
+    def test_given_module_splits_by_dash_with_second_part_empty_then_function_returns_correctly(self):
+
+        dash_sep, cols = get_mc.split_ioc_module_name("part_one-")
+
+        self.assertTrue(dash_sep)
+        self.assertEqual(cols, ["part_one", ""])
+
+    def test_given_neither_slash_nor_dash_then_exception_raised_with_correct_message(self):
+
+        comp_message = "Need a name with dashes or hyphens in it, got this_has_no_separator"
+
+        with self.assertRaises(ParsingError) as e:
+            get_mc.split_ioc_module_name("this_has_no_separator")
+
+        self.assertEqual(str(e.exception), comp_message)
