@@ -413,53 +413,44 @@ class GetTagMessagesTest(unittest.TestCase):
 
 class FormatLogMessagesTest(unittest.TestCase):
 
-    def test_given_not_verbose_not_raw_then_format(self):
+    def setUp(self):
         commit = "dummy"
-        log_info = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
-                    u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list']]}
+        self.log_info = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
+                         u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
+                                    u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                    u'12/08/2014 13:50:10',
+                                    u' make "sdos" public to allow checks on the sdo_observers list']]}
+        self.log_info_verbose = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
+                                 u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
+                                            u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                            u'12/08/2014 13:50:10',
+                                            u' make "sdos" public to allow checks on the sdo_observers list'],
+                                           [1407847810, 'e327e92', 'Ronaldo Mercado',
+                                            u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                            u'12/08/2014 13:50:10',
+                                            u' make "sdos" public to allow checks on the sdo_observers list']]}
 
-        log = dls_logs_since_release.format_log_messages(log_info, raw=False, verbose=False)
+    def test_given_not_verbose_not_raw_then_format(self):
+
+        log = dls_logs_since_release.format_log_messages(self.log_info, raw=False, verbose=False)
 
         self.assertEqual(log, [u'\x1b[34me327e92\x1b[0m \x1b[32mRonaldo Mercado\x1b[0m: add '
                                u'on_sdo_message to process scanner MSG_SDO_READ messages (4-1)'])
 
     def test_given_not_verbose_raw_then_format(self):
-        commit = "dummy"
-        log_info = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
-                    u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list']]}
 
-        log = dls_logs_since_release.format_log_messages(log_info, raw=True, verbose=False)
+        log = dls_logs_since_release.format_log_messages(self.log_info, raw=True, verbose=False)
 
         self.assertEqual(log, [u'e327e92 Ronaldo Mercado: add on_sdo_message to process scanner'
                                u' MSG_SDO_READ messages (4-1)'])
 
-    @patch('dls_ade.dls_logs_since_release.get_file_changes',
-           return_value="u'M     ethercatApp/src/ecAsyn.cpp\n', "
-                        "u'M     ethercatApp/src/ecAsyn.h\n'")
-    def test_given_verbose_not_raw_then_format(self, _1):
-        self.maxDiff = None
-        commit = "dummy"
-        log_info = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
-                    u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list'],
-                              [1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list']]}
-        # Given 2nd log so it will perform the diff section of code
+    @patch('dls_ade.dls_logs_since_release.get_file_changes', return_value="u'M     ethercatApp/src/ecAsyn.cpp\n', "
+                                                                           "u'M     ethercatApp/src/ecAsyn.h\n'")
+    def test_given_verbose_raw_then_format(self, _1):
 
-        log = dls_logs_since_release.format_log_messages(log_info, raw=False, verbose=True)
+        log = dls_logs_since_release.format_log_messages(self.log_info_verbose, raw=True, verbose=True)
 
-        self.assertEqual(log[0], u'\x1b[34me327e92\x1b[0m \x1b[36m12/08/2014 '
-                                 u'13:50:10\x1b[0m \x1b[32mRonaldo Mercado\x1b[0m: '
+        self.assertEqual(log[0], u'e327e92 12/08/2014 13:50:10 Ronaldo Mercado: '
                                  u'add on_sdo_message to process scanner MSG_SDO_READ\n'
                                  u'...                                          messages (4-1)\n'
                                  u'...                                          '
@@ -470,25 +461,14 @@ class FormatLogMessagesTest(unittest.TestCase):
                                  u'\', u\'M     ethercatApp/src/ecAsyn.h\n'
                                  u'\'')
 
-    @patch('dls_ade.dls_logs_since_release.get_file_changes',
-           return_value="u'M     ethercatApp/src/ecAsyn.cpp\n', "
-                        "u'M     ethercatApp/src/ecAsyn.h\n'")
-    def test_given_verbose_raw_then_format(self, _1):
-        self.maxDiff = None
-        commit = "dummy"
-        log_info = {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
-                    u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list'],
-                              [1407847810, 'e327e92', 'Ronaldo Mercado',
-                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
-                               u'12/08/2014 13:50:10',
-                               u' make "sdos" public to allow checks on the sdo_observers list']]}
+    @patch('dls_ade.dls_logs_since_release.get_file_changes', return_value="u'M     ethercatApp/src/ecAsyn.cpp\n', "
+                                                                           "u'M     ethercatApp/src/ecAsyn.h\n'")
+    def test_given_verbose_not_raw_then_format(self, _1):
 
-        log = dls_logs_since_release.format_log_messages(log_info, raw=True, verbose=True)
+        log = dls_logs_since_release.format_log_messages(self.log_info_verbose, raw=False, verbose=True)
 
-        self.assertEqual(log[0], u'e327e92 12/08/2014 13:50:10 Ronaldo Mercado: '
+        self.assertEqual(log[0], u'\x1b[34me327e92\x1b[0m \x1b[36m12/08/2014 '
+                                 u'13:50:10\x1b[0m \x1b[32mRonaldo Mercado\x1b[0m: '
                                  u'add on_sdo_message to process scanner MSG_SDO_READ\n'
                                  u'...                                          messages (4-1)\n'
                                  u'...                                          '
