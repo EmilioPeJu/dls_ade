@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 from dls_ade.argument_parser import ArgParser
-from dls_ade.new_module_creator import get_new_module_creator
+from dls_ade.get_module_creator import get_module_creator
 
 usage = ("Default <area> is 'support'."
          "\nStart a new diamond module of a particular type."
@@ -63,7 +63,7 @@ def main():
     fullname = args.fullname
     export_to_server = not args.no_import
 
-    module_creator = get_new_module_creator(module_name, area, fullname)
+    module_creator = get_module_creator(module_name, area, fullname)
 
     module_creator.verify_can_create_local_module()
 
