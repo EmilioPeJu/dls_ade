@@ -1,10 +1,10 @@
-class ModuleTemplateError(Exception):
-    """Class for exceptions relating to the 'module_template' python module."""
+class ArgumentError(Exception):
+    """Class for exceptions relating to template arguments."""
     pass
 
 
-class ArgumentError(ModuleTemplateError):
-    """Class for exceptions relating to template arguments."""
+class ModuleTemplateError(Exception):
+    """Class for exceptions relating to the 'module_template' python module."""
     pass
 
 

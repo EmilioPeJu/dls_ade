@@ -4,7 +4,6 @@ import path_functions as pathf
 import shutil
 import logging
 import vcs_git
-import module_template as mt
 from exceptions import RemoteRepoError, VerificationError, ArgumentError
 
 logging.basicConfig(level=logging.DEBUG)
@@ -259,6 +258,9 @@ class ModuleCreatorWithApps(ModuleCreator):
         _app_name: The name of the app for the new module.
             This is a separate folder in each git repository, corresponding to
             the newly created module.
+
+    Raises:
+        ArgumentError: If 'app_name' not given as a keyword argument
 
     """
 
