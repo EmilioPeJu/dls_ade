@@ -202,10 +202,7 @@ def get_log_messages(repo, start, end):
         time_stamp = commit.authored_date
         message = commit.message[len(summary):].replace('\n', ' ')
 
-        # Convert time stamp into time and date
-        ti = time.localtime(commit.authored_date)
-        formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
-                         '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
+        formatted_time = convert_time_stamp(time_stamp)
 
         log_info['logs'].append([time_stamp, sha, author, summary, formatted_time, message])
 
@@ -282,10 +279,7 @@ def get_tag_messages(tags_range, log_info):
         message = tag_info.message[len(summary):].replace('\n', ' ')
         summary += ' (' + tag.name + ')'
 
-        # Convert time stamp into time and date
-        ti = time.localtime(time_stamp)
-        formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
-                         '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
+        formatted_time = convert_time_stamp(time_stamp)
 
         log_info['logs'].append([time_stamp, sha, author, summary, formatted_time, message])
 
@@ -297,6 +291,21 @@ def get_tag_messages(tags_range, log_info):
             log_info['max_author_length'] = len(author)
 
     return log_info
+
+
+def convert_time_stamp(time_stamp):
+
+    if isinstance(time_stamp, int):
+        ti = time.localtime(time_stamp)
+        if len(ti) > 5:
+            formatted_time = '{:0>2}'.format(ti[2]) + '/' + '{:0>2}'.format(ti[1]) + '/' + str(ti[0]) + ' ' + \
+                             '{:0>2}'.format(ti[3]) + ':' + '{:0>2}'.format(ti[4]) + ':' + '{:0>2}'.format(ti[5])
+        else:
+            formatted_time = 'no time/date'
+    else:
+        formatted_time = 'no time/date'
+
+    return formatted_time
 
 
 def format_log_messages(log_info, raw, verbose):

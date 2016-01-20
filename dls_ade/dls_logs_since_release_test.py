@@ -411,6 +411,32 @@ class GetTagMessagesTest(unittest.TestCase):
             self.assertEqual(error.message, expected_error_message)
 
 
+class ConvertTimeStamp(unittest.TestCase):
+
+    def test_given_not_int_then_return_default(self):
+        time_stamp = ''
+
+        time_and_date = dls_logs_since_release.convert_time_stamp(time_stamp)
+
+        self.assertEqual(time_and_date, 'no time/date')
+
+    @patch('dls_ade.dls_logs_since_release.time.localtime',
+           return_value=[])
+    def test_given_time_returns_bad_entry_then_return_default(self, _1):
+        time_stamp = 1407847810
+
+        time_and_date = dls_logs_since_release.convert_time_stamp(time_stamp)
+
+        self.assertEqual(time_and_date, 'no time/date')
+
+    def test_given_good_entries_then_return(self):
+        time_stamp = 1407847810
+
+        time_and_date = dls_logs_since_release.convert_time_stamp(time_stamp)
+
+        self.assertEqual(time_and_date, u'12/08/2014 13:50:10')
+
+
 class FormatLogMessagesTest(unittest.TestCase):
 
     def setUp(self):
