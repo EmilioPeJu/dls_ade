@@ -23,10 +23,6 @@ when <later_release> was done. If not specified, <earlier_release> defaults to
 revision the most recent release, and <later_release> defaults to the head revision.
 """
 
-blue = 34
-cyan = 36
-green = 32
-
 
 def make_parser():
     """
@@ -241,7 +237,7 @@ def get_tags_list(repo, start, end, last_release):
     tag_refs = []
     for tag in repo.tags:
         tag_refs.append(tag)
-        tags.append(str(tag))
+        tags.append(tag.name)
 
     if end == 'HEAD':
         # If end is HEAD then just go up to most recent release with tags
@@ -281,9 +277,10 @@ def get_tag_messages(tags_range, log_info):
         sha = tag.object.hexsha[:7]
         author = tag_info.author.name
         time_stamp = tag_info.committed_date
-        summary = tag_info.summary.replace('\n', ' ') + ' (' + tag.name + ')'
+        summary = tag_info.summary.replace('\n', ' ')
         # Summary is included in message, so just get extra part
         message = tag_info.message[len(summary):].replace('\n', ' ')
+        summary += ' (' + tag.name + ')'
 
         # Convert time stamp into time and date
         ti = time.localtime(time_stamp)
@@ -315,6 +312,10 @@ def format_log_messages(log_info, raw, verbose):
     Returns:
         a list of strings, each string containing a log entry
     """
+
+    blue = 34
+    cyan = 36
+    green = 32
 
     logs = log_info['logs']
     commit_objects = log_info['commit_objects']
