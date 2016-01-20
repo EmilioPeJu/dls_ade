@@ -99,7 +99,7 @@ class SystemsTestCheckIfFoldersEqualTest(unittest.TestCase):
 
         st.check_if_folders_equal("local_path_one", "local_path_two")
 
-        mock_check_output.assert_called_once_with(["diff", "-rq", "local_path_one", "local_path_two"])
+        mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', 'local_path_one', 'local_path_two'])
 
     @patch('systems_testing.subprocess.check_output')
     def test_given_subprocess_returns_output_then_function_returns_false(self, mock_check_output):
@@ -538,7 +538,7 @@ class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
 
         self.assertFalse(self.mock_delete_temp_repo.called)
 
-    def test_given_server_repo_clone_exists_then_delete_temp_repo_called(self):
+    def test_given_server_repo_clone_exists_then_delete_temp_repo_called_and_clone_path_set_blank(self):
 
         self.st_obj._server_repo_clone_path = "test/repo/clone/path"
 
@@ -546,7 +546,7 @@ class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
 
         self.mock_delete_temp_repo.assert_called_once_with("test/repo/clone/path")
 
-
+        self.assertEqual(self.st_obj._server_repo_clone_path, "")
 
 # class InitRepoTest(unittest.TestCase):
 #

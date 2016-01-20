@@ -4,6 +4,7 @@ import os
 import subprocess
 import tempfile
 import shutil
+import logging
 from pkg_resources import require
 require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
@@ -106,12 +107,17 @@ def check_if_folders_equal(path_1, path_2):
                        "path 1: {path_1:s}, path 2: {path_2:s}.")
         raise SettingsError(err_message.format(path_1=path_1, path_2=path_2))
 
-    command_format = "diff -rq {path1:s} {path2:s}"
+    command_format = ("diff -rq --exclude=.git --exclude=.gitattributes "
+                      "{path1:s} {path2:s}")
     call_args = command_format.format(path1=path_1, path2=path_2).split()
+    try:
+        subprocess.check_output(call_args)
+    except subprocess.CalledProcessError as e:
+        logging.debug(e.output)
+        if e.returncode == 1:  # Indicates files are different.
+            return False
 
-    out = subprocess.check_output(call_args)
-
-    return not out
+    return True
 
 
 class SystemsTest(object):
@@ -194,10 +200,10 @@ class SystemsTest(object):
             'std_out_compare_string',
             'arguments',
             'attributes_dict',
-            'server_repo_path'
-            'local_repo_path'
-            'repo_comp_method'
-            'local_comp_path_one'
+            'server_repo_path',
+            'local_repo_path',
+            'repo_comp_method',
+            'local_comp_path_one',
             'local_comp_path_two'
         ]
         """A list of all attributes that may be changed.
@@ -327,6 +333,8 @@ class SystemsTest(object):
         if not self._attributes_dict:
             return
 
+        logging.debug(self.__dict__)
+
         if not (self._server_repo_clone_path or self._local_repo_path):
             raise SettingsError("As an attributes dict has been provided, "
                                 "either the local_repo_path or "
@@ -416,6 +424,8 @@ class SystemsTest(object):
             return
 
         delete_temp_repo(self._server_repo_clone_path)
+
+        self._server_repo_clone_path = ""
 
     def run_tests(self):
         """Performs the entire test suite.

@@ -32,7 +32,25 @@ settings_list = [
 
         'local_repo_path': "test_repo",
 
-        'attributes_dict': {'modue-contact': "bobsuruncle"}
+        'attributes_dict': {'module-contact': "lkz95212"}
+
+    },
+
+    {
+        'description': "example_test_name",
+        'std_out_compare_string': ("I am not the message?\nDo you liek: wine?\n"),
+
+        'exception_type': "__main__.Error",
+
+        'exception_string': "I am the message.",
+
+        'arguments': "wine",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "test_repo",
+
+        'local_comp_path_two': "test_repo_2",
 
     }
 ]
