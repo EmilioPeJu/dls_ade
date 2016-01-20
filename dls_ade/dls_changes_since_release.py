@@ -10,7 +10,7 @@ from pkg_resources import require
 require('GitPython')
 import git
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
@@ -61,7 +61,7 @@ def main():
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made
-    logs = repo.git.log(last_release_num + "..HEAD", '-1')
+    logs = list(repo.iter_commits(last_release_num + "..HEAD", max_count=1))
     if logs:
         print("Changes have been made to " + module + " since release " + last_release_num)
     else:
