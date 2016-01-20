@@ -393,7 +393,7 @@ class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
 
         comp_message = "'app_name' must be provided as keyword argument."
 
-        with self.assertRaises(mc.mt.ArgumentError) as e:
+        with self.assertRaises(mc.ArgumentError) as e:
             base_c = mc.ModuleCreatorWithApps("test_module", "test_area", self.mock_mt, additional="value")
 
         self.assertEqual(str(e.exception), comp_message)
