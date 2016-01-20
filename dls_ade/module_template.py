@@ -10,7 +10,7 @@ class ModuleTemplate(object):
     """Class for the creation of new module contents.
 
     Raises:
-        Error: All errors raised by this module inherit from this class
+        ModuleTemplateError: Base class for this module's exceptions
 
     """
 
@@ -65,7 +65,7 @@ class ModuleTemplate(object):
             template_area: The module area for obtaining the templates.
 
         Raises:
-            Error: If template folder does not exist.
+            TemplateFolderError: If template folder does not exist.
 
         """
         templates_folder = "new_module_templates"
@@ -122,7 +122,8 @@ class ModuleTemplate(object):
         creation by default.
 
         Raises:
-            Error: From :meth:`_create_files_from_template_dict`
+            ArgumentError: From :meth:`_create_files_from_template_dict`
+            OSError: From :meth:`_create_files_from_template_dict`
 
         """
         self._create_custom_files()
@@ -143,7 +144,8 @@ class ModuleTemplate(object):
         file creation by default.
 
         Raises:
-            KeyError: If key in `_template_files` is a directory, not a file.
+            ArgumentError: If 'file' given is a directory, not a file.
+            OSError: From os.makedirs()
 
         """
         # dictionary keys are the relative file paths for the documents
@@ -305,6 +307,9 @@ class ModuleTemplateSupport(ModuleTemplateWithApps):
 
         This uses makeBaseApp.pl program for file creation.
 
+        Raises:
+            OSError: If system call fails.
+
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
             app_name=self._template_args['app_name']))
@@ -322,6 +327,9 @@ class ModuleTemplateIOC(ModuleTemplateWithApps):
         """Creates the folder structure and files in the current directory.
 
         This uses makeBaseApp.pl program for file creation.
+
+        Raises:
+            OSError: If system call fails.
 
         """
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
@@ -363,6 +371,9 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
         """Creates the folder structure and files in the current directory.
 
         This uses makeBaseApp.pl program for file creation.
+
+        Raises:
+            OSError: If system call fails.
 
         """
         os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])

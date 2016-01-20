@@ -50,10 +50,11 @@ def get_module_creator(module_name, area="support", fullname=False):
         ModuleCreator: An object of a :class:`ModuleCreator` subclass
 
     Raises:
-        Error: If invalid arguments are provided.
+        ParsingError: If an IOC module name cannot be split by '-' or '/'.
+        ParsingError: If the Python module name is not properly constructed.
+        ParsingError: If the area given is not supported.
 
     """
-    # Use arguments to determine which new module creator to use, and return it
     if area == "ioc":
         return get_module_creator_ioc(module_name, fullname)
 
@@ -109,13 +110,15 @@ def get_module_creator_ioc(module_name, fullname=False):
         ModuleCreatorIOC: :class:`ModuleCreatorIOC` subclass object
 
     Raises:
-        Error: Using an invalid name
+        ParsingError: If the module cannot be split by '-' or '/'.
 
     """
     area = "ioc"
 
-    dash_separated, cols, domain, technical_area = parse_ioc_module_name(
-            module_name)
+    dash_separated, cols = parse_ioc_module_name(module_name)
+
+    domain = cols[0]
+    technical_area = cols[1]
 
     if technical_area == "BL":
         if dash_separated:
@@ -176,7 +179,7 @@ def get_module_creator_ioc(module_name, fullname=False):
 
 # TODO(Martin) unit tests for function
 def parse_ioc_module_name(module_name):
-    """Parses the module name and returns relevant data.
+    """Parses the module name and returns split module_name and split type.
 
     Args:
         module_name: The ioc module's name.
@@ -186,8 +189,8 @@ def parse_ioc_module_name(module_name):
             Based on original svn implementation, if both slashes and dashes
             appear in the module name, it will default to slash-separated.
         list[str]: A list of strings that make up the module name.
-        str: The domain of the module.
-        str: The technical area of the module
+            These are the components separated by a '/' or '-' in the module
+            name.
 
     Raises:
         ParsingError: If the module cannot be split by '-' or '/'.
@@ -206,7 +209,4 @@ def parse_ioc_module_name(module_name):
                            "{module:s}")
             raise ParsingError(err_message.format(module=module_name))
 
-    domain = cols[0]
-    technical_area = cols[1]
-
-    return dash_separated, cols, domain, technical_area
+    return dash_separated, cols

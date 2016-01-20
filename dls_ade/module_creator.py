@@ -5,7 +5,7 @@ import shutil
 import logging
 import vcs_git
 import module_template as mt
-from exceptions import RemoteRepoError, VerificationError
+from exceptions import RemoteRepoError, VerificationError, ArgumentError
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -23,6 +23,9 @@ class ModuleCreator(object):
             Used for system and git commands.
         _server_repo_path: The git repository server path for module.
         _module_template: Object that handles file and user message creation.
+
+    Raises:
+        ModuleCreatorError: Base class for this module's exceptions
 
     """
 
@@ -237,6 +240,7 @@ class ModuleCreator(object):
 
         Raises:
             VerificationError: Local repository cannot be pushed to remote.
+            VCSGitError: If issue with adding a new remote and pushing.
 
         """
         self.verify_can_push_repo_to_remote()
@@ -265,8 +269,8 @@ class ModuleCreatorWithApps(ModuleCreator):
         """
 
         if 'app_name' not in kwargs:
-            raise mt.ArgumentError("'app_name' must be provided as keyword "
-                                   "argument.")
+            raise ArgumentError("'app_name' must be provided as keyword "
+                                "argument.")
 
         super(ModuleCreatorWithApps, self).__init__(
             module_path,
@@ -318,7 +322,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         Raises:
             VerificationError: If there is an issue with the remote repository.
-            Error: From :meth:`_check_if_remote_repo_has_app`.
+            RemoteRepoError: From :meth:`_check_if_remote_repo_has_app`.
                 This should never be raised. There is a bug if it is!
 
         """
@@ -361,8 +365,9 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             bool: True if app exists, False otherwise.
 
         Raises:
-            Error: If given repo path does not exist on gitolite.
+            RemoteRepoError: If given repo path does not exist on gitolite.
                 This should never be raised. There is a bug if it is!
+            VCSGitError: Issue with the vcs_git function calls.
 
         """
         if not vcs_git.is_repo_path(remote_repo_path):
@@ -397,6 +402,12 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         This will use the file creation specified in :meth:`_create_files`.
 
+        Raises:
+            ArgumentError: From ModuleTemplate.create_files()
+            OSError: From ModuleTemplate.create_files()
+            VCSGitError: From stage_all_files_and_commit()
+
+
         """
         self.verify_can_create_local_module()
 
@@ -419,7 +430,8 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         server it was cloned from.
 
         Raises:
-            Error: From :meth:`verify_can_push_repo_to_remote`.
+            VerificationError: From :meth:`verify_can_push_repo_to_remote`.
+            VCSGitError: From push_to_remote()
 
         """
         self.verify_can_push_repo_to_remote()
