@@ -438,9 +438,6 @@ class SystemsTest(object):
 
         """
 
-        if self._server_repo_path:
-            raise SystemsTestingError("Remove when script fully tested")
-
         self.check_std_out_and_exceptions()
 
         self.check_for_and_clone_remote_repo()

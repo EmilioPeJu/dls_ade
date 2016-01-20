@@ -3,12 +3,11 @@ import sys
 
 var1 = sys.argv[1]
 
-print("I am not the message?")
+print("I am not the " + var1 + "?")
+
 
 class Error(Exception):
     pass
-
-print("Do you liek: " + var1 + "?")
 
 raise Error("I am the message.")
 
