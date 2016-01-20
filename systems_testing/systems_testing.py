@@ -85,7 +85,7 @@ def delete_temp_repo(local_repo_path):
     shutil.rmtree(local_repo_path)
 
 
-def check_if_folders_equal(path_1, path_2):
+def check_if_repos_equal(path_1, path_2):
     """Check if the two local paths given are equivalent.
 
     This involves all files and folders (plus names) being identical. The
@@ -100,6 +100,7 @@ def check_if_folders_equal(path_1, path_2):
 
     Raises:
         SettingsError: If either of the two paths are blank.
+        subprocess.CalledProcessError: If there is an error with the command.
 
     """
     if not (path_1 and path_2):
@@ -116,6 +117,8 @@ def check_if_folders_equal(path_1, path_2):
         logging.debug(e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False
+        else:
+            raise
 
     return True
 
@@ -366,26 +369,26 @@ class SystemsTest(object):
             SettingsError: From check_if_folders_equal
             SettingsError: If the repo_comp_method has an unexpected value.
             AssertionError: If the test does not pass.
-
+            subprocess.CalledProcessError: From check_if_repos_equal
         """
         if not self._repo_comp_method:
             return
 
         if self._repo_comp_method == "local_comp":
-            equal = check_if_folders_equal(self._local_comp_path_one,
-                                           self._local_comp_path_two)
+            equal = check_if_repos_equal(self._local_comp_path_one,
+                                         self._local_comp_path_two)
             assert_true(equal)
 
         elif self._repo_comp_method == "server_comp":
-            equal = check_if_folders_equal(self._local_comp_path_one,
-                                           self._server_repo_clone_path)
+            equal = check_if_repos_equal(self._local_comp_path_one,
+                                         self._server_repo_clone_path)
             assert_true(equal)
 
         elif self._repo_comp_method == "all_comp":
-            equal_1 = check_if_folders_equal(self._local_comp_path_one,
-                                             self._local_comp_path_two)
-            equal_2 = check_if_folders_equal(self._local_comp_path_one,
-                                             self._server_repo_clone_path)
+            equal_1 = check_if_repos_equal(self._local_comp_path_one,
+                                           self._local_comp_path_two)
+            equal_2 = check_if_repos_equal(self._local_comp_path_one,
+                                           self._server_repo_clone_path)
             assert_true(equal_1 and equal_2)
 
         else:

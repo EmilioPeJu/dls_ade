@@ -78,7 +78,7 @@ class DeleteTempRepoTest(unittest.TestCase):
         self.mock_rmtree.assert_called_once_with("/tmp/git_root_dir")
 
 
-class SystemsTestCheckIfFoldersEqualTest(unittest.TestCase):
+class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
     def setUp(self):
 
@@ -90,30 +90,30 @@ class SystemsTestCheckIfFoldersEqualTest(unittest.TestCase):
         comp_message = "Two paths must be given to compare folders.\npath 1: , path 2: path_two."
 
         with self.assertRaises(st.SystemsTestingError) as e:
-            st.check_if_folders_equal("", "path_two")
+            st.check_if_repos_equal("", "path_two")
 
         self.assertEqual(str(e.exception), comp_message)
 
     @patch('systems_testing.subprocess.check_output')
     def test_subprocess_check_output_given_correct_input(self, mock_check_output):
 
-        st.check_if_folders_equal("local_path_one", "local_path_two")
+        st.check_if_repos_equal("local_path_one", "local_path_two")
 
         mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', 'local_path_one', 'local_path_two'])
 
     @patch('systems_testing.subprocess.check_output')
-    def test_given_subprocess_returns_output_then_function_returns_false(self, mock_check_output):
-        mock_check_output.return_value = "I indicate differences between the two folders."
+    def test_given_subprocess_return_code_1_then_function_returns_false(self, mock_check_output):
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "This just makes the return code 1")
 
-        return_value = st.check_if_folders_equal("path1", "path2")
+        return_value = st.check_if_repos_equal("path1", "path2")
 
         self.assertFalse(return_value)
 
     @patch('systems_testing.subprocess.check_output')
-    def test_given_subprocess_returns_no_output_then_function_returns_true(self, mock_check_output):
+    def test_given_subprocess_return_code_0_then_function_returns_true(self, mock_check_output):
         mock_check_output.return_value = ""
 
-        return_value = st.check_if_folders_equal("path1", "path2")
+        return_value = st.check_if_repos_equal("path1", "path2")
 
         self.assertTrue(return_value)
 
@@ -463,7 +463,7 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
 class SystemsTestRunComparisonTests(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_folders_equal = set_up_mock_(self, 'systems_testing.check_if_folders_equal')
+        self.mock_check_folders_equal = set_up_mock_(self, 'systems_testing.check_if_repos_equal')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
