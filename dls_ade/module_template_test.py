@@ -94,7 +94,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         self.mock_os.path.realpath.return_value = "test_dir/script_name"
         self.mock_os.path.isdir.return_value = False
 
-        comp_message = ("Template folder test_dir/new_module_templates/non_existent does not exist. "
+        comp_message = ("Template folder test_dir/module_templates/non_existent does not exist. "
                         "\nNote: This exception means there is a bug in the ModuleTemplate subclass code.")
 
         with self.assertRaises(mt.TemplateFolderError) as e:
@@ -109,7 +109,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
 
         self.mt_obj._set_template_files_from_area("this_folder_exists")
 
-        self.mock_set_from_folder.assert_called_once_with("test_dir/new_module_templates/this_folder_exists")
+        self.mock_set_from_folder.assert_called_once_with("test_dir/module_templates/this_folder_exists")
 
 
 class ModuleTemplateSetTemplateFilesFromFolderTest(unittest.TestCase):
