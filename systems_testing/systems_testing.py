@@ -22,8 +22,18 @@ except ImportError:
     raise ImportError("PYTHONPATH must contain the dls_ade package")
 
 
-class Error(Exception):
+class SystemsTestingError(Exception):
     """Class for exceptions relating to systems_testing module."""
+    pass
+
+
+class SettingsError(SystemsTestingError):
+    """Class for exceptions relating to invalid settings"""
+    pass
+
+
+class TempdirError(SystemsTestingError):
+    """Class for exceptions relating to issues with temporary directories."""
     pass
 
 
@@ -62,12 +72,14 @@ def delete_temp_repo(local_repo_path):
     if not os.path.realpath(local_repo_path).startswith(tempfile.gettempdir()):
         err_message = ("{local_repo_path:s} is not a temporary folder, cannot "
                        "delete.")
-        raise Error(err_message.format(local_repo_path=local_repo_path))
+        raise TempdirError(err_message.format(
+                local_repo_path=local_repo_path))
 
     if not vcs_git.is_git_root_dir(local_repo_path):
         err_message = ("{local_repo_path:s} is not a git root directory, "
                        "cannot delete.")
-        raise Error(err_message.format(local_repo_path=local_repo_path))
+        raise TempdirError(err_message.format(
+                local_repo_path=local_repo_path))
 
     shutil.rmtree(local_repo_path)
 
@@ -92,7 +104,7 @@ def check_if_folders_equal(path_1, path_2):
     if not (path_1 and path_2):
         err_message = ("Two paths must be given to compare folders.\n"
                        "path 1: {path_1:s}, path 2: {path_2:s}.")
-        raise Error(err_message.format(path_1=path_1, path_2=path_2))
+        raise SettingsError(err_message.format(path_1=path_1, path_2=path_2))
 
     command_format = "diff -rq {path1:s} {path2:s}"
     call_args = command_format.format(path1=path_1, path2=path_2).split()
@@ -206,6 +218,9 @@ class SystemsTest(object):
             - local_comp_path_one
             - local_comp_path_two
 
+        Args:
+            settings: The dictionary of settings used to set up the test.
+
         """
         self.__dict__.update({("_" + key): value for (key, value)
                               in settings.items()
@@ -242,8 +257,8 @@ class SystemsTest(object):
         if not self._exception_type or not self._exception_string:
             if not self._exception_type and not self._exception_string:
                 return
-            raise Error("Both exception_type and exception_string must "
-                        "be provided.")
+            raise SettingsError("Both exception_type and exception_string "
+                                "must be provided.")
 
         assert_false(self._return_code == 0)
 
@@ -310,9 +325,9 @@ class SystemsTest(object):
             return
 
         if not (self._server_repo_clone_path or self._local_repo_path):
-            raise Error("As an attributes dict has been provided, either the "
-                        "local_repo_path or server_repo_clone_path must be "
-                        "provided.")
+            raise SettingsError("As an attributes dict has been provided, "
+                                "either the local_repo_path or "
+                                "server_repo_clone_path must be provided.")
 
         if self._server_repo_clone_path:
             return_value = vcs_git.check_git_attributes(
@@ -347,19 +362,19 @@ class SystemsTest(object):
 
         if self._repo_comp_method == "local_comp":
             equal = check_if_folders_equal(self._local_comp_path_one,
-                                                self._local_comp_path_two)
+                                           self._local_comp_path_two)
             assert_true(equal)
 
         elif self._repo_comp_method == "server_comp":
             equal = check_if_folders_equal(self._local_comp_path_one,
-                                                self._server_repo_clone_path)
+                                           self._server_repo_clone_path)
             assert_true(equal)
 
         elif self._repo_comp_method == "all_comp":
             equal_1 = check_if_folders_equal(self._local_comp_path_one,
-                                                  self._local_comp_path_two)
+                                             self._local_comp_path_two)
             equal_2 = check_if_folders_equal(self._local_comp_path_one,
-                                                  self._server_repo_clone_path)
+                                             self._server_repo_clone_path)
             assert_true(equal_1 and equal_2)
 
         else:
@@ -367,7 +382,7 @@ class SystemsTest(object):
                            "the following:"
                            "\nlocal_comp, server_comp, all_comp."
                            "\nCurrently got: {repo_comp_method:s}")
-            raise Error(err_message.format(
+            raise SettingsError(err_message.format(
                     repo_comp_method=self._repo_comp_method)
             )
 
@@ -410,7 +425,7 @@ class SystemsTest(object):
         """
 
         if self._server_repo_path:
-            raise Error("Remove when script fully tested")
+            raise SystemsTestingError("Remove when script fully tested")
 
         self.check_std_out_and_exceptions()
 

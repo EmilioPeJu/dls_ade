@@ -53,7 +53,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
         comp_message = "/usr/bin/not_in_tempdir is not a temporary folder, cannot delete."
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             st.delete_temp_repo("/usr/bin/not_in_tempdir")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -64,7 +64,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
         comp_message = "/tmp/not_git_root_dir is not a git root directory, cannot delete."
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             st.delete_temp_repo("/tmp/not_git_root_dir")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -89,7 +89,7 @@ class SystemsTestCheckIfFoldersEqualTest(unittest.TestCase):
 
         comp_message = "Two paths must be given to compare folders.\npath 1: , path 2: path_two."
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             st.check_if_folders_equal("", "path_two")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -197,7 +197,7 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
             'exception_type': "test_exception_type"
         })
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             st_obj.check_std_err_for_exception()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -212,7 +212,7 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
             'exception_string': "test exception string"
         })
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             st_obj.check_std_err_for_exception()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -389,7 +389,7 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
 
         comp_message = "As an attributes dict has been provided, either the local_repo_path or server_repo_clone_path must be provided."
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             self.st_obj.run_git_attributes_tests()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -516,7 +516,7 @@ class SystemsTestRunComparisonTests(unittest.TestCase):
                         "\nlocal_comp, server_comp, all_comp."
                         "\nCurrently got: not_comp")
 
-        with self.assertRaises(st.Error) as e:
+        with self.assertRaises(st.SystemsTestingError) as e:
             self.st_obj.run_comparison_tests()
 
         self.assertEqual(str(e.exception), comp_message)
