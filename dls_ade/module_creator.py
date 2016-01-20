@@ -19,7 +19,7 @@ class ModuleCreator(object):
         _module_name: The base name of the module path.
         _module_path: The relative module path.
             Used in messages and exceptions for user-friendliness.
-        disk_dir: The absolute module path.
+        abs_module_path: The absolute module path.
             Used for system and git commands.
         _server_repo_path: The git repository server path for module.
         _module_template: Object that handles file and user message creation.
@@ -51,7 +51,7 @@ class ModuleCreator(object):
         self._module_name = os.path.basename(os.path.normpath(
                                              self._module_path))
 
-        self.disk_dir = os.path.join(self._cwd, self._module_path)
+        self.abs_module_path = os.path.join(self._cwd, self._module_path)
         self._server_repo_path = pathf.devModule(self._module_path, self._area)
 
         template_args = {'module_name': self._module_name,
@@ -126,7 +126,7 @@ class ModuleCreator(object):
 
         err_list = []
 
-        if os.path.exists(self.disk_dir):
+        if os.path.exists(self.abs_module_path):
             err_list.append("Directory {dir:s} already exists, "
                             "please move elsewhere and try again.")
 
@@ -168,11 +168,11 @@ class ModuleCreator(object):
 
         err_list = []
 
-        if not os.path.exists(self.disk_dir):
+        if not os.path.exists(self.abs_module_path):
             err_list.append("Directory {dir:s} does not exist.")
 
         else:
-            mod_dir_is_repo = vcs_git.is_git_root_dir(self.disk_dir)
+            mod_dir_is_repo = vcs_git.is_git_root_dir(self.abs_module_path)
             if not mod_dir_is_repo:
                 err_list.append("Directory {dir:s} is not a git repository. "
                                 "Unable to push to remote repository.")
@@ -203,7 +203,7 @@ class ModuleCreator(object):
 
         Raises:
             VerificationError: Local module cannot be created.
-            OSError: The disk_dir already exists (outside interference).
+            OSError: The abs_module_path already exists (outside interference).
 
         """
         self.verify_can_create_local_module()
@@ -212,19 +212,19 @@ class ModuleCreator(object):
 
         print("Making clean directory structure for " + self._module_path)
 
-        os.makedirs(self.disk_dir)
+        os.makedirs(self.abs_module_path)
 
         # The reason why we have to change directory into the folder where the
         # files are created is in order to remain compatible with
         # makeBaseApp.pl, used for IOC and Support modules
-        os.chdir(self.disk_dir)
+        os.chdir(self.abs_module_path)
 
         self._module_template.create_files()
 
         os.chdir(self._cwd)
 
-        vcs_git.init_repo(self.disk_dir)
-        vcs_git.stage_all_files_and_commit(self.disk_dir)
+        vcs_git.init_repo(self.abs_module_path)
+        vcs_git.stage_all_files_and_commit(self.abs_module_path)
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
@@ -248,7 +248,8 @@ class ModuleCreator(object):
         self._can_push_repo_to_remote = False
         self._remote_repo_valid = False
 
-        vcs_git.add_new_remote_and_push(self._server_repo_path, self.disk_dir)
+        vcs_git.add_new_remote_and_push(self._server_repo_path,
+                                        self.abs_module_path)
 
 
 class ModuleCreatorWithApps(ModuleCreator):
@@ -415,13 +416,13 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         print("Cloning module to " + self._module_path)
 
-        vcs_git.clone(self._server_repo_path, self.disk_dir)
+        vcs_git.clone(self._server_repo_path, self.abs_module_path)
 
-        os.chdir(self.disk_dir)
+        os.chdir(self.abs_module_path)
         self._module_template.create_files()
         os.chdir(self._cwd)
 
-        vcs_git.stage_all_files_and_commit(self.disk_dir)
+        vcs_git.stage_all_files_and_commit(self.abs_module_path)
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server using remote 'origin'.
@@ -438,4 +439,4 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         self._can_push_repo_to_remote = False
 
-        vcs_git.push_to_remote(self.disk_dir)
+        vcs_git.push_to_remote(self.abs_module_path)

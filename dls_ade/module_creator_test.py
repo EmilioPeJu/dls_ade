@@ -149,7 +149,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.mock_exists.return_value = False
         self.mock_is_git_dir.return_value = True
 
-        comp_message = "Currently in a git repository, please move elsewhere and try again.".format(dir=os.path.join("./", self.nmc_obj.disk_dir))
+        comp_message = "Currently in a git repository, please move elsewhere and try again.".format(dir=os.path.join("./", self.nmc_obj.abs_module_path))
 
         with self.assertRaises(mc.VerificationError) as e:
             self.nmc_obj.verify_can_create_local_module()
@@ -314,12 +314,12 @@ class ModuleCreatorCreateLocalModuleTest(unittest.TestCase):
 
         self.nmc_obj.create_local_module()
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
+        call_list = [call(self.nmc_obj.abs_module_path), call(self.nmc_obj._cwd)]
 
         self.mock_os.chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.init_repo.assert_called_once_with(self.nmc_obj.disk_dir)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
+        self.mock_vcs_git.init_repo.assert_called_once_with(self.nmc_obj.abs_module_path)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.abs_module_path)
 
 
 class ModuleCreatorPrintMessageTest(unittest.TestCase):
@@ -351,7 +351,7 @@ class ModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.abs_module_path)
 
     def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
@@ -568,7 +568,7 @@ class ModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-        self.mock_push_to_remote.assert_called_with(self.nmc_obj.disk_dir)
+        self.mock_push_to_remote.assert_called_with(self.nmc_obj.abs_module_path)
 
     def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
@@ -603,12 +603,12 @@ class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
         self.assertFalse(self.nmc_obj._can_create_local_module)
 
-        call_list = [call(self.nmc_obj.disk_dir), call(self.nmc_obj._cwd)]
+        call_list = [call(self.nmc_obj.abs_module_path), call(self.nmc_obj._cwd)]
 
-        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.disk_dir)
+        self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.abs_module_path)
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.disk_dir)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.abs_module_path)
 
     def test_given_verify_can_create_local_module_fails_then_exception_raised_with_correct_message(self):
 
