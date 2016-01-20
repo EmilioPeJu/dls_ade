@@ -1,18 +1,15 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-import os
 import sys
 import logging
 from argument_parser import ArgParser
-from dls_environment import environment
 import path_functions as pathf
 import vcs_git
 from pkg_resources import require
 require('GitPython')
 import git
 
-e = environment()
 logging.basicConfig(level=logging.WARNING)
 
 usage = """
