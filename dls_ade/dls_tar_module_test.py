@@ -37,7 +37,7 @@ class MakeParserTest(unittest.TestCase):
         self.assertIn("--epics_version", option.option_strings)
 
 
-class CheckAreaTest(unittest.TestCase):
+class CheckAreaArchivableTest(unittest.TestCase):
 
     def test_given_invalid_area_then_error_raised(self):
         area = "not_an_area"
