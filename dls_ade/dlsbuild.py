@@ -7,7 +7,7 @@ import tempfile
 import stat
 import shutil
 from pkg_resources import require
-require("python_ldap==2.3.12")
+require("python_ldap>=2.3.12")
 import ldap
 
 from dls_environment import environment
