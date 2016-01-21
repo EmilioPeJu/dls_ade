@@ -356,8 +356,6 @@ def clone_multi(source):
     Raises:
         Error: Repository does not contain <source>
     """
-    if not is_repo_path(source):
-        raise Error("Repository does not contain " + source)
 
     if source[-1] == '/':
         source = source[:-1]

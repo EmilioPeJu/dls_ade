@@ -649,19 +649,12 @@ class CloneMultiTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
-    def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
+    def test_given_invalid_source_then_clone_not_called(self, mock_clone_from, _2):
         source = "/does/not/exist"
 
-        with self.assertRaises(vcs_git.Error):
-            vcs_git.clone_multi(source)
-
-    @patch('dls_ade.vcs_git.get_repository_list')
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
-    @patch('git.Repo.clone_from')
-    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, _1):
-        source = "/does/exist"
-
         vcs_git.clone_multi(source)
+
+        self.assertFalse(mock_clone_from.call_count)
 
     @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('os.listdir', return_value=["test_module"])
