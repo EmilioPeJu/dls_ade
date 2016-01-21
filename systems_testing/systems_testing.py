@@ -238,11 +238,6 @@ class SystemsTest(object):
                               in settings.items()
                               if key in self._settings_list})
 
-    def setup(self):
-        """Performs any setup routine required.
-        """
-        pass
-
     def call_script(self):
         """Call the script and store output, error and return code.
 
@@ -468,7 +463,6 @@ class SystemsTest(object):
             VCSGitError: From run_tests().
 
         """
-        self.setup()
         self.call_script()
         self.run_tests()
 
