@@ -51,11 +51,12 @@ class environment(object):
 
     def setEpicsFromEnv(self):
         """
-        Get epics version from the environment, and set self.epics. Set default 'R3.14.8.2' if environment
+        Get epics version from the environment, and set self.epics. Set default 'R3.14.12.3' if environment
         epics version is inaccessible
 
         """
-        self.epics = os.environ.get('DLS_EPICS_RELEASE', os.environ.get('EPICS_RELEASE', 'R3.14.12.3'))
+        default_epics = 'R3.14.12.3'
+        self.epics = os.environ.get('DLS_EPICS_RELEASE', os.environ.get('EPICS_RELEASE', default_epics))
 
     def copy(self):
         """
