@@ -5,7 +5,7 @@ import os
 version = os.environ.get("MODULEVER", "0.0")
 
 # find the build scripts
-savecwd=os.getcwd()
+savecwd = os.getcwd()
 os.chdir("dls_ade")
 
 build_scripts = []
@@ -21,11 +21,11 @@ os.chdir(savecwd)
 
 setup(
     # name of the module
-    name = "dls_ade",
+    name="dls_ade",
     # version: over-ridden by the release script
-    version = version,
-    description = 'DLS Controls Group Application Development Environment scripts',
-    author = 'Diamond Light Source Controls Group',
+    version=version,
+    description='DLS Controls Group Application Development Environment scripts',
+    author='Diamond Light Source Controls Group',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -34,15 +34,25 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     license='APACHE',
-    install_requires = ['GitPython>=0.3.2', 'python-ldap>=2.3.12', 'six'],
-    packages = ["dls_ade","dls_environment"],
-    package_data = {"dls_ade": additional_files},
+    install_requires=['GitPython==0.3.2.RC1', 'python-ldap>=2.3.12', 'six'],
+    packages=["dls_ade", "dls_environment"],
+    package_data={"dls_ade": additional_files},
     # define console_scripts
-    entry_points = { 'console_scripts':
-                         ['dls-release.py = dls_ade.dls_release:main',] },
+    entry_points={'console_scripts':
+                  ['dls-changes-since-release.py = dls_ade.dls_changes_since_release:main',
+                   'dls-checkout-module.py = dls_ade.dls_checkout_module:main',
+                   'dls-list-branches.py = dls_ade.dls_list_branches:main',
+                   'dls-list-modules.py = dls_ade.dls_list_modules:main',
+                   'dls-list-releases.py = dls_ade.dls_list_releases:main',
+                   'dls-logs-since-releases.py = dls_ade.dls_logs_since_release:main',
+                   'dls-module-contacts.py = dls_ade.dls_module_contacts:main',
+                   'dls-release.py = dls_ade.dls_release:main',
+                   'dls-start-new-module.py = dls_ade.dls_start_new_module:main',
+                   'dls-tar-module.py = dls_ade.dls_tar_module:main']},
+
     include_package_data=True,
     tests_require=['nose', 'mock'],
     test_suite='nose.collector',
 
-    zip_safe = False
+    zip_safe=False
     )
