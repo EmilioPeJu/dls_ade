@@ -52,7 +52,7 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
 
         self.mock_mt.assert_called_once_with(expected_dict)
 
-    def test_given_no_extra_template_args_then_module_template_initialisation_behaves_as_normal(self):
+    def test_given_no_extra_template_args_then_module_template_initialisation_includes_expected_keys(self):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",

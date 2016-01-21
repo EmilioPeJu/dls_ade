@@ -204,7 +204,7 @@ def split_ioc_module_name(module_name):
 
         # This has different check to retain compatibility with old svn script.
         if len(cols) <= 1:
-            err_message = ("Need a name with dashes or hyphens in it, got "
+            err_message = ("Need a name with '-' or '/' in it, got "
                            "{module:s}")
             raise ParsingError(err_message.format(module=module_name))
 
