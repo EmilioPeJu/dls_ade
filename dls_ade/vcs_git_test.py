@@ -669,14 +669,13 @@ class CloneMultiTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('os.listdir', return_value=["not_test_module"])
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1, _2):
-        source = "area/test_module"
+    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1):
+        source = "controls/area/"
 
         vcs_git.clone_multi(source)
 
-        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + "controls/" + source, "./test_module")
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'test_module', "./test_module")
 
 
 class ListRemoteBranchesTest(unittest.TestCase):

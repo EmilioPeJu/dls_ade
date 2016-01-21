@@ -362,7 +362,7 @@ def clone_multi(source):
 
     split_list = get_repository_list()
     for path in split_list:
-        if source in path:
+        if path.startswith(source):
             module = path.split('/')[-1]
             if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")
