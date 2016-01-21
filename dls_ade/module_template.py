@@ -149,7 +149,7 @@ class ModuleTemplate(object):
 
         """
         # dictionary keys are the relative file paths for the documents
-        for path in self._template_files:
+        for path, contents in self._template_files.iteritems():
             # Using template_args allows us to insert eg. module_name
             rel_path = path.format(**self._template_args)
             logging.debug("rel_path: " + rel_path)
@@ -175,8 +175,7 @@ class ModuleTemplate(object):
                 os.makedirs(dir_path)
 
             with open(rel_path, "w") as f:
-                f.write(self._template_files[path].format(
-                        **self._template_args))
+                f.write(contents.format(**self._template_args))
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
