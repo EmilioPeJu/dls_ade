@@ -78,9 +78,10 @@ class ModuleTemplate(object):
         if not os.path.isdir(template_path):
             raise TemplateFolderError(template_path)
 
-        self._set_template_files_from_folder(template_path)
+        self._template_files = self._get_template_files_from_folder(
+                template_path)
 
-    def _set_template_files_from_folder(self, template_folder):
+    def _get_template_files_from_folder(self, template_folder):
         """Sets `template_files` from a folder passed to it.
 
         Note:
@@ -107,9 +108,9 @@ class ModuleTemplate(object):
                     contents = f.read()
                 rel_path = os.path.relpath(file_path, template_folder)
                 logging.debug("rel path: " + rel_path)
-                template_files.update({rel_path: contents})
+                template_files[rel_path] = contents
 
-        self._template_files = template_files
+        return template_files
 
     def create_files(self):
         """Creates the folder structure and files in the current directory.
