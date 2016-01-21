@@ -105,17 +105,17 @@ class IsGitRootDirTest(unittest.TestCase):
         self.assertFalse(return_value)
 
 
-class IsInRepoTest(unittest.TestCase):
+class IsRepoPathTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/path'])
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/test/path'])
     def test_given_path_exists_then_return_true(self, mock_check):
 
         self.assertTrue(vcs_git.is_repo_path("controls/test/path"))
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/otherpath'])
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/test/path'])
     def test_given_path_does_not_exist_then_return_false(self, mock_check):
 
-        self.assertFalse(vcs_git.is_repo_path("controls/test/path"))
+        self.assertFalse(vcs_git.is_repo_path("controls/test/pa"))
 
 
 class InitRepoTest(unittest.TestCase):

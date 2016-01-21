@@ -89,12 +89,8 @@ def is_repo_path(server_repo_path):
         bool: True if path does exist False if not
 
     """
-    list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
-    list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
-
-    list_cmd_output = subprocess.check_output(list_cmd.split())
-
-    return server_repo_path in list_cmd_output
+    repo_list = get_repository_list()
+    return server_repo_path in repo_list
 
 
 # TODO(Martin): get_remote_repo_list
