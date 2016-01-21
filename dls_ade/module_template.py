@@ -14,7 +14,7 @@ class ModuleTemplate(object):
 
     """
 
-    def __init__(self, template_args, extra_required_args=list()):
+    def __init__(self, template_args, extra_required_args=[]):
         """Default initialisation of all object attributes.
 
         """
@@ -190,7 +190,7 @@ class ModuleTemplateTools(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args, additional_required_args=list()):
+    def __init__(self, template_args, additional_required_args=[]):
         """Initialise template args and default template files."""
 
         required_args = ['module_name', 'module_path', 'user_login']
@@ -216,7 +216,7 @@ class ModuleTemplateTools(ModuleTemplate):
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
 
-    def __init__(self, template_args, additional_required_args=list()):
+    def __init__(self, template_args, additional_required_args=[]):
         """Initialise template args and default template files."""
 
         required_args = ['module_name', 'module_path', 'user_login']
@@ -258,7 +258,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args, additional_required_args=list()):
+    def __init__(self, template_args, additional_required_args=[]):
 
         required_args = ['module_path', 'app_name', 'user_login']
 
