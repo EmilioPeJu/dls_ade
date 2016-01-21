@@ -75,6 +75,8 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
 
     def setUp(self):
 
+        self.module_template_folder = mt.MODULE_TEMPLATES
+
         self.mock_os = set_up_mock(self, 'dls_ade.module_template.os')
         self.mock_get_from_folder = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate._get_template_files_from_folder')
 
@@ -89,15 +91,13 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         self.mock_os.path.realpath.return_value = "test_dir/script_name"
         self.mock_os.path.isdir.return_value = False
 
-        comp_message = ("Template folder test_dir/module_templates/non_existent does not exist. "
-                        "\nNote: This exception means there is a bug in the ModuleTemplate subclass code.")
-
         with self.assertRaises(mt.TemplateFolderError) as e:
             self.mt_obj._set_template_files_from_area("non_existent")
 
-        self.assertEqual(str(e.exception), comp_message)
+        self.assertTrue(self.module_template_folder in str(e.exception))
 
     def test_given_template_folder_does_exist_then_get_template_files_from_folder_called_with_correct_arguments_and_template_files_set_correctly(self):
+
         self.mock_get_from_folder.return_value = "template dictionary"
         self.mock_os.path.realpath.return_value = "test_dir/script_name"
         self.mock_os.path.isdir.return_value = True
@@ -105,7 +105,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
         self.mt_obj._set_template_files_from_area("this_folder_exists")
 
         self.assertEqual(self.mt_obj._template_files, "template dictionary")
-        self.mock_get_from_folder.assert_called_once_with("test_dir/module_templates/this_folder_exists")
+        self.mock_get_from_folder.assert_called_once_with("test_dir/" + self.module_template_folder + "/this_folder_exists")
 
 
 class ModuleTemplateGetTemplateFilesFromFolderTest(unittest.TestCase):
@@ -384,12 +384,13 @@ class ModuleTemplatePrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self, mock_print, _):
 
         mt_obj = mt.ModuleTemplateTools({'module_name': "test_module_name",
-                                          'module_path': "test_module_path",
-                                          'user_login': "test_login"})
+                                         'module_path': "test_module_path",
+                                         'user_login': "test_login"})
 
         comp_message = ("\nPlease add your patch files to the test_module_path "
                         "\ndirectory and edit test_module_path/build script "
@@ -402,8 +403,9 @@ class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self, mock_print, _):
 
         mt_obj = mt.ModuleTemplatePython({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
@@ -425,8 +427,9 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self, mock_print, _):
 
         mt_obj = mt.ModuleTemplateWithApps({'module_name': "test_module_name",
                                                   'module_path': "test_module_path",
@@ -451,8 +454,9 @@ class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, _):
 
         mt_obj = mt.ModuleTemplateSupport({'module_name': "test_module_name",
                                             'module_path': "test_module_path",
@@ -468,9 +472,10 @@ class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCCreateCustomFilesTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.shutil.rmtree')
     @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, mock_rmtree):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, mock_rmtree, _):
 
         mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
                                         'module_path': "test_module_path",
@@ -487,8 +492,9 @@ class ModuleTemplateIOCCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, _):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
@@ -502,8 +508,9 @@ class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
 
+    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self, mock_print, _):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                          'module_path': "test_module_path",

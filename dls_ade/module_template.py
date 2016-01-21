@@ -6,6 +6,9 @@ from exceptions import ArgumentError, TemplateFolderError
 logging.basicConfig(level=logging.DEBUG)
 
 
+MODULE_TEMPLATES = "module_templates"
+
+
 class ModuleTemplate(object):
     """Class for the creation of new module contents.
 
@@ -68,7 +71,7 @@ class ModuleTemplate(object):
             TemplateFolderError: If template folder does not exist.
 
         """
-        templates_folder = "module_templates"
+        templates_folder = MODULE_TEMPLATES
         template_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             templates_folder,
