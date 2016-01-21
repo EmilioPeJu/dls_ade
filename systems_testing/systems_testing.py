@@ -91,6 +91,9 @@ def check_if_repos_equal(path_1, path_2):
     This involves all files and folders (plus names) being identical. The
     names of the folders themselves are ignored.
 
+    The .git folder is ignored, as it is different even for a cloned
+    repository. The .gitattributes file is also ignored.
+
     Args:
         path_1: The first path for comparison.
         path_2: The second path for comparison.
