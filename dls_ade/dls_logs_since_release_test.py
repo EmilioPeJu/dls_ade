@@ -434,7 +434,8 @@ class ConvertTimeStamp(unittest.TestCase):
 
         time_and_date = dls_logs_since_release.convert_time_stamp(time_stamp)
 
-        self.assertEqual(time_and_date, u'12/08/2014 13:50:10')
+        reg_ex = "\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}"
+        self.assertRegexpMatches(time_and_date, reg_ex)
 
 
 class FormatLogMessagesTest(unittest.TestCase):
