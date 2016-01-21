@@ -647,9 +647,10 @@ class TempCloneTest(unittest.TestCase):
 
 class CloneMultiTest(unittest.TestCase):
 
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
-    def test_given_invalid_source_then_clone_not_called(self, mock_clone_from, _2):
+    def test_given_invalid_source_then_clone_not_called(self, mock_clone_from, _2, _3):
         source = "/does/not/exist"
 
         vcs_git.clone_multi(source)
