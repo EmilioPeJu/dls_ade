@@ -32,12 +32,12 @@ class environment(object):
     If you modify this to suit your site environment, you will be able to use any of the dls modules without
     modification. This module has the idea of areas. An area is simply an  argument that can be passed to devArea
     or prodArea. support and ioc must exist to use modules like the  dependency checker, others may be added. For
-    example the dls support devArea contains all support modules, and is located at /dls_sw/work/R3.14.8.2/support.
-    This is the area for testing modules. There is a similar prodArea at /dls_sw/prod/R3.14.8.2/support for
+    example the dls support devArea contains all support modules, and is located at /dls_sw/work/R3.14.12.3/support.
+    This is the area for testing modules. There is a similar prodArea at /dls_sw/prod/R3.14.12.3/support for
     releases. These are then used to locate the root of a particular module.
 
     Variables
-        epics: the version of epics - e.g R3.14.8.2
+        epics: the version of epics - e.g R3.14.12.3
         epics_ver_re: a useful regex for matching the version of epics
         areas: the areas that can be passed to devArea() or prodArea()
     """
