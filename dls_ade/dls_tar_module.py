@@ -5,10 +5,10 @@ import os
 import sys
 import vcs_git
 from dls_environment import environment
-from dls_ade.argument_parser import ArgParser
-from dls_ade import dlsbuild
+from argument_parser import ArgParser
+import dlsbuild
 
-e = environment()
+env = environment()
 
 usage = """
 Default <area> is 'support'.
@@ -39,7 +39,7 @@ def make_parser():
         help="Untar archive created with dls-archive-module.py")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="Change the epics version, default is " + e.epicsVer() + " (from your environment)")
+        help="Change the epics version, default is " + env.epicsVer() + " (from your environment)")
 
     return parser
 
@@ -73,8 +73,8 @@ def check_epics_version(epics_version):
     if epics_version:
         if not epics_version.startswith("R"):
             epics_version = "R{0}".format(epics_version)
-        if e.epics_ver_re.match(epics_version):
-            e.setEpics(epics_version)
+        if env.epics_ver_re.match(epics_version):
+            env.setEpics(epics_version)
         else:
             raise ValueError("Expected epics version like R3.14.12.3, got: " + epics_version)
 
@@ -132,7 +132,7 @@ def main():
     check_technical_area(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
-    w_dir = os.path.join(e.prodArea(args.area), args.module_name)
+    w_dir = os.path.join(env.prodArea(args.area), args.module_name)
     release_dir = os.path.join(w_dir, args.release)
     archive = release_dir + ".tar.gz"
     check_file_paths(release_dir, archive, args.untar)
