@@ -423,7 +423,7 @@ class Git(BaseVCS):
         self._module = module
         self.area = options.area
 
-        server_repo_path = pathf.devModule(self._module, self.area)
+        server_repo_path = pathf.dev_module_path(self._module, self.area)
 
         if not is_server_repo(server_repo_path):
             raise Error('repo not found on gitolite server')

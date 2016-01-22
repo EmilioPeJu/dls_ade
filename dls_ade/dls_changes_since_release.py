@@ -40,7 +40,7 @@ def main():
     pathf.check_technical_area_valid(args.area, args.module_name)
 
     module = args.module_name
-    source = pathf.devModule(module, args.area)
+    source = pathf.dev_module_path(module, args.area)
     logging.debug(source)
 
     # Check for existence of this module in various places in the repository and note revisions

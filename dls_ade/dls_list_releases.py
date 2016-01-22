@@ -124,7 +124,7 @@ def main():
     if args.git:
         # List branches of repository
         target = "the repository"
-        source = pathf.devModule(args.module_name, args.area)
+        source = pathf.dev_module_path(args.module_name, args.area)
 
         repo = vcs_git.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)

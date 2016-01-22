@@ -500,7 +500,7 @@ def main():
     check_parsed_args_compatible(args.releases, args.earlier_release, args.later_release, parser)
     check_releases_valid(args.releases, parser)
 
-    source = pathf.devModule(args.module_name, args.area)
+    source = pathf.dev_module_path(args.module_name, args.area)
     if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
         releases = create_release_list(repo)

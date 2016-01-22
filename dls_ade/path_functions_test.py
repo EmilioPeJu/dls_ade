@@ -46,29 +46,11 @@ class AreaTest(unittest.TestCase):
 
 class ModuleAreaTests(unittest.TestCase):
 
-    def test_devModule(self):
+    def test_dev_module(self):
 
         area = "etc"
         module = "test_module"
 
-        path = path_functions.devModule(module, area)
-
-        self.assertEqual(path, "controlstest/" + area + "/" + module)
-
-    def test_prodModule(self):
-
-        area = "epics"
-        module = "test_module"
-
-        path = path_functions.prodModule(module, area)
-
-        self.assertEqual(path, "controlstest/" + area + "/" + module)
-
-    def test_branchModule(self):
-
-        area = "tools"
-        module = "test_module"
-
-        path = path_functions.branchModule(module, area)
+        path = path_functions.dev_module_path(module, area)
 
         self.assertEqual(path, "controlstest/" + area + "/" + module)

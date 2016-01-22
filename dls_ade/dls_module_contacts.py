@@ -220,7 +220,7 @@ def main():
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")
         for module in modules:
-            source = pathf.devModule(module, args.area)
+            source = pathf.dev_module_path(module, args.area)
             repo = vcs_git.temp_clone(source)
 
             # Retrieve contact info
@@ -249,7 +249,7 @@ def main():
     for module, contact, cc in contacts:
 
         print("Cloning " + module + " from " + args.area + " area...")
-        source = pathf.devModule(module, args.area)
+        source = pathf.dev_module_path(module, args.area)
         repo = vcs_git.temp_clone(source)
 
         commit_message = edit_contact_info(repo, contact, cc,)

@@ -4,7 +4,7 @@
 import sys
 import shutil
 from argument_parser import ArgParser
-import path_functions as path
+import path_functions as pathf
 import vcs_git
 
 usage = """
@@ -51,7 +51,7 @@ def main():
 
     check_technical_area(args.area, args.module_name)
 
-    source = path.devModule(args.module_name, args.area)
+    source = pathf.dev_module_path(args.module_name, args.area)
 
     if not vcs_git.is_server_repo(source):
         raise Exception(args.module_name + " does not exist on repo")
