@@ -814,6 +814,19 @@ class CheckGitAttributesTest(unittest.TestCase):
         self.assertTrue(return_value)
 
 
+class GetActiveBranchTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_returns_active_branch_correctly(self, mock_repo_class):
+
+        mock_repo = MagicMock(active_branch="current_active_branch")
+        mock_repo_class.return_value = mock_repo
+
+        return_value = vcs_git.get_active_branch("test_repo_path")
+
+        self.assertEqual(return_value, "current_active_branch")
+
+
 class GitClassInitTest(unittest.TestCase):
 
     def setUp(self):
