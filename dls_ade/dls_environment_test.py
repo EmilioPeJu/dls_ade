@@ -63,7 +63,7 @@ class SetEpicsFromEnvTest(unittest.TestCase):
         with patch.dict('os.environ', {'DOESNT_EXIST': "test_release"}, clear=True):
             env.setEpicsFromEnv()
 
-        self.assertEqual(env.epics, "R3.14.8.2")
+        self.assertEqual(env.epics, "R3.14.12.3")
 
 
 class SetEpicsTest(unittest.TestCase):

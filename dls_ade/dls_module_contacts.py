@@ -62,9 +62,15 @@ def make_parser():
     return parser
 
 
-def check_parsed_args_compatible(imp, contact, cc):
+def check_parsed_args_compatible(imp, modules, contact, cc, parser):
     if imp and (contact or cc):
-        raise Exception("--import cannot be used with --contact or --cc")
+        parser.error("--import cannot be used with --contact or --cc")
+
+    # Stop user from setting all modules in an area to one contact/cc
+    if not modules and (contact or cc):
+        parser.error("You cannot set all modules in an area to one contact/cc, enter a specific module.")
+        # Just in case parser.error doesn't stop the script
+        return 1
 
 
 def get_area_module_list(area):
@@ -230,14 +236,6 @@ def main():
         return 0
 
     # If we get to this point, we are assigning contacts
-
-    # Confirm user intention to set all modules in an area to one contact/cc
-    if not args.modules and (args.contact or args.cc):
-        answer = raw_input("Are you sure you want to set the contacts and cc for all modules in area "
-                           "{0}, from file {1}? Enter Y or N: ".format(args.area, args.imp))
-        if answer.upper() != "Y":
-            print("Aborting contact assignment")
-            return 1
 
     if args.imp:
         contacts = import_from_csv(modules, args.area, args.imp)
