@@ -15,20 +15,6 @@ e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 """
 
 
-def check_source_file_path_valid(source):
-    """
-    Checks if given source path exists on the repository and raises a parser error if it does not.
-
-    Args:
-        source: Suffix of URL to check for
-
-    Raises:
-        Exception: Repository does not contain <source>
-    """
-    if not vcs_git.is_repo_path(source):
-        raise Exception("Repository does not contain " + source)
-
-
 def print_module_list(source, area):
     """
     Prints the modules in the area of the repository specified by source
@@ -40,10 +26,10 @@ def print_module_list(source, area):
     """
     split_list = vcs_git.get_repository_list()
     print("Modules in " + area + ":\n")
-    for module in split_list:
-        if source in module:
+    for module_path in split_list:
+        if module_path.startswith(source):
             # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
-            print(module.split('/', 2)[-1])
+            print(module_path.split('/', 2)[-1])
 
 
 def make_parser():
@@ -69,8 +55,6 @@ def main():
         source = path.devModule(args.domain_name, args.area)
     else:
         source = path.devArea(args.area)
-
-    check_source_file_path_valid(source)
 
     print_module_list(source, args.area)
 
