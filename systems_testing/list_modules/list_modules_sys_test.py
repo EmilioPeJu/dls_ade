@@ -50,7 +50,7 @@ settings_list = [
 
 def test_generator():
 
-        for test in st.generate_tests_from_dicts("dls-list-modules.py",
-                                                 st.SystemsTest,
-                                                 settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-list-modules.py",
+                                             st.SystemsTest,
+                                             settings_list):
+        yield test
