@@ -119,7 +119,7 @@ def check_if_repos_equal(path_1, path_2):
     try:
         subprocess.check_output(call_args)
     except subprocess.CalledProcessError as e:
-        logging.debug("diff output is: " + e.output)
+        logging.debug("diff output is:\n" + e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False
         else:
@@ -240,7 +240,8 @@ class SystemsTest(object):
                               in settings.items()
                               if key in self._settings_list})
 
-        logging.debug("The test's local variables are:\n" + self.__dict__)
+        logging.debug("The test's local variables are:")
+        logging.debug(self.__dict__)
 
     def call_script(self):
         """Call the script and store output, error and return code.
@@ -250,7 +251,8 @@ class SystemsTest(object):
         """
         call_args = (self._script + " " + self._arguments).split()
 
-        logging.debug("About to call script with: " + call_args)
+        logging.debug("About to call script with:")
+        logging.debug(call_args)
         # It appears that we cannot use 'higher-level' subprocess functions,
         # eg. check_output here. This is because stderr cannot be obtained
         # separately to stdout in these functions.
@@ -258,10 +260,11 @@ class SystemsTest(object):
                                    stderr=subprocess.PIPE)
 
         self._std_out, self._std_err = process.communicate()
-        logging.debug("standard out: " + self._std_out)
-        logging.debug("standard error: " + self._std_err)
+        logging.debug("standard out:\n" + self._std_out)
+        logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
-        logging.debug("return code: " + self._return_code)
+        logging.debug("return code:")
+        logging.debug(self._return_code)
 
     def check_std_err_for_exception(self):
         """Check the standard error for the exception information.
