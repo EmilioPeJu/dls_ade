@@ -16,7 +16,7 @@ class IsGitDirTest(unittest.TestCase):
     def test_given_invalid_file_path_then_error_raised(self):
         path = "/not/a/path"
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             vcs_git.is_in_local_repo(path)
 
     def test_given_not_git_dir_then_returns_false(self):
@@ -140,7 +140,7 @@ class InitRepoTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a directory".format(path="fake_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.init_repo("fake_path")
 
         self.mock_is_dir.assert_called_once_with("fake_path")
@@ -153,7 +153,7 @@ class InitRepoTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is already a git repository".format(path="non_repo_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.init_repo("non_repo_path")
 
         self.mock_is_dir.assert_called_once_with("non_repo_path")
@@ -203,7 +203,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a directory".format(path="fake_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.stage_all_files_and_commit("fake_path")
 
         self.mock_is_dir.assert_called_once_with("fake_path")
@@ -216,7 +216,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a git repository".format(path="non_repo_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.stage_all_files_and_commit("non_repo_path")
 
         self.mock_is_dir.assert_called_once_with("non_repo_path")
@@ -283,7 +283,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         comp_message = "Path {path:s} is not a git repository"
         comp_message = comp_message.format(path="test_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.add_new_remote_and_push("test_destination", path="test_path")
 
         self.mock_is_local_repo_root.assert_called_once_with("test_path")
@@ -309,7 +309,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.add_new_remote_and_push("test_destination", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -325,7 +325,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         comp_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
         comp_message = comp_message.format(remote="test_remote")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -386,7 +386,7 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
         comp_message = "{dest:s} already exists".format(dest="test_destination")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.create_remote_repo("test_destination")
 
         mock_is_server_repo.assert_called_once_with("test_destination")
@@ -446,7 +446,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Path {path:s} is not a git repository".format(path="test_path")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.push_to_remote(path="test_path")
 
         self.mock_is_local_repo_root.assert_called_once_with("test_path")
@@ -472,7 +472,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.push_to_remote(branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -487,7 +487,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Local repository does not have remote {remote:s}".format(remote="test_remote")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -502,7 +502,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Remote repository URL {remoteURL:s} does not begin with the gitolite server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
@@ -520,7 +520,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         comp_message = "Server repo path {s_repo_path:s} does not currently exist".format(s_repo_path="test_URL")
 
-        with self.assertRaises(vcs_git.Error) as e:
+        with self.assertRaises(vcs_git.VCSGitError) as e:
             vcs_git.push_to_remote(remote_name="test_remote", branch_name="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
@@ -566,7 +566,7 @@ class CloneTest(unittest.TestCase):
         source = "does/not/exist"
         module = "test_module"
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             vcs_git.clone(source, module)
 
     @patch('dls_ade.vcs_git.is_server_repo', return_value=True)
@@ -584,7 +584,7 @@ class CloneTest(unittest.TestCase):
         source = "test/source"
         module = "already_exists"
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             vcs_git.clone(source, module)
 
     @patch('os.path.isdir', return_value=False)
@@ -623,7 +623,7 @@ class TempCloneTest(unittest.TestCase):
     def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_server_repo):
         source = "/does/not/exist"
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             vcs_git.temp_clone(source)
 
     @patch('dls_ade.vcs_git.is_server_repo', return_value=True)
@@ -766,7 +766,7 @@ class GitClassInitTest(unittest.TestCase):
 
         try:
             vcs_git.Git('dummy', FakeOptions())
-        except vcs_git.Error, e:
+        except vcs_git.VCSGitError, e:
             self.fail(e)
 
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
@@ -791,7 +791,7 @@ class GitClassInitTest(unittest.TestCase):
         module = "dummy"
         options = FakeOptions()
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             vcs_git.Git(module, options)
 
         n_clone_calls = mock_clone.call_count
@@ -1072,7 +1072,7 @@ class GitSettersTest(unittest.TestCase):
 
     def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             self.vcs.version
 
     @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
@@ -1089,7 +1089,7 @@ class GitSettersTest(unittest.TestCase):
 
         version = '0-2'
 
-        with self.assertRaises(vcs_git.Error):
+        with self.assertRaises(vcs_git.VCSGitError):
             self.vcs.set_version(version);
 
 

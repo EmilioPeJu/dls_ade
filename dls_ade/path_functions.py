@@ -1,4 +1,5 @@
 import os
+from exceptions import ParsingError
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
@@ -17,7 +18,7 @@ def check_technical_area_valid(area, module):
     """
 
     if area == "ioc" and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area Under Beamline")
+        raise ParsingError("Missing Technical Area Under Beamline")
 
 
 def area(area_v):

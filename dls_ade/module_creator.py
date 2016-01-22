@@ -51,7 +51,8 @@ class ModuleCreator(object):
                                              self._module_path))
 
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
-        self._server_repo_path = pathf.dev_module_path(self._module_path, self._area)
+        self._server_repo_path = pathf.dev_module_path(self._module_path,
+                                                       self._area)
 
         template_args = {'module_name': self._module_name,
                          'module_path': self._module_path,
