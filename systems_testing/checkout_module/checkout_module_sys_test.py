@@ -5,6 +5,7 @@ import shutil
 
 settings_list = [
 
+    # Checkout one module from support area and check it is correctly cloned
     {
         'description': "checkout_from_support",
 
@@ -18,6 +19,7 @@ settings_list = [
 
     },
 
+    # Checkout one module from python area and check it is correctly cloned
     {
         'description': "checkout_from_python",
 
@@ -31,6 +33,7 @@ settings_list = [
 
     },
 
+    # Checkout one module from ioc area and check it is correctly cloned
     {
         'description': "checkout_from_ioc",
 
@@ -44,8 +47,11 @@ settings_list = [
 
     },
 
+    # Checkout everything from support area and check one of them is correctly cloned
     {
-        'description': "checkout_all_support",
+        'description': "checkout_all_support (Enter 'Y')",
+
+        'arguments': "everything",
 
         'repo_comp_method': "server_comp",
 
@@ -55,10 +61,11 @@ settings_list = [
 
     },
 
+    # Checkout everything from python area and check one of them is correctly cloned
     {
-        'description': "checkout_all_python",
+        'description': "checkout_all_python (Enter 'Y')",
 
-        'arguments': "-p",
+        'arguments': "-p everything",
 
         'repo_comp_method': "server_comp",
 
@@ -68,10 +75,11 @@ settings_list = [
 
     },
 
+    # Checkout everything from ioc area and check one of them is correctly cloned
     {
-        'description': "checkout_all_ioc",
+        'description': "checkout_all_ioc (Enter 'Y')",
 
-        'arguments': "-i",
+        'arguments': "-i everything",
 
         'repo_comp_method': "server_comp",
 
