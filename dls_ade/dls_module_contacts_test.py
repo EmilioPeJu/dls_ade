@@ -62,59 +62,107 @@ class MakeParserTest(unittest.TestCase):
 
 class CheckParsedArgsCompatibleTest(unittest.TestCase):
 
+    def setUp(self):
+        self.parser = dls_module_contacts.make_parser()
+        parse_error_patch = patch('dls_ade.dls_module_contacts.ArgParser.error')
+        self.addCleanup(parse_error_patch.stop)
+        self.mock_error = parse_error_patch.start()
+
     def test_given_imp_not_contact_not_cc_then_no_error_raised(self):
         imp = True
+        modules = ''
         contact = False
         cc = False
 
-        dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
-    def test_given_not_imp_contact_not_cc_then_no_error_raised(self):
-        imp = False
-        contact = True
-        cc = False
-
-        dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
-
-    def test_given_not_imp_not_contact_cc_then_no_error_raised(self):
-        imp = False
-        contact = False
-        cc = True
-
-        dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_imp_contact_not_cc_then_error_raised(self):
         imp = True
+        modules = 'test'
         contact = True
         cc = False
         expected_error_message = "--import cannot be used with --contact or --cc"
 
-        try:
-            dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_not_contact_cc_then_error_raised(self):
         imp = True
+        modules = 'test'
         contact = False
         cc = True
         expected_error_message = "--import cannot be used with --contact or --cc"
 
-        try:
-            dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_contact_cc_then_error_raised(self):
         imp = True
+        modules = 'test'
         contact = True
         cc = True
         expected_error_message = "--import cannot be used with --contact or --cc"
 
-        try:
-            dls_module_contacts.check_parsed_args_compatible(imp, contact, cc)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_no_imp_contact_no_module_then_error(self):
+        imp = False
+        modules = ''
+        contact = True
+        cc = False
+        expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
+
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_no_imp_cc_no_module_then_error(self):
+        imp = False
+        modules = ''
+        contact = False
+        cc = True
+        expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
+
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_no_imp_cc_and_contact_no_module_then_error(self):
+        imp = False
+        modules = ''
+        contact = True
+        cc = True
+        expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
+
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_no_imp_contact_module_then_no_error(self):
+        imp = False
+        modules = 'test'
+        contact = True
+        cc = False
+
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.assertFalse(self.mock_error.call_count)
+
+    def test_no_imp_cc_module_then_no_error(self):
+        imp = False
+        modules = 'test'
+        contact = False
+        cc = True
+
+        dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
+
+        self.assertFalse(self.mock_error.call_count)
 
 
 class GetAreaModuleListTest(unittest.TestCase):
