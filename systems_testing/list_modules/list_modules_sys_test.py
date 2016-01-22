@@ -1,9 +1,25 @@
 from systems_testing import systems_testing as st
 
-support_list = "Modules in support:\n\ntestsupportmod\ntestsupportmo\n"
-python_list = "Modules in python:\n\ndls_testpythonmod2\ndls_testpythonmod\n"
-ioc_list = "Modules in ioc:\n\nBTEST2/TS\nBTEST/BTEST-EB-IOC-03\nBTEST/BTEST-EB-IOC-0\nBTEST/BTEST-VA-IOC-04\nBTEST/TS\n"
-ioc_domain_list = "Modules in ioc:\n\nBTEST/BTEST-EB-IOC-03\nBTEST/BTEST-EB-IOC-0\nBTEST/BTEST-VA-IOC-04\nBTEST/TS\n"
+support_list = "Modules in support:\n\n" \
+               "testsupportmod\n" \
+               "testsupportmo\n"
+
+python_list = "Modules in python:\n\n" \
+              "dls_testpythonmod2\n" \
+              "dls_testpythonmod\n"
+
+ioc_list = "Modules in ioc:\n\n" \
+           "BTEST2/TS\n" \
+           "BTEST/BTEST-EB-IOC-03\n" \
+           "BTEST/BTEST-EB-IOC-0\n" \
+           "BTEST/BTEST-VA-IOC-04\n" \
+           "BTEST/TS\n"
+
+ioc_domain_list = "Modules in ioc:\n\n" \
+                  "BTEST/BTEST-EB-IOC-03\n" \
+                  "BTEST/BTEST-EB-IOC-0\n" \
+                  "BTEST/BTEST-VA-IOC-04\n" \
+                  "BTEST/TS\n"
 
 settings_list = [
 
