@@ -24,7 +24,7 @@ def print_module_list(source, area):
         area: Area of repository to list
 
     """
-    split_list = vcs_git.get_repository_list()
+    split_list = vcs_git.get_server_repo_list()
     print("Modules in " + area + ":\n")
     for module_path in split_list:
         if module_path.startswith(source + '/'):

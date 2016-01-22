@@ -162,7 +162,7 @@ def get_module_creator_ioc(module_name, fullname=False):
         # on the server in this instance.
         module_path = domain + "/" + technical_area
         server_repo_path = pathf.devModule(module_path, area)
-        if vcs_git.is_repo_path(server_repo_path):
+        if vcs_git.is_server_repo(server_repo_path):
             # Adding new App to old style "domain/tech_area" module that
             # already exists on the remote server.
             return mc.ModuleCreatorAddAppToModule(module_path, area,

@@ -75,7 +75,7 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
 
 def get_area_module_list(area):
 
-    repo_list = vcs_git.get_repository_list()
+    repo_list = vcs_git.get_server_repo_list()
 
     modules = []
     for path in repo_list:

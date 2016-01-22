@@ -21,8 +21,7 @@ class Error(Exception):
     pass
 
 
-# TODO(Martin): is_in_local_repo
-def is_git_dir(path="./"):
+def is_in_local_repo(path="./"):
     """Returns whether or not the local path is inside a git repository.
 
     Args:
@@ -47,8 +46,7 @@ def is_git_dir(path="./"):
         return True
 
 
-# TODO(Martin): is_local_repo_root
-def is_git_root_dir(path="."):
+def is_local_repo_root(path="."):
     """Returns whether or not the local path is the root of a git repository.
 
     Args:
@@ -59,10 +57,10 @@ def is_git_root_dir(path="."):
         bool: True if the path is inside a git repository, false otherwise.
 
     Raises:
-        Error: If the path given is not a local directory (from is_git_dir).
+        Error: If the path given is not a local directory (from is_in_local_repo).
 
     """
-    if not is_git_dir(path):
+    if not is_in_local_repo(path):
         return False
 
     git_repo = git.Repo(path)
@@ -74,11 +72,7 @@ def is_git_root_dir(path="."):
     return full_path == top_level_path
 
 
-# TODO(Martin): Rename this and all instances of its use to is_server_repo
-# TODO(Martin): and change to match exact path only (use get_repository_list)
-# TODO(Martin): But remember to alter dls_list_modules and clone_multi to use
-# TODO(Martin): this current function renamed to is_server_path
-def is_repo_path(server_repo_path):
+def is_server_repo(server_repo_path):
     """
     Checks if path exists on repository
 
@@ -89,12 +83,11 @@ def is_repo_path(server_repo_path):
         bool: True if path does exist False if not
 
     """
-    repo_list = get_repository_list()
+    repo_list = get_server_repo_list()
     return server_repo_path in repo_list
 
 
-# TODO(Martin): get_remote_repo_list
-def get_repository_list():
+def get_server_repo_list():
     """
     Returns formatted list of entries from 'ssh dascgitolite@dasc-git.diamond.ac.uk expand controls' command
 
@@ -129,7 +122,7 @@ def init_repo(path="./"):
     if not os.path.isdir(path):
         raise Error("Path {path:s} is not a directory".format(path=path))
 
-    if is_git_root_dir(path):
+    if is_local_repo_root(path):
         err_message = "Path {path:s} is already a git repository"
         raise Error(err_message.format(path=path))
 
@@ -151,7 +144,7 @@ def stage_all_files_and_commit(path="./"):
     if not os.path.isdir(path):
         raise Error("Path {path:s} is not a directory".format(path=path))
 
-    if not is_git_root_dir(path):
+    if not is_local_repo_root(path):
         err_message = "Path {path:s} is not a git repository"
         raise Error(err_message.format(path=path))
 
@@ -187,7 +180,7 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
         Error: If there is an issue with the operation.
 
     """
-    if not is_git_root_dir(path):
+    if not is_local_repo_root(path):
         err_message = "Path {path:s} is not a git repository"
         raise Error(err_message.format(path=path))
 
@@ -221,7 +214,7 @@ def create_remote_repo(dest):
         Error: If a git repository already exists on the destination path.
 
     """
-    if is_repo_path(dest):
+    if is_server_repo(dest):
         raise Error("{dest:s} already exists".format(dest=dest))
 
     git_dest = os.path.join(GIT_SSH_ROOT, dest)
@@ -259,7 +252,7 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
         Error: If there is an issue with the operation.
 
     """
-    if not is_git_root_dir(path):
+    if not is_local_repo_root(path):
         err_message = "Path {path:s} is not a git repository"
         raise Error(err_message.format(path=path))
 
@@ -286,7 +279,7 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
     # Removes initial GIT_SSH_ROOT (with slash at end)
     server_repo_path = remote.url[len(GIT_SSH_ROOT):]
 
-    if not is_repo_path(server_repo_path):
+    if not is_server_repo(server_repo_path):
         err_message = ("Server repo path {s_repo_path:s} does not "
                        "currently exist")
         raise Error(err_message.format(s_repo_path=server_repo_path))
@@ -308,7 +301,7 @@ def clone(server_repo_path, local_repo_path):
         Error: <module> already exists in current directory
 
     """
-    if not is_repo_path(server_repo_path):
+    if not is_server_repo(server_repo_path):
         raise Error("Repository does not contain " + server_repo_path)
     elif os.path.isdir(local_repo_path):
         raise Error(local_repo_path + " already exists in current directory")
@@ -333,7 +326,7 @@ def temp_clone(source):
         git.Repo object
 
     """
-    if not is_repo_path(source):
+    if not is_server_repo(source):
         raise Error("Repository does not contain " + source)
 
     if source[-1] == '/':
@@ -360,7 +353,7 @@ def clone_multi(source):
     if source[-1] == '/':
         source = source[:-1]
 
-    split_list = get_repository_list()
+    split_list = get_server_repo_list()
     for path in split_list:
         if path.startswith(source):
             module = path.split('/')[-1]
@@ -432,7 +425,7 @@ class Git(BaseVCS):
 
         server_repo_path = pathf.devModule(self._module, self.area)
 
-        if not is_repo_path(server_repo_path):
+        if not is_server_repo(server_repo_path):
             raise Error('repo not found on gitolite server')
 
         repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))

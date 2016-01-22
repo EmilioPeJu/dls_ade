@@ -61,7 +61,7 @@ def check_source_file_path_valid(source):
     Raises:
         Exception: Repository does not contain <source>
     """
-    if not vcs_git.is_repo_path(source):
+    if not vcs_git.is_server_repo(source):
         raise Exception("Repository does not contain " + source)
 
 
