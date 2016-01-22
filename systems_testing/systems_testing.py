@@ -52,6 +52,8 @@ def get_local_temp_clone(server_repo_path):
         VCSGitError: From vcs_git.temp_clone.
 
     """
+    logging.debug("Cloning server repo path: " + server_repo_path)
+
     repo = vcs_git.temp_clone(server_repo_path)
 
     tempdir = repo.working_tree_dir
@@ -117,6 +119,7 @@ def check_if_repos_equal(path_1, path_2):
     try:
         subprocess.check_output(call_args)
     except subprocess.CalledProcessError as e:
+        logging.debug("diff output is:")
         logging.debug(e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False
@@ -153,6 +156,10 @@ class SystemsTest(object):
         _server_repo_path: The remote repository path.
             This is used for both git attribute checking as well as directory
             comparisons (after being cloned to _server_repo_clone_path)
+
+        _branch_name: The name of the repository branch.
+            This is used for checking that the given _local_repo_path is on the
+            given branch, as well as changing server_repo_clone_path's branch.
 
     Raises:
         Error: Indicates error in this class or in the settings dict.
@@ -200,6 +207,8 @@ class SystemsTest(object):
         This is used for both git attribute checking as well as directory
         comparisons (after being cloned to _server_repo_clone_path)"""
 
+        self._branch_name = ""
+
         self._settings_list = [  # List of valid variables to update.
             'exception_type',
             'exception_string',
@@ -210,7 +219,8 @@ class SystemsTest(object):
             'local_repo_path',
             'repo_comp_method',
             'local_comp_path_one',
-            'local_comp_path_two'
+            'local_comp_path_two',
+            'branch_name',
         ]
         """A list of all attributes that may be changed.
         This is done by the settings dictionary passed to load_settings."""
@@ -229,6 +239,7 @@ class SystemsTest(object):
             - repo_comp_method
             - local_comp_path_one
             - local_comp_path_two
+            - branch_name
 
         Args:
             settings: The dictionary of settings used to set up the test.
@@ -238,6 +249,24 @@ class SystemsTest(object):
                               in settings.items()
                               if key in self._settings_list})
 
+        logging.debug("The test's local variables are:")
+        logging.debug(self.__dict__)
+
+    def __call__(self):
+        """Defined for the use of nosetests.
+
+        This is considered the test function.
+
+        Raises:
+            SettingsError: From run_tests().
+            TempdirError: From run_tests()
+            AssertionError: From run_tests().
+            VCSGitError: From run_tests().
+
+        """
+        self.call_script()
+        self.run_tests()
+
     def call_script(self):
         """Call the script and store output, error and return code.
 
@@ -246,6 +275,8 @@ class SystemsTest(object):
         """
         call_args = (self._script + " " + self._arguments).split()
 
+        logging.debug("About to call script with:")
+        logging.debug(call_args)
         # It appears that we cannot use 'higher-level' subprocess functions,
         # eg. check_output here. This is because stderr cannot be obtained
         # separately to stdout in these functions.
@@ -253,8 +284,49 @@ class SystemsTest(object):
                                    stderr=subprocess.PIPE)
 
         self._std_out, self._std_err = process.communicate()
-
+        logging.debug("standard out:\n" + self._std_out)
+        logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
+        logging.debug("return code:")
+        logging.debug(self._return_code)
+
+    def run_tests(self):
+        """Performs the entire test suite.
+
+        Raises:
+            SettingsError: From the tests.
+            TempdirError: From :meth:`delete_cloned_server_repo()`
+            AssertionError: From the tests.
+            VCSGitError: From the tests.
+
+        """
+        logging.debug("Performing tests.")
+
+        self.check_std_out_and_exceptions()
+
+        self.check_for_and_clone_remote_repo()
+
+        self.run_git_repo_tests()
+
+        self.run_comparison_tests()
+        # Filesystem equality checks
+
+        self.delete_cloned_server_repo()
+
+    def check_std_out_and_exceptions(self):
+        """Performs all the standard out and error comparisons.
+
+        This includes exception testing.
+
+        Raises:
+            SettingsError: From the comparison tests.
+            AssertionError: From the comparison tests.
+            VCSGitError: From the comparison tests.
+
+        """
+        self.check_std_err_for_exception()
+
+        self.compare_std_out_to_string()
 
     def check_std_err_for_exception(self):
         """Check the standard error for the exception information.
@@ -264,6 +336,8 @@ class SystemsTest(object):
             AssertionError: If the test does not pass.
 
         """
+        logging.debug("Checking standard error for given exception.")
+
         if not self._exception_type or not self._exception_string:
             if not self._exception_type and not self._exception_string:
                 return
@@ -287,6 +361,8 @@ class SystemsTest(object):
         """
         if self._std_out_compare_string is None:
             return
+
+        logging.debug("Comparing the standard output to comparison string.")
 
         assert_equal(self._std_out, self._std_out_compare_string)
 
@@ -312,16 +388,55 @@ class SystemsTest(object):
             AssertionError: If the test does not pass.
 
         """
+        logging.debug("Checking server repo path given exists.")
         assert_true(vcs_git.is_repo_path(self._server_repo_path))
 
     def clone_server_repo(self):
         """Clone the server_repo_path to a temp dir and return the path.
 
+        If a branch name is set, then the remote branch will be checked out.
+
         Raises:
             VCSGitError: From vcs_git.temp_clone()
         """
+        logging.debug("Cloning the server repository to temporary directory.")
         repo = vcs_git.temp_clone(self._server_repo_path)
+
+        if self._branch_name:
+            vcs_git.checkout_remote_branch(self._branch_name, repo)
+
         self._server_repo_clone_path = repo.working_tree_dir
+        logging.debug("The cloned directory is: " +
+                      self._server_repo_clone_path)
+
+    def run_git_repo_tests(self):
+        """Perform all repository-related tests.
+
+        These are the tests that require a git repository to be given.
+
+        """
+        self.check_local_repo_active_branch()
+
+        self.run_git_attributes_tests()
+        # This should check local_repo and server_repo_path for attributes_dict
+
+    def check_local_repo_active_branch(self):
+        """This checks if the local repository's active branch is correct."""
+        if not self._branch_name:
+            return
+
+        if not self._local_repo_path:
+            # The branch_name may still be used when cloning the server repo.
+            return
+
+        logging.debug("Checking that local repository active branch is "
+                      "correct.")
+
+        current_active_branch = vcs_git.get_active_branch(
+                self._local_repo_path)
+
+        logging.debug("Actual branch: " + current_active_branch)
+        assert_equal(self._branch_name, current_active_branch)
 
     def run_git_attributes_tests(self):
         """Perform the git attributes tests.
@@ -334,14 +449,13 @@ class SystemsTest(object):
         if not self._attributes_dict:
             return
 
-        logging.debug(self.__dict__)
-
         if not (self._server_repo_clone_path or self._local_repo_path):
             raise SettingsError("As an attributes dict has been provided, "
                                 "either the local_repo_path or "
                                 "server_repo_clone_path must be provided.")
 
         if self._server_repo_clone_path:
+            logging.debug("Testing server clone's attributes.")
             return_value = vcs_git.check_git_attributes(
                     self._server_repo_clone_path,
                     self._attributes_dict
@@ -349,6 +463,8 @@ class SystemsTest(object):
             assert_true(return_value)
 
         if self._local_repo_path:
+            logging.debug("Testing local repo's attributes.")
+
             return_value = vcs_git.check_git_attributes(self._local_repo_path,
                                                         self._attributes_dict)
             assert_true(return_value)
@@ -373,16 +489,22 @@ class SystemsTest(object):
             return
 
         if self._repo_comp_method == "local_comp":
+            logging.debug("Performing 'local' comparison.")
+
             equal = check_if_repos_equal(self._local_comp_path_one,
                                          self._local_comp_path_two)
             assert_true(equal)
 
         elif self._repo_comp_method == "server_comp":
+            logging.debug("Performing 'server' comparison.")
+
             equal = check_if_repos_equal(self._local_comp_path_one,
                                          self._server_repo_clone_path)
             assert_true(equal)
 
         elif self._repo_comp_method == "all_comp":
+            logging.debug("Performing 'all' comparison.")
+
             equal_1 = check_if_repos_equal(self._local_comp_path_one,
                                            self._local_comp_path_two)
             equal_2 = check_if_repos_equal(self._local_comp_path_one,
@@ -398,21 +520,6 @@ class SystemsTest(object):
                     repo_comp_method=self._repo_comp_method)
             )
 
-    def check_std_out_and_exceptions(self):
-        """Performs all the standard out and error comparisons.
-
-        This includes exception testing.
-
-        Raises:
-            SettingsError: From the comparison tests.
-            AssertionError: From the comparison tests.
-            VCSGitError: From the comparison tests.
-
-        """
-        self.check_std_err_for_exception()
-
-        self.compare_std_out_to_string()
-
     def delete_cloned_server_repo(self):
         """Deletes the clone of the server repository.
 
@@ -424,47 +531,12 @@ class SystemsTest(object):
         if not self._server_repo_clone_path:
             return
 
+        logging.debug("About to delete temporary repository: " +
+                      self._server_repo_clone_path)
+
         delete_temp_repo(self._server_repo_clone_path)
 
         self._server_repo_clone_path = ""
-
-    def run_tests(self):
-        """Performs the entire test suite.
-
-        Raises:
-            SettingsError: From the tests.
-            TempdirError: From :meth:`delete_cloned_server_repo()`
-            AssertionError: From the tests.
-            VCSGitError: From the tests.
-
-        """
-
-        self.check_std_out_and_exceptions()
-
-        self.check_for_and_clone_remote_repo()
-
-        self.run_git_attributes_tests()
-        # This should check local_repo and server_repo_path for attributes_dict
-
-        self.run_comparison_tests()
-        # Filesystem equality checks
-
-        self.delete_cloned_server_repo()
-
-    def __call__(self):
-        """Defined for the use of nosetests.
-
-        This is considered the test function.
-
-        Raises:
-            SettingsError: From run_tests().
-            TempdirError: From run_tests()
-            AssertionError: From run_tests().
-            VCSGitError: From run_tests().
-
-        """
-        self.call_script()
-        self.run_tests()
 
 
 def generate_tests_from_dicts(script, systems_test_cls, test_settings):

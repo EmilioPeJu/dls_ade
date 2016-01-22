@@ -350,20 +350,96 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
 
 class SystemsTestCloneServerRepoTest(unittest.TestCase):
 
+    def setUp(self):
+        self.repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
+
+        self.mock_temp_clone = set_up_mock_(self, 'systems_testing.vcs_git.temp_clone')
+        self.mock_temp_clone.return_value = self.repo_mock
+
+        self.mock_checkout_remote_branch = set_up_mock_(self, 'systems_testing.vcs_git.checkout_remote_branch')
+
     def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
-
-        repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
-
-        mock_temp_clone = set_up_mock_(self, 'systems_testing.vcs_git.temp_clone')
-        mock_temp_clone.return_value = repo_mock
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj.clone_server_repo()
 
-        mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.mock_temp_clone.assert_called_once_with("test_repo_path")
         self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
+
+    def test_given_function_called_with_no_branch_set_then_checkout_remote_branch_not_called(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj._server_repo_path = "test_repo_path"
+
+        self.st_obj._branch_name = ""
+
+        self.st_obj.clone_server_repo()
+
+        self.mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
+        self.assertFalse(self.mock_checkout_remote_branch.called)
+
+    def test_given_function_called_with_branch_set_then_checkout_remote_branch_called(self):
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj._server_repo_path = "test_repo_path"
+
+        self.st_obj._branch_name = "test_branch_name"
+
+        self.st_obj.clone_server_repo()
+
+        self.mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
+        self.mock_checkout_remote_branch.assert_called_once_with("test_branch_name", self.repo_mock)
+
+
+class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_get_active_branch = set_up_mock_(self, 'systems_testing.vcs_git.get_active_branch')
+
+        self.st_obj = st.SystemsTest("test_script", "test_name")
+
+    def test_given_no_branch_name_then_function_returns_immediately(self):
+
+        self.st_obj._branch_name = ""
+        self.st_obj._local_repo_path = "test_lrp"
+
+        self.st_obj.check_local_repo_active_branch()
+
+        self.assertFalse(self.mock_get_active_branch.called)
+
+    def test_given_no_local_repo_path_then_function_returns_immediately(self):
+
+        self.st_obj._branch_name = "test_branch"
+        self.st_obj._local_repo_path = ""
+
+        self.st_obj.check_local_repo_active_branch()
+
+        self.assertFalse(self.mock_get_active_branch.called)
+
+    def test_given_repository_branch_is_different_than_expected_then_assertion_error_raised(self):
+
+        self.st_obj._branch_name = "test_branch"
+        self.mock_get_active_branch.return_value = "other_branch"
+        self.st_obj._local_repo_path = "test_lrp"
+
+        with self.assertRaises(AssertionError):
+            self.st_obj.check_local_repo_active_branch()
+
+        self.mock_get_active_branch.assert_called_once_with("test_lrp")
+
+    def test_given_repository_branch_is_the_same_as_expected_then_test_passes(self):
+
+        self.st_obj._branch_name = "test_branch"
+        self.mock_get_active_branch.return_value = "test_branch"
+        self.st_obj._local_repo_path = "test_lrp"
+
+        self.st_obj.check_local_repo_active_branch()
+
+        self.mock_get_active_branch.assert_called_once_with("test_lrp")
 
 
 class SystemsTestRunGitAttributesTest(unittest.TestCase):

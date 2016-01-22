@@ -89,12 +89,8 @@ def is_repo_path(server_repo_path):
         bool: True if path does exist False if not
 
     """
-    list_cmd = "ssh {git_root:s} expand {git_root_dir:s}/"
-    list_cmd = list_cmd.format(git_root=GIT_ROOT, git_root_dir=GIT_ROOT_DIR)
-
-    list_cmd_output = subprocess.check_output(list_cmd.split())
-
-    return server_repo_path in list_cmd_output
+    repo_list = get_repository_list()
+    return server_repo_path in repo_list
 
 
 # TODO(Martin): get_remote_repo_list
@@ -360,15 +356,13 @@ def clone_multi(source):
     Raises:
         Error: Repository does not contain <source>
     """
-    if not is_repo_path(source):
-        raise Error("Repository does not contain " + source)
 
     if source[-1] == '/':
         source = source[:-1]
 
     split_list = get_repository_list()
     for path in split_list:
-        if source in path:
+        if path.startswith(source):
             module = path.split('/')[-1]
             if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")
@@ -451,6 +445,21 @@ def check_git_attributes(local_repo_path, attributes_dict):
             return False
 
     return True
+
+
+def get_active_branch(local_repo_path):
+    """Returns the active branch of the given local repository.
+
+    Args:
+        local_repo_path: The path to the local repository.
+
+    Returns:
+        str: The name of the active branch.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    return repo.active_branch.name
 
 
 class Git(BaseVCS):

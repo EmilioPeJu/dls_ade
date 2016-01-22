@@ -105,17 +105,17 @@ class IsGitRootDirTest(unittest.TestCase):
         self.assertFalse(return_value)
 
 
-class IsInRepoTest(unittest.TestCase):
+class IsRepoPathTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/path'])
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/test/path'])
     def test_given_path_exists_then_return_true(self, mock_check):
 
         self.assertTrue(vcs_git.is_repo_path("controls/test/path"))
 
-    @patch('dls_ade.vcs_git.subprocess.check_output', return_value=['controls/test/otherpath'])
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/test/path'])
     def test_given_path_does_not_exist_then_return_false(self, mock_check):
 
-        self.assertFalse(vcs_git.is_repo_path("controls/test/path"))
+        self.assertFalse(vcs_git.is_repo_path("controls/test/pa"))
 
 
 class InitRepoTest(unittest.TestCase):
@@ -647,21 +647,15 @@ class TempCloneTest(unittest.TestCase):
 
 class CloneMultiTest(unittest.TestCase):
 
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('dls_ade.vcs_git.is_repo_path', return_value=False)
     @patch('git.Repo.clone_from')
-    def test_given_invalid_source_then_error_raised(self, mock_clone_from, mock_is_repo_path):
+    def test_given_invalid_source_then_clone_not_called(self, mock_clone_from, _2, _3):
         source = "/does/not/exist"
 
-        with self.assertRaises(vcs_git.Error):
-            vcs_git.clone_multi(source)
-
-    @patch('dls_ade.vcs_git.get_repository_list')
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
-    @patch('git.Repo.clone_from')
-    def test_given_valid_source_then_no_error_raised(self, mock_clone_from, mock_is_repo_path, _1):
-        source = "/does/exist"
-
         vcs_git.clone_multi(source)
+
+        self.assertFalse(mock_clone_from.call_count)
 
     @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('os.listdir', return_value=["test_module"])
@@ -676,14 +670,13 @@ class CloneMultiTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/area/test_module"])
     @patch('os.listdir', return_value=["not_test_module"])
-    @patch('dls_ade.vcs_git.is_repo_path', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1, _2):
-        source = "area/test_module"
+    def test_given_valid_module_name_then_clone(self, mock_clone_from, mock_is_repo_path, _1):
+        source = "controls/area/"
 
         vcs_git.clone_multi(source)
 
-        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + "controls/" + source, "./test_module")
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'test_module', "./test_module")
 
 
 class ListRemoteBranchesTest(unittest.TestCase):
@@ -819,6 +812,20 @@ class CheckGitAttributesTest(unittest.TestCase):
         return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
 
         self.assertTrue(return_value)
+
+
+class GetActiveBranchTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_returns_active_branch_correctly(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        type(mock_repo.active_branch).name = PropertyMock(return_value="current_active_branch")
+        mock_repo_class.return_value = mock_repo
+
+        return_value = vcs_git.get_active_branch("test_repo_path")
+
+        self.assertEqual(return_value, "current_active_branch")
 
 
 class GitClassInitTest(unittest.TestCase):
