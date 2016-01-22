@@ -453,6 +453,21 @@ def check_git_attributes(local_repo_path, attributes_dict):
     return True
 
 
+def get_active_branch(local_repo_path):
+    """Returns the active branch of the given local repository.
+
+    Args:
+        local_repo_path: The path to the local repository.
+
+    Returns:
+        str: The name of the active branch.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    return repo.active_branch
+
+
 class Git(BaseVCS):
 
     def __init__(self, module, options):
