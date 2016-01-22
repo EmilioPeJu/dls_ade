@@ -27,7 +27,7 @@ def print_module_list(source, area):
     split_list = vcs_git.get_repository_list()
     print("Modules in " + area + ":\n")
     for module_path in split_list:
-        if module_path.startswith(source):
+        if module_path.startswith(source + '/'):
             # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
             print(module_path.split('/', 2)[-1])
 
