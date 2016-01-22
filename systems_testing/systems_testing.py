@@ -91,6 +91,9 @@ def check_if_repos_equal(path_1, path_2):
     This involves all files and folders (plus names) being identical. The
     names of the folders themselves are ignored.
 
+    The .git folder is ignored, as it is different even for a cloned
+    repository. The .gitattributes file is also ignored.
+
     Args:
         path_1: The first path for comparison.
         path_2: The second path for comparison.
@@ -234,11 +237,6 @@ class SystemsTest(object):
         self.__dict__.update({("_" + key): value for (key, value)
                               in settings.items()
                               if key in self._settings_list})
-
-    def setup(self):
-        """Performs any setup routine required.
-        """
-        pass
 
     def call_script(self):
         """Call the script and store output, error and return code.
@@ -465,7 +463,6 @@ class SystemsTest(object):
             VCSGitError: From run_tests().
 
         """
-        self.setup()
         self.call_script()
         self.run_tests()
 

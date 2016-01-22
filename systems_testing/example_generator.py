@@ -5,8 +5,10 @@ import systems_testing as st
 
 settings_list = [
     {
-        'description': "example_test_name",
+        'description': "example_test_name_1",
+
         'std_out_compare_string': ("I am not the message?\n"),
+
         'exception_type': "__main__.Error",
 
         'exception_string': "I am the message.",
@@ -20,7 +22,8 @@ settings_list = [
     },
 
     {
-        'description': "example_test_name",
+        'description': "example_test_name_2",
+
         'std_out_compare_string': ("I am not the wine?\n"),
 
         'exception_type': "__main__.Error",
@@ -36,7 +39,8 @@ settings_list = [
     },
 
     {
-        'description': "example_test_name",
+        'description': "example_test_name_3",
+
         'std_out_compare_string': ("I am not the wine?\n"),
 
         'exception_type': "__main__.Error",
@@ -54,7 +58,8 @@ settings_list = [
     },
 
     {
-        'description': "example_test_name",
+        'description': "example_test_name_4",
+
         'std_out_compare_string': ("I am not the wine?\n"),
 
         'exception_type': "__main__.Error",
@@ -72,7 +77,8 @@ settings_list = [
     },
 
     {
-        'description': "example_test_name",
+        'description': "example_test_name_5",
+
         'std_out_compare_string': ("I am not the wine?\n"),
 
         'exception_type': "__main__.Error",
