@@ -2,6 +2,7 @@
 # This script comes from the dls_scripts python module
 
 import sys
+import shutil
 import logging
 from argument_parser import ArgParser
 import path_functions as pathf
@@ -66,6 +67,8 @@ def main():
         print("Changes have been made to " + module + " since release " + last_release_num)
     else:
         print("No changes have been made to " + module + " since most recent release " + last_release_num)
+
+    shutil.rmtree(repo.working_tree_dir)
 
 
 if __name__ == "__main__":
