@@ -219,8 +219,8 @@ class SystemsTest(object):
             'local_repo_path',
             'repo_comp_method',
             'local_comp_path_one',
-            'local_comp_path_two'
-            'branch_name'
+            'local_comp_path_two',
+            'branch_name',
         ]
         """A list of all attributes that may be changed.
         This is done by the settings dictionary passed to load_settings."""
