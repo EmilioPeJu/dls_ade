@@ -67,11 +67,6 @@ class CheckAreaArchivableTest(unittest.TestCase):
         dls_tar_module.check_area_archivable(area)
 
 
-class SetUpEpicsEnvironmentTest(unittest.TestCase):
-    # Tests in list releases, to be moved to dls_environment
-    pass
-
-
 class CheckTechnicalAreaTest(unittest.TestCase):
     # Tests in list releases, to be moved to path_functions
     pass

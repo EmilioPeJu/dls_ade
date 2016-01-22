@@ -58,27 +58,6 @@ def check_area_archivable(area):
         raise ValueError("Modules in area " + area + " cannot be archived")
 
 
-# TODO: Implement via dls_environment (also in list-releases)
-def check_epics_version(epics_version):
-    """
-    Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
-    Then checks if the epics version matches the reg ex. Then sets environment epics version.
-
-    Args:
-        epics_version: Epics version to check
-
-    Raises:
-        ValueError: Expected epics version like R3.14.12.3, got: <epics_version>
-    """
-    if epics_version:
-        if not epics_version.startswith("R"):
-            epics_version = "R{0}".format(epics_version)
-        if env.epics_ver_re.match(epics_version):
-            env.setEpics(epics_version)
-        else:
-            raise ValueError("Expected epics version like R3.14.12.3, got: " + epics_version)
-
-
 # TODO: Route through path_functions (also in list-releases)
 def check_technical_area(area, module):
     """
@@ -128,7 +107,7 @@ def main():
     args = parser.parse_args()
 
     check_area_archivable(args.area)
-    check_epics_version(args.epics_version)
+    env.check_epics_version(args.epics_version)
     check_technical_area(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    

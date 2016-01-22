@@ -39,6 +39,38 @@ class EnvironmentInitTest(unittest.TestCase):
             self.assertIn(area, env.areas)
 
 
+class CheckEpicsVersionTest(unittest.TestCase):
+
+    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    def test_given_epics_version_with_R_and_match_then_set(self, mock_set_epics):
+        env = dls_environment.environment()
+        epics_version = "R3.14.8.2"
+
+        env.check_epics_version(epics_version)
+
+        mock_set_epics.assert_called_once_with(epics_version)
+
+    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    def test_given_epics_version_without_R_and_match_then_set(self, mock_set_epics):
+        env = dls_environment.environment()
+        epics_version = "3.14.8.2"
+
+        env.check_epics_version(epics_version)
+
+        mock_set_epics.assert_called_once_with("R" + epics_version)
+
+    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    def test_given_epics_version_with_R_and_not_match_then_raise_error(self, mock_set_epics):
+        env = dls_environment.environment()
+        epics_version = "R3"
+        expected_error_message = "Expected epics version like R3.14.8.2, got: " + epics_version
+
+        try:
+            env.check_epics_version(epics_version)
+        except Exception as error:
+            self.assertEqual(error.message, expected_error_message)
+
+
 class SetEpicsFromEnvTest(unittest.TestCase):
 
     def test_given_dls_epics_release_exists_then_set(self):
