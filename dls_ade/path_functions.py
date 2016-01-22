@@ -6,31 +6,42 @@ GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 def check_technical_area_valid(area, module):
     """
-    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
-    raises a parser error if not
+    Checks if given area is IOC and if so, checks that the technical area is also provided.
 
     Args:
         area: Area of repository
         module: Module to check
 
     Raises:
-        "Missing Technical Area Under Beamline"
+        ValueError: "Missing technical area under beamline"
     """
 
     if area == "ioc" and len(module.split('/')) < 2:
-        raise ParsingError("Missing Technical Area Under Beamline")
+        raise ParsingError("Missing technical area under beamline")
 
 
-def area(area_v):
-    """Return the full file path for the given area."""
-    return os.path.join(GIT_ROOT_DIR, area_v)
+def dev_area_path(area="support"):
+    """Return the full server path for the given area.
+
+    Args:
+        area: The area of the module.
+
+    Returns:
+        str: The full server path for the given area.
+
+    """
+    return os.path.join(GIT_ROOT_DIR, area)
 
 
-def dev_area_path(area_v="support"):
-    """Return the path for the trunk section of a particular area_v"""
-    return area(area_v)
+def dev_module_path(module, area="support"):
+    """Return the full server path for the given module and area.
 
+    Args:
+        area: The area of the module.
+        module: The module name.
 
-def dev_module_path(module, area_v="support"):
-    """Return the path for module in trunk section a particular area"""
-    return os.path.join(dev_area_path(area_v), module)
+    Returns:
+        str: The full server path for the given module.
+
+    """
+    return os.path.join(dev_area_path(area), module)

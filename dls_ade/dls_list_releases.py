@@ -10,7 +10,7 @@ from argument_parser import ArgParser
 import path_functions as pathf
 import vcs_git
 
-e = environment()
+env = environment()
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -58,7 +58,7 @@ def make_parser():
         help="Print releases available in git")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="Change the epics version, default is " + e.epicsVer() +
+        help="Change the epics version, default is " + env.epicsVer() +
              " (from your environment)")
     parser.add_argument(
         "-r", "--rhel_version", action="store", type=int, dest="rhel_version",
@@ -69,50 +69,13 @@ def make_parser():
     return parser
 
 
-def check_epics_version(epics_version):
-    """
-    Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
-    Then checks if the epics version matches the reg ex. Then sets environment epics version.
-
-    Args:
-        epics_version: Epics version to check
-
-    Raises:
-        Expected epics version like R3.14.8.2, got: <epics_version>
-    """
-    if epics_version:
-        if not epics_version.startswith("R"):
-            epics_version = "R{0}".format(epics_version)
-        if e.epics_ver_re.match(epics_version):
-            e.setEpics(epics_version)
-        else:
-            raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
-
-
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that the technical area is also provided.
-
-    Args:
-        area: Area of repository
-        module: Module to check
-
-    Raises:
-        "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" \
-            and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area under Beamline")
-
-
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
-    check_epics_version(args.epics_version)
-    check_technical_area(args.area, args.module_name)
+    env.check_epics_version(args.epics_version)
+    pathf.check_technical_area(args.area, args.module_name)
 
     # >>> Not sure what this is for
     # # Force options.svn if no releases in the file system
@@ -133,7 +96,7 @@ def main():
     else:
         # List branches from prod
         target = "prod"
-        prodArea = e.prodArea(args.area)
+        prodArea = env.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
             prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
                                                                    platform.machine()))
@@ -153,7 +116,7 @@ def main():
             print(args.module_name + ": No releases made for " + args.epics_version)
         return 1
 
-    releases = e.sortReleases(releases)
+    releases = env.sortReleases(releases)
 
     if args.latest:
         print("The latest release for " + args.module_name + " in " + target +

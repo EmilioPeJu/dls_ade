@@ -49,6 +49,25 @@ class environment(object):
         if epics:
             self.setEpics(epics)
 
+    def check_epics_version(self, epics_version):
+        """
+        Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
+        Then checks if the epics version matches the reg ex. Then sets environment epics version.
+
+        Args:
+            epics_version: Epics version to check
+
+        Raises:
+            Expected epics version like R3.14.8.2, got: <epics_version>
+        """
+        if epics_version:
+            if not epics_version.startswith("R"):
+                epics_version = "R{0}".format(epics_version)
+            if self.epics_ver_re.match(epics_version):
+                self.setEpics(epics_version)
+            else:
+                raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
+
     def setEpicsFromEnv(self):
         """
         Get epics version from the environment, and set self.epics. Set default 'R3.14.12.3' if environment

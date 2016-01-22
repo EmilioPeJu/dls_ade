@@ -5,7 +5,11 @@ from exceptions import ParsingError
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
-class CheckTechnicalAreaTest(unittest.TestCase):
+def setUpModule():
+    path_functions.GIT_ROOT_DIR = "controlstest"
+
+
+class CheckTechnicalAreaValidTest(unittest.TestCase):
 
     def test_given_area_not_ioc_then_no_error_raised(self):
         area = "support"
@@ -22,27 +26,12 @@ class CheckTechnicalAreaTest(unittest.TestCase):
     def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
         area = "ioc"
         module = "test_module"
-        expected_error_msg = "Missing Technical Area Under Beamline"
+        expected_error_msg = "Missing technical area under beamline"
 
         try:
             path_functions.check_technical_area_valid(area, module)
         except ParsingError as error:
             self.assertEqual(error.message, expected_error_msg)
-
-
-def setUpModule():
-    path_functions.GIT_ROOT_DIR = "controlstest"
-
-
-class AreaTest(unittest.TestCase):
-
-    def test_given_area_then_path_to_area_returned(self):
-
-        area = "any"
-
-        path = path_functions.area(area)
-
-        self.assertEqual(path, "controlstest/" + area)
 
 
 class ModuleAreaTests(unittest.TestCase):

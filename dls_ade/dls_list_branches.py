@@ -3,6 +3,7 @@
 
 import sys
 import shutil
+import path_functions as pathf
 from argument_parser import ArgParser
 import path_functions as pathf
 import vcs_git
@@ -27,29 +28,12 @@ def make_parser():
     return parser
 
 
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
-    name or that the technical area is also provided. Raises parser error if not.
-
-    Args:
-        area(str): Area of repository
-        module(str): Name of module
-
-    Raises:
-        Exception: "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area under Beamline")
-
-
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
-    check_technical_area(args.area, args.module_name)
+    pathf.check_technical_area_valid(args.area, args.module_name)
 
     source = pathf.dev_module_path(args.module_name, args.area)
 
