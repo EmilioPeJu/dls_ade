@@ -67,17 +67,21 @@ class GetModuleCreatorTestBase(GetModuleCreatorTest):
 
 class GetModuleCreatorTestPython(GetModuleCreatorTest):
 
-    def test_given_invalid_name_then_module_creator_python_not_returned(self):
+    def test_given_name_with_no_dls_prepended_then_exception_raised(self):
 
         with self.assertRaises(ParsingError) as e:
             get_mc.get_module_creator("test_module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
+    def test_given_name_with_dash_then_exception_raised(self):
+
         with self.assertRaises(ParsingError) as e:
             get_mc.get_module_creator("dls_test-module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
+
+    def test_given_name_with_dot_then_exception_raised(self):
 
         with self.assertRaises(ParsingError) as e:
             get_mc.get_module_creator("dls_test.module", "python")
