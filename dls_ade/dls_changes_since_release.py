@@ -2,34 +2,34 @@
 # This script comes from the dls_scripts python module
 
 import sys
+import shutil
+import logging
 from argument_parser import ArgParser
-from dls_environment import environment
-import path_functions as path
+import path_functions as pathf
+import vcs_git
+from pkg_resources import require
+require('GitPython')
+import git
 
-usage = """Default <area> is 'support'.
-Check if a module in the <area> area of the repository has had changes committed since its last release."""
+logging.basicConfig(level=logging.DEBUG)
+
+usage = """
+Default <area> is 'support'.
+Check if a module in the <area> area of the repository has had changes committed since its last release.
+"""
 
 
 def make_parser():
-    # parse options
+    """
+    Takes default parser arguments and adds module_name
+
+    Returns:
+        ArgumentParser: Parser with relevant arguments
+    """
+
     parser = ArgParser(usage)
-    parser.add_argument("module_name", type=str,
-                        help="name of module to release")
+    parser.add_argument("module_name", type=str, help="name of module to release")
     return parser
-
-
-def check_parsed_arguments_valid(args, parser):
-
-    if 'module_name' not in args:
-        parser.error("Module name required")
-
-
-def check_technical_area_valid(args, parser):
-    module = args['module']
-    area = args['area']
-
-    if area == "ioc" and not len(module.split('/')) > 1:
-        parser.error("Missing Technical Area Under Beamline")
 
 
 def main():
@@ -37,38 +37,39 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_parsed_arguments_valid(vars(args), parser)
-    check_technical_area_valid(vars(args), parser)
-
-    # setup the environment
-    e = environment()
+    pathf.check_technical_area_valid(args.area, args.module_name)
 
     module = args.module_name
+    source = pathf.devModule(module, args.area)
+    logging.debug(source)
 
-    source = path.devModule(module, args.area)
-    release = path.prodModule(module, args.area)
-                
     # Check for existence of this module in various places in the repository and note revisions
-    assert svn.pathcheck(source), "Repository does not contain '" + source + "'"
+    if not vcs_git.is_repo_path(source):
+        raise Exception("Repository does not contain " + source)
 
-    last_trunk_rev = svn.info2(source, recurse=False)[0][1]["last_changed_rev"].number
+    if vcs_git.is_repo_path(source):
+        repo = vcs_git.temp_clone(source)
+        releases = vcs_git.list_module_releases(repo)
 
-    if svn.pathcheck(release):
-        last_release_rev = \
-            svn.info2(release, recurse=False)[0][1]["last_changed_rev"].number
-        last_release_num = \
-            e.sortReleases([x["name"] for x in svn.ls(release)])[-1].split("/")[-1]
-        # print the output
-        if last_trunk_rev > last_release_rev:
-            print(module + " (" + last_release_num + \
-                  "): Outstanding changes. Release = r" + \
-                  str(last_release_rev) + ", Trunk = r" + \
-                  str(last_trunk_rev))
+        if releases:
+            last_release_num = releases[-1]
         else:
-            print(module + " (" + last_release_num + "): Up to date.")
+            print("No release has been done for " + module)
+            # return so last_release_num can't be referenced before assignment
+            return 1
     else:
-        print(module + " (No release done): Outstanding changes.")
-    
+        raise Exception(source + "does not exist on the repository.")
+
+    # Get a single log between last release and HEAD
+    # If there is one, then changes have been made
+    logs = list(repo.iter_commits(last_release_num + "..HEAD", max_count=1))
+    if logs:
+        print("Changes have been made to " + module + " since release " + last_release_num)
+    else:
+        print("No changes have been made to " + module + " since most recent release " + last_release_num)
+
+    shutil.rmtree(repo.working_tree_dir)
+
 
 if __name__ == "__main__":
     sys.exit(main())
