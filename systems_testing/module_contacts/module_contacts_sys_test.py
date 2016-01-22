@@ -79,33 +79,41 @@ settings_list = [
 
     },
 
-    # # Checkout one module from python area and check it is correctly cloned
-    # {
-    #     'description': "checkout_from_python",
-    #
-    #     'arguments': "-p dls_testpythonmod",
-    #
-    #     'repo_comp_method': "server_comp",
-    #
-    #     'local_comp_path_one': "dls_testpythonmod",
-    #
-    #     'server_repo_path': "controlstest/python/dls_testpythonmod",
-    #
-    # },
-    #
-    # # Checkout one module from ioc area and check it is correctly cloned
-    # {
-    #     'description': "checkout_from_ioc",
-    #
-    #     'arguments': "-i BTEST/TS",
-    #
-    #     'repo_comp_method': "server_comp",
-    #
-    #     'local_comp_path_one': "BTEST/TS",
-    #
-    #     'server_repo_path': "controlstest/ioc/BTEST/TS",
-    #
-    # },
+    # Check contacts of ioc module
+    {
+        'description': "check_ioc_contacts",
+
+        'arguments': "-i BTEST/TS",
+
+        'std_out_compare_string': "Contact: lkz95212 (CC: mef65357)\n",
+
+    },
+
+    # Set contacts of ioc module
+    {
+        'description': "set_ioc_contacts",
+
+        'arguments': "-i BTEST/TS -c mef65357 -d lkz95212",
+
+        'attributes_dict': {'module-contact': 'mef65357',
+                            'module-cc': 'lkz95212'},
+
+        'server_repo_path': "controlstest/ioc/BTEST/TS",
+
+    },
+
+    # Set contacts of ioc module with CSV
+    {
+        'description': "set_ioc_contacts_CSV",
+
+        'arguments': "-i BTEST/TS -m ioc_test_csv.txt",
+
+        'attributes_dict': {'module-contact': 'lkz95212',
+                            'module-cc': 'mef65357'},
+
+        'server_repo_path': "controlstest/ioc/BTEST/TS",
+
+    },
 
 ]
 
