@@ -94,15 +94,15 @@ settings_list = [
 
 def test_generator():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
-        os.chdir(tempdir)
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
+    os.chdir(tempdir)
 
-        for test in st.generate_tests_from_dicts("dls-checkout-module.py",
-                                                 st.SystemsTest,
-                                                 settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-checkout-module.py",
+                                             st.SystemsTest,
+                                             settings_list):
+        yield test
 
-        os.chdir(cwd)
-        shutil.rmtree(tempdir)
+    os.chdir(cwd)
+    shutil.rmtree(tempdir)
 
