@@ -69,30 +69,13 @@ def make_parser():
     return parser
 
 
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that the technical area is also provided.
-
-    Args:
-        area: Area of repository
-        module: Module to check
-
-    Raises:
-        "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" \
-            and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area under Beamline")
-
-
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
     env.check_epics_version(args.epics_version)
-    check_technical_area(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
 
     # >>> Not sure what this is for
     # # Force options.svn if no releases in the file system

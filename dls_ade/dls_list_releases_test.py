@@ -67,28 +67,3 @@ class MakeParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.dest, "rhel_version")
         self.assertIn("--rhel_version", option.option_strings)
-
-
-class CheckTechnicalAreaTest(unittest.TestCase):
-
-    def test_given_area_not_ioc_then_no_error_raised(self):
-        area = "support"
-        module = "test_module"
-
-        dls_list_releases.check_technical_area(area, module)
-
-    def test_given_area_ioc_module_split_two_then_no_error_raised(self):
-        area = "ioc"
-        module = "modules/test_module"
-
-        dls_list_releases.check_technical_area(area, module)
-
-    def test_given_area_ioc_module_split_less_than_two_then_no_error_raised(self):
-        area = "ioc"
-        module = "test_module"
-        expected_error_msg = "Missing Technical Area under Beamline"
-
-        try:
-            dls_list_releases.check_technical_area(area, module)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_msg)

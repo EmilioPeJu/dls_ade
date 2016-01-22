@@ -5,19 +5,18 @@ GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 def check_technical_area_valid(area, module):
     """
-    Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
-    raises a parser error if not
+    Checks if given area is IOC and if so, checks that the technical area is also provided.
 
     Args:
         area: Area of repository
         module: Module to check
 
     Raises:
-        "Missing Technical Area Under Beamline"
+        ValueError: "Missing technical area under beamline"
     """
 
     if area == "ioc" and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area Under Beamline")
+        raise ValueError("Missing technical area under beamline")
 
 
 def area(area_v):
@@ -39,7 +38,7 @@ def devModule(module, area_v="support"):
 
 # TODO(Martin): Delete the below functions, (check for usage and change to
 # TODO(Martin): dev_module_path or dev_area_path). Note: dlsbuild uses entirely
-# TODO(Martin): different set of devArea and prodArea functions.
+# TODO(Martin): different set of dev_area and prod_area functions.
 def prodArea(area_v="support"):
     """Return the path for the release section of a particular area"""
     return area(area_v)

@@ -4,6 +4,7 @@
 import os
 import sys
 import vcs_git
+import path_functions as pathf
 from dls_environment import environment
 from argument_parser import ArgParser
 import dlsbuild
@@ -58,24 +59,6 @@ def check_area_archivable(area):
         raise ValueError("Modules in area " + area + " cannot be archived")
 
 
-# TODO: Route through path_functions (also in list-releases)
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that the technical area is also provided.
-
-    Args:
-        area: Area of repository
-        module: Module to check
-
-    Raises:
-        ValueError: "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" \
-            and len(module.split('/')) < 2:
-        raise ValueError("Missing Technical Area under Beamline")
-
-
 def check_file_paths(release_dir, archive, untar):
     """
     Checks if the file to untar exists and the directory to build it a does not (if untar is True), or
@@ -108,7 +91,7 @@ def main():
 
     check_area_archivable(args.area)
     env.check_epics_version(args.epics_version)
-    check_technical_area(args.area, args.module_name)
+    pathf.check_technical_area_valid(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)
