@@ -459,7 +459,7 @@ def get_active_branch(local_repo_path):
     """
     repo = git.Repo(local_repo_path)
 
-    return repo.active_branch
+    return repo.active_branch.name
 
 
 class Git(BaseVCS):

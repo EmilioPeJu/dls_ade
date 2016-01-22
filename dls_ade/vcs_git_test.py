@@ -819,7 +819,8 @@ class GetActiveBranchTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo')
     def test_returns_active_branch_correctly(self, mock_repo_class):
 
-        mock_repo = MagicMock(active_branch="current_active_branch")
+        mock_repo = MagicMock()
+        type(mock_repo.active_branch).name = PropertyMock(return_value="current_active_branch")
         mock_repo_class.return_value = mock_repo
 
         return_value = vcs_git.get_active_branch("test_repo_path")
