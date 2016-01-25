@@ -235,7 +235,10 @@ class environment(object):
         """
         releases = []
         for path in paths:
-            release = os.path.split(os.path.normpath(path))[1]
+            if type(path) == tuple:
+                release = os.path.split(os.path.normpath(path[0]))[1]
+            else:
+                release = os.path.split(os.path.normpath(path))[1]
             releases.append((self.normaliseRelease(release), path))
 
         sorted_releases = []
