@@ -185,3 +185,5 @@ def test_generator_export_to_server():
 
         os.chdir(cwd)
 
+        shutil.rmtree(tempdir)
+
