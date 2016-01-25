@@ -51,23 +51,23 @@ settings_list = [
 
     },
 
-    # # Checkout one module from python area, change branch and check it is correctly cloned
-    # {
-    #     'description': "checkout_from_python_and_change_branch",
-    #
-    #     'arguments': "-p dls_testpythonmod -b bug-fix",
-    #
-    #     'local_repo_path': "dls_testpythonmod",
-    #
-    #     'branch_name': "bug-fix",
-    #
-    #     'repo_comp_method': "server_comp",
-    #
-    #     'local_comp_path_one': "dls_testpythonmod",
-    #
-    #     'server_repo_path': "controlstest/python/dls_testpythonmod",
-    #
-    # },
+    # Checkout one module from python area, change branch and check it is correctly cloned
+    {
+        'description': "checkout_from_python_and_change_branch",
+
+        'arguments': "-p dls_testpythonmod -b bug-fix",
+
+        'local_repo_path': "dls_testpythonmod",
+
+        'branch_name': "bug-fix",
+
+        'repo_comp_method': "server_comp",
+
+        'local_comp_path_one': "dls_testpythonmod",
+
+        'server_repo_path': "controlstest/python/dls_testpythonmod",
+
+    },
 
     # Checkout one module from ioc area and check it is correctly cloned
     {
@@ -83,23 +83,23 @@ settings_list = [
 
     },
 
-    # # Checkout one module from ioc area, change branch and check it is correctly cloned
-    # {
-    #     'description': "checkout_from_ioc_and_change_branch",
-    #
-    #     'arguments': "-i BTEST/TS -b bug-fix",
-    #
-    #     'local_repo_path': "BTEST/TS",
-    #
-    #     'branch_name': "bug-fix",
-    #
-    #     'repo_comp_method': "server_comp",
-    #
-    #     'local_comp_path_one': "BTEST/TS",
-    #
-    #     'server_repo_path': "controlstest/ioc/BTEST/TS",
-    #
-    # },
+    # Checkout one module from ioc area, change branch and check it is correctly cloned
+    {
+        'description': "checkout_from_ioc_and_change_branch",
+
+        'arguments': "-i BTEST/TS -b bug-fix",
+
+        'local_repo_path': "BTEST/TS",
+
+        'branch_name': "bug-fix",
+
+        'repo_comp_method': "server_comp",
+
+        'local_comp_path_one': "BTEST/TS",
+
+        'server_repo_path': "controlstest/ioc/BTEST/TS",
+
+    },
 
     # Checkout everything from support area and check one of them is correctly cloned
     {
@@ -148,15 +148,14 @@ settings_list = [
 
 def test_generator():
 
-    tempdir = tempfile.mkdtemp()
-    cwd = os.getcwd()
-    os.chdir(tempdir)
-
     for test in st.generate_tests_from_dicts("dls-checkout-module.py",
                                              st.SystemsTest,
                                              settings_list):
+        tempdir = tempfile.mkdtemp()
+        cwd = os.getcwd()
+        os.chdir(tempdir)
+
         yield test
 
-    os.chdir(cwd)
-    shutil.rmtree(tempdir)
-
+        os.chdir(cwd)
+        shutil.rmtree(tempdir)
