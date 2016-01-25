@@ -144,8 +144,6 @@ class SystemsTest(object):
 
         _exception_type: The exception type to test for in standard error.
         _exception_string: The exception string to test for in standard error.
-        _std_out_compare_method: The type of output comparison used.
-            Defaults to full comparison.
         _std_out_compare_string: The string for standard output comparisons.
         _arguments: A string containing the arguments for the given script.
         _attributes_dict: A dictionary of all git attributes to check for.
