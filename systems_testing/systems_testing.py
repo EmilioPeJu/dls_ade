@@ -144,6 +144,8 @@ class SystemsTest(object):
 
         _exception_type: The exception type to test for in standard error.
         _exception_string: The exception string to test for in standard error.
+        _std_out_compare_method: The type of output comparison used.
+            Defaults to full comparison.
         _std_out_compare_string: The string for standard output comparisons.
         _arguments: A string containing the arguments for the given script.
         _attributes_dict: A dictionary of all git attributes to check for.
@@ -183,6 +185,7 @@ class SystemsTest(object):
         self._exception_type = ""
         self._exception_string = ""
 
+        self._std_out_compare_method = None
         self._std_out_compare_string = None
         self._arguments = ""
         self._attributes_dict = {}
@@ -212,6 +215,7 @@ class SystemsTest(object):
         self._settings_list = [  # List of valid variables to update.
             'exception_type',
             'exception_string',
+            'std_out_compare_method',
             'std_out_compare_string',
             'arguments',
             'attributes_dict',
@@ -231,6 +235,7 @@ class SystemsTest(object):
         Note: This will only load the following variables:
             - exception_type
             - exception_string
+            - std_out_compare_method
             - std_out_compare_string
             - arguments
             - attributes_dict
@@ -364,7 +369,26 @@ class SystemsTest(object):
 
         logging.debug("Comparing the standard output to comparison string.")
 
-        assert_equal(self._std_out, self._std_out_compare_string)
+        if self._std_out_compare_method is None:
+            self._std_out_compare_method = "full_comp"
+
+        if self._std_out_compare_method == "full_comp":
+            assert_equal(self._std_out, self._std_out_compare_string)
+
+        elif self._std_out_compare_method == "starts_with":
+            assert_true(self._std_out.startswith(self._std_out_compare_string))
+
+        elif self._std_out_compare_method == "ends_with":
+            assert_true(self._std_out.endswith(self._std_out_compare_string))
+
+        else:
+            err_message = ("The std_out_compare_method must be one of the "
+                           "following (defaults to full_comp):"
+                           "\nfull_comp, starts_with, ends_with."
+                           "\nGot: {std_out_compare_method:s}")
+            raise SettingsError(err_message.format(
+                    std_out_compare_method=self._std_out_compare_method)
+            )
 
     def check_for_and_clone_remote_repo(self):
         """Checks server repo path exists and clones it.
@@ -515,7 +539,7 @@ class SystemsTest(object):
             err_message = ("The repo_comp_method must be called using one of "
                            "the following:"
                            "\nlocal_comp, server_comp, all_comp."
-                           "\nCurrently got: {repo_comp_method:s}")
+                           "\nGot: {repo_comp_method:s}")
             raise SettingsError(err_message.format(
                     repo_comp_method=self._repo_comp_method)
             )
