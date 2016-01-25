@@ -31,6 +31,6 @@ if __name__ == "__main__":
     user_login = os.getlogin()
     current_dir = os.getcwd()
 
-    subprocess.check_call("find " + current_dir + " -type f -exec sed -i 's/" +
-                          user_login + "/USER_LOGIN_NAME/g' {} +")
+    subprocess.check_call(("find " + current_dir + " -type f -exec sed -i s/" +
+                          user_login + "/USER_LOGIN_NAME/g {} +").split())
 
