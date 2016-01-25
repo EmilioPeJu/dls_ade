@@ -185,8 +185,9 @@ class SystemsTest(object):
         self._exception_type = ""
         self._exception_string = ""
 
-        self._std_out_compare_method = None
         self._std_out_compare_string = None
+        self._std_out_starts_with_string = None
+        self._std_out_ends_with_string = None
         self._arguments = ""
         self._attributes_dict = {}
 
@@ -215,8 +216,9 @@ class SystemsTest(object):
         self._settings_list = [  # List of valid variables to update.
             'exception_type',
             'exception_string',
-            'std_out_compare_method',
             'std_out_compare_string',
+            'std_out_starts_with_string',
+            'std_out_ends_with_string',
             'arguments',
             'attributes_dict',
             'server_repo_path',
@@ -235,8 +237,9 @@ class SystemsTest(object):
         Note: This will only load the following variables:
             - exception_type
             - exception_string
-            - std_out_compare_method
             - std_out_compare_string
+            - std_out_starts_with_string
+            - std_out_ends_with_string
             - arguments
             - attributes_dict
             - server_repo_path
@@ -332,6 +335,8 @@ class SystemsTest(object):
         self.check_std_err_for_exception()
 
         self.compare_std_out_to_string()
+        self.check_std_out_starts_with_string()
+        self.check_std_out_ends_with_string()
 
     def check_std_err_for_exception(self):
         """Check the standard error for the exception information.
@@ -369,26 +374,37 @@ class SystemsTest(object):
 
         logging.debug("Comparing the standard output to comparison string.")
 
-        if self._std_out_compare_method is None:
-            self._std_out_compare_method = "full_comp"
+        assert_equal(self._std_out, self._std_out_compare_string)
 
-        if self._std_out_compare_method == "full_comp":
-            assert_equal(self._std_out, self._std_out_compare_string)
+    def check_std_out_starts_with_string(self):
+        """Check if the standard output starts with std_out_starts_with_string.
 
-        elif self._std_out_compare_method == "starts_with":
-            assert_true(self._std_out.startswith(self._std_out_compare_string))
+        Raises:
+            AssertionError: If the test does not pass.
 
-        elif self._std_out_compare_method == "ends_with":
-            assert_true(self._std_out.endswith(self._std_out_compare_string))
+        """
+        if self._std_out_starts_with_string is None:
+            return
 
-        else:
-            err_message = ("The std_out_compare_method must be one of the "
-                           "following (defaults to full_comp):"
-                           "\nfull_comp, starts_with, ends_with."
-                           "\nGot: {std_out_compare_method:s}")
-            raise SettingsError(err_message.format(
-                    std_out_compare_method=self._std_out_compare_method)
-            )
+        logging.debug("Checking if the standard output starts with the given "
+                      "string.")
+
+        assert_true(self._std_out.startswith(self._std_out_starts_with_string))
+
+    def check_std_out_ends_with_string(self):
+        """Check if the standard output ends with std_out_ends_with_string.
+
+        Raises:
+            AssertionError: If the test does not pass.
+
+        """
+        if self._std_out_ends_with_string is None:
+            return
+
+        logging.debug("Checking if the standard output ends with the given "
+                      "string.")
+
+        assert_true(self._std_out.endswith(self._std_out_ends_with_string))
 
     def check_for_and_clone_remote_repo(self):
         """Checks server repo path exists and clones it.

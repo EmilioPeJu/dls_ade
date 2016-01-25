@@ -269,7 +269,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
         st_obj.compare_std_out_to_string()
 
-    def test_given_std_out_equal_to_comparison_string_with_comparison_method_none_then_test_passes(self):
+    def test_given_std_out_equal_to_comparison_string_then_test_passes(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
@@ -280,7 +280,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
         st_obj.compare_std_out_to_string()
 
-    def test_given_std_out_not_equal_to_comparison_string_with_comparison_method_none_then_test_fails(self):
+    def test_given_std_out_not_equal_to_comparison_string_then_test_fails(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
@@ -292,100 +292,75 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             st_obj.compare_std_out_to_string()
 
-    def test_given_std_out_equal_to_comparison_string_with_comparison_method_full_comp_then_test_passes(self):
+
+class SystemsTestCheckStdOutStartsWithStringTest(unittest.TestCase):
+
+    def test_given_starts_with_string_is_none_then_function_returns(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        st_obj._std_out_starts_with_string = None
+        st_obj._std_out = "I definitely exist."
+
+        st_obj.check_std_out_starts_with_string()
+
+    def test_given_std_out_starts_with_string_then_test_passes(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
-            'std_out_compare_string': "String to test for.",
-            'std_out_compare_method': "full_comp",
+            'std_out_starts_with_string': "String to test",
         })
 
-        st_obj.compare_std_out_to_string()
+        st_obj.check_std_out_starts_with_string()
 
-    def test_given_std_out_not_equal_to_comparison_string_with_comparison_method_full_comp_then_test_fails(self):
-
-        st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj._std_out = "String to test for."
-
-        st_obj.load_settings({
-            'std_out_compare_string': "A different string.",
-            'std_out_compare_method': "full_comp",
-        })
-
-        with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_to_string()
-
-    def test_given_std_out_starts_with_comparison_string_with_comparison_method_starts_with_then_test_passes(self):
+    def test_given_std_out_does_not_start_with_comparison_string_then_test_fails(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
-            'std_out_compare_string': "String to test",
-            'std_out_compare_method': "starts_with",
-        })
-
-        st_obj.compare_std_out_to_string()
-
-    def test_given_std_out_does_not_start_with_comparison_string_with_comparison_method_starts_with_then_test_fails(self):
-
-        st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj._std_out = "String to test for."
-
-        st_obj.load_settings({
-            'std_out_compare_string': "String_",
-            'std_out_compare_method': "starts_with",
+            'std_out_starts_with_string': "String_",
         })
 
         with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_to_string()
+            st_obj.check_std_out_starts_with_string()
 
-    def test_given_std_out_ends_with_comparison_string_with_comparison_method_ends_with_then_test_passes(self):
+
+class SystemsTestCheckStdOutEndsWithStringTest(unittest.TestCase):
+
+    def test_given_ends_with_string_is_none_then_function_returns(self):
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+
+        st_obj._std_out_ends_with_string = None
+        st_obj._std_out = "I definitely exist."
+
+        st_obj.check_std_out_ends_with_string()
+
+    def test_given_std_out_ends_with_comparison_string_then_test_passes(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
-            'std_out_compare_string': "to test for.",
-            'std_out_compare_method': "ends_with",
+            'std_out_ends_with_string': "to test for.",
         })
 
-        st_obj.compare_std_out_to_string()
+        st_obj.check_std_out_ends_with_string()
 
-    def test_given_std_out_does_not_end_with_comparison_string_with_comparison_method_ends_with_then_test_fails(self):
+    def test_given_std_out_does_not_end_with_comparison_string_then_test_fails(self):
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
-            'std_out_compare_string': "test_for.",
-            'std_out_compare_method': "ends_with",
+            'std_out_ends_with_string': "test_for.",
         })
 
         with self.assertRaises(AssertionError):
-            st_obj.compare_std_out_to_string()
-
-    def test_given_unexpected_comparison_method_then_exception_raised_with_given_and_accepted_comparison_methods(self):
-
-        st_obj = st.SystemsTest("test_script", "test_name")
-        st_obj._std_out = "String to test for."
-
-        st_obj.load_settings({
-            'std_out_compare_string': "test_for.",
-            'std_out_compare_method': "non_existent",
-        })
-
-        with self.assertRaises(st.SettingsError) as e:
-            st_obj.compare_std_out_to_string()
-
-        exc_msg = str(e.exception)
-
-        self.assertTrue(all(x in exc_msg for x in ['non_existent',
-                                                   'full_comp',
-                                                   'starts_with',
-                                                   'ends_with']))
+            st_obj.check_std_out_ends_with_string()
 
 
 class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
