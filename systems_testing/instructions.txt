@@ -1,0 +1,7 @@
+Instructions for system testing:
+
+Run "make clean && make install" in the repository root.
+
+Run "source setup_testing_environment.sh " and then path to the dls_ade REPOSITORY (not package).
+
+systems_testing.py and vcs_git are now in your PYTHONPATH, while the compiled scripts (dls_ade/prefix/bin/...) are in your PATH.
