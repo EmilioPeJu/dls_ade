@@ -44,7 +44,7 @@ setup(
                    'dls-list-branches.py = dls_ade.dls_list_branches:main',
                    'dls-list-modules.py = dls_ade.dls_list_modules:main',
                    'dls-list-releases.py = dls_ade.dls_list_releases:main',
-                   'dls-logs-since-releases.py = dls_ade.dls_logs_since_release:main',
+                   'dls-logs-since-release.py = dls_ade.dls_logs_since_release:main',
                    'dls-module-contacts.py = dls_ade.dls_module_contacts:main',
                    'dls-release.py = dls_ade.dls_release:main',
                    'dls-start-new-module.py = dls_ade.dls_start_new_module:main',
