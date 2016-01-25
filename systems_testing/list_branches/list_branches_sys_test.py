@@ -1,6 +1,8 @@
 from systems_testing import systems_testing as st
 
 support_list = "Branches of testsupportmod:\n\nbug-fix\nmaster\nnew-feature\n\n"
+python_list = "Branches of dls_testpythonmod:\n\nbug-fix\nmaster\nnew-feature\n\n"
+ioc_list = "Branches of BTEST/TS:\n\nbug-fix\nmaster\nnew-feature\n\n"
 
 settings_list = [
 
@@ -14,35 +16,25 @@ settings_list = [
 
     },
 
-    # # List everything in python area
-    # {
-    #     'description': "list_python",
-    #
-    #     'arguments': "-p",
-    #
-    #     'std_out_compare_string': python_list,
-    #
-    # },
-    #
-    # # List everything in ioc area
-    # {
-    #     'description': "list_ioc",
-    #
-    #     'arguments': "-i",
-    #
-    #     'std_out_compare_string': ioc_list,
-    #
-    # },
-    #
-    # # List everything in an ioc domain
-    # {
-    #     'description': "list_ioc_domain",
-    #
-    #     'arguments': "-i -d BTEST",
-    #
-    #     'std_out_compare_string': ioc_domain_list,
-    #
-    # },
+    # List everything in python area
+    {
+        'description': "list_python_branches",
+
+        'arguments': "-p dls_testpythonmod",
+
+        'std_out_compare_string': python_list,
+
+    },
+
+    # List everything in ioc area
+    {
+        'description': "list_ioc_branches",
+
+        'arguments': "-i BTEST/TS",
+
+        'std_out_compare_string': ioc_list,
+
+    },
 
 ]
 
