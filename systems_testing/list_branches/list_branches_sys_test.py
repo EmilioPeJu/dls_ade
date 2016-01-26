@@ -16,7 +16,7 @@ settings_list = [
 
     },
 
-    # List everything in python area
+    # List releases for python module on repo
     {
         'description': "list_python_branches",
 
@@ -26,7 +26,7 @@ settings_list = [
 
     },
 
-    # List everything in ioc area
+    # List releases for ioc module on repo
     {
         'description': "list_ioc_branches",
 
