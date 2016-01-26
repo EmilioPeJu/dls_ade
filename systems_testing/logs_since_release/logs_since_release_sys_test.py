@@ -3,63 +3,83 @@ import logs
 
 settings_list = [
 
-    # Print logs for module in support area
-    {
-        'description': "print_support_logs",
-
-        'arguments': "testsupportmod 1-0 1-1",
-
-        'std_out_compare_string': logs.support,
-
-    },
-
-    # Print verbose logs for module in support area
-    {
-        'description': "print_verbose_support_logs",
-
-        'arguments': "testsupportmod 1-0 1-1 -v",
-
-        'std_out_compare_string': logs.verbose_support,
-
-    },
-
     # Print logs for module in python area
     {
-        'description': "print_python_logs",
+        'description': "print_logs",
 
-        'arguments': "-p dls_testpythonmod 1-0 1-1",
+        'arguments': "-p dls_testpythonmod2",
 
-        'std_out_compare_string': logs.python,
+        'std_out_compare_string': logs.all_logs,
 
     },
 
     # Print verbose logs for module in python area
     {
-        'description': "print_verbose_python_logs",
+        'description': "print_verbose_logs",
 
-        'arguments': "-p dls_testpythonmod 1-0 1-1 -v",
+        'arguments': "-p dls_testpythonmod2 -v",
 
-        'std_out_compare_string': logs.verbose_python,
-
-    },
-
-    # Print logs for module in ioc area
-    {
-        'description': "print_ioc_logs",
-
-        'arguments': "-i BTEST/TS 1-0 1-1",
-
-        'std_out_compare_string': logs.ioc,
+        'std_out_compare_string': logs.verbose_all,
 
     },
 
-    # Print verbose logs for module in ioc area
+    # Print range logs for module in python area
     {
-        'description': "print_verbose_ioc_logs",
+        'description': "print_range_logs",
 
-        'arguments': "-i BTEST/TS 1-0 1-1 -v",
+        'arguments': "-p dls_testpythonmod2 1-1 2-0",
 
-        'std_out_compare_string': logs.verbose_ioc,
+        'std_out_compare_string': logs.release_range,
+
+    },
+
+    # Print verbose range logs for module in python area
+    {
+        'description': "print_verbose_range_logs",
+
+        'arguments': "-p dls_testpythonmod2 1-1 2-0 -v",
+
+        'std_out_compare_string': logs.verbose_range,
+
+    },
+
+    # Print earlier logs for module in python area
+    {
+        'description': "print_earlier_logs",
+
+        'arguments': "-p dls_testpythonmod2 -e 1-1",
+
+        'std_out_compare_string': logs.earlier,
+
+    },
+
+    # Print verbose earlier logs for module in python area
+    {
+        'description': "print_verbose_earlier_logs",
+
+        'arguments': "-p dls_testpythonmod2 -e 1-1 -v",
+
+        'std_out_compare_string': logs.earlier_verbose,
+
+    },
+
+    # Print later logs for module in python area
+    {
+        'description': "print_later_logs",
+
+        'arguments': "-p dls_testpythonmod2 -l 2-0",
+
+        'std_out_compare_string': logs.later,
+
+    },
+
+    # Print verbose later logs for module in python area
+    {
+        'description': "print_verbose_later_logs",
+
+        'arguments': "-p dls_testpythonmod2 -l 2-0 -v",
+
+        'std_out_compare_string': logs.later_verbose,
 
     },
 
