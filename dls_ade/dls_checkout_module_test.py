@@ -29,12 +29,6 @@ class MakeParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "branch")
         self.assertIn("--branch", option.option_strings)
 
-    def test_force_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-f']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "force")
-        self.assertIn("--force", option.option_strings)
-
 
 class CheckTechnicalAreaTest(unittest.TestCase):
 

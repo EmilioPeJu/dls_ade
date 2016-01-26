@@ -28,8 +28,6 @@ def make_parser():
                         help="name of module to checkout")
     parser.add_argument("-b", "--branch", action="store", type=str, dest="branch",
                         help="Checkout a specific named branch rather than the default (master)")
-    parser.add_argument("-f", "--force", action="store_true", dest="force",
-                        help="force the checkout, disable warnings")
     return parser
 
 
