@@ -1,6 +1,6 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
-# new branch
+
 import os
 import sys
 from dls_ade import vcs_git

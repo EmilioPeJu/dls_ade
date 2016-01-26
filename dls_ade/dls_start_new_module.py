@@ -75,8 +75,6 @@ def main():
 
     if export_to_server:
         module_creator.push_repo_to_remote()
-    else:
-        os.chdir(module_creator.disk_dir)
 
 
 if __name__ == "__main__":
