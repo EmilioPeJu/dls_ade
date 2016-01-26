@@ -24,8 +24,8 @@ call_dict = {
     '--area=python dls_test_python_module': "dls_test_python_module",
     '--area=support test_support_module': "test_support_module",
     '--area=tools test_tools_module': "test_tools_module",
-    '--area=ioc testB21/BL/01': "testB21",
-    '--area=ioc testB22-BL-IOC-04': "testB22",
+    '--area=ioc testB21/BL': "testB21",
+    '--area=ioc testB22-BL-IOC-01': "testB22",
 }
 
 if __name__ == "__main__":
@@ -50,16 +50,12 @@ if __name__ == "__main__":
             "USER_LOGIN_NAME",
             current_dir
     )
-
+    os.chdir(cwd)
     tar_name = COMPARISON_FILES + ".tar.gz"
 
     # Tarball the resultant folder
     with tarfile.open(tar_name, "w:gz") as tar:
         for file_name in tar_list:
-            tar.add(os.path.join(file_name))
-
-    os.chdir(cwd)
-
-    shutil.copy(os.path.join(COMPARISON_FILES, tar_name), tar_name)
+            tar.add(os.path.join(COMPARISON_FILES, file_name))
 
     shutil.rmtree(COMPARISON_FILES)
