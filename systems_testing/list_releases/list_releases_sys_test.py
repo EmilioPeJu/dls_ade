@@ -1,38 +1,27 @@
 from systems_testing import systems_testing as st
 
-support_list = "Previous releases for testsupportmod in the repository:\n1-0\n1-1\n"
-python_list = "Previous releases for dls_testpythonmod in the repository:\n1-0\n1-1\n"
-ioc_list = "Previous releases for BTEST/TS in the repository:\n1-0\n1-1\n"
+releases_list = "Previous releases for dls_testpythonmod2 in the repository:\n1-0\n1-1\n2-0\n2-1\n"
+latest_release = "The latest release for dls_testpythonmod2 in the repository is: 2-1\n"
 
 settings_list = [
 
-    # List releases for support module on repo
-    {
-        'description': "list_support_repo_releases",
-
-        'arguments': "testsupportmod -g",
-
-        'std_out_compare_string': support_list,
-
-    },
-
     # List releases for python module on repo
     {
-        'description': "list_python_repo_releases",
+        'description': "list_repo_releases",
 
-        'arguments': "-p dls_testpythonmod -g",
+        'arguments': "-p dls_testpythonmod2 -g",
 
-        'std_out_compare_string': python_list,
+        'std_out_compare_string': releases_list,
 
     },
 
-    # List everything in ioc area
+    # List last release for python module on repo
     {
-        'description': "list_ioc_repo_releases",
+        'description': "list_last_repo_release",
 
-        'arguments': "-i BTEST/TS -g",
+        'arguments': "-p dls_testpythonmod2 -g -l",
 
-        'std_out_compare_string': ioc_list,
+        'std_out_compare_string': latest_release,
 
     },
 
