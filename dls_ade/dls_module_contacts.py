@@ -204,7 +204,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_parsed_args_compatible(args.imp, args.contact, args.cc)
+    check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc, parser)
 
     # Create the list of modules from args, or the gitolite server if none provided
     modules = []
