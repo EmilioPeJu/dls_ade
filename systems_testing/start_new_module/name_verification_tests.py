@@ -6,7 +6,6 @@ import os
 import shutil
 import tempfile
 
-COMPARISON_FILES = "comparison_files"
 
 settings_list = [
     {
@@ -102,3 +101,22 @@ settings_list = [
 
     }
 ]
+
+
+# TODO(Martin) Make this one for all the parsing errors.
+# TODO(Martin) Can check that no local folders exist at the end - job complete!
+def test_generator_parsing_errors_expected():
+
+        tempdir = tempfile.mkdtemp()
+        cwd = os.getcwd()
+
+        os.chdir(tempdir)
+
+        for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+                                                 st.SystemsTest,
+                                                 settings_list):
+            yield test
+
+        os.chdir(cwd)
+
+        shutil.rmtree(tempdir)

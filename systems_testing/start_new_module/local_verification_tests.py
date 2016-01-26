@@ -9,7 +9,7 @@ import tempfile
 COMPARISON_FILES = "comparison_files"
 
 
-# TODO(Martin) Make this one for all the expected verification errors.
+# TODO(Martin) Make this one for all the expected local verification errors.
 # TODO(Martin) Can check that no local folders exist at the end - job complete!
 def test_generator_local_exceptions_expected():
 

@@ -1,3 +1,4 @@
 In order to generate the comparison files, you must ensure you are using the default environment settings.
+ - Do NOT use setup_testing_environment before running generate_comparison_files.py!
 
-Do NOT use setup_testing_environment before running generate_comparison_files.py!
+This will create the tarball in your local directory.
