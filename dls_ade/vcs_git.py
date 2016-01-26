@@ -363,10 +363,7 @@ def clone_multi(source):
     split_list = get_repository_list()
     for path in split_list:
         if path.startswith(source):
-            if source.split('/')[-1] == 'ioc':
-                module = path.split('/')[-2] + '/' + path.split('/')[-1]
-            else:
-                module = path.split('/')[-1]
+            module = path.split('/')[-1]
             if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")
                 git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
