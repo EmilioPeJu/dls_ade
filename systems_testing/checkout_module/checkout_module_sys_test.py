@@ -5,41 +5,9 @@ import shutil
 
 settings_list = [
 
-    # Checkout one module from support area and check it is correctly cloned
-    {
-        'description': "checkout_from_support",
-
-        'arguments': "testsupportmod",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "testsupportmod",
-
-        'server_repo_path': "controlstest/support/testsupportmod",
-
-    },
-
-    # Checkout one module from support area, change branch and check it is correctly cloned
-    {
-        'description': "checkout_from_support_and_change_branch",
-
-        'arguments': "testsupportmod -b bug-fix",
-
-        'local_repo_path': "testsupportmod",
-
-        'branch_name': "bug-fix",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "testsupportmod",
-
-        'server_repo_path': "controlstest/support/testsupportmod",
-
-    },
-
     # Checkout one module from python area and check it is correctly cloned
     {
-        'description': "checkout_from_python",
+        'description': "checkout_module",
 
         'arguments': "-p dls_testpythonmod",
 
@@ -53,7 +21,7 @@ settings_list = [
 
     # Checkout one module from python area, change branch and check it is correctly cloned
     {
-        'description': "checkout_from_python_and_change_branch",
+        'description': "checkout_and_change_branch",
 
         'arguments': "-p dls_testpythonmod -b bug-fix",
 
@@ -69,55 +37,9 @@ settings_list = [
 
     },
 
-    # Checkout one module from ioc area and check it is correctly cloned
-    {
-        'description': "checkout_from_ioc",
-
-        'arguments': "-i BTEST/TS",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "BTEST/TS",
-
-        'server_repo_path': "controlstest/ioc/BTEST/TS",
-
-    },
-
-    # Checkout one module from ioc area, change branch and check it is correctly cloned
-    {
-        'description': "checkout_from_ioc_and_change_branch",
-
-        'arguments': "-i BTEST/TS -b bug-fix",
-
-        'local_repo_path': "BTEST/TS",
-
-        'branch_name': "bug-fix",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "BTEST/TS",
-
-        'server_repo_path': "controlstest/ioc/BTEST/TS",
-
-    },
-
-    # Checkout everything from support area and check one of them is correctly cloned
-    {
-        'description': "checkout_all_support (Enter 'Y')",
-
-        'arguments': "everything",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "testsupportmod",
-
-        'server_repo_path': "controlstest/support/testsupportmod",
-
-    },
-
     # Checkout everything from python area and check one of them is correctly cloned
     {
-        'description': "checkout_all_python (Enter 'Y')",
+        'description': "checkout_all_area (Enter 'Y')",
 
         'arguments': "-p everything",
 
@@ -129,19 +51,19 @@ settings_list = [
 
     },
 
-    # Checkout everything from ioc area and check one of them is correctly cloned
-    {
-        'description': "checkout_all_ioc (Enter 'Y')",
-
-        'arguments': "-i everything",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "BTEST/TS",
-
-        'server_repo_path': "controlstest/ioc/BTEST/TS",
-
-    },
+    # # Checkout everything from ioc area/domain and check one of them is correctly cloned
+    # {
+    #     'description': "checkout_ioc_domain",
+    #
+    #     'arguments': "-i ...",
+    #
+    #     'repo_comp_method': "server_comp",
+    #
+    #     'local_comp_path_one': "BTEST/TS",
+    #
+    #     'server_repo_path': "controlstest/ioc/BTEST/TS",
+    #
+    # },
 
 ]
 
@@ -151,6 +73,7 @@ def test_generator():
     for test in st.generate_tests_from_dicts("dls-checkout-module.py",
                                              st.SystemsTest,
                                              settings_list):
+
         tempdir = tempfile.mkdtemp()
         cwd = os.getcwd()
         os.chdir(tempdir)
@@ -159,3 +82,4 @@ def test_generator():
 
         os.chdir(cwd)
         shutil.rmtree(tempdir)
+
