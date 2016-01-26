@@ -678,6 +678,16 @@ class CloneMultiTest(unittest.TestCase):
 
         mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'test_module', "./test_module")
 
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/ioc/BL/module"])
+    @patch('os.listdir', return_value=["not_test_module"])
+    @patch('git.Repo.clone_from')
+    def test_given_ioc_area_name_then_clone_with_domain_in_file_name(self, mock_clone_from, mock_is_repo_path, _1):
+        source = "controls/ioc/"
+
+        vcs_git.clone_multi(source)
+
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'BL/module', "./BL/module")
+
 
 class ListRemoteBranchesTest(unittest.TestCase):
 
