@@ -11,7 +11,7 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod",
 
-        'std_out_compare_string': python_changes,
+        'std_out_compare_string': changes,
 
     },
 
@@ -21,7 +21,7 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod2",
 
-        'std_out_compare_string': python_no_changes,
+        'std_out_compare_string': no_changes,
 
     },
 

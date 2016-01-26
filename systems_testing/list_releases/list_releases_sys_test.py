@@ -51,7 +51,7 @@ settings_list = [
 
     # List releases for support module in prod
     {
-        'description': "list_prod_releases",
+        'description': "list_prod_releases_other_epics",
 
         'arguments': "symbols -e R3.14.8.2",
 
@@ -61,7 +61,7 @@ settings_list = [
 
     # List releases for support module in prod
     {
-        'description': "list_prod_releases",
+        'description': "list_latest_prod_release_other_epics",
 
         'arguments': "symbols -e R3.14.8.2 -l",
 
