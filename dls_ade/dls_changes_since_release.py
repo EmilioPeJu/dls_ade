@@ -4,9 +4,9 @@
 import sys
 import shutil
 import logging
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 from pkg_resources import require
 require('GitPython')
 import git

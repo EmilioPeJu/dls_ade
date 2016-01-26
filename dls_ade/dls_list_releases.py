@@ -4,13 +4,13 @@ import os
 import sys
 import shutil
 import platform
-from dls_environment import environment
+from dls_ade.dls_environment import environment
 import logging
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 
-env = environment()
+e = environment()
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -58,8 +58,7 @@ def make_parser():
         help="Print releases available in git")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        default=env.epicsVer(),
-        help="Change the epics version, default is " + env.epicsVer() +
+        help="Change the epics version, default is " + e.epicsVer() +
              " (from your environment)")
     parser.add_argument(
         "-r", "--rhel_version", action="store", type=int, dest="rhel_version",
@@ -84,8 +83,8 @@ def check_epics_version(epics_version):
     if epics_version:
         if not epics_version.startswith("R"):
             epics_version = "R{0}".format(epics_version)
-        if env.epics_ver_re.match(epics_version):
-            env.setEpics(epics_version)
+        if e.epics_ver_re.match(epics_version):
+            e.setEpics(epics_version)
         else:
             raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
 
@@ -134,7 +133,7 @@ def main():
     else:
         # List branches from prod
         target = "prod"
-        prodArea = env.prodArea(args.area)
+        prodArea = e.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
             prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
                                                                    platform.machine()))
@@ -154,7 +153,7 @@ def main():
             print(args.module_name + ": No releases made for " + args.epics_version)
         return 1
 
-    releases = env.sortReleases(releases)
+    releases = e.sortReleases(releases)
 
     if args.latest:
         print("The latest release for " + args.module_name + " in " + target +

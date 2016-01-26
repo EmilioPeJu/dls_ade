@@ -3,9 +3,9 @@
 
 from __future__ import print_function
 import sys
-from argument_parser import ArgParser
-import path_functions as path
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as path
+from dls_ade import vcs_git
 
 usage = """
 Default <area> is 'support'.
