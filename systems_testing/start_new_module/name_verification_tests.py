@@ -5,106 +5,76 @@ import systems_testing as st
 import os
 import shutil
 import tempfile
+from nose.tools import assert_false
 
 
 settings_list = [
     {
-        'description': "example_test_name_1",
+        'description': "test_python_creation_fails_with_no_prepending_dls_in_name",
 
-        'std_out_compare_string': "I am not the message?\n",
+        'arguments': "-p test_python_module",
 
-        'exception_type': "__main__.Error",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'exception_string': "I am the message.",
-
-        'arguments': "message",
-
-        'local_repo_path': "test_repo",
-
-        'attributes_dict': {'module-contact': "lkz95212"}
-
+        'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
 
     {
-        'description': "example_test_name_2",
+        'description': "test_python_creation_fails_with_full_stop_in_name",
 
-        'std_out_compare_string': "I am not the wine?\n",
+        'arguments': "-p dls_test_python.module",
 
-        'exception_type': "__main__.Error",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'exception_string': "I am the message.",
-
-        'arguments': "wine",
-
-        'local_repo_path': "test_repo",
-
-        'attributes_dict': {'module-contact': "lkz95212"}
-
+        'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
 
     {
-        'description': "example_test_name_3",
+        'description': "test_python_creation_fails_with_hyphen_in_name",
 
-        'std_out_compare_string': "I am not the wine?\n",
+        'arguments': "-p dls_test_python-module",
 
-        'exception_type': "__main__.Error",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'exception_string': "I am the message.",
-
-        'arguments': "wine",
-
-        'repo_comp_method': "local_comp",
-
-        'local_comp_path_one': "test_repo",
-
-        'local_comp_path_two': "test_repo_2",
-
+        'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
 
     {
-        'description': "example_test_name_4",
+        'description': "test_ioc_creation_fails_with_neither_hyphen_nor_slash_in_name",
 
-        'std_out_compare_string': "I am not the wine?\n",
+        'arguments': "-i test_ioc_module",
 
-        'exception_type': "__main__.Error",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'exception_string': "I am the message.",
-
-        'arguments': "wine",
-
-        'repo_comp_method': "server_comp",
-
-        'local_comp_path_one': "test_repo",
-
-        'server_repo_path': "controlstest/ioc/BTEST/BTEST-EB-IOC-03",
-
+        'exception_string': "Need a name with '-' or '/' in it, got test_ioc_module",
     },
 
     {
-        'description': "example_test_name_5",
+        'description': "test_ioc_creation_fails_with_empty_second_part_of_slash_separated_name",
 
-        'std_out_compare_string': "I am not the wine?\n",
+        'arguments': "-i test/",
 
-        'exception_type': "__main__.Error",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'exception_string': "I am the message.",
+        'exception_string': "Need a name with '-' or '/' in it, got test/",
+    },
 
-        'arguments': "wine",
+    {
+        'description': "test_ioc_creation_fails_with_empty_second_part_of_slash_separated_name_but_third_exists",
 
-        'repo_comp_method': "all_comp",
+        'arguments': "-i test//ioc",
 
-        'local_comp_path_one': "server_already_cloned",
+        'exception_type': "dls_ade.exceptions.ParsingError",
 
-        'local_comp_path_two': "server_clone_2",
-
-        'server_repo_path': "controlstest/ioc/BTEST/BTEST-EB-IOC-03",
-
-    }
+        'exception_string': "Need a name with '-' or '/' in it, got test//ioc",
+    },
 ]
 
 
 # TODO(Martin) Make this one for all the parsing errors.
-# TODO(Martin) Can check that no local folders exist at the end - job complete!
+# TODO(Martin) Redo check for local files?
+# NOTE: All tests run the script with '-n' in order to prevent creating
+# remote repository files if the tests fail
 def test_generator_parsing_errors_expected():
 
         tempdir = tempfile.mkdtemp()
@@ -112,10 +82,13 @@ def test_generator_parsing_errors_expected():
 
         os.chdir(tempdir)
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
                                                  st.SystemsTest,
                                                  settings_list):
             yield test
+
+        # checks that no module folders have been created
+        assert_false(os.listdir("."))
 
         os.chdir(cwd)
 
