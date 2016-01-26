@@ -165,5 +165,5 @@ def test_generator_local():
 
         os.chdir(cwd)
 
-        # shutil.rmtree(tempdir)
+        shutil.rmtree(tempdir)
 
