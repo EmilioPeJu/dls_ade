@@ -43,11 +43,16 @@ printed_messages = {
          "screens has been placed in "
          "testB22/testB22-BL-IOC-01/testB22-BL-IOC-01App/opi/edl . Please "
          "modify these.\n\n"),
+    'IOC-B01':
+        ("Please now edit testB01/TS/configure/RELEASE to put in correct "
+         "paths for dependencies.\nYou can also add dependencies to "
+         "testB01/TS/testB01-TS-IOC-01App/src/Makefile\nand "
+         "testB01/TS/testB01-TS-IOC-01App/Db/Makefile if appropriate.\n"),
 }
 
 settings_list = [
     {
-        'description': "test_local_python_module_created_properly",
+        'description': "test_local_python_module_created_with_correct_files",
 
         'arguments': "-p dls_test_python_module",
 
@@ -65,7 +70,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_tools_module_created_properly",
+        'description': "test_local_tools_module_created_with_correct_files",
 
         'arguments': "-a tools test_tools_module",
 
@@ -83,7 +88,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_support_module_created_properly",
+        'description': "test_local_support_module_created_with_correct_files",
 
         'arguments': "-a support test_support_module",
 
@@ -101,7 +106,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_BL_slash_form_module_created_properly",
+        'description': "test_local_IOC_BL_slash_form_module_created_with_correct_files",
 
         'arguments': "-i testB21/BL",
 
@@ -119,7 +124,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_BL_dash_form_module_created_properly",
+        'description': "test_local_IOC_BL_dash_form_module_created_with_correct_files",
 
         'arguments': "-i testB22-BL-IOC-01",
 
@@ -134,6 +139,24 @@ settings_list = [
         'local_comp_path_one': "testB22/testB22-BL-IOC-01",
 
         'local_comp_path_two': "testB22/testB22-BL-IOC-01",
+    },
+
+    {
+        'description': "test_local_IOC_module_slash_form_without_ioc_number_created_with_correct_ioc_number_and_files",
+
+        'arguments': "-i testB01/TS",
+
+        'std_out_ends_with_string': printed_messages['IOC-B01'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB01/TS",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB01/TS",
+
+        'local_comp_path_two': "testB01/TS",
     },
 ]
 
