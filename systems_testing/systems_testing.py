@@ -145,7 +145,10 @@ class SystemsTest(object):
         _exception_type: The exception type to test for in standard error.
         _exception_string: The exception string to test for in standard error.
         _std_out_compare_string: The string for standard output comparisons.
+        _std_out_starts_with_string: Standard output 'startswith' check string.
+        _std_out_ends_with_string: Standard output 'endswith' check string.
         _arguments: A string containing the arguments for the given script.
+        _input: The input to be sent to the script while it's running.
         _attributes_dict: A dictionary of all git attributes to check for.
 
         _local_repo_path: A local path, used for attribute checking.
@@ -184,7 +187,10 @@ class SystemsTest(object):
         self._exception_string = ""
 
         self._std_out_compare_string = None
+        self._std_out_starts_with_string = None
+        self._std_out_ends_with_string = None
         self._arguments = ""
+        self._input = None
         self._attributes_dict = {}
 
         # Used for attribute checking
@@ -213,7 +219,10 @@ class SystemsTest(object):
             'exception_type',
             'exception_string',
             'std_out_compare_string',
+            'std_out_starts_with_string',
+            'std_out_ends_with_string',
             'arguments',
+            'input',
             'attributes_dict',
             'server_repo_path',
             'local_repo_path',
@@ -232,7 +241,10 @@ class SystemsTest(object):
             - exception_type
             - exception_string
             - std_out_compare_string
+            - std_out_starts_with_string
+            - std_out_ends_with_string
             - arguments
+            - input
             - attributes_dict
             - server_repo_path
             - local_repo_path
@@ -270,6 +282,8 @@ class SystemsTest(object):
     def call_script(self):
         """Call the script and store output, error and return code.
 
+        If `input` is set, this will pass the input to the child process.
+
         Raises:
             ValueError: From Popen().
         """
@@ -277,13 +291,19 @@ class SystemsTest(object):
 
         logging.debug("About to call script with:")
         logging.debug(call_args)
-        # It appears that we cannot use 'higher-level' subprocess functions,
-        # eg. check_output here. This is because stderr cannot be obtained
-        # separately to stdout in these functions.
-        process = subprocess.Popen(call_args, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
 
-        self._std_out, self._std_err = process.communicate()
+        # If no input is given, this will prevent communicate() from sending
+        # data to the child process.
+        if self._input is not None:
+            stdin_pipe = subprocess.PIPE
+        else:
+            stdin_pipe = None
+
+        process = subprocess.Popen(call_args, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   stdin=stdin_pipe)
+
+        self._std_out, self._std_err = process.communicate(self._input)
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
@@ -327,6 +347,8 @@ class SystemsTest(object):
         self.check_std_err_for_exception()
 
         self.compare_std_out_to_string()
+        self.check_std_out_starts_with_string()
+        self.check_std_out_ends_with_string()
 
     def check_std_err_for_exception(self):
         """Check the standard error for the exception information.
@@ -365,6 +387,36 @@ class SystemsTest(object):
         logging.debug("Comparing the standard output to comparison string.")
 
         assert_equal(self._std_out, self._std_out_compare_string)
+
+    def check_std_out_starts_with_string(self):
+        """Check if the standard output starts with std_out_starts_with_string.
+
+        Raises:
+            AssertionError: If the test does not pass.
+
+        """
+        if self._std_out_starts_with_string is None:
+            return
+
+        logging.debug("Checking if the standard output starts with the given "
+                      "string.")
+
+        assert_true(self._std_out.startswith(self._std_out_starts_with_string))
+
+    def check_std_out_ends_with_string(self):
+        """Check if the standard output ends with std_out_ends_with_string.
+
+        Raises:
+            AssertionError: If the test does not pass.
+
+        """
+        if self._std_out_ends_with_string is None:
+            return
+
+        logging.debug("Checking if the standard output ends with the given "
+                      "string.")
+
+        assert_true(self._std_out.endswith(self._std_out_ends_with_string))
 
     def check_for_and_clone_remote_repo(self):
         """Checks server repo path exists and clones it.
@@ -515,7 +567,7 @@ class SystemsTest(object):
             err_message = ("The repo_comp_method must be called using one of "
                            "the following:"
                            "\nlocal_comp, server_comp, all_comp."
-                           "\nCurrently got: {repo_comp_method:s}")
+                           "\nGot: {repo_comp_method:s}")
             raise SettingsError(err_message.format(
                     repo_comp_method=self._repo_comp_method)
             )
