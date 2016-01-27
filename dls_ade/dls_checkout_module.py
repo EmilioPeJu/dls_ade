@@ -10,7 +10,7 @@ from dls_ade import path_functions as path
 usage = """
 Default <area> is 'support'.
 Checkout a module in the <area> area of the repository to the current directory.
-If you enter "everything" as <module_name>, the whole <area> area will be checked out.
+If you enter no <module_name>, the whole <area> area will be checked out.
 """
 
 
@@ -24,7 +24,7 @@ def make_parser():
         An ArgumentParser instance with relevant arguments
     """
     parser = ArgParser(usage)
-    parser.add_argument("module_name", type=str, default="",
+    parser.add_argument("module_name", nargs="?", type=str, default="",
                         help="name of module to checkout")
     parser.add_argument("-b", "--branch", action="store", type=str, dest="branch",
                         help="Checkout a specific named branch rather than the default (master)")
@@ -43,9 +43,7 @@ def check_technical_area(area, module):
     Raises:
         Exception: "Missing Technical Area under Beamline"
     """
-    if area == "ioc" \
-            and module != "everything" \
-            and len(module.split('/')) < 2:
+    if area == "ioc" and module != "" and len(module.split('/')) < 2:
         raise Exception("Missing Technical Area under Beamline")
 
 
@@ -82,7 +80,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    if args.module_name == "everything":
+    if args.module_name == "":
         answer = raw_input("Would you like to checkout the whole " +
                            args.area + " area? This may take some time. Enter Y or N: ")
         if answer.upper() != "Y":
@@ -92,18 +90,17 @@ def main():
 
     module = args.module_name
 
-    if module == "everything":
+    if module == "":
         # Set source to area folder
         source = path.devArea(args.area)
     else:
         # Set source to module in area folder
         source = path.devModule(module, args.area)
 
-    if module == "everything":
+    if module == "":
         print("Checking out entire " + args.area + " area...\n")
         vcs_git.clone_multi(source)
     else:
-        print("Checking out " + module + " from " + args.area + " area...")
         check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
 
