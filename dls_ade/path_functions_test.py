@@ -4,6 +4,23 @@ import unittest
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 
+class RemoveEndSlash(unittest.TestCase):
+
+    def test_given_path_slash_then_removed_and_returned(self):
+        path = "controls/area/module/"
+
+        new_path = path_functions.remove_end_slash(path)
+
+        self.assertEqual(new_path, "controls/area/module")
+
+    def test_given_path_no_slash_then_returned(self):
+        path = "controls/area/module"
+
+        new_path = path_functions.remove_end_slash(path)
+
+        self.assertEqual(new_path, path)
+
+
 class CheckTechnicalAreaTest(unittest.TestCase):
 
     def test_given_area_not_ioc_then_no_error_raised(self):
