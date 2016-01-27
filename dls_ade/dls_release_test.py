@@ -361,29 +361,29 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
 class TestCreateVCSObject(unittest.TestCase):
 
-    @patch('dls_ade.dls_release.vcs_svn.Svn')
+    # @patch('dls_ade.dls_release.vcs_svn.Svn')
     @patch('dls_ade.dls_release.vcs_git.Git')
-    def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
-
+    # def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
+    def test_given_git_option_then_git_vcs_object_created(self, mock_git):
         module = 'dummy'
         options = FakeOptions(git=True)
 
         vcs = dls_release.create_vcs_object(module, options)
 
         mock_git.assert_called_once_with(module, options)
-        self.assertFalse(mock_svn.called)
-
-    @patch('dls_ade.dls_release.vcs_svn.Svn')
-    @patch('dls_ade.dls_release.vcs_git.Git')
-    def test_not_given_git_option_then_svn_vcs_object_created(self, mock_git, mock_svn):
-
-        module = 'dummy'
-        options = FakeOptions()
-
-        vcs = dls_release.create_vcs_object(module, options)
-
-        mock_svn.assert_called_once_with(module, options)
-        self.assertFalse(mock_git.called)
+        # self.assertFalse(mock_svn.called)
+    #
+    # @patch('dls_ade.dls_release.vcs_svn.Svn')
+    # @patch('dls_ade.dls_release.vcs_git.Git')
+    # def test_not_given_git_option_then_svn_vcs_object_created(self, mock_git, mock_svn):
+    #
+    #     module = 'dummy'
+    #     options = FakeOptions()
+    #
+    #     vcs = dls_release.create_vcs_object(module, options)
+    #
+    #     mock_svn.assert_called_once_with(module, options)
+    #     self.assertFalse(mock_git.called)
 
 
 class TestNextVersionNumber(unittest.TestCase):

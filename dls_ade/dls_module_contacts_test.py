@@ -167,7 +167,7 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
 
 class GetAreaModuleListTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.get_repository_list', return_value=['controls/support/ADCore', 'controls/support/ethercat', 'controls/support/vacuum'])
+    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=['controls/support/ADCore', 'controls/support/ethercat', 'controls/support/vacuum'])
     def test_given_area_then_return_final_element_of_list(self, _1):
         area = "support"
 

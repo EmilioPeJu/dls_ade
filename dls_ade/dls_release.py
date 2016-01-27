@@ -5,7 +5,7 @@ require('python-ldap')
 import sys
 import re
 import logging
-from dls_ade import vcs_svn
+# from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
@@ -157,8 +157,8 @@ def create_vcs_object(module, args):
     """
     if args.git:
         return vcs_git.Git(module, args)
-    else:
-        return vcs_svn.Svn(module, args)
+    # else:
+    #     return vcs_svn.Svn(module, args)
 
 
 def check_parsed_arguments_valid(args,  parser):
