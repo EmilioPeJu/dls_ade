@@ -55,7 +55,7 @@ settings_list = [
     {
         'description': "list_ioc_domain",
 
-        'arguments': "-i -d BTEST",
+        'arguments': "-i BTEST",
 
         'std_out_compare_string': ioc_domain_list,
 
