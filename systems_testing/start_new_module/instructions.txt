@@ -1,4 +1,10 @@
-In order to generate the comparison files, you must ensure you are using the default environment settings.
- - Do NOT use setup_testing_environment before running generate_comparison_files.py!
+Originally, the comparison files were created using the generate_comparison_files python script.
+Due to a number of issues, such as uneccesary whitespace in the original svn templates, the
+folders are now maintained separately. The main addition to each is their expected .gitignore
+file, which was obviously not originally present.
 
-This will create the tarball in your local directory.
+The commands used to create the comparison folders using the new script can be seen in the
+local_repository_tests.py script, as here they are directly used for comparison.
+
+Note: The testB06/TS module requires the use of the gitolite server in order to create the full
+repository, as it tests the addition of an App to a previously existing module.

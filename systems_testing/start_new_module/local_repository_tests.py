@@ -43,11 +43,46 @@ printed_messages = {
          "screens has been placed in "
          "testB22/testB22-BL-IOC-01/testB22-BL-IOC-01App/opi/edl . Please "
          "modify these.\n\n"),
+
     'IOC-B01':
         ("Please now edit testB01/TS/configure/RELEASE to put in correct "
          "paths for dependencies.\nYou can also add dependencies to "
          "testB01/TS/testB01-TS-IOC-01App/src/Makefile\nand "
          "testB01/TS/testB01-TS-IOC-01App/Db/Makefile if appropriate.\n"),
+
+    'IOC-B02':
+        ("Please now edit testB02/TS/configure/RELEASE to put in correct "
+         "paths for dependencies.\nYou can also add dependencies to "
+         "testB02/TS/testB02-TS-IOC-03App/src/Makefile\nand "
+         "testB02/TS/testB02-TS-IOC-03App/Db/Makefile if appropriate.\n"),
+
+    'IOC-B03':
+        ("Please now edit testB03/testB03-TS-IOC-01/configure/RELEASE to put "
+         "in correct paths for dependencies.\nYou can also add dependencies "
+         "to testB03/testB03-TS-IOC-01/testB03-TS-IOC-01App/src/Makefile\nand "
+         "testB03/testB03-TS-IOC-01/testB03-TS-IOC-01App/Db/Makefile if "
+         "appropriate.\n"),
+
+    'IOC-B04':
+        ("Please now edit testB04/testB04-TS-IOC-04/configure/RELEASE to put "
+         "in correct paths for dependencies.\nYou can also add dependencies "
+         "to testB04/testB04-TS-IOC-04/testB04-TS-IOC-04App/src/Makefile\nand "
+         "testB04/testB04-TS-IOC-04/testB04-TS-IOC-04App/Db/Makefile if "
+         "appropriate.\n"),
+
+    'IOC-B05':
+        ("Please now edit testB05/testB05-TS-IOC-02/configure/RELEASE to put "
+         "in correct paths for dependencies.\nYou can also add dependencies "
+         "to testB05/testB05-TS-IOC-02/testB05-TS-IOC-02App/src/Makefile\nand "
+         "testB05/testB05-TS-IOC-02/testB05-TS-IOC-02App/Db/Makefile if "
+         "appropriate.\n"),
+
+    'IOC-B06':
+        ("Please now edit testB06/TS/configure/RELEASE to put "
+         "in correct paths for dependencies.\nYou can also add dependencies "
+         "to testB06/TS/testB06-TS-IOC-02App/src/Makefile\nand "
+         "testB06/TS/testB06-TS-IOC-02App/Db/Makefile if "
+         "appropriate.\n"),
 }
 
 settings_list = [
@@ -142,9 +177,11 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_without_ioc_number_created_with_correct_ioc_number_and_files",
+        'description': "test_local_IOC_module_slash_form_without_ioc_number_created_with_correct_ioc_number_and_module_name_and_files",
 
         'arguments': "-i testB01/TS",
+
+        'input': "",
 
         'std_out_ends_with_string': printed_messages['IOC-B01'],
 
@@ -157,6 +194,106 @@ settings_list = [
         'local_comp_path_one': "testB01/TS",
 
         'local_comp_path_two': "testB01/TS",
+    },
+
+    {
+        'description': "test_local_IOC_module_slash_form_with_ioc_number_created_with_correct_ioc_number_and_module_name_and_files",
+
+        'arguments': "-i testB02/TS/03",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B02'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB02/TS",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB02/TS",
+
+        'local_comp_path_two': "testB02/TS",
+    },
+
+    {
+        'description': "test_local_IOC_module_slash_form_with_no_ioc_number_and_fullname_created_with_correct_module_name_and_files",
+
+        'arguments': "-i testB03/TS/ --fullname",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B03'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB03/testB03-TS-IOC-01",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB03/testB03-TS-IOC-01",
+
+        'local_comp_path_two': "testB03/testB03-TS-IOC-01",
+    },
+
+    {
+        'description': "test_local_IOC_module_slash_form_with_ioc_number_and_fullname_created_with_correct_module_name_and_files",
+
+        'arguments': "-i testB04/TS/04 --fullname",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B04'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB04/testB04-TS-IOC-04",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB04/testB04-TS-IOC-04",
+
+        'local_comp_path_two': "testB04/testB04-TS-IOC-04",
+    },
+
+    {
+        'description': "test_local_IOC_module_dash_form_created_with_correct_module_name_and_files",
+
+        'arguments': "-i testB05-TS-IOC-02 --fullname",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B05'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB05/testB05-TS-IOC-02",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB05/testB05-TS-IOC-02",
+
+        'local_comp_path_two': "testB05/testB05-TS-IOC-02",
+    },
+
+    {
+        'description': "test_local_IOC_module_slash_form_that_needs_to_add_app_created_with_correct_module_name_and_app_name_and_files",
+
+        'arguments': "-i testB06/TS/02",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B06'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB06/TS",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB06/TS",
+
+        'local_comp_path_two': "testB06/TS",
     },
 ]
 
