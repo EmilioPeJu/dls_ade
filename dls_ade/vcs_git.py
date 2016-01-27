@@ -1,15 +1,13 @@
-#from dls_ade.vcs import BaseVCS
-from vcs import BaseVCS
+from dls_ade.vcs import BaseVCS
 import subprocess
 import os
 import tempfile
 import shutil
-
+from dls_ade import path_functions as pathf
 from pkg_resources import require
 require('GitPython')
 import git
 
-import path_functions as pathf
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
