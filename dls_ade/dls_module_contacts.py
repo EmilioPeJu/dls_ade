@@ -18,9 +18,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Utility for setting and showing primary contact (contact) and seconday contact
-(cc) properties. If any <modules> are specified, only show and set
-properties on those modules, otherwise operate on the entire area.
+Utility for setting and showing primary contact (contact) and secondary contact
+(cc) properties.
 
 e.g.
 %prog ip autosave calc
