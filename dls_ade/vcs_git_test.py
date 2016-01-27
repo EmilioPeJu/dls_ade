@@ -222,7 +222,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         self.mock_is_dir.assert_called_once_with("non_repo_path")
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_both_tests_pass_then_repo_staged_and_committed_correctly(self):
+    def test_given_both_tests_pass_then_repo_staged_and_committed_with_correct_defaults(self):
 
         self.mock_is_dir.return_value = True
         self.mock_is_local_repo_root.return_value = True
@@ -230,7 +230,17 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit("test_path")
 
         self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.git.commit.assert_called_once_with(m="Initial commit")
+        self.mock_repo.git.commit.assert_called_once_with(m="Initial commit.")
+
+    def test_given_both_tests_pass_and_both_arguments_supplied_then_repo_committed_with_correct_arguments(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
+
+        vcs_git.stage_all_files_and_commit("test_path", "test_message")
+
+        self.mock_repo.git.add.assert_called_once_with("--all")
+        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
 
     def test_given_no_input_then_sensible_default_applied(self):
 
@@ -240,6 +250,17 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit()
 
         self.mock_is_dir.assert_called_once_with("./")
+
+    def test_given_git_commit_raises_exception_then_function_does_not_raise_exception(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
+        self.mock_repo.git.commit.side_effect = vcs_git.git.exc.GitCommandError("", 1)
+
+        vcs_git.stage_all_files_and_commit("test_path", "test_message")
+
+        self.mock_repo.git.add.assert_called_once_with("--all")
+        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
 
 
 class AddNewRemoteAndPushTest(unittest.TestCase):

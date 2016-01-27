@@ -83,11 +83,18 @@ printed_messages = {
          "to testB06/TS/testB06-TS-IOC-02App/src/Makefile\nand "
          "testB06/TS/testB06-TS-IOC-02App/Db/Makefile if "
          "appropriate.\n"),
+
+    'IOC-B07':
+        ("\nPlease now edit testB07/TS/configure/RELEASE to put "
+         "in correct paths for dependencies.\nYou can also add dependencies "
+         "to testB07/TS/testB07-TS-IOC-02App/src/Makefile\nand "
+         "testB07/TS/testB07-TS-IOC-02App/Db/Makefile if "
+         "appropriate.\n"),
 }
 
 settings_list = [
     {
-        'description': "test_local_python_module_created_with_correct_files",
+        'description': "test_local_python_module_is_created_with_correct_files",
 
         'arguments': "-p dls_test_python_module",
 
@@ -105,7 +112,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_tools_module_created_with_correct_files",
+        'description': "test_local_tools_module_is_created_with_correct_files",
 
         'arguments': "-a tools test_tools_module",
 
@@ -123,7 +130,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_support_module_created_with_correct_files",
+        'description': "test_local_support_module_is_created_with_correct_files",
 
         'arguments': "-a support test_support_module",
 
@@ -141,7 +148,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_BL_slash_form_module_created_with_correct_files",
+        'description': "test_local_IOC_BL_slash_form_module_is_created_with_correct_files",
 
         'arguments': "-i testB21/BL",
 
@@ -159,7 +166,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_BL_dash_form_module_created_with_correct_files",
+        'description': "test_local_IOC_BL_dash_form_module_is_created_with_correct_files",
 
         'arguments': "-i testB22-BL-IOC-01",
 
@@ -177,7 +184,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_without_ioc_number_created_with_correct_ioc_number_and_module_name_and_files",
+        'description': "test_local_IOC_module_slash_form_without_ioc_number_is_created_with_correct_ioc_number_and_module_name_and_files",
 
         'arguments': "-i testB01/TS",
 
@@ -197,7 +204,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_with_ioc_number_created_with_correct_ioc_number_and_module_name_and_files",
+        'description': "test_local_IOC_module_slash_form_with_ioc_number_is_created_with_correct_ioc_number_and_module_name_and_files",
 
         'arguments': "-i testB02/TS/03",
 
@@ -217,7 +224,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_with_no_ioc_number_and_fullname_created_with_correct_module_name_and_files",
+        'description': "test_local_IOC_module_slash_form_with_no_ioc_number_and_fullname_is_created_with_correct_module_name_and_files",
 
         'arguments': "-i testB03/TS/ --fullname",
 
@@ -237,7 +244,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_with_ioc_number_and_fullname_created_with_correct_module_name_and_files",
+        'description': "test_local_IOC_module_slash_form_with_ioc_number_and_fullname_is_created_with_correct_module_name_and_files",
 
         'arguments': "-i testB04/TS/04 --fullname",
 
@@ -257,7 +264,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_dash_form_created_with_correct_module_name_and_files",
+        'description': "test_local_IOC_module_dash_form_is_created_with_correct_module_name_and_files",
 
         'arguments': "-i testB05-TS-IOC-02 --fullname",
 
@@ -277,7 +284,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_slash_form_that_needs_to_add_app_created_with_correct_module_name_and_app_name_and_files",
+        'description': "test_local_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
 
         'arguments': "-i testB06/TS/02",
 
@@ -294,6 +301,26 @@ settings_list = [
         'local_comp_path_one': "testB06/TS",
 
         'local_comp_path_two': "testB06/TS",
+    },
+
+    {
+        'description': "test_local_IOC_module_that_needs_to_add_app_but_app_conflict_occurs_is_created_with_correct_module_name_and_app_name_and_files",
+
+        'arguments': "-i testB07/TS/02",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B07'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB07/TS",
+
+        'repo_comp_method': "local_comp",
+
+        'local_comp_path_one': "testB07/TS",
+
+        'local_comp_path_two': "testB07/TS",
     },
 ]
 

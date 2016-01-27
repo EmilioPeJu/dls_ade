@@ -425,7 +425,12 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         self._module_template.create_files()
         os.chdir(self._cwd)
 
-        vcs_git.stage_all_files_and_commit(self.abs_module_path)
+        commit_message = ("Added app, {app_name:s}, to module.".format(
+            app_name=self._app_name
+        ))
+
+        vcs_git.stage_all_files_and_commit(self.abs_module_path,
+                                           commit_message)
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server using remote 'origin'.

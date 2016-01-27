@@ -127,11 +127,12 @@ def init_repo(path="./"):
     print("Repository created.")
 
 
-def stage_all_files_and_commit(path="./"):
+def stage_all_files_and_commit(path="./", message="Initial commit."):
     """Stage and commit all files in a local git repository.
 
     Args:
         path: The relative or absolute path of the local git repository.
+        message: The commit message to use.
 
     Raises:
         Error: If the path is not a git repository.
@@ -148,7 +149,14 @@ def stage_all_files_and_commit(path="./"):
     print("Staging files...")
     repo.git.add('--all')
     print("Committing files to repo...")
-    msg = repo.git.commit(m="Initial commit")
+
+    # If there are no changes to commit, then GitCommandError will be raised.
+    # There is no reason to raise an exception for this.
+    msg = ""
+    try:
+        msg = repo.git.commit(m=message)
+    except git.exc.GitCommandError as e:
+        pass
     print(msg)
 
 

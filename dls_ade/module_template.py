@@ -238,7 +238,7 @@ class ModuleTemplatePython(ModuleTemplate):
                         }
 
         message = ("\nPlease add your python files to the {module_path:s}"
-                   "\ndirectory and edit {setup_path} appropriately.")
+                   "\ndirectory and edit {setup_path:s} appropriately.")
         message = message.format(**message_dict)
 
         print(message)
@@ -352,7 +352,7 @@ class ModuleTemplateIOC(ModuleTemplateWithApps):
         boot_file = "ioc_boot/ioc{app_name:s}".format(**self._template_args)
         if os.path.exists(boot_file):
             shutil.rmtree(boot_file)
-        
+
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
             **self._template_args))
         os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
@@ -394,7 +394,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
                    "for the ioc's other technical areas and path to scripts."
                    "\nAlso edit {srcMakefile:s} to add all database files "
                    "from these technical areas.\nAn example set of screens"
-                   " has been placed in {opi/edl}. Please modify these.")
+                   " has been placed in {opi/edl:s}. Please modify these.")
         message = message.format(**message_dict)
 
         print(message)
