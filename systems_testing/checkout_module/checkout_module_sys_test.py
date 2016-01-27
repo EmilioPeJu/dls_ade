@@ -41,7 +41,7 @@ settings_list = [
     {
         'description': "checkout_all_area (Enter 'Y')",
 
-        'arguments': "-p everything",
+        'arguments': "-p",
 
         'repo_comp_method': "server_comp",
 
@@ -51,19 +51,19 @@ settings_list = [
 
     },
 
-    # # Checkout everything from ioc area/domain and check one of them is correctly cloned
-    # {
-    #     'description': "checkout_ioc_domain",
-    #
-    #     'arguments': "-i ...",
-    #
-    #     'repo_comp_method': "server_comp",
-    #
-    #     'local_comp_path_one': "BTEST/TS",
-    #
-    #     'server_repo_path': "controlstest/ioc/BTEST/TS",
-    #
-    # },
+    # Checkout everything from ioc area/domain and check one of them is correctly cloned
+    {
+        'description': "checkout_ioc_domain",
+
+        'arguments': "-i BTEST/",
+
+        'repo_comp_method': "server_comp",
+
+        'local_comp_path_one': "BTEST/TS",
+
+        'server_repo_path': "controlstest/ioc/BTEST/TS",
+
+    },
 
 ]
 
