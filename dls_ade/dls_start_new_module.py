@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 from dls_ade.argument_parser import ArgParser
-import dls_ade.new_module_creator as new_c
+from dls_ade.get_module_creator import get_module_creator
 
 usage = ("Default <area> is 'support'."
          "\nStart a new diamond module of a particular type."
@@ -61,22 +61,20 @@ def main():
     module_name = args.module_name
     area = args.area
     fullname = args.fullname
-    no_import = args.no_import
+    export_to_server = not args.no_import
 
-    nmc_obj = new_c.get_new_module_creator(module_name, area, fullname)
+    module_creator = get_module_creator(module_name, area, fullname)
 
-    nmc_obj.verify_can_create_local_module()
+    module_creator.verify_can_create_local_module()
 
-    if not no_import:
-        nmc_obj.verify_remote_repo()
+    if export_to_server:
+        module_creator.verify_remote_repo()
 
-    nmc_obj.create_local_module()
-    nmc_obj.print_message()
+    module_creator.create_local_module()
+    module_creator.print_message()
 
-    if not no_import:
-        nmc_obj.push_repo_to_remote()
-    else:
-        os.chdir(nmc_obj.disk_dir)
+    if export_to_server:
+        module_creator.push_repo_to_remote()
 
 
 if __name__ == "__main__":
