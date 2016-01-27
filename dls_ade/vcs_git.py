@@ -313,8 +313,7 @@ def clone(server_repo_path, local_repo_path):
     elif os.path.isdir(local_repo_path):
         raise Error(local_repo_path + " already exists in current directory")
 
-    if server_repo_path[-1] == '/':
-        server_repo_path = server_repo_path[:-1]
+    pathf.remove_end_slash(server_repo_path)
 
     repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, server_repo_path),
                                os.path.join("./", local_repo_path))
@@ -336,8 +335,7 @@ def temp_clone(source):
     if not is_repo_path(source):
         raise Error("Repository does not contain " + source)
 
-    if source[-1] == '/':
-        source = source[:-1]
+    pathf.remove_end_slash(source)
 
     tempdir = tempfile.mkdtemp()
 

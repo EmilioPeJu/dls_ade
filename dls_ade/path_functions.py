@@ -3,6 +3,14 @@ import os
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
+def remove_end_slash(path):
+
+    if path.endswith('/'):
+        path = path[:-1]
+
+    return path
+
+
 def check_technical_area_valid(area, module):
     """
     Checks if <area> is 'ioc', if so checks if <module_name> is of the form 'tech_area/module' and
