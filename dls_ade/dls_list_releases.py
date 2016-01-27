@@ -58,6 +58,7 @@ def make_parser():
         help="Print releases available in git")
     parser.add_argument(
         "-e", "--epics_version", action="store", type=str, dest="epics_version",
+        default=env.epicsVer(),
         help="Change the epics version, default is " + env.epicsVer() +
              " (from your environment)")
     parser.add_argument(

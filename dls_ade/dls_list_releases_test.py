@@ -60,6 +60,7 @@ class MakeParserTest(unittest.TestCase):
         option = self.parser._option_string_actions['-e']
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.dest, "epics_version")
+        self.assertEqual(option.default, "R3.14.12.3")
         self.assertIn("--epics_version", option.option_strings)
 
     def test_rhel_argument_has_correct_attributes(self):
