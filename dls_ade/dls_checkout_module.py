@@ -104,6 +104,7 @@ def main():
         print("Checking out " + module + " technical area...")
         vcs_git.clone_multi(source)
     else:
+        print("Checking out " + module + " from " + args.area + " area...")
         check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
 
