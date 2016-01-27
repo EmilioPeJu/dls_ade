@@ -104,6 +104,8 @@ def test_checkout_domain():
                "controlstest/ioc/BTEST/BTEST-VA-IOC-04",
                "controlstest/ioc/BTEST/TS"]
 
+    should_not_clone = "controlstest/ioc/BTEST2/TS"
+
     process = subprocess.Popen("dls-checkout-module.py -i BTEST/".split(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
@@ -116,6 +118,7 @@ def test_checkout_domain():
 
     for path in modules:
         assert_true(os.path.isdir(path.split('/', 2)[-1]))
+        assert_false(os.path.isdir(should_not_clone))
 
     for path in modules:
         repo = path.split('/', 2)[-1]
