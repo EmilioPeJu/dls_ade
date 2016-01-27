@@ -11,13 +11,13 @@ COMPARISON_FILES = "comparison_files"
 
 printed_messages = {
     'python':
-        ("\nPlease add your python files to the dls_test_python_module "
+        ("\nPlease add your python files to the dls_test_python_module"
          "\ndirectory and edit dls_test_python_module/setup.py appropriately."
          "\n"),
 
     'tools':
-        ("\nPlease add your patch files to the test_tools_module \ndirectory "
-         "and edit test_tools_module/build script appropriately\n"),
+        ("\nPlease add your patch files to the test_tools_module\ndirectory "
+         "and edit test_tools_module/build script appropriately.\n"),
 
     'support':
         ("\nPlease now edit test_support_module/configure/RELEASE to put in "
@@ -31,8 +31,8 @@ printed_messages = {
          "paths for the ioc's other technical areas and path to scripts."
          "\nAlso edit testB21/BL/testB21App/src/Makefile to add all database "
          "files from these technical areas.\nAn example set of screens has "
-         "been placed in testB21/BL/testB21App/opi/edl . Please modify these."
-         "\n\n"),
+         "been placed in testB21/BL/testB21App/opi/edl. Please modify these."
+         "\n"),
 
     'IOC-BL-dash':
         ("\nPlease now edit testB22/testB22-BL-IOC-01/configure/RELEASE to put"
@@ -41,44 +41,44 @@ printed_messages = {
          "testB22/testB22-BL-IOC-01/testB22-BL-IOC-01App/src/Makefile to add "
          "all database files from these technical areas.\nAn example set of "
          "screens has been placed in "
-         "testB22/testB22-BL-IOC-01/testB22-BL-IOC-01App/opi/edl . Please "
-         "modify these.\n\n"),
+         "testB22/testB22-BL-IOC-01/testB22-BL-IOC-01App/opi/edl. Please "
+         "modify these.\n"),
 
     'IOC-B01':
-        ("Please now edit testB01/TS/configure/RELEASE to put in correct "
+        ("\nPlease now edit testB01/TS/configure/RELEASE to put in correct "
          "paths for dependencies.\nYou can also add dependencies to "
          "testB01/TS/testB01-TS-IOC-01App/src/Makefile\nand "
          "testB01/TS/testB01-TS-IOC-01App/Db/Makefile if appropriate.\n"),
 
     'IOC-B02':
-        ("Please now edit testB02/TS/configure/RELEASE to put in correct "
+        ("\nPlease now edit testB02/TS/configure/RELEASE to put in correct "
          "paths for dependencies.\nYou can also add dependencies to "
          "testB02/TS/testB02-TS-IOC-03App/src/Makefile\nand "
          "testB02/TS/testB02-TS-IOC-03App/Db/Makefile if appropriate.\n"),
 
     'IOC-B03':
-        ("Please now edit testB03/testB03-TS-IOC-01/configure/RELEASE to put "
+        ("\nPlease now edit testB03/testB03-TS-IOC-01/configure/RELEASE to put "
          "in correct paths for dependencies.\nYou can also add dependencies "
          "to testB03/testB03-TS-IOC-01/testB03-TS-IOC-01App/src/Makefile\nand "
          "testB03/testB03-TS-IOC-01/testB03-TS-IOC-01App/Db/Makefile if "
          "appropriate.\n"),
 
     'IOC-B04':
-        ("Please now edit testB04/testB04-TS-IOC-04/configure/RELEASE to put "
+        ("\nPlease now edit testB04/testB04-TS-IOC-04/configure/RELEASE to put "
          "in correct paths for dependencies.\nYou can also add dependencies "
          "to testB04/testB04-TS-IOC-04/testB04-TS-IOC-04App/src/Makefile\nand "
          "testB04/testB04-TS-IOC-04/testB04-TS-IOC-04App/Db/Makefile if "
          "appropriate.\n"),
 
     'IOC-B05':
-        ("Please now edit testB05/testB05-TS-IOC-02/configure/RELEASE to put "
+        ("\nPlease now edit testB05/testB05-TS-IOC-02/configure/RELEASE to put "
          "in correct paths for dependencies.\nYou can also add dependencies "
          "to testB05/testB05-TS-IOC-02/testB05-TS-IOC-02App/src/Makefile\nand "
          "testB05/testB05-TS-IOC-02/testB05-TS-IOC-02App/Db/Makefile if "
          "appropriate.\n"),
 
     'IOC-B06':
-        ("Please now edit testB06/TS/configure/RELEASE to put "
+        ("\nPlease now edit testB06/TS/configure/RELEASE to put "
          "in correct paths for dependencies.\nYou can also add dependencies "
          "to testB06/TS/testB06-TS-IOC-02App/src/Makefile\nand "
          "testB06/TS/testB06-TS-IOC-02App/Db/Makefile if "

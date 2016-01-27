@@ -208,9 +208,9 @@ class ModuleTemplateTools(ModuleTemplate):
     def print_message(self):
         message_dict = {'module_path': self._template_args['module_path']}
 
-        message = ("\nPlease add your patch files to the {module_path:s} "
+        message = ("\nPlease add your patch files to the {module_path:s}"
                    "\ndirectory and edit {module_path:s}/build script "
-                   "appropriately")
+                   "appropriately.")
         message = message.format(**message_dict)
 
         print(message)
@@ -237,7 +237,7 @@ class ModuleTemplatePython(ModuleTemplate):
                         'setup_path': os.path.join(module_path, "setup.py")
                         }
 
-        message = ("\nPlease add your python files to the {module_path:s} "
+        message = ("\nPlease add your python files to the {module_path:s}"
                    "\ndirectory and edit {setup_path} appropriately.")
         message = message.format(**message_dict)
 
@@ -375,7 +375,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
                    "for the ioc's other technical areas and path to scripts."
                    "\nAlso edit {srcMakefile:s} to add all database files "
                    "from these technical areas.\nAn example set of screens"
-                   " has been placed in {opi/edl} . Please modify these.\n")
+                   " has been placed in {opi/edl}. Please modify these.")
         message = message.format(**message_dict)
 
         print(message)
