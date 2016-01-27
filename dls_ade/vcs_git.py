@@ -314,6 +314,8 @@ def clone(server_repo_path, local_repo_path):
     if server_repo_path[-1] == '/':
         server_repo_path = server_repo_path[:-1]
 
+    print(os.path.join(GIT_SSH_ROOT, server_repo_path))
+
     repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, server_repo_path),
                                os.path.join("./", local_repo_path))
 
