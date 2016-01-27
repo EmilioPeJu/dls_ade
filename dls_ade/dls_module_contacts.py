@@ -43,7 +43,7 @@ e.g.
 def make_parser():
 
     parser = ArgParser(usage)
-    # 'nargs' makes <modules> an optional positional argument, '*' makes it a list of N entries
+    # nargs='*' makes <modules> an optional positional argument; a list of N entries
     parser.add_argument(
         "modules", nargs='*', type=str, default=None, help="Name(s) of module(s) to list/set contacts for")
     parser.add_argument(
