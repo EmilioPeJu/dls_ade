@@ -21,12 +21,10 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_list_modules.make_parser()
 
-    def test_domain_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-d']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, str)
-        self.assertEqual(option.dest, "domain_name")
-        self.assertIn("--domain", option.option_strings)
+    def test_domain_name_has_correct_attributes(self):
+        arguments = self.parser._positionals._actions[4]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.dest, 'domain_name')
 
 
 class PrintModuleListTest(unittest.TestCase):

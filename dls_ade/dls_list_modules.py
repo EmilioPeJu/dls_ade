@@ -40,8 +40,7 @@ def make_parser():
         ArgParser instance
     """
     parser = ArgParser(usage)
-    parser.add_argument("-d", "--domain", action="store",
-                        type=str, dest="domain_name",
+    parser.add_argument("domain_name", nargs="?", type=str,
                         help="domain of ioc to list")
     return parser
 
