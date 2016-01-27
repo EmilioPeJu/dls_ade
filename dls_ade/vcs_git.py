@@ -357,17 +357,13 @@ def clone_multi(source):
         Error: Repository does not contain <source>
     """
 
-    if source[-1] == '/':
-        source = source[:-1]
-
     split_list = get_repository_list()
     for path in split_list:
         if path.startswith(source):
-            if source.split('/')[-1] == 'ioc':
-                # Add domain to save path
-                module = path.split('/')[-2] + '/' + path.split('/')[-1]
-            else:
-                module = path.split('/')[-1]
+
+            # Remove controls/<area>/ from front of save path
+            module = path.split('/', 2)[-1]
+            print("Module: " + module)
 
             if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")

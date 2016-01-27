@@ -100,6 +100,9 @@ def main():
     if module == "":
         print("Checking out entire " + args.area + " area...\n")
         vcs_git.clone_multi(source)
+    elif module.endswith('/') and args.area == 'ioc':
+        print("Checking out " + module + " technical area...")
+        vcs_git.clone_multi(source)
     else:
         check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
