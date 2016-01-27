@@ -3,12 +3,12 @@ import os
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
-def remove_end_slash(path):
+def remove_end_slash(path_string):
 
-    if path.endswith('/'):
-        path = path[:-1]
+    if path_string and isinstance(path_string, str) and path_string.endswith('/'):
+        path_string = path_string[:-1]
 
-    return path
+    return path_string
 
 
 def check_technical_area_valid(area, module):

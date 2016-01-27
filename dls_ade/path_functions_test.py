@@ -6,6 +6,13 @@ GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 class RemoveEndSlash(unittest.TestCase):
 
+    def test_given_empty_string_then_return(self):
+        test_string = ""
+
+        new_string = path_functions.remove_end_slash(test_string)
+
+        self.assertEqual(new_string, "")
+
     def test_given_path_slash_then_removed_and_returned(self):
         path = "controls/area/module/"
 
