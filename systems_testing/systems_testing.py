@@ -148,6 +148,7 @@ class SystemsTest(object):
         _std_out_starts_with_string: Standard output 'startswith' check string.
         _std_out_ends_with_string: Standard output 'endswith' check string.
         _arguments: A string containing the arguments for the given script.
+        _input: The input to be sent to the script while it's running.
         _attributes_dict: A dictionary of all git attributes to check for.
 
         _local_repo_path: A local path, used for attribute checking.
@@ -189,6 +190,7 @@ class SystemsTest(object):
         self._std_out_starts_with_string = None
         self._std_out_ends_with_string = None
         self._arguments = ""
+        self._input = None
         self._attributes_dict = {}
 
         # Used for attribute checking
@@ -220,6 +222,7 @@ class SystemsTest(object):
             'std_out_starts_with_string',
             'std_out_ends_with_string',
             'arguments',
+            'input',
             'attributes_dict',
             'server_repo_path',
             'local_repo_path',
@@ -241,6 +244,7 @@ class SystemsTest(object):
             - std_out_starts_with_string
             - std_out_ends_with_string
             - arguments
+            - input
             - attributes_dict
             - server_repo_path
             - local_repo_path
@@ -278,6 +282,8 @@ class SystemsTest(object):
     def call_script(self):
         """Call the script and store output, error and return code.
 
+        If `input` is set, this will pass the input to the child process.
+
         Raises:
             ValueError: From Popen().
         """
@@ -285,13 +291,19 @@ class SystemsTest(object):
 
         logging.debug("About to call script with:")
         logging.debug(call_args)
-        # It appears that we cannot use 'higher-level' subprocess functions,
-        # eg. check_output here. This is because stderr cannot be obtained
-        # separately to stdout in these functions.
-        process = subprocess.Popen(call_args, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
 
-        self._std_out, self._std_err = process.communicate()
+        # If no input is given, this will prevent communicate() from sending
+        # data to the child process.
+        if self._input is not None:
+            stdin_pipe = subprocess.PIPE
+        else:
+            stdin_pipe = None
+
+        process = subprocess.Popen(call_args, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   stdin=stdin_pipe)
+
+        self._std_out, self._std_err = process.communicate(self._input)
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode

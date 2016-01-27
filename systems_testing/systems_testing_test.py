@@ -7,7 +7,7 @@ require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 
 
-def set_up_mock_(test_case_obj, mock_path):
+def set_up_mock(test_case_obj, mock_path):
     patch_obj = patch(mock_path)
     test_case_obj.addCleanup(patch_obj.stop)
     mock_obj = patch_obj.start()
@@ -124,7 +124,6 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
         settings = {
             'arguments': "--area python test_module_name",
-            'std_out_compare_method': "manual_comp",
             'std_out_compare_string': "test_output"
         }
 
@@ -139,7 +138,6 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
         settings = {
             'arguments': "--area python test_module_name",
-            'std_out_compare_method': "manual_comp",
             'std_out_compare_string': "test_output",
             'std_out': "this should not get updated"
         }
@@ -154,30 +152,109 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
 
 class SystemsTestCallScriptTest(unittest.TestCase):
+    #
+    # @patch('systems_testing.subprocess.Popen')
+    # def test_given_no_input_to_call_script_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self, mock_popen):
+    #     mock_process = MagicMock(returncode=1)
+    #     mock_process.communicate.return_value = ("test_out", "test_err")
+    #     mock_popen.return_value = mock_process
+    #
+    #     st_obj = st.SystemsTest("test_script", "test_name")
+    #     st_obj.load_settings(
+    #             {
+    #                 'arguments': "--area python test_server_repo_path"
+    #             }
+    #     )
+    #
+    #     st_obj.call_script()
+    #
+    #     mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
+    #                                        stdout=subprocess.PIPE,
+    #                                        stderr=subprocess.PIPE)
+    #
+    #     self.assertEqual(st_obj._std_out, "test_out")
+    #     self.assertEqual(st_obj._std_err, "test_err")
+    #     self.assertEqual(st_obj._return_code, 1)
 
-    @patch('systems_testing.subprocess.Popen')
-    def test_given_function_called_then_popen_called_correctly(self, mock_popen):
+    def setUp(self):
+        self.mock_popen = set_up_mock(self, 'systems_testing.subprocess.Popen')
+
+    def test_given_no_input_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self):
         mock_process = MagicMock(returncode=1)
         mock_process.communicate.return_value = ("test_out", "test_err")
-        mock_popen.return_value = mock_process
+        self.mock_popen.return_value = mock_process
 
         st_obj = st.SystemsTest("test_script", "test_name")
         st_obj.load_settings(
                 {
-                    'arguments': "--area python test_server_repo_path"
+                    'arguments': "--area python test_server_repo_path",
                 }
         )
 
         st_obj.call_script()
 
-        mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE)
+        self.mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE,
+                                                stdin=None)
+
+        mock_process.communicate.assert_called_once_with(None)
 
         self.assertEqual(st_obj._std_out, "test_out")
         self.assertEqual(st_obj._std_err, "test_err")
         self.assertEqual(st_obj._return_code, 1)
 
+    def test_given_input_then_popen_has_standard_input_set_to_pipe_and_communicate_called_with_input(self):
+        mock_process = MagicMock(returncode=1)
+        mock_process.communicate.return_value = ("test_out", "test_err")
+        self.mock_popen.return_value = mock_process
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.load_settings(
+                {
+                    'arguments': "--area python test_server_repo_path",
+                    'input': "I am input",
+                }
+        )
+
+        st_obj.call_script()
+
+        self.mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE,
+                                                stdin=subprocess.PIPE)
+
+        mock_process.communicate.assert_called_once_with("I am input")
+
+        self.assertEqual(st_obj._std_out, "test_out")
+        self.assertEqual(st_obj._std_err, "test_err")
+        self.assertEqual(st_obj._return_code, 1)
+
+    def test_given_input_is_blank_string_then_popen_has_standard_input_set_to_pipe_and_communicate_called_with_input(self):
+        mock_process = MagicMock(returncode=1)
+        mock_process.communicate.return_value = ("test_out", "test_err")
+        self.mock_popen.return_value = mock_process
+
+        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj.load_settings(
+                {
+                    'arguments': "--area python test_server_repo_path",
+                    'input': "",
+                }
+        )
+
+        st_obj.call_script()
+
+        self.mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE,
+                                                stdin=subprocess.PIPE)
+
+        mock_process.communicate.assert_called_once_with("")
+
+        self.assertEqual(st_obj._std_out, "test_out")
+        self.assertEqual(st_obj._std_err, "test_err")
+        self.assertEqual(st_obj._return_code, 1)
 
 class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
@@ -368,12 +445,12 @@ class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
     def setUp(self):
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
-        self.mock_check_remote_repo_exists = set_up_mock_(
+        self.mock_check_remote_repo_exists = set_up_mock(
                 self,
                 "systems_testing.SystemsTest.check_remote_repo_exists"
         )
 
-        self.mock_clone_server_repo = set_up_mock_(
+        self.mock_clone_server_repo = set_up_mock(
             self,
             "systems_testing.SystemsTest.clone_server_repo"
         )
@@ -423,10 +500,10 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
     def setUp(self):
         self.repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
 
-        self.mock_temp_clone = set_up_mock_(self, 'systems_testing.vcs_git.temp_clone')
+        self.mock_temp_clone = set_up_mock(self, 'systems_testing.vcs_git.temp_clone')
         self.mock_temp_clone.return_value = self.repo_mock
 
-        self.mock_checkout_remote_branch = set_up_mock_(self, 'systems_testing.vcs_git.checkout_remote_branch')
+        self.mock_checkout_remote_branch = set_up_mock(self, 'systems_testing.vcs_git.checkout_remote_branch')
 
     def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
 
@@ -468,7 +545,7 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
 class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_get_active_branch = set_up_mock_(self, 'systems_testing.vcs_git.get_active_branch')
+        self.mock_get_active_branch = set_up_mock(self, 'systems_testing.vcs_git.get_active_branch')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -515,7 +592,7 @@ class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 class SystemsTestRunGitAttributesTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_git_attributes = set_up_mock_(self, 'systems_testing.vcs_git.check_git_attributes')
+        self.mock_check_git_attributes = set_up_mock(self, 'systems_testing.vcs_git.check_git_attributes')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -609,7 +686,7 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
 class SystemsTestRunComparisonTests(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_folders_equal = set_up_mock_(self, 'systems_testing.check_if_repos_equal')
+        self.mock_check_folders_equal = set_up_mock(self, 'systems_testing.check_if_repos_equal')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -674,7 +751,7 @@ class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
-        self.mock_delete_temp_repo = set_up_mock_(self, "systems_testing.delete_temp_repo")
+        self.mock_delete_temp_repo = set_up_mock(self, "systems_testing.delete_temp_repo")
 
     def test_given_server_repo_clone_does_not_exist_then_function_returns(self):
 
