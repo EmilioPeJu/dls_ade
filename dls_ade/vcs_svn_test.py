@@ -6,6 +6,7 @@ require("mock")
 from mock import patch, ANY, call, MagicMock
 from dls_ade import vcs_svn
 from dls_environment.svn import svnClient
+import pysvn
 
 
 class SvnClassInitTest(unittest.TestCase):
@@ -47,6 +48,44 @@ class SvnClassInitTest(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             vcs_svn.Svn(module, options)
+
+
+class SvnCatTest(unittest.TestCase):
+
+    @patch('vcs_svn.svnClient.pathcheck', return_value=True)
+    def setUp(self, mock_check):
+
+        self.module = 'deleteme'
+        self.options = FakeOptions()
+        self.vcs = vcs_svn.Svn(self.module, self.options)
+
+    def test_given_target_file_exists_then_correct_args_in_call_to_client_method(self):
+
+        filename = 'configure/RELEASE'
+        expected_cat_args = 'svn+ssh://serv0002.cs.diamond.ac.uk/home/subversion/repos/controls/diamond'
+        expected_cat_args += '/trunk/support/' + self.module + '/' + filename
+
+        self.vcs.client.cat = MagicMock()
+
+        self.vcs.cat(filename)
+
+        self.vcs.client.cat.assert_called_once_with(expected_cat_args)
+
+    def test_given_target_file_exists_then_return_string_of_contents(self):
+
+        self.vcs.client.cat = MagicMock(return_value = 'file contents in a string')
+
+        file_contents = self.vcs.cat('file')
+
+        self.assertIsInstance(file_contents, str)
+
+    def test_given_nonexistent_target_file_then_return_empty_string(self):
+
+        self.vcs.client.cat = MagicMock(side_effect = pysvn.ClientError) # effect of pysvn.client.cat of bad file
+
+        file_contents = self.vcs.cat('file')
+
+        self.assertEquals(len(file_contents), 0)
 
 
 class SvnListReleasesTest(unittest.TestCase):

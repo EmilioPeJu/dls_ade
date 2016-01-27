@@ -1,6 +1,6 @@
 import os
 from vcs import BaseVCS
-from dls_environment.svn import svnClient
+from dls_environment.svn import svnClient, pysvn
 
 
 class Svn(BaseVCS):
@@ -51,7 +51,10 @@ class Svn(BaseVCS):
 
     def cat(self, filename):
         '''Fetch contents of file in remote repository.'''
-        return self.client.cat(os.path.join(self._repo_url, filename))
+        try:
+            return self.client.cat(os.path.join(self._repo_url, filename))
+        except pysvn.ClientError:
+            return str('')
 
 
     def list_releases(self):

@@ -678,6 +678,16 @@ class CloneMultiTest(unittest.TestCase):
 
         mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'test_module', "./test_module")
 
+    @patch('dls_ade.vcs_git.get_repository_list', return_value=["controls/ioc/BL/module"])
+    @patch('os.listdir', return_value=["not_test_module"])
+    @patch('git.Repo.clone_from')
+    def test_given_ioc_area_name_then_clone_with_domain_in_file_name(self, mock_clone_from, _1, _2):
+        source = "controls/ioc/"
+
+        vcs_git.clone_multi(source)
+
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'BL/module', "./BL/module")
+
 
 class ListRemoteBranchesTest(unittest.TestCase):
 
@@ -742,6 +752,90 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
         vcs_git.checkout_remote_branch(branch, repo)
 
         self.assertFalse(repo.git.checkout.call_count)
+
+
+class CheckGitAttributesTest(unittest.TestCase):
+
+    @staticmethod
+    def check_attr_side_effect(argument):
+        if argument == "attr1 -- .".split():
+            return ".: attr1: Valueofattr1"
+        elif argument == "attr2 -- .".split():
+            return ".: attr2: Now_with_spaces"
+        elif argument == "attr3-name -- .".split():
+            return ".: attr3-name: But_spaces_arent_really_allowed"
+        elif argument == "attr-not-exist -- .".split():
+            return ".: attr-not-exist: unspecified"
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_all_attributes_exist_then_function_returns_true(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_then_function_returns_false(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "I_do_not_exist"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertFalse(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_but_we_set_value_to_unspecified_then_function_returns_True(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "unspecified"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+
+class GetActiveBranchTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_returns_active_branch_correctly(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        type(mock_repo.active_branch).name = PropertyMock(return_value="current_active_branch")
+        mock_repo_class.return_value = mock_repo
+
+        return_value = vcs_git.get_active_branch("test_repo_path")
+
+        self.assertEqual(return_value, "current_active_branch")
 
 
 class GitClassInitTest(unittest.TestCase):
@@ -918,6 +1012,16 @@ class GitCatTest(unittest.TestCase):
         self.vcs.cat(filename)
 
         self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
+
+    def test_given_non_existent_target_file_when_called_then_return_empty_string(self):
+
+        self.mgit.cat_file.side_effect = vcs_git.git.GitCommandError('abc',123, 'raised in mock of cat_file')
+        filename = 'non/existent/file'
+
+        result = self.vcs.cat(filename)
+
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 0)
 
 
 class GitListReleasesTest(unittest.TestCase):

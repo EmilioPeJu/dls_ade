@@ -471,7 +471,10 @@ class Git(BaseVCS):
         if self._version:
             if self.check_version_exists(self._version):
                 tag = self._version
-        return self.client.git.cat_file('-p', tag + ':' + filename)
+        try:
+            return self.client.git.cat_file('-p', tag+':'+filename)
+        except git.GitCommandError:
+            return str('')
 
     def list_releases(self):
         """
