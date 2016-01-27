@@ -38,9 +38,9 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
         dls_checkout_module.check_technical_area(area, module)
 
-    def test_given_area_ioc_module_everything_then_no_error_raised(self):
+    def test_given_area_ioc_module_all_then_no_error_raised(self):
         area = "ioc"
-        module = "everything"
+        module = ""
 
         dls_checkout_module.check_technical_area(area, module)
 
