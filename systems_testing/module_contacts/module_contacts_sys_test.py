@@ -1,7 +1,5 @@
 import systems_testing as st
-import tempfile
 import os
-import shutil
 
 sys_test_dir_path = os.path.realpath(os.path.dirname(__file__))
 
@@ -30,6 +28,19 @@ settings_list = [
         'arguments': "-p dls_testpythonmod -s",
 
         'std_out_compare_string': csv_output,
+
+    },
+
+    # Set one contact of python module
+    {
+        'description': "set_contact_not_cc",
+
+        'arguments': "-p dls_testpythonmod -c mef65357",
+
+        'attributes_dict': {'module-contact': 'mef65357',
+                            'module-cc': 'mef65357'},
+
+        'server_repo_path': "controlstest/python/dls_testpythonmod",
 
     },
 
