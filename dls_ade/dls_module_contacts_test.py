@@ -323,7 +323,8 @@ class EditContactInfoTest(unittest.TestCase):
     @patch('dls_ade.dls_module_contacts.lookup_contact_name')
     def test_given_contact_then_set(self, _1):
         repo_inst = MagicMock()
-        repo_inst.working_tree_dir.return_value = "test/test_module"
+        repo_inst.working_tree_dir = "test/test_module"
+        repo_inst.git.check_attr.side_effect = ['', '']
 
         with patch.object(builtins, 'open', mock_open(read_data='test_data')):
             with open('test_file') as mock_file:
@@ -331,3 +332,40 @@ class EditContactInfoTest(unittest.TestCase):
 
         self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user123\n")
         self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
+
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    def test_given_unchanged_contacts_then_do_not_set(self, _1):
+        repo_inst = MagicMock()
+        repo_inst.working_tree_dir = "test/test_module"
+        repo_inst.git.check_attr.side_effect = ['user123', 'user456']
+
+        with patch.object(builtins, 'open', mock_open(read_data='test_data')):
+            with open('test_file') as mock_file:
+                dls_module_contacts.edit_contact_info(repo_inst, "user123", "user456")
+
+        self.assertFalse(len(mock_file.write.call_args_list))
+
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    def test_given_empty_and_unchanged_contact_then_do_not_set(self, _1):
+        repo_inst = MagicMock()
+        repo_inst.working_tree_dir = "test/test_module"
+        repo_inst.git.check_attr.side_effect = ['user123', 'user456']
+
+        with patch.object(builtins, 'open', mock_open(read_data='test_data')):
+            with open('test_file') as mock_file:
+                dls_module_contacts.edit_contact_info(repo_inst, "", "user456")
+
+        self.assertFalse(len(mock_file.write.call_args_list))
+
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    def test_given_empty_and_changed_contact_then_change_one_keep_other(self, _1):
+        repo_inst = MagicMock()
+        repo_inst.working_tree_dir = "test/test_module"
+        repo_inst.git.check_attr.side_effect = ['user123', 'user456']
+
+        with patch.object(builtins, 'open', mock_open(read_data='test_data')):
+            with open('test_file') as mock_file:
+                dls_module_contacts.edit_contact_info(repo_inst, "", "user789")
+
+        self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user123\n")
+        self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user789\n")
