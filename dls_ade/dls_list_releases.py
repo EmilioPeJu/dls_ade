@@ -133,12 +133,12 @@ def main():
     else:
         # List branches from prod
         target = "prod"
-        prodArea = env.prodArea(args.area)
+        source = env.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
-            prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
-                                                                   platform.machine()))
-            logging.debug(prodArea)
-        release_dir = os.path.join(prodArea, args.module_name)
+            source = os.path.join(source, "RHEL{0}-{1}".format(args.rhel_version,
+                                                               platform.machine()))
+            logging.debug(source)
+        release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
             for p in os.listdir(release_dir):
