@@ -114,12 +114,13 @@ def check_if_repos_equal(path_1, path_2):
         raise SettingsError(err_message.format(path_1=path_1, path_2=path_2))
 
     command_format = ("diff -rq --exclude=.git --exclude=.gitattributes "
-                      "{path1:s} {path2:s}")
+                      "--exclude=.keep {path1:s} {path2:s}")
     call_args = command_format.format(path1=path_1, path2=path_2).split()
     try:
         subprocess.check_output(call_args)
     except subprocess.CalledProcessError as e:
-        logging.debug("diff output is:")
+        logging.debug("diff path one: " + path_1)
+        logging.debug("diff path two: " + path_2)
         logging.debug(e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False

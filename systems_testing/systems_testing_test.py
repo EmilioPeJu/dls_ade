@@ -36,15 +36,15 @@ class DeleteTempRepoTest(unittest.TestCase):
     def setUp(self):
 
         self.patch_gettempdir = patch('systems_testing.tempfile.gettempdir')
-        self.patch_is_git_root_dir = patch('systems_testing.vcs_git.is_git_root_dir')
+        self.patch_is_local_repo_root = patch('systems_testing.vcs_git.is_local_repo_root')
         self.patch_rmtree = patch('systems_testing.shutil.rmtree')
 
         self.addCleanup(self.patch_gettempdir.stop)
-        self.addCleanup(self.patch_is_git_root_dir.stop)
+        self.addCleanup(self.patch_is_local_repo_root.stop)
         self.addCleanup(self.patch_rmtree.stop)
 
         self.mock_gettempdir = self.patch_gettempdir.start()
-        self.mock_is_git_root_dir = self.patch_is_git_root_dir.start()
+        self.mock_is_local_repo_root = self.patch_is_local_repo_root.start()
         self.mock_rmtree = self.patch_rmtree.start()
 
         self.mock_gettempdir.return_value = "/tmp"
@@ -60,7 +60,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
     def test_given_repo_not_git_root_dir_then_exception_raised_with_correct_message(self):
 
-        self.mock_is_git_root_dir.return_value = False
+        self.mock_is_local_repo_root.return_value = False
 
         comp_message = "/tmp/not_git_root_dir is not a git root directory, cannot delete."
 
@@ -71,7 +71,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
     def test_given_both_tests_pass_then_shutil_rmtree_called_on_given_file_path(self):
 
-        self.mock_is_git_root_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
 
         st.delete_temp_repo("/tmp/git_root_dir")
 
@@ -99,7 +99,7 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
         st.check_if_repos_equal("local_path_one", "local_path_two")
 
-        mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', 'local_path_one', 'local_path_two'])
+        mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', '--exclude=.keep', 'local_path_one', 'local_path_two'])
 
     @patch('systems_testing.subprocess.check_output')
     def test_given_subprocess_return_code_1_then_function_returns_false(self, mock_check_output):
@@ -479,20 +479,20 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
         self.st_obj = st.SystemsTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=False)
-    def test_given_is_repo_path_false_then_assert_failed(self, mock_is_repo_path):
+    @patch('systems_testing.vcs_git.is_server_repo', return_value=False)
+    def test_given_is_server_repo_false_then_assert_failed(self, mock_is_server_repo):
 
         with self.assertRaises(AssertionError):
             self.st_obj.check_remote_repo_exists()
 
-        mock_is_repo_path.assert_called_once_with("test_repo_path")
+        mock_is_server_repo.assert_called_once_with("test_repo_path")
 
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=True)
-    def test_given_is_repo_path_true_then_no_assertion_failed(self, mock_is_repo_path):
+    @patch('systems_testing.vcs_git.is_server_repo', return_value=True)
+    def test_given_is_server_repo_true_then_no_assertion_failed(self, mock_is_server_repo):
 
         self.st_obj.check_remote_repo_exists()
 
-        mock_is_repo_path.assert_called_once_with("test_repo_path")
+        mock_is_server_repo.assert_called_once_with("test_repo_path")
 
 
 class SystemsTestCloneServerRepoTest(unittest.TestCase):

@@ -303,6 +303,18 @@ class ModuleTemplateSupport(ModuleTemplateWithApps):
     These have apps with the same name as the module.
 
     """
+    def __init__(self, template_args, additional_required_args=[]):
+
+        super(ModuleTemplateSupport, self).__init__(
+                template_args,
+                additional_required_args
+        )
+
+        # The difference between this and WithApps' template_files, is that a
+        # number of '.keep' files are included in otherwise empty repositories
+        # created by MakeBaseApp.pl so the folders are included in the git
+        # repository.
+        self._set_template_files_from_area("support")
 
     def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.

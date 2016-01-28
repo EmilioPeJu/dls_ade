@@ -1,21 +1,3 @@
-import os
-
-with open("repo_test_num.txt", "r") as f:
-    test_number = f.readline()
-
-if not test_number and not test_number.isdigit():
-    raise Exception("The file repo_test_num.txt must contain the current test "
-                    "number.")
-
-test_number = int(test_number)
-test_number += 1
-test_number = str(test_number)
-
-os.environ['GIT_ROOT_DIR'] = "controlstest/targetOS/creation" + test_number
-
-with open("repo_test_num.txt", "w") as f:
-    f.write(test_number)
-
 from pkg_resources import require
 require('nose')
 
@@ -26,7 +8,9 @@ import shutil
 import tempfile
 import start_new_module_util as snm_util
 
+ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
 COMPARISON_FILES = "comparison_files"
+NEW_GIT_ROOT_DIR = ""
 
 printed_messages = {
     'python':
@@ -116,26 +100,28 @@ printed_messages = {
 # comparisons. I have copied over all the text, though, in order to make these
 # tests self contained.
 settings_list = [
-    {
-        'description': "test_exported_python_module_is_created_with_correct_files",
-
-        'arguments': "-p dls_test_python_module",
-
-        'std_out_ends_with_string': printed_messages['python'],
-
-        'attributes_dict': {'module-contact': os.getlogin()},
-
-        'local_repo_path': "dls_test_python_module",
-
-        'repo_comp_method': "all_comp",
-
-        'local_comp_path_one': "dls_test_python_module",
-
-        'local_comp_path_two': "dls_test_python_module",
-
-        'server_repo_path': "python/dls_test_python_module",
-    },
-
+    # {
+    #     'description': "test_exported_python_module_is_created_with_correct_files",
+    #
+    #     'arguments': "-p dls_test_python_module",
+    #
+    #     'std_out_ends_with_string': printed_messages['python'],
+    #
+    #     'attributes_dict': {'module-contact': os.getlogin()},
+    #
+    #     'local_repo_path': "dls_test_python_module",
+    #
+    #     'repo_comp_method': "all_comp",
+    #
+    #     'local_comp_path_one': "dls_test_python_module",
+    #
+    #     'local_comp_path_two': "dls_test_python_module",
+    #
+    #     'server_repo_path': "dls_test_python_module",
+    #
+    #     'server_area': "python",
+    # },
+    #
     # {
     #     'description': "test_exported_tools_module_is_created_with_correct_files",
     #
@@ -153,28 +139,33 @@ settings_list = [
     #
     #     'local_comp_path_two': "test_tools_module",
     #
-    #     'server_repo_path': "tools/test_tools_module",
+    #     'server_repo_path': "test_tools_module",
+    #
+    #     'server_area': "tools",
+    #
     # },
-    #
-    # {
-    #     'description': "test_exported_support_module_is_created_with_correct_files",
-    #
-    #     'arguments': "-a support test_support_module",
-    #
-    #     'std_out_ends_with_string': printed_messages['support'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'local_repo_path': "test_support_module",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "test_support_module",
-    #
-    #     'local_comp_path_two': "test_support_module",
-    #
-    #     'server_repo_path': "support/test_support_module"
-    # },
+
+    {
+        'description': "test_exported_support_module_is_created_with_correct_files",
+
+        'arguments': "-a support test_support_module",
+
+        'std_out_ends_with_string': printed_messages['support'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "test_support_module",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "test_support_module",
+
+        'local_comp_path_two': "test_support_module",
+
+        'server_repo_path': "test_support_module",
+
+        'server_area': "support",
+    },
     #
     # {
     #     'description': "test_exported_IOC_BL_slash_form_module_is_created_with_correct_files",
@@ -193,7 +184,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB21/BL",
     #
-    #     'server_repo_path': "ioc/testB21/BL"
+    #     'server_repo_path': "testB21/BL",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -213,7 +206,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB22/testB22-BL-IOC-01",
     #
-    #     'server_repo_path': "ioc/testB22/testB22-BL-IOC-01"
+    #     'server_repo_path': "testB22/testB22-BL-IOC-01",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -235,7 +230,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB01/TS",
     #
-    #     'server_repo_path': "ioc/testB01/TS"
+    #     'server_repo_path': "testB01/TS",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -257,7 +254,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB02/TS",
     #
-    #     'server_repo_path': "ioc/testB02/TS"
+    #     'server_repo_path': "testB02/TS",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -279,7 +278,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB03/testB03-TS-IOC-01",
     #
-    #     'server_repo_path': "ioc/testB03/testB03-TS-IOC-01"
+    #     'server_repo_path': "testB03/testB03-TS-IOC-01",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -301,7 +302,9 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB04/testB04-TS-IOC-04",
     #
-    #     'server_repo_path': "ioc/testB04/testB04-TS-IOC-04"
+    #     'server_repo_path': "testB04/testB04-TS-IOC-04",
+    #
+    #     'server_area': "ioc",
     # },
     #
     # {
@@ -323,65 +326,53 @@ settings_list = [
     #
     #     'local_comp_path_two': "testB05/testB05-TS-IOC-02",
     #
-    #     'server_repo_path': "ioc/testB05/testB05-TS-IOC-02"
-    # },
+    #     'server_repo_path': "testB05/testB05-TS-IOC-02",
     #
-    # {
-    #     'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
-    #
-    #     'arguments': "-i testB06/TS/02",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B06'],
-    #
-    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
-    #
-    #     'local_repo_path': "testB06/TS",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB06/TS",
-    #
-    #     'local_comp_path_two': "testB06/TS",
-    #
-    #     'server_repo_path': "ioc/testB06/TS"
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_that_needs_to_add_app_but_app_conflict_occurs_is_created_with_correct_module_name_and_app_name_and_files",
-    #
-    #     'arguments': "-i testB07/TS/02",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B07'],
-    #
-    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
-    #
-    #     'local_repo_path': "testB07/TS",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB07/TS",
-    #
-    #     'local_comp_path_two': "testB07/TS",
-    #
-    #     'server_repo_path': "ioc/testB07/TS"
+    #     'server_area': "ioc",
     # },
 ]
+
+
+def setup_module():
+
+    global NEW_GIT_ROOT_DIR
+
+    with open("repo_test_num.txt", "r") as f:
+        test_number = f.readline()
+
+    if not test_number and not test_number.isdigit():
+        raise Exception("The file repo_test_num.txt must contain the current "
+                        "test number.")
+
+    test_number = int(test_number)
+    test_number += 1
+    test_number = str(test_number)
+
+    NEW_GIT_ROOT_DIR = "controlstest/targetOS/creation" + test_number
+    os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
+
+    with open("repo_test_num.txt", "w") as f:
+        f.write(test_number)
+
+    st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
+    st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
 # TODO(Martin) Suggestion: Use exact same tests as local repo tests, but also
 # TODO(Martin) use comparison to server repository.
 def test_generator_export_to_server():
-
     # Search the COMPARISON_FILES folder for folders to compare with.
     for settings_dict in settings_list:
         comparison_path = settings_dict['local_comp_path_two']
+
         settings_dict['local_comp_path_two'] = os.path.join(
                 COMPARISON_FILES,
                 comparison_path
+        )
+
+        settings_dict['server_repo_path'] = st.vcs_git.pathf.dev_module_path(
+            settings_dict['server_repo_path'],
+            settings_dict['server_area']
         )
 
     tempdir = tempfile.mkdtemp()
@@ -403,4 +394,58 @@ def test_generator_export_to_server():
 
     shutil.rmtree(tempdir)
 
-    os.environ['GIT_ROOT_DIR'] = "controlstest"
+
+    # {
+    #     'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
+    #
+    #     'arguments': "-i testB06/TS/02",
+    #
+    #     'input': "",
+    #
+    #     'std_out_ends_with_string': printed_messages['IOC-B06'],
+    #
+    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
+    #
+    #     'local_repo_path': "testB06/TS",
+    #
+    #     'repo_comp_method': "all_comp",
+    #
+    #     'local_comp_path_one': "testB06/TS",
+    #
+    #     'local_comp_path_two': "testB06/TS",
+    #
+    #     'server_repo_path': "testB06/TS",
+    #
+    #     'server_area': "ioc",
+    # },
+    #
+    # {
+    #     'description': "test_exported_IOC_module_that_needs_to_add_app_but_app_conflict_occurs_is_created_with_correct_module_name_and_app_name_and_files",
+    #
+    #     'arguments': "-i testB07/TS/02",
+    #
+    #     'input': "",
+    #
+    #     'std_out_ends_with_string': printed_messages['IOC-B07'],
+    #
+    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
+    #
+    #     'local_repo_path': "testB07/TS",
+    #
+    #     'repo_comp_method': "all_comp",
+    #
+    #     'local_comp_path_one': "testB07/TS",
+    #
+    #     'local_comp_path_two': "testB07/TS",
+    #
+    #     'server_repo_path': "testB07/TS",
+    #
+    #     'server_area': "ioc",
+    # },
+
+
+def teardown_module():
+
+    os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
+    st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
+    st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
