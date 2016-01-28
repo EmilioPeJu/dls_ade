@@ -31,16 +31,16 @@ settings_list = [
 
 def test_generator_remote_verification():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        os.chdir(tempdir)
+    os.chdir(tempdir)
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-                                                 st.SystemsTest,
-                                                 settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+                                             st.SystemsTest,
+                                             settings_list):
+        yield test
 
-        os.chdir(cwd)
+    os.chdir(cwd)
 
-        shutil.rmtree(tempdir)
+    shutil.rmtree(tempdir)

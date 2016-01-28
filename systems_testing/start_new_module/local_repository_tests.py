@@ -327,30 +327,30 @@ settings_list = [
 
 def test_generator_local():
 
-        # Search the COMPARISON_FILES folder for folders to compare with.
-        for settings_dict in settings_list:
-            comparison_path = settings_dict['local_comp_path_two']
-            settings_dict['local_comp_path_two'] = os.path.join(
-                    COMPARISON_FILES,
-                    comparison_path
-            )
-
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
-
-        # Unpack tar in tempdir and change to match currently logged in user.
-        snm_util.untar_comparison_files_and_insert_user_login(
-                COMPARISON_FILES + ".tar.gz", tempdir
+    # Search the COMPARISON_FILES folder for folders to compare with.
+    for settings_dict in settings_list:
+        comparison_path = settings_dict['local_comp_path_two']
+        settings_dict['local_comp_path_two'] = os.path.join(
+                COMPARISON_FILES,
+                comparison_path
         )
 
-        os.chdir(tempdir)
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                                 st.SystemsTest,
-                                                 settings_list):
-            yield test
+    # Unpack tar in tempdir and change to match currently logged in user.
+    snm_util.untar_comparison_files_and_insert_user_login(
+            COMPARISON_FILES + ".tar.gz", tempdir
+    )
 
-        os.chdir(cwd)
+    os.chdir(tempdir)
 
-        shutil.rmtree(tempdir)
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
+                                             st.SystemsTest,
+                                             settings_list):
+        yield test
+
+    os.chdir(cwd)
+
+    shutil.rmtree(tempdir)
 

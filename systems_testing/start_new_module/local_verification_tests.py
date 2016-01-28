@@ -37,22 +37,22 @@ conflicting_settings_list = [
 
 def test_generator_conflicting_filepaths_expected():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        os.chdir(tempdir)
+    os.chdir(tempdir)
 
-        for settings in conflicting_settings_list:
-            os.makedirs(settings.pop('create_folder'))
+    for settings in conflicting_settings_list:
+        os.makedirs(settings.pop('create_folder'))
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                                 st.SystemsTest,
-                                                 conflicting_settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
+                                             st.SystemsTest,
+                                             conflicting_settings_list):
+        yield test
 
-        os.chdir(cwd)
+    os.chdir(cwd)
 
-        shutil.rmtree(tempdir)
+    shutil.rmtree(tempdir)
 
 
 git_root_dir_settings_list = [
@@ -70,21 +70,21 @@ git_root_dir_settings_list = [
 
 def test_generator_local_git_repo_root_directory():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        os.chdir(tempdir)
+    os.chdir(tempdir)
 
-        st.vcs_git.init_repo(".")
+    st.vcs_git.init_repo(".")
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                                 st.SystemsTest,
-                                                 git_root_dir_settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
+                                             st.SystemsTest,
+                                             git_root_dir_settings_list):
+        yield test
 
-        os.chdir(cwd)
+    os.chdir(cwd)
 
-        shutil.rmtree(tempdir)
+    shutil.rmtree(tempdir)
 
 
 git_nested_dir_settings_list = [
@@ -102,20 +102,20 @@ git_nested_dir_settings_list = [
 
 def test_generator_local_git_repo_nested_directory():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        os.chdir(tempdir)
+    os.chdir(tempdir)
 
-        st.vcs_git.init_repo(".")
-        os.makedirs("nested_folder")
-        os.chdir("nested_folder")
+    st.vcs_git.init_repo(".")
+    os.makedirs("nested_folder")
+    os.chdir("nested_folder")
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                                 st.SystemsTest,
-                                                 git_nested_dir_settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
+                                             st.SystemsTest,
+                                             git_nested_dir_settings_list):
+        yield test
 
-        os.chdir(cwd)
+    os.chdir(cwd)
 
-        shutil.rmtree(tempdir)
+    shutil.rmtree(tempdir)

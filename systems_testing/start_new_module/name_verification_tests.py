@@ -77,19 +77,19 @@ settings_list = [
 # remote repository files if the tests fail
 def test_generator_parsing_errors_expected():
 
-        tempdir = tempfile.mkdtemp()
-        cwd = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
 
-        os.chdir(tempdir)
+    os.chdir(tempdir)
 
-        for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                                 st.SystemsTest,
-                                                 settings_list):
-            yield test
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
+                                             st.SystemsTest,
+                                             settings_list):
+        yield test
 
-        # checks that no module folders have been created
-        assert_false(os.listdir("."))
+    # checks that no module folders have been created
+    assert_false(os.listdir("."))
 
-        os.chdir(cwd)
+    os.chdir(cwd)
 
-        shutil.rmtree(tempdir)
+    shutil.rmtree(tempdir)
