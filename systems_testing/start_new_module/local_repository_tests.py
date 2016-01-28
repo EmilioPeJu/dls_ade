@@ -292,7 +292,7 @@ settings_list = [
 
         'std_out_ends_with_string': printed_messages['IOC-B06'],
 
-        'attributes_dict': {'module-contact': os.getlogin()},
+        'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
 
         'local_repo_path': "testB06/TS",
 
@@ -312,7 +312,7 @@ settings_list = [
 
         'std_out_ends_with_string': printed_messages['IOC-B07'],
 
-        'attributes_dict': {'module-contact': os.getlogin()},
+        'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
 
         'local_repo_path': "testB07/TS",
 
