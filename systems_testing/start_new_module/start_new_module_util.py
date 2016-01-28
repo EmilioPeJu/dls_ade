@@ -2,8 +2,6 @@ from pkg_resources import require
 require('nose')
 
 import os
-import shutil
-import tempfile
 import tarfile
 import subprocess
 
