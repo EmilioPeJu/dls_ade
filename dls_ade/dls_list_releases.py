@@ -115,10 +115,9 @@ def main():
     check_epics_version(args.epics_version)
     check_technical_area(args.area, args.module_name)
 
-    # >>> Not sure what this is for
-    # # Force options.svn if no releases in the file system
-    # if args.area in ["etc", "tools", "epics"]:
-    #     args.git = True
+    # Force check of repo, not file system, for tools, etc and epics (previous releases are only stored on repo)
+    if args.area in ["etc", "tools", "epics"]:
+        args.git = True
 
     # Check for the existence of releases of this module/IOC    
     releases = []
