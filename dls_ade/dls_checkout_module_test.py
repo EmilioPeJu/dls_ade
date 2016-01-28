@@ -60,44 +60,6 @@ class CheckTechnicalAreaTest(unittest.TestCase):
             self.assertEqual(error.message, expected_error_msg)
 
 
-class CheckSourceFilePathValidTest(unittest.TestCase):
-
-    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=True)
-    def test_given_valid_source_then_no_error_raised(self, _1):
-        source = "controls/python/dls_release"
-
-        dls_checkout_module.check_source_file_path_valid(source)
-
-    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=False)
-    def test_given_invalid_source_then_error_raised(self, _1):
-        source = "controls/python/doesnotexist"
-        expected_error_msg = "Repository does not contain " + source
-
-        try:
-            dls_checkout_module.check_source_file_path_valid(source)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_msg)
-
-
-class CheckModuleFilePathValidTest(unittest.TestCase):
-
-    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=False)
-    def test_given_valid_module_then_no_error_raised(self, _1):
-        module = "doesnotexistyet"
-
-        dls_checkout_module.check_module_file_path_valid(module)
-
-    @patch('dls_ade.dls_checkout_module.os.path.isdir', return_value=True)
-    def test_given_existing_module_then_error_raised(self, _1):
-        module = "test_module"
-        expected_error_msg = "Path already exists: " + module
-
-        try:
-            dls_checkout_module.check_module_file_path_valid(module)
-        except Exception as error:
-            self.assertEqual(error.message, expected_error_msg)
-
-
 if __name__ == '__main__':
     # buffer option suppresses stdout generated from tested code
     unittest.main(buffer=True)

@@ -47,34 +47,6 @@ def check_technical_area(area, module):
         raise Exception("Missing Technical Area under Beamline")
 
 
-def check_source_file_path_valid(source):
-    """
-    Checks if given source path exists on the repository
-
-    Args:
-        source(str): Path to module to be cloned
-
-    Raises:
-        Exception: Repository does not contain <source>
-    """
-    if not vcs_git.is_repo_path(source):
-        raise Exception("Repository does not contain " + source)
-
-
-def check_module_file_path_valid(module):
-    """
-    Checks if the given module already exists in the current directory
-
-    Args:
-        module(str): Name of module to clone
-
-    Raises:
-        Exception: Path already exists: <module>
-    """
-    if os.path.isdir(module):
-        raise Exception("Path already exists: " + module)
-
-
 def main():
 
     parser = make_parser()
@@ -105,7 +77,6 @@ def main():
         vcs_git.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
 
         if args.branch:
