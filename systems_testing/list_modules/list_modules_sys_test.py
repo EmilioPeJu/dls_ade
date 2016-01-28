@@ -1,4 +1,4 @@
-from systems_testing import systems_testing as st
+import systems_testing as st
 
 support_list = "Modules in support:\n\n" \
                "testsupportmod\n" \

@@ -1,4 +1,4 @@
-from systems_testing import systems_testing as st
+import systems_testing as st
 
 changes = "Changes have been made to dls_testpythonmod since release 1-1\n"
 no_changes = "No changes have been made to dls_testpythonmod2 since most recent release 2-1\n"

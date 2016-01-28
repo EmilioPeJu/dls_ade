@@ -1,4 +1,4 @@
-from systems_testing import systems_testing as st
+import systems_testing as st
 import tempfile
 import os
 import shutil
