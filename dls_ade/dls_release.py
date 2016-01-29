@@ -215,7 +215,7 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            print "Last release for %s was %s" % (module, last_release)
+            print "Last release for {module} was {last_release}".format(module=module, last_release=last_release)
     return version
 
 
@@ -253,28 +253,29 @@ def increment_version_number(last_release):
     return version
 
 
-def construct_info_message(module, args, version, build_object):
+def construct_info_message(module, branch, area, version, build_object):
     """
     Gathers info to display during release
 
     Args:
-        module(str): Module to be released
-        args(argparser Namespace): Parser arguments
-        version(str): Release version
-        build_object(Builder): Either a Windows or RedHat build object
+        module: Module to be released
+        branch: Branch to be released
+        area: Area of module
+        version: Release version
+        build_object: Either a Windows or RedHat build object
 
     Returns:
-        Info message
+
     """
     info = str()
-    if args.branch:
-        btext = "branch %s" % args.branch
+    if branch:
+        btext = "branch {}".format(branch)
     else:
         btext = "trunk"
-    info += ('Releasing %s %s from %s, ' % (module, version, btext))
-    info += ('using %s build server' % build_object.get_server())
-    if args.area in ("ioc", "support"):
-        info += (' and epics %s' % build_object.epics())
+    info += ('Releasing {module} {version} from {btext}, '.format(module=module, version=version, btext=btext))
+    info += ('using {} build server'.format(build_object.get_server()))
+    if area in ("ioc", "support"):
+        info += (' and epics {}'.format(build_object.epics()))
     return info
 
 
@@ -295,10 +296,10 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
     if not option_epics and module_epics != build_epics:
         question = (
             "You are trying to release a %s module under %s without "
-            "using the -e flag. Are you sure [y/n]?" %
+            "using the -e flag. Are you sure [Y/N]?" %
             (module_epics, build_epics)).lower()
         answer = ask_user_input(question)
-        return True if answer is "y" else False
+        return False if answer.upper() is not "Y" else True
     else:
         return True
 
@@ -336,13 +337,13 @@ def get_module_epics_version(vcs):
     return module_epics
 
 
-def perform_test_build(build_object, args, vcs):
+def perform_test_build(build_object, local_build, vcs):
     """
     Test build the module and return whether it was successful
 
     Args:
         build_object(Builder): Either a windows or RedHat builder
-        args(argparse Namespace): Parser arguments
+        local_build(bool): Specifier to perform test build only
         vcs(Git/Svn): Git or Svn version control system instance
 
     Returns:
@@ -360,7 +361,7 @@ def perform_test_build(build_object, args, vcs):
             test_fail = True
         else:
             message += "\nTest build successful."
-            if not args.local_build:
+            if not local_build:
                 message += " Continuing with build server submission"
     return message, test_fail
 
@@ -389,7 +390,7 @@ def main():
     vcs.set_log_message(
         (log_mess % (module, version, args.message)).strip())
 
-    print construct_info_message(module, args, version, build)
+    print construct_info_message(module, args.branch, args.area, version, build)
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
@@ -400,7 +401,7 @@ def main():
 
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build, args, vcs)
+            build, args.local_build, vcs)
         print test_build_message
         if test_build_fail:
             sys.exit(1)
