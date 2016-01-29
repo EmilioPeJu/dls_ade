@@ -100,50 +100,50 @@ printed_messages = {
 # comparisons. I have copied over all the text, though, in order to make these
 # tests self contained.
 settings_list = [
-    # {
-    #     'description': "test_exported_python_module_is_created_with_correct_files",
-    #
-    #     'arguments': "-p dls_test_python_module",
-    #
-    #     'std_out_ends_with_string': printed_messages['python'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'local_repo_path': "dls_test_python_module",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "dls_test_python_module",
-    #
-    #     'local_comp_path_two': "dls_test_python_module",
-    #
-    #     'server_repo_path': "dls_test_python_module",
-    #
-    #     'server_area': "python",
-    # },
-    #
-    # {
-    #     'description': "test_exported_tools_module_is_created_with_correct_files",
-    #
-    #     'arguments': "-a tools test_tools_module",
-    #
-    #     'std_out_ends_with_string': printed_messages['tools'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'local_repo_path': "test_tools_module",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "test_tools_module",
-    #
-    #     'local_comp_path_two': "test_tools_module",
-    #
-    #     'server_repo_path': "test_tools_module",
-    #
-    #     'server_area': "tools",
-    #
-    # },
+    {
+        'description': "test_exported_python_module_is_created_with_correct_files",
+
+        'arguments': "-p dls_test_python_module",
+
+        'std_out_ends_with_string': printed_messages['python'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "dls_test_python_module",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "dls_test_python_module",
+
+        'local_comp_path_two': "dls_test_python_module",
+
+        'server_repo_path': "dls_test_python_module",
+
+        'module_area': "python",
+    },
+
+    {
+        'description': "test_exported_tools_module_is_created_with_correct_files",
+
+        'arguments': "-a tools test_tools_module",
+
+        'std_out_ends_with_string': printed_messages['tools'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "test_tools_module",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "test_tools_module",
+
+        'local_comp_path_two': "test_tools_module",
+
+        'server_repo_path': "test_tools_module",
+
+        'module_area': "tools",
+
+    },
 
     {
         'description': "test_exported_support_module_is_created_with_correct_files",
@@ -164,30 +164,30 @@ settings_list = [
 
         'server_repo_path': "test_support_module",
 
-        'server_area': "support",
+        'module_area': "support",
     },
-    #
-    # {
-    #     'description': "test_exported_IOC_BL_slash_form_module_is_created_with_correct_files",
-    #
-    #     'arguments': "-i testB21/BL",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-BL-slash'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'local_repo_path': "testB21/BL",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB21/BL",
-    #
-    #     'local_comp_path_two': "testB21/BL",
-    #
-    #     'server_repo_path': "testB21/BL",
-    #
-    #     'server_area': "ioc",
-    # },
+
+    {
+        'description': "test_exported_IOC_BL_slash_form_module_is_created_with_correct_files",
+
+        'arguments': "-i testB21/BL",
+
+        'std_out_ends_with_string': printed_messages['IOC-BL-slash'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB21/BL",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "testB21/BL",
+
+        'local_comp_path_two': "testB21/BL",
+
+        'server_repo_path': "testB21/BL",
+
+        'module_area': "ioc",
+    },
     #
     # {
     #     'description': "test_exported_IOC_BL_dash_form_module_is_created_with_correct_files",
@@ -208,7 +208,7 @@ settings_list = [
     #
     #     'server_repo_path': "testB22/testB22-BL-IOC-01",
     #
-    #     'server_area': "ioc",
+    #     'module_area': "ioc",
     # },
     #
     # {
@@ -232,7 +232,7 @@ settings_list = [
     #
     #     'server_repo_path': "testB01/TS",
     #
-    #     'server_area': "ioc",
+    #     'module_area': "ioc",
     # },
     #
     # {
@@ -256,7 +256,7 @@ settings_list = [
     #
     #     'server_repo_path': "testB02/TS",
     #
-    #     'server_area': "ioc",
+    #     'module_area': "ioc",
     # },
     #
     # {
@@ -280,7 +280,7 @@ settings_list = [
     #
     #     'server_repo_path': "testB03/testB03-TS-IOC-01",
     #
-    #     'server_area': "ioc",
+    #     'module_area': "ioc",
     # },
     #
     # {
@@ -304,32 +304,32 @@ settings_list = [
     #
     #     'server_repo_path': "testB04/testB04-TS-IOC-04",
     #
-    #     'server_area': "ioc",
+    #     'module_area': "ioc",
     # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_dash_form_is_created_with_correct_module_name_and_files",
-    #
-    #     'arguments': "-i testB05-TS-IOC-02 --fullname",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B05'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'local_repo_path': "testB05/testB05-TS-IOC-02",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB05/testB05-TS-IOC-02",
-    #
-    #     'local_comp_path_two': "testB05/testB05-TS-IOC-02",
-    #
-    #     'server_repo_path': "testB05/testB05-TS-IOC-02",
-    #
-    #     'server_area': "ioc",
-    # },
+
+    {
+        'description': "test_exported_IOC_module_dash_form_is_created_with_correct_module_name_and_files",
+
+        'arguments': "-i testB05-TS-IOC-02 --fullname",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B05'],
+
+        'attributes_dict': {'module-contact': os.getlogin()},
+
+        'local_repo_path': "testB05/testB05-TS-IOC-02",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "testB05/testB05-TS-IOC-02",
+
+        'local_comp_path_two': "testB05/testB05-TS-IOC-02",
+
+        'server_repo_path': "testB05/testB05-TS-IOC-02",
+
+        'module_area': "ioc",
+    },
 ]
 
 
@@ -358,22 +358,9 @@ def setup_module():
     st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
-# TODO(Martin) Suggestion: Use exact same tests as local repo tests, but also
-# TODO(Martin) use comparison to server repository.
 def test_generator_export_to_server():
-    # Search the COMPARISON_FILES folder for folders to compare with.
-    for settings_dict in settings_list:
-        comparison_path = settings_dict['local_comp_path_two']
 
-        settings_dict['local_comp_path_two'] = os.path.join(
-                COMPARISON_FILES,
-                comparison_path
-        )
-
-        settings_dict['server_repo_path'] = st.vcs_git.pathf.dev_module_path(
-            settings_dict['server_repo_path'],
-            settings_dict['server_area']
-        )
+    alter_settings_dictionaries(settings_list)
 
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
@@ -395,53 +382,91 @@ def test_generator_export_to_server():
     shutil.rmtree(tempdir)
 
 
-    # {
-    #     'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
-    #
-    #     'arguments': "-i testB06/TS/02",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B06'],
-    #
-    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
-    #
-    #     'local_repo_path': "testB06/TS",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB06/TS",
-    #
-    #     'local_comp_path_two': "testB06/TS",
-    #
-    #     'server_repo_path': "testB06/TS",
-    #
-    #     'server_area': "ioc",
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_that_needs_to_add_app_but_app_conflict_occurs_is_created_with_correct_module_name_and_app_name_and_files",
-    #
-    #     'arguments': "-i testB07/TS/02",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B07'],
-    #
-    #     'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
-    #
-    #     'local_repo_path': "testB07/TS",
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'local_comp_path_one': "testB07/TS",
-    #
-    #     'local_comp_path_two': "testB07/TS",
-    #
-    #     'server_repo_path': "testB07/TS",
-    #
-    #     'server_area': "ioc",
-    # },
+add_app_settings_list = [
+    {
+        'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
+
+        'arguments': "-i testB06/TS/02",
+
+        'input': "",
+
+        'std_out_ends_with_string': printed_messages['IOC-B06'],
+
+        'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
+
+        'local_repo_path': "testB06/TS",
+
+        'repo_comp_method': "all_comp",
+
+        'local_comp_path_one': "testB06/TS",
+
+        'local_comp_path_two': "testB06/TS",
+
+        'server_repo_path': "testB06/TS",
+
+        'module_area': "ioc",
+    },
+]
+
+
+def test_generator_export_add_app_to_server():
+
+    for settings_dict in add_app_settings_list:
+        clone_from = os.path.join(
+                ORIGINAL_GIT_ROOT_DIR,
+                settings_dict['module_area'],
+                settings_dict['server_repo_path'],
+        )
+
+        clone_to = st.vcs_git.pathf.dev_module_path(
+            settings_dict['server_repo_path'],
+            settings_dict['module_area']
+        )
+
+        temp_repo = st.vcs_git.temp_clone(clone_from)
+
+        local_repo_path = temp_repo.working_tree_dir
+
+        st.vcs_git.delete_remote(local_repo_path, "origin")
+
+        st.vcs_git.add_new_remote_and_push(clone_to, local_repo_path)
+
+    alter_settings_dictionaries(add_app_settings_list)
+
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
+
+    # Unpack tar in tempdir and change to match currently logged in user.
+    snm_util.untar_comparison_files_and_insert_user_login(
+            COMPARISON_FILES + ".tar.gz", tempdir
+    )
+
+    os.chdir(tempdir)
+
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+                                             st.SystemsTest,
+                                             add_app_settings_list):
+        yield test
+
+    os.chdir(cwd)
+
+    shutil.rmtree(tempdir)
+
+
+def alter_settings_dictionaries(simplified_settings_list):
+
+    for settings_dict in simplified_settings_list:
+        # Search the COMPARISON_FILES folder for folders to compare with.
+        settings_dict['local_comp_path_two'] = os.path.join(
+                COMPARISON_FILES,
+                settings_dict['local_comp_path_two']
+        )
+
+        # Create the full server repo path from the given simplified version.
+        settings_dict['server_repo_path'] = st.vcs_git.pathf.dev_module_path(
+            settings_dict['server_repo_path'],
+            settings_dict['module_area']
+        )
 
 
 def teardown_module():

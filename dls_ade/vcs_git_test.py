@@ -11,6 +11,17 @@ def setUpModule():
     vcs_git.GIT_ROOT_DIR = "controlstest"
 
 
+def set_up_mock(test_case_object, path):
+
+    patch_obj = patch(path)
+
+    test_case_object.addCleanup(patch_obj.stop)
+
+    mock_obj = patch_obj.start()
+
+    return mock_obj
+
+
 class IsGitDirTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
@@ -579,6 +590,41 @@ class PushToRemoteTest(unittest.TestCase):
         mock_remote.push.assert_called_once_with("master")
 
 
+class CheckRemoteExistsTest(unittest.TestCase):
+
+    class RemoteEntry(object):
+        def __init__(self, name):
+            self.name = name
+
+    class StubGitRepo(object):  # Used to mock out the git.Repo() function
+        def __init__(self, remotes_list):
+
+            self.remotes_list = remotes_list  # set this to a list eg. [RemoteEntry("branch_name")] for list comprehension
+
+        @property
+        def remotes(self):
+            return self.remotes_list
+
+    def test_given_remote_name_does_not_exist_then_exception_raised_with_correct_message(self):
+
+        remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        comp_message = "Local repository does not have remote {remote:s}".format(remote="test_remote")
+
+        with self.assertRaises(vcs_git.VCSGitError) as e:
+            vcs_git.check_remote_exists(mock_repo, "test_remote")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_remote_name_exists_then_no_exception_raised(self):
+
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        vcs_git. check_remote_exists(mock_repo, "test_remote")
+
+
 class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_server_repo', return_value=False)
@@ -847,6 +893,51 @@ class GetActiveBranchTest(unittest.TestCase):
         return_value = vcs_git.get_active_branch("test_repo_path")
 
         self.assertEqual(return_value, "current_active_branch")
+
+
+class DeleteRemoteTest(unittest.TestCase):
+
+    class RemoteEntry(object):
+        def __init__(self, name):
+            self.name = name
+
+    class StubGitRepo(object):  # Used to mock out the git.Repo() function
+        def __init__(self, remotes_list, mock_repo_git=MagicMock()):
+
+            self.remotes_list = remotes_list  # set this to a list eg. [RemoteEntry("branch_name")] for list comprehension
+            self.git = mock_repo_git
+
+        @property
+        def remotes(self):
+            return self.remotes_list
+
+    def setUp(self):
+        self.mock_git_repo = set_up_mock(self, 'dls_ade.vcs_git.git.Repo')
+
+    def test_given_remote_does_not_exist_then_exception_raised_with_correct_message(self):
+
+        remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
+        mock_repo = DeleteRemoteTest.StubGitRepo(remotes_list)
+        self.mock_git_repo.return_value = mock_repo
+
+        with self.assertRaises(vcs_git.VCSGitError) as e:
+            vcs_git.delete_remote("local/repository/path", "test_remote")
+
+        self.assertTrue("test_remote" in str(e.exception))
+
+        self.mock_git_repo.assert_called_once_with("local/repository/path")
+
+    def test_given_remote_does_exist_then_remote_properly_deleted(self):
+
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo_git = MagicMock()
+        mock_repo = DeleteRemoteTest.StubGitRepo(remotes_list, mock_repo_git)
+        self.mock_git_repo.return_value = mock_repo
+
+        vcs_git.delete_remote("local/repository/path", "test_remote")
+
+        self.mock_git_repo.assert_called_once_with("local/repository/path")
+        mock_repo_git.remote.assert_called_once_with("rm", "test_remote")
 
 
 class GitClassInitTest(unittest.TestCase):
