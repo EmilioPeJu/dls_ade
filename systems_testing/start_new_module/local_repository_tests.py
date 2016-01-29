@@ -346,7 +346,6 @@ def test_generator_local():
     os.chdir(tempdir)
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                             st.SystemsTest,
                                              settings_list):
         yield test
 

@@ -46,7 +46,6 @@ def test_generator_conflicting_filepaths_expected():
         os.makedirs(settings.pop('create_folder'))
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                             st.SystemsTest,
                                              conflicting_settings_list):
         yield test
 
@@ -78,7 +77,6 @@ def test_generator_local_git_repo_root_directory():
     st.vcs_git.init_repo(".")
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                             st.SystemsTest,
                                              git_root_dir_settings_list):
         yield test
 
@@ -112,7 +110,6 @@ def test_generator_local_git_repo_nested_directory():
     os.chdir("nested_folder")
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                             st.SystemsTest,
                                              git_nested_dir_settings_list):
         yield test
 

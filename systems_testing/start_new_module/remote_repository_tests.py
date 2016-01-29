@@ -373,7 +373,6 @@ def test_generator_export_to_server():
     os.chdir(tempdir)
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-                                             st.SystemsTest,
                                              settings_list):
         yield test
 
@@ -444,7 +443,6 @@ def test_generator_export_add_app_to_server():
     os.chdir(tempdir)
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-                                             st.SystemsTest,
                                              add_app_settings_list):
         yield test
 

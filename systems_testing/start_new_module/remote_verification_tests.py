@@ -37,7 +37,6 @@ def test_generator_remote_verification():
     os.chdir(tempdir)
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-                                             st.SystemsTest,
                                              settings_list):
         yield test
 
