@@ -591,7 +591,7 @@ class SystemsTest(object):
         self._server_repo_clone_path = ""
 
 
-def generate_tests_from_dicts(script, systems_test_cls, test_settings):
+def generate_tests_from_dicts(script, test_settings):
     """Generator for the automatic construction of systems tests.
 
     Args:
@@ -604,6 +604,6 @@ def generate_tests_from_dicts(script, systems_test_cls, test_settings):
         if 'script' in settings:
             script = settings.pop('script')
         description = settings.pop('description')
-        systems_test = systems_test_cls(script, description)
+        systems_test = SystemsTest(script, description)
         systems_test.load_settings(settings)
         yield systems_test
