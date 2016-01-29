@@ -39,30 +39,35 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_list_releases.make_parser()
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'module_name')
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
+    def test_module_name_set(self, module_mock):
 
-    def test_force_argument_has_correct_attributes(self):
+        dls_list_releases.make_parser()
+
+        module_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_git_flag')
+    def test_git_flag_set(self, module_mock):
+
+        dls_list_releases.make_parser()
+
+        module_mock.assert_called_once_with(
+            help_msg="Print releases available in git")
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
+    def test_epics_version_flag_set(self, module_mock):
+
+        dls_list_releases.make_parser()
+
+        module_mock.assert_called_once_with()
+
+    def test_latest_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-l']
         self.assertIsInstance(option, _StoreTrueAction)
         self.assertEqual(option.dest, "latest")
         self.assertIn("--latest", option.option_strings)
 
-    def test_git_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-g']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "git")
-        self.assertIn("--git", option.option_strings)
-
-    def test_epics_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-e']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.dest, "epics_version")
-        self.assertIn("--epics_version", option.option_strings)
-
-    def test_rhel_argument_has_correct_attributes(self):
+    def test_rhel_version_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-r']
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.dest, "rhel_version")
