@@ -1,4 +1,6 @@
 from argparse import ArgumentParser
+from dls_ade import dls_environment
+env = dls_environment.environment()
 
 areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
 
@@ -11,13 +13,13 @@ class ArgParser(ArgumentParser):
         area = self.add_mutually_exclusive_group(required=True)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="set <area>=AREA, e.g. " + ", ".join(areas))
+            help="Set area, e.g. " + ", ".join(areas))
         area.add_argument(
             "-p", "--python", action="store_true", dest="python",
-            help="set <area>='python'")
+            help="Set 'python' area")
         area.add_argument(
             "-i", "--ioc", action="store_true", dest="ioc",
-            help="set <area>='ioc'")
+            help="Set 'ioc' area")
 
     def parse_args(self, args=None, namespace=None):
         args = super(ArgParser, self).parse_args(args, namespace)
@@ -28,5 +30,29 @@ class ArgParser(ArgumentParser):
             args.area = "python"
         return args
 
-    def add_module(self, help_msg):
-        pass
+    def add_module_name_arg(self, help_msg="Name of module"):
+
+        self.add_argument("module_name", type=str, default=None,
+                          help=help_msg)
+
+    def add_release_arg(self, help_msg="Release of module"):
+
+        self.add_argument("release", type=str, default=None,
+                          help=help_msg)
+
+    def add_branch_flag(self, help_msg="Branch of repository"):
+
+        self.add_argument("-b", "--branch", action="store", type=str, dest="branch",
+                          help=help_msg)
+
+    def add_git_flag(self, help_msg="Use git repository"):
+
+        self.add_argument("-g", "--git", action="store_true", dest="git",
+                          help=help_msg)
+
+    def add_epics_version_flag(self, help_msg="Change the epics version, "
+                                              "default is " + env.epicsVer() +
+                                              " (from your environment)"):
+
+        self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
+                          help=help_msg)
