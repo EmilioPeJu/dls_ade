@@ -399,10 +399,11 @@ def main():
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
-        sure = check_epics_version_consistent(
-            module_epics, args.epics_version, build.epics())
-        if not sure:
-            sys.exit(0)
+        if module_epics:
+            sure = check_epics_version_consistent(
+                module_epics, args.epics_version, build.epics())
+            if not sure:
+                sys.exit(0)
 
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
