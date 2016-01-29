@@ -96,7 +96,7 @@ class CheckParsedArgumentsCompatible(unittest.TestCase):
         earlier = '4-1'
         later = ''
         expected_error_message = "To specify both start and end point, use format " \
-                                 "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags."
+                                 "'ethercat 3-1 4-1', not -l and -e flags."
 
         dls_logs_since_release.check_parsed_args_compatible(releases, earlier, later, self.parser)
 
@@ -107,7 +107,7 @@ class CheckParsedArgumentsCompatible(unittest.TestCase):
         earlier = ''
         later = '4-4'
         expected_error_message = "To specify both start and end point, use format " \
-                                 "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags."
+                                 "'ethercat 3-1 4-1', not -l and -e flags."
 
         dls_logs_since_release.check_parsed_args_compatible(releases, earlier, later, self.parser)
 
@@ -118,7 +118,7 @@ class CheckParsedArgumentsCompatible(unittest.TestCase):
         earlier = '4-1'
         later = '4-4'
         expected_error_message = "To specify both start and end point, use format " \
-                                 "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags."
+                                 "'ethercat 3-1 4-1', not -l and -e flags."
 
         dls_logs_since_release.check_parsed_args_compatible(releases, earlier, later, self.parser)
 
@@ -173,7 +173,7 @@ class CheckReleasesValidTest(unittest.TestCase):
     @patch('dls_ade.dls_logs_since_release.environment.sortReleases', return_value=['4-1', '4-4'])
     def test_given_releases_wrong_order_then_error(self, _1):
         releases = ['4-4', '4-1']
-        expected_error_message = "Input releases in correct order (<earlier_release> <later_release>)"
+        expected_error_message = "Input releases in correct order (<earlier> <later>)"
 
         dls_logs_since_release.check_releases_valid(releases, self.parser)
 
