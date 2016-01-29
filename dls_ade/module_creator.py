@@ -40,7 +40,7 @@ class ModuleCreator(object):
                 created as well as affecting the repository server path.
             module_template_cls: Class for module_template object.
                 Must be a non-abstract subclass of ModuleTemplate.
-           kwargs: Additional arguments for module creation.
+            kwargs: Additional arguments for module creation.
 
         """
         self._area = area
