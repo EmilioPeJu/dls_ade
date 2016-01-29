@@ -57,7 +57,7 @@ settings_list = [
 
     },
 
-    {
+    {  # This one should fail!
         'description': "example_test_name_4",
 
         'std_out_compare_string': "I am not the wine?\n",
@@ -101,6 +101,5 @@ settings_list = [
 
 def test_generator():
     for test in st.generate_tests_from_dicts("./test_error_script.py",
-                                             st.SystemsTest,
                                              settings_list):
         yield test
