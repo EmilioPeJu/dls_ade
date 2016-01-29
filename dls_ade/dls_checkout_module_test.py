@@ -18,18 +18,18 @@ class MakeParserTest(unittest.TestCase):
         self.parser = dls_checkout_module.make_parser()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_checkout_module.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
-    def test_branch_set(self, module_mock):
+    def test_branch_set(self, parser_mock):
 
         dls_checkout_module.make_parser()
 
-        module_mock.assert_called_once_with(
+        parser_mock.assert_called_once_with(
             help_msg="Checkout a specific named branch rather than the default (master)")
 
     def test_force_argument_has_correct_attributes(self):

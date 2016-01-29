@@ -14,11 +14,11 @@ class MakeParserTest(unittest.TestCase):
         self.parser = dls_ade.dls_start_new_module.make_parser()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_ade.dls_start_new_module.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     def test_no_import_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-n']

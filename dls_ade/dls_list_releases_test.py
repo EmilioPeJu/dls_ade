@@ -40,26 +40,26 @@ class MakeParserTest(unittest.TestCase):
         self.parser = dls_list_releases.make_parser()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_list_releases.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_git_flag')
-    def test_git_flag_set(self, module_mock):
+    def test_git_flag_set(self, parser_mock):
 
         dls_list_releases.make_parser()
 
-        module_mock.assert_called_once_with(
+        parser_mock.assert_called_once_with(
             help_msg="Print releases available in git")
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
-    def test_epics_version_flag_set(self, module_mock):
+    def test_epics_version_flag_set(self, parser_mock):
 
         dls_list_releases.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     def test_latest_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-l']

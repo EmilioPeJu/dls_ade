@@ -10,8 +10,8 @@ from mock import ANY, patch
 class MakeParserTest(unittest.TestCase):
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_changes_since_release.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()

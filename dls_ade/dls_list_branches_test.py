@@ -15,8 +15,8 @@ from argparse import _StoreTrueAction
 class MakeParserTest(unittest.TestCase):
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_list_branches.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()

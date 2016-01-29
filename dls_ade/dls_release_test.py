@@ -18,40 +18,40 @@ class ParserTest(unittest.TestCase):
         self.parser = dls_release.make_parser()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, module_mock):
+    def test_module_name_set(self, parser_mock):
 
         dls_release.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_release_arg')
-    def test_release_set(self, module_mock):
+    def test_release_set(self, parser_mock):
 
         dls_release.make_parser()
 
-        module_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with()
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
-    def test_branch_flag_set(self, module_mock):
+    def test_branch_flag_set(self, parser_mock):
 
         dls_release.make_parser()
 
-        module_mock.assert_called_once_with(help_msg="Release from a branch")
+        parser_mock.assert_called_once_with(help_msg="Release from a branch")
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_git_flag')
-    def test_git_flag_set(self, module_mock):
+    def test_git_flag_set(self, parser_mock):
 
         dls_release.make_parser()
 
-        module_mock.assert_called_once_with(
+        parser_mock.assert_called_once_with(
             help_msg="Release from a git tag from the diamond gitolite repository")
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
-    def test_epics_version_flag_set(self, module_mock):
+    def test_epics_version_flag_set(self, parser_mock):
 
         dls_release.make_parser()
 
-        module_mock.assert_called_once_with(
+        parser_mock.assert_called_once_with(
             help_msg="Change the epics version. "
                      "This will determine which build server your job is built on for epics modules. "
                      "Default is from your environment")
