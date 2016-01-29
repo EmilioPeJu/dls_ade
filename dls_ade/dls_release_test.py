@@ -507,15 +507,17 @@ class TestConstructInfoMessage(unittest.TestCase):
         
         module = 'dummy'
         version = '1-0'
+        branch = None
+        area = "support"
         options = FakeOptions()
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from trunk,' % (module, version)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
@@ -523,16 +525,18 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         module = 'dummy'
         version = '3-5'
+        branch = 'new_feature'
+        area = 'support'
         options = FakeOptions(branch='new_feature')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from branch %s,' % (
-            module, version, options.branch)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = \
+            'Releasing {module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
@@ -540,15 +544,17 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         module = 'dummy'
         version = '1-0'
+        area = 'ioc'
+        branch = None
         options = FakeOptions(area='ioc')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from trunk,' % (module, version)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
@@ -556,11 +562,13 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         module = 'dummy'
         version = '1-0'
+        branch = None
+        area = 'python'
         options = FakeOptions(area='python')
         build = dls_release.create_build_object(options)
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertFalse('epics' in returned_message)
         self.assertFalse(build.epics() in returned_message)
@@ -603,7 +611,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
         self.assertTrue(sure)
 
     @patch('dls_ade.dls_release.ask_user_input', return_value='n')
-    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_spcificies_64bit_then_return_true(self, mock_ask):
+    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_specifies_64bit_then_return_true(self, mock_ask):
 
         e_option = None
         e_module = 'R3.14.11'
@@ -643,31 +651,32 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_any_option_when_called_then_return_string_and_test_failure_bool(self):
 
+        local_build = False
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertIsInstance(test_message, str)
         self.assertIsInstance(test_fail, bool)
 
     def test_given_local_test_build_not_possible_when_Called_then_return_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.local_test_possible = MagicMock(return_value=False)
         expected_message = "Local test build not possible since local system "
         expected_message += "not the same OS as build server"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
     def test_given_local_test_build_possible_then_returned_string_begins_with_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         expected_message = "Performing test build on local system"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertTrue(
             test_message.startswith(expected_message),
@@ -675,35 +684,34 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_local_test_possible_and_build_fails_then_return_test_failed(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.test.return_value = 1
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertTrue(test_fail)
 
     def test_given_local_test_possible_then_test_build_performed_once_with_vcs_and_version_as_args(self):
 
-        options = FakeOptions()
+        local_build = False
         version = '0-1'
         vcs = FakeVcs(version=version)
         self.fake_build.test.return_value = 1
 
-        test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), vcs)
+        dls_release.perform_test_build(self.fake_build, local_build, vcs)
 
         self.fake_build.test.assert_called_once_with(vcs)
 
     def test_given_test_possible_and_build_works_then_return_test_not_failed_and_message_ends_with_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.test.return_value = 0
         expected_message_end = "Test build successful. Continuing with build"
         expected_message_end += " server submission"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertFalse(test_fail)
         self.assertTrue(
@@ -712,13 +720,13 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_test_possible_and_build_works_and_local_build_option_then_message_ends_without_continuation_info(self):
 
-        options = FakeOptions(local_build=True)
+        local_build = True
         self.fake_build.test.return_value = 0
         expected_message = "Performing test build on local system"
         expected_message += '\nTest build successful.'
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, options, FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 

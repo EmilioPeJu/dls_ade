@@ -1115,6 +1115,16 @@ class GitCatTest(unittest.TestCase):
 
         self.mgit.cat_file.assert_called_once_with(ANY, expected_arg)
 
+    def test_given_non_existent_target_file_when_called_then_return_empty_string(self):
+
+        self.mgit.cat_file.side_effect = vcs_git.git.GitCommandError('abc',123, 'raised in mock of cat_file')
+        filename = 'non/existent/file'
+
+        result = self.vcs.cat(filename)
+
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 0)
+
 
 class GitListReleasesTest(unittest.TestCase):
 

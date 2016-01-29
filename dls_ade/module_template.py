@@ -187,6 +187,7 @@ class ModuleTemplateTools(ModuleTemplate):
 
     For this class to work properly, the following template arguments must be
     specified upon initialisation:
+
         - module_name
         - module_path
         - user_login
@@ -255,6 +256,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
     For this class to work properly, the following template arguments must be
     specified upon initialisation:
+    
         - module_path
         - user_login
         - app_name
