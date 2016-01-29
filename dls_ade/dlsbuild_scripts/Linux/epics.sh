@@ -53,7 +53,7 @@ cd $build_dir                               || ReportFailure "Can not cd to $bui
 [ "$_force" == "false" ] || rm -rf $_module || ReportFailure "Can not rm $_module"
 
 if [ ! -d $_module ]; then
-    svn checkout -q $_svn_dir $_module         || ReportFailure "Can not check out  $_svn_dir"
+    svn checkout -q $_svn_dir $_module      || ReportFailure "Can not check out  $_svn_dir"
     cd $_module                             || ReportFailure "Can not cd to $_module"
 else
     cd $_module                             || ReportFailure "Can not cd to $_module"
