@@ -4,7 +4,7 @@
 from __future__ import print_function
 import sys
 from argument_parser import ArgParser
-import path_functions as path
+import path_functions as pathf
 import vcs_git
 
 usage = """
@@ -24,7 +24,7 @@ def print_module_list(source, area):
         area: Area of repository to list
 
     """
-    split_list = vcs_git.get_repository_list()
+    split_list = vcs_git.get_server_repo_list()
     print("Modules in " + area + ":\n")
     for module_path in split_list:
         if module_path.startswith(source + '/'):
@@ -52,9 +52,9 @@ def main():
     args = parser.parse_args()
     
     if args.area == "ioc" and args.domain_name:
-        source = path.devModule(args.domain_name, args.area)
+        source = pathf.dev_module_path(args.domain_name, args.area)
     else:
-        source = path.devArea(args.area)
+        source = pathf.dev_area_path(args.area)
 
     print_module_list(source, args.area)
 

@@ -18,15 +18,20 @@ class TemplateFolderError(ModuleTemplateError):
                 template_path=template_folder))
 
 
+class ParsingError(Exception):
+    """Class for errors relating to parsing given arguments"""
+    pass
+
+
+class VCSGitError(Exception):
+    """Class for exceptions relating to vcs_git module"""
+    pass
+
+
 class ModuleCreatorError(Exception):
     """Class for exceptions relating to the 'new_module_creator' python module.
 
     """
-    pass
-
-
-class ParsingError(ModuleCreatorError):
-    """Class for errors relating to parsing the given arguments"""
     pass
 
 
