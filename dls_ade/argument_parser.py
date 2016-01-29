@@ -8,13 +8,14 @@ class ArgParser(ArgumentParser):
     def __init__(self, usage_v):
         super(ArgParser, self).__init__(description=usage_v)
 
-        self.add_argument(
+        area = self.add_mutually_exclusive_group(required=True)
+        area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
             help="set <area>=AREA, e.g. " + ", ".join(areas))
-        self.add_argument(
+        area.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="set <area>='python'")
-        self.add_argument(
+        area.add_argument(
             "-i", "--ioc", action="store_true", dest="ioc",
             help="set <area>='ioc'")
 
@@ -26,3 +27,6 @@ class ArgParser(ArgumentParser):
         elif args.python:
             args.area = "python"
         return args
+
+    def add_module(self, help_msg):
+        pass
