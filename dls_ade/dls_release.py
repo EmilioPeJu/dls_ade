@@ -155,8 +155,8 @@ def create_vcs_object(module, args):
     """
     if args.git:
         return vcs_git.Git(module, args)
-    else:
-        return vcs_svn.Svn(module, args)
+    # else:
+    #     return vcs_svn.Svn(module, args)
 
 
 def check_parsed_arguments_valid(args,  parser):

@@ -51,7 +51,8 @@ class ModuleCreator(object):
                                              self._module_path))
 
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
-        self._server_repo_path = pathf.devModule(self._module_path, self._area)
+        self._server_repo_path = pathf.dev_module_path(self._module_path,
+                                                       self._area)
 
         template_args = {'module_name': self._module_name,
                          'module_path': self._module_path,
@@ -93,7 +94,7 @@ class ModuleCreator(object):
         if self._remote_repo_valid:
             return
 
-        if vcs_git.is_repo_path(self._server_repo_path):
+        if vcs_git.is_server_repo(self._server_repo_path):
             err_message = ("The path {dir:s} already exists on gitolite,"
                            " cannot continue")
             raise VerificationError(
@@ -129,7 +130,7 @@ class ModuleCreator(object):
             err_list.append("Directory {dir:s} already exists, "
                             "please move elsewhere and try again.")
 
-        if vcs_git.is_git_dir(self._cwd):
+        if vcs_git.is_in_local_repo(self._cwd):
             err_list.append("Currently in a git repository, "
                             "please move elsewhere and try again.")
 
@@ -171,7 +172,7 @@ class ModuleCreator(object):
             err_list.append("Directory {dir:s} does not exist.")
 
         else:
-            mod_dir_is_repo = vcs_git.is_git_root_dir(self.abs_module_path)
+            mod_dir_is_repo = vcs_git.is_local_repo_root(self.abs_module_path)
             if not mod_dir_is_repo:
                 err_list.append("Directory {dir:s} is not a git repository. "
                                 "Unable to push to remote repository.")
@@ -333,7 +334,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         if self._remote_repo_valid:
             return
 
-        if not vcs_git.is_repo_path(self._server_repo_path):
+        if not vcs_git.is_server_repo(self._server_repo_path):
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
             err_message = err_message.format(path=self._server_repo_path)
@@ -373,7 +374,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             VCSGitError: Issue with the vcs_git function calls.
 
         """
-        if not vcs_git.is_repo_path(remote_repo_path):
+        if not vcs_git.is_server_repo(remote_repo_path):
             # This should never get raised!
             err_message = ("Remote repo {repo:s} does not exist. Cannot "
                            "clone to determine if there is an app_name "
