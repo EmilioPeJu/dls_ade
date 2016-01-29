@@ -11,6 +11,11 @@
 .. automodule:: dls_ade.dls_checkout_module
     :members:
 
+:mod:`dls_ade.dls_environment` module
+--------------------------------------------
+.. automodule:: dls_ade.dls_environment
+    :members:
+
 :mod:`dls_ade.dls_list_branches` module
 --------------------------------------------
 .. automodule:: dls_ade.dls_list_branches
