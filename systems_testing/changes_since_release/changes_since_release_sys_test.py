@@ -31,6 +31,5 @@ settings_list = [
 def test_generator():
 
     for test in st.generate_tests_from_dicts("dls-changes-since-release.py",
-                                             st.SystemsTest,
                                              settings_list):
         yield test

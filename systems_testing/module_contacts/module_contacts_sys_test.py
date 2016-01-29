@@ -79,7 +79,6 @@ def test_generator():
     os.chdir(sys_test_dir_path)
 
     for test in st.generate_tests_from_dicts("dls-module-contacts.py",
-                                             st.SystemsTest,
                                              settings_list):
         yield test
 
