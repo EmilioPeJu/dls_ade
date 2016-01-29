@@ -67,7 +67,7 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.mock_is_repo_path = set_up_mock(self, 'dls_ade.vcs_git.is_repo_path')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.vcs_git.is_server_repo')
 
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", MagicMock())
 
@@ -79,13 +79,13 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
         self.nmc_obj.verify_remote_repo()
 
-        self.assertFalse(self.mock_is_repo_path.called)
+        self.assertFalse(self.mock_is_server_repo.called)
 
     def test_given_remote_repo_path_exists_then_exception_raised_with_correct_message(self):
 
         server_repo_path = self.nmc_obj._server_repo_path
 
-        self.mock_is_repo_path.return_value = True
+        self.mock_is_server_repo.return_value = True
         comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir=server_repo_path)
 
         with self.assertRaises(mc.VerificationError) as e:
@@ -95,7 +95,7 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def test_given_remote_repo_does_not_exist_then_remote_repo_valid_set_true(self):
 
-        self.mock_is_repo_path.return_value = False
+        self.mock_is_server_repo.return_value = False
 
         self.nmc_obj.verify_remote_repo()
 
@@ -107,7 +107,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
     def setUp(self):
 
         self.mock_exists = set_up_mock(self, 'dls_ade.module_creator.os.path.exists')
-        self.mock_is_git_dir = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_git_dir')
+        self.mock_is_in_local_repo = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_in_local_repo')
 
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", MagicMock())
 
@@ -124,7 +124,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
     def test_given_module_folder_does_not_exist_and_is_not_in_git_repo_then_flag_set_true(self):
 
         self.mock_exists.return_value = False
-        self.mock_is_git_dir.return_value = False
+        self.mock_is_in_local_repo.return_value = False
 
         self.nmc_obj.verify_can_create_local_module()
 
@@ -133,7 +133,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
     def test_given_module_folder_exists_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_exists.return_value = True
-        self.mock_is_git_dir.return_value = False
+        self.mock_is_in_local_repo.return_value = False
 
         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.".format(dir=self.nmc_obj._module_path)
 
@@ -147,7 +147,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
     def test_given_module_folder_is_in_git_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_exists.return_value = False
-        self.mock_is_git_dir.return_value = True
+        self.mock_is_in_local_repo.return_value = True
 
         comp_message = "Currently in a git repository, please move elsewhere and try again.".format(dir=os.path.join("./", self.nmc_obj.abs_module_path))
 
@@ -161,7 +161,7 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
     def test_given_module_folder_exists_and_is_in_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_exists.return_value = True
-        self.mock_is_git_dir.return_value = True
+        self.mock_is_in_local_repo.return_value = True
 
         comp_message = "Directory {dir:s} already exists, please move elsewhere and try again.\n"
         comp_message += "Currently in a git repository, please move elsewhere and try again."
@@ -180,7 +180,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
     def setUp(self):
 
         self.mock_exists = set_up_mock(self, 'dls_ade.module_creator.os.path.exists')
-        self.mock_is_git_root_dir = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_git_root_dir')
+        self.mock_is_local_repo_root = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_local_repo_root')
         self.mock_verify_remote_repo = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator.verify_remote_repo')
 
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", MagicMock())
@@ -198,7 +198,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
     def test_given_module_folder_exists_and_is_repo_and_remote_repo_valid_then_flag_set_true(self):
 
         self.mock_exists.return_value = True
-        self.mock_is_git_root_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
 
         self.nmc_obj._remote_repo_valid = True
         self.nmc_obj.verify_can_push_repo_to_remote()
@@ -208,7 +208,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
     def test_given_remote_repo_valid_not_previously_set_but_true_then_flag_set_true(self):
 
         self.mock_exists.return_value = True
-        self.mock_is_git_root_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
 
         self.nmc_obj._can_push_repo_to_remote = False
 
@@ -223,7 +223,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.mock_verify_remote_repo.side_effect = mc.VerificationError("error")
 
         self.mock_exists.return_value = True
-        self.mock_is_git_root_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
 
         with self.assertRaises(mc.VerificationError) as e:
             self.nmc_obj.verify_can_push_repo_to_remote()
@@ -234,7 +234,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
     def test_given_module_folder_does_not_exist_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_exists.return_value = False
-        self.mock_is_git_root_dir.return_value = False
+        self.mock_is_local_repo_root.return_value = False
 
         self.nmc_obj._remote_repo_valid = True
 
@@ -249,7 +249,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
     def test_given_module_folder_is_not_repo_then_flag_set_false_and_error_returned_is_correct(self):
 
         self.mock_exists.return_value = True
-        self.mock_is_git_root_dir.return_value = False
+        self.mock_is_local_repo_root.return_value = False
 
         self.nmc_obj._remote_repo_valid = True
 
@@ -265,7 +265,7 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
 
         self.mock_verify_remote_repo.side_effect = mc.VerificationError('error')
         self.mock_exists.return_value = True
-        self.mock_is_git_root_dir.return_value = False
+        self.mock_is_local_repo_root.return_value = False
 
         comp_message = "Directory {dir:s} is not a git repository. Unable to push to remote repository.\n"
         comp_message = comp_message.format(dir=self.nmc_obj._module_path)
@@ -404,7 +404,7 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
     def setUp(self):
 
         self.mock_check_if_remote_repo_has_app = set_up_mock(self, 'dls_ade.module_creator.ModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
-        self.mock_is_repo_path = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_repo_path')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_server_repo')
 
         self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
@@ -416,11 +416,11 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
         self.nmc_obj.verify_remote_repo()
 
-        self.assertFalse(self.mock_is_repo_path.called)
+        self.assertFalse(self.mock_is_server_repo.called)
 
     def test_given_server_repo_path_does_not_exist_then_exception_raised_with_correct_message(self):
 
-        self.mock_is_repo_path.return_value = False
+        self.mock_is_server_repo.return_value = False
         self.nmc_obj._server_repo_path = "notinrepo"
 
         comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
@@ -432,7 +432,7 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def test_given_app_exists_in_server_repo_then_exception_raised_with_correct_error_message(self):
 
-        self.mock_is_repo_path.return_value = True
+        self.mock_is_server_repo.return_value = True
         self.nmc_obj._server_repo_path = "inrepo1"
         self.mock_check_if_remote_repo_has_app.return_value = True
 
@@ -445,7 +445,7 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
 
     def test_given_all_checks_passed_then_remote_repo_valid_set_true(self):
 
-        self.mock_is_repo_path.return_value = True
+        self.mock_is_server_repo.return_value = True
         self.mock_check_if_remote_repo_has_app.return_value = False
 
         self.nmc_obj.verify_remote_repo()
@@ -470,7 +470,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_remote_repo_path_is_not_on_server_then_exception_raised_with_correct_message(self):
 
-        self.mock_vcs_git.is_repo_path.return_value = False
+        self.mock_vcs_git.is_server_repo.return_value = False
 
         comp_message = ("Remote repo {repo:s} does not exist. Cannot "
                         "clone to determine if there is an app_name "
@@ -483,7 +483,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_remote_repo_exists_on_server_then_temp_clone_called_correctly(self):
 
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
 
         try:
             self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -494,7 +494,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_app_exists_then_return_value_is_true(self):
 
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
         self.mock_exists.return_value = True
 
         exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -504,7 +504,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_app_does_not_exist_then_return_value_is_false(self):
 
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
         self.mock_exists.return_value = False
 
         exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -515,7 +515,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
     def test_given_exception_raised_in_temp_clone_then_rmtree_not_called(self):
 
         self.mock_vcs_git.temp_clone.side_effect = Exception("test_exception")
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
 
         with self.assertRaises(Exception) as e:
             self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -526,7 +526,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
     def test_given_exception_raised_after_mkdtemp_then_rmtree_called(self):
 
         self.mock_exists.side_effect = Exception("test_exception")
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
 
         with self.assertRaises(Exception) as e:
             self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -537,7 +537,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
     def test_given_app_exists_then_true_returned(self):
 
         self.mock_exists.return_value = True
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
 
         exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
 
@@ -546,7 +546,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
     def test_given_app_does_not_exist_then_false_returned(self):
 
         self.mock_exists.return_value = False
-        self.mock_vcs_git.is_repo_path.return_value = True
+        self.mock_vcs_git.is_server_repo.return_value = True
 
         exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
 

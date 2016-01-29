@@ -68,13 +68,13 @@ class CheckTechnicalAreaTest(unittest.TestCase):
 
 class CheckSourceFilePathValidTest(unittest.TestCase):
 
-    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=True)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_server_repo', return_value=True)
     def test_given_valid_source_then_no_error_raised(self, _1):
         source = "controls/python/dls_release"
 
         dls_checkout_module.check_source_file_path_valid(source)
 
-    @patch('dls_ade.dls_checkout_module.vcs_git.is_repo_path', return_value=False)
+    @patch('dls_ade.dls_checkout_module.vcs_git.is_server_repo', return_value=False)
     def test_given_invalid_source_then_error_raised(self, _1):
         source = "controls/python/doesnotexist"
         expected_error_msg = "Repository does not contain " + source
