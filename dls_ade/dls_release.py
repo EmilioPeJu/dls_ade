@@ -5,7 +5,7 @@ require('python-ldap')
 import sys
 import re
 import logging
-from dls_ade import vcs_svn
+# from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
@@ -111,8 +111,6 @@ def make_parser():
         "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
         "Both 32 and 64 bit builds are built on the same 64-bit build server")
 
-    # print vars(parser.parse_args())
-
     return parser
 
 
@@ -157,8 +155,8 @@ def create_vcs_object(module, args):
     """
     if args.git:
         return vcs_git.Git(module, args)
-    else:
-        return vcs_svn.Svn(module, args)
+    # else:
+    #     return vcs_svn.Svn(module, args)
 
 
 def check_parsed_arguments_valid(args,  parser):
@@ -400,10 +398,11 @@ def main():
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
-        sure = check_epics_version_consistent(
-            module_epics, args.epics_version, build.epics())
-        if not sure:
-            sys.exit(0)
+        if module_epics:
+            sure = check_epics_version_consistent(
+                module_epics, args.epics_version, build.epics())
+            if not sure:
+                sys.exit(0)
 
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(

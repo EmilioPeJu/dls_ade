@@ -5,7 +5,7 @@ import os
 import sys
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
+from dls_ade import path_functions as pathf
 
 usage = """
 Default <area> is 'support'.
@@ -61,7 +61,7 @@ def check_source_file_path_valid(source):
     Raises:
         Exception: Repository does not contain <source>
     """
-    if not vcs_git.is_repo_path(source):
+    if not vcs_git.is_server_repo(source):
         raise Exception("Repository does not contain " + source)
 
 
@@ -96,10 +96,10 @@ def main():
 
     if module == "everything":
         # Set source to area folder
-        source = path.devArea(args.area)
+        source = pathf.dev_area_path(args.area)
     else:
         # Set source to module in area folder
-        source = path.devModule(module, args.area)
+        source = pathf.dev_module_path(module, args.area)
 
     if module == "everything":
         print("Checking out entire " + args.area + " area...\n")

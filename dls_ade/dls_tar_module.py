@@ -4,6 +4,7 @@
 import os
 import sys
 import vcs_git
+import path_functions as pathf
 from dls_environment import environment
 from argument_parser import ArgParser
 import dlsbuild
@@ -58,45 +59,6 @@ def check_area_archivable(area):
         raise ValueError("Modules in area " + area + " cannot be archived")
 
 
-# TODO: Implement via dls_environment (also in list-releases)
-def check_epics_version(epics_version):
-    """
-    Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
-    Then checks if the epics version matches the reg ex. Then sets environment epics version.
-
-    Args:
-        epics_version: Epics version to check
-
-    Raises:
-        ValueError: Expected epics version like R3.14.12.3, got: <epics_version>
-    """
-    if epics_version:
-        if not epics_version.startswith("R"):
-            epics_version = "R{0}".format(epics_version)
-        if env.epics_ver_re.match(epics_version):
-            env.setEpics(epics_version)
-        else:
-            raise ValueError("Expected epics version like R3.14.12.3, got: " + epics_version)
-
-
-# TODO: Route through path_functions (also in list-releases)
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that the technical area is also provided.
-
-    Args:
-        area: Area of repository
-        module: Module to check
-
-    Raises:
-        ValueError: "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" \
-            and len(module.split('/')) < 2:
-        raise ValueError("Missing Technical Area under Beamline")
-
-
 def check_file_paths(release_dir, archive, untar):
     """
     Checks if the file to untar exists and the directory to build it a does not (if untar is True), or
@@ -128,8 +90,8 @@ def main():
     args = parser.parse_args()
 
     check_area_archivable(args.area)
-    check_epics_version(args.epics_version)
-    check_technical_area(args.area, args.module_name)
+    env.check_epics_version(args.epics_version)
+    pathf.check_technical_area_valid(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)

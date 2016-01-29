@@ -41,7 +41,7 @@ class PrintModuleListTest(unittest.TestCase):
 
         mock_sub.assert_called_once_with(list_cmd.split())
 
-    @patch('dls_ade.vcs_git.get_repository_list', return_value=["test/source/module", "test/source2/module2"])
+    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module", "test/source2/module2"])
     def test_given_valid_source_then_print_called(self, _1):
         source = "test/source"
         area = "test/area"
@@ -54,7 +54,7 @@ class PrintModuleListTest(unittest.TestCase):
         # Check that module2 from source2 is not printed
         self.assertEqual(len(call_args), 2)
 
-    @patch('dls_ade.vcs_git.get_repository_list', return_value=["test/source/module"])
+    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module"])
     def test_given_invalid_source_then_print_not_called(self, _1):
         source = "test/not_source"
         area = "test/area"
