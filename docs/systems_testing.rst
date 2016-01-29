@@ -33,6 +33,8 @@ SystemsTest Settings Descriptions
 ---------------------------------
 All provided settings are given as a {string: ...} dictionary. Unless otherwise specified, assume that the dictionary values are also strings.
 
+.. _basic-settings:
+
 Basic settings
 ~~~~~~~~~~~~~~
 These two settings handle the running of the script.
@@ -46,6 +48,8 @@ These two settings handle the running of the script.
     the process will still register the input (as though pressing Enter without
     any text).
 
+.. _exception-comparison-settings:
+
 Exception comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -53,6 +57,8 @@ Exception comparison settings
     Exception type to test for.
 - exception_string
     Exception string to test for.
+
+.. _standard-output-comparison-settings:
 
 Standard output comparison setttings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +118,8 @@ Folder comparison settings
     
     Note: 
     This is the same as the path used for :ref:`attribute-comparison-settings`.
+
+.. _branch-comparison-settings:
 
 Branch comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
