@@ -19,9 +19,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Utility for setting and showing primary contact (contact) and seconday contact
-(cc) properties. If any <modules> are specified, only show and set
-properties on those modules, otherwise operate on the entire area.
+Set or get primary contact (contact) and secondary contact (cc) properties
+for <modules> (can just give one module)
 
 e.g.
 %prog ip autosave calc
@@ -34,13 +33,31 @@ e.g.
 # Set the python module pysvn to have contact tmc43 and cc jr76
 
 %prog -m /tmp/module_contacts_backup.csv
-# Import the module contacts and cc from the csv file and set them in svn.
-# The csv file must be in the same format as produced by the -s command, but
-# any specified contact and cc names are ignored, only fed-ids are used.
+# Import the module contact and cc from /tmp/module_contacts_backup.csv
+# and set them in svn. The csv file must be in the same format as produced
+# by the -s command, but any specified contact and cc names are ignored,
+# only fed-ids are used.
 """
 
 
 def make_parser():
+    """
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * modules
+        * releases
+
+    Flags:
+        * -c (contact)
+        * -d (cc)
+        * -s (verbose)
+        * -m (import)
+
+    Returns:
+        An ArgumentParser instance
+
+    """
 
     parser = ArgParser(usage)
     # 'nargs' makes <modules> an optional positional argument, '*' makes it a list of N entries

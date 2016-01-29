@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.DEBUG)
 usage = """
 Default <area> is 'support'.
 
-List the releases of a module in the release area of <area>. By default uses
-the epics release number from your environment to work out the area on disk to
+List the releases of <module_name> in the <area> area of prod or the repository if -g is true.
+By default uses the epics release number from your environment to work out the area on disk to
 look for the module, this can be overridden with the -e flag.
 """
 
@@ -42,10 +42,20 @@ def get_rhel_version():
 
 def make_parser():
     """
-    Takes default parser and adds 'module_name' and 'latest', 'git', 'epics_version' & 'rhel_version'
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+
+    Flags:
+        * -b (branch)
+        * -l (latest)
+        * -g (git)
+        * -e (epics_version)
+        * -r (rhel_version)
 
     Returns:
-        ArgumentParser instance
+        An ArgumentParser instance
     """
     parser = ArgParser(usage)
     parser.add_argument(

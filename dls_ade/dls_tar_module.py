@@ -13,19 +13,28 @@ env = environment()
 
 usage = """
 Default <area> is 'support'.
-This script removes all O.* directories from an old release of a module and
+This script removes all O.* directories from a release of a module and
 tars it up before deleting the release directory. <module_name>/<module_release>
 will be stored as <module_name>/<module_release>.tar.gz. Running the script with
-a -u flag will untar the module and remove the archive.
+a -u flag will untar the module and remove the archive (reversing the original process)
 """
 
 
 def make_parser():
     """
-    Takes default parser and adds arguments for module_name, release, -u: untar and -e: epics_version
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+        * release
+
+    Flags:
+        * -u: untar
+        * -e: epics_version
 
     Returns:
-        Parser: An argument parser instance with the relevant arguments
+        An ArgumentParser instance with the relevant arguments
+
     """
 
     parser = ArgParser(usage)
@@ -53,7 +62,8 @@ def check_area_archivable(area):
         area: Area to check
 
     Raises:
-        ValueError: "Modules in area <args.area> cannot be archived"
+        ValueError: Modules in area <args.area> cannot be archived
+
     """
     if area not in ["support", "ioc", "python", "matlab"]:
         raise ValueError("Modules in area " + area + " cannot be archived")
@@ -65,12 +75,13 @@ def check_file_paths(release_dir, archive, untar):
     checks if the opposite is true (if untar is False)
 
     Args:
-        release_dir (str): Directory to build to or to tar from
-        archive (str): File to build from or to tar into
-        untar (bool): True if building, False if archiving
+        release_dir: Directory to build to or to tar from
+        archive: File to build from or to tar into
+        untar: True if building, False if archiving
 
     Raises:
         IOError: Source does not exist or target already exists
+
     """
     if untar:
         if not os.path.isfile(archive):

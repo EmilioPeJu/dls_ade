@@ -15,16 +15,19 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Check if a module in the <area> area of the repository has had changes committed since its last release.
+Check if <module_name> in the <area> area of the repository has had changes committed since its last release.
 """
 
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
 
     Returns:
-        ArgumentParser: Parser with relevant arguments
+        An ArgumentParser instance
     """
 
     parser = ArgParser(usage)

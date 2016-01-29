@@ -18,7 +18,8 @@ GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
 
 
 def is_in_local_repo(path="./"):
-    """Returns whether or not the local path is inside a git repository.
+    """
+    Returns whether or not the local path is inside a git repository.
 
     Args:
         path: The path to check.
@@ -43,7 +44,8 @@ def is_in_local_repo(path="./"):
 
 
 def is_local_repo_root(path="."):
-    """Returns whether or not the local path is the root of a git repository.
+    """
+    Returns whether or not the local path is the root of a git repository.
 
     Args:
         path: The path to check.
@@ -106,7 +108,8 @@ def get_server_repo_list():
 
 
 def init_repo(path="./"):
-    """Initialise a local git repository.
+    """
+    Initialise a local git repository.
 
     Args:
         path: The relative or absolute path for the local git repository.
@@ -128,7 +131,8 @@ def init_repo(path="./"):
 
 
 def stage_all_files_and_commit(path="./"):
-    """Stage and commit all files in a local git repository.
+    """
+    Stage and commit all files in a local git repository.
 
     Args:
         path: The relative or absolute path of the local git repository.
@@ -154,7 +158,8 @@ def stage_all_files_and_commit(path="./"):
 
 def add_new_remote_and_push(dest, path="./", remote_name="origin",
                             branch_name="master"):
-    """Adds a remote to a git repository, and pushes to the gitolite server.
+    """
+    Adds a remote to a git repository, and pushes to the gitolite server.
 
     This will fail if:
         - The path given is not a git repository.
@@ -201,7 +206,8 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
 
 
 def create_remote_repo(dest):
-    """Create a git repository on the given gitolite server path.
+    """
+    Create a git repository on the given gitolite server path.
 
     Args:
         dest: The server path for the git repository to be created.
@@ -226,7 +232,8 @@ def create_remote_repo(dest):
 
 
 def push_to_remote(path="./", remote_name="origin", branch_name="master"):
-    """Pushes to the server path given by its remote name, on the given branch.
+    """
+    Pushes to the server path given by its remote name, on the given branch.
 
     Args:
         path: The relative or absolute path for the local git repository.
@@ -453,9 +460,12 @@ class Git(BaseVCS):
         """
         Fetch contents of file in repository, if version not set then uses master.
 
-        :param filename: File to fetch from
-        :return: Contents of file
-        :rtype: str
+        Args:
+            filename: File to fetch from
+
+        Returns:
+            Contents of file
+
         """
         tag = 'master'
         if self._version:
@@ -470,9 +480,11 @@ class Git(BaseVCS):
         """
         Return list of release tags of module.
 
-        :return: Release tags of module
-        :rtype: list
+        Returns:
+            Release tags of module
+
         """
+
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
@@ -483,8 +495,11 @@ class Git(BaseVCS):
         """
         Git support will not do a commit, so log message not needed.
 
-        :param message:
-        :return:
+        Args:
+            message:
+
+        Returns:
+            None
         """
         return None
 
@@ -492,9 +507,12 @@ class Git(BaseVCS):
         """
         Check if version corresponds to a previous release.
 
-        :param version: Release tag to check for
-        :return: True or False for whether the version exists or not
-        :rtype: bool
+        Args:
+            version: True or False for whether the version exists or not
+
+        Returns:
+            Release tag to check for
+
         """
         return version in self.list_releases()
 
@@ -503,11 +521,11 @@ class Git(BaseVCS):
 
     def set_version(self, version):
         """
-        Set version release tag.
+        Set version release tag for self
 
-        :param version: Version release tag
-        :type version: str
-        :return: Null
+        Args:
+            version: Version release tag
+
         """
         if not self.check_version_exists(version):
             raise VCSGitError('version does not exist')

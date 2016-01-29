@@ -37,9 +37,10 @@ class environment(object):
     releases. These are then used to locate the root of a particular module.
 
     Variables
-        epics: the version of epics - e.g R3.14.12.3
-        epics_ver_re: a useful regex for matching the version of epics
-        areas: the areas that can be passed to devArea() or prodArea()
+        * epics: the version of epics - e.g R3.14.12.3
+        * epics_ver_re: a useful regex for matching the version of epics
+        * areas: the areas that can be passed to devArea() or prodArea()
+
     """
 
     def __init__(self, epics=None):
@@ -58,7 +59,8 @@ class environment(object):
             epics_version: Epics version to check
 
         Raises:
-            Expected epics version like R3.14.8.2, got: <epics_version>
+            Expected epics version like R3.14.8.2, got <epics_version>
+
         """
         if epics_version:
             if not epics_version.startswith("R"):
@@ -82,7 +84,8 @@ class environment(object):
         Return a copy of self
 
         Returns:
-            environment: A copy of the environment instance
+            A copy of the environment instance
+
         """
         return environment(self.epicsVer())
 
@@ -91,7 +94,8 @@ class environment(object):
         Force the version of epics in self
 
         Args:
-            epics: Epics version
+            Epics version
+
         """
         self.epics = epics
 
@@ -100,8 +104,9 @@ class environment(object):
         Return the root directory of the epics installation
 
         Returns:
-            str: Path to root of home - if epics version lower than R3.14
-            str: Path to root of dls_sw - if epics version higher than R3.14
+            * Path to root of home - if epics version lower than R3.14
+            * Path to root of dls_sw - if epics version higher than R3.14
+
         """
         if self.epicsVer() < "R3.14":
             return os.path.join("/home", "epics", self.epicsVerDir())
@@ -112,8 +117,10 @@ class environment(object):
         """
         Return the version of epics from self. If it not set, try and get it from the environment.
         This may have a _64 suffix for 64 bit architectures
+
         Returns:
-            str: Epics version
+            Epics version
+
         """
         if not self.epics:
             self.setEpicsFromEnv()
@@ -123,8 +130,10 @@ class environment(object):
         """
         Return the directory version of epics from self. If it not set, try and get it from the environment.
         This will not have a _64 suffix for 64 bit architectures
+
         Returns:
-            str: Epics directory version
+            Epics directory version
+
         """
         if not self.epics:
             self.setEpicsFromEnv()
@@ -135,15 +144,16 @@ class environment(object):
         Return the development directory for a particular area and epics version
 
         Args:
-            area(str): Area to generate path for
+            area: Area to generate path for
 
         Returns:
-            str: Path to home ... dir/work/<area> - if epics version < R3.14 and <area> is support or ioc
-            str: Path to home/work/<area> - if epics version < R3.14 and <area> is epics, etc, or tools
-            str: Path to home ... common/work/<area> - if epics version < R3.14 and <area> is matlab or python
-            str: Path to dls_sw ... work/dir/<area> - if epics version > R3.14 and <area> is support or ioc
-            str: Path to dls_sw/work/<area> - if epics version > R3.14 and <area> is epics, etc, or tools
-            str: Path to dls_sw ... work/common/<area> - if epics version > R3.14 and <area> is matlab or python
+            * Path to home ... dir/work/<area> - if epics version < R3.14 and <area> is support or ioc
+            * Path to home/work/<area> - if epics version < R3.14 and <area> is epics, etc, or tools
+            * Path to home ... common/work/<area> - if epics version < R3.14 and <area> is matlab or python
+            * Path to dls_sw ... work/dir/<area> - if epics version > R3.14 and <area> is support or ioc
+            * Path to dls_sw/work/<area> - if epics version > R3.14 and <area> is epics, etc, or tools
+            * Path to dls_sw ... work/common/<area> - if epics version > R3.14 and <area> is matlab or python
+
         """
         if area not in self.areas:
             raise Exception("Only the following areas are supported: " + ", ".join(self.areas))
@@ -170,11 +180,12 @@ class environment(object):
         Return the production directory for a particular area
 
         Args:
-            area(str): Area to generate path for
+            area: Area to generate path for
 
         Returns:
-            str: Path to dls_sw/<area> - if area is epics
-            str: Path to devArea(area) with 'work' replaced by 'prod' - see devArea() doc string
+            * Path to dls_sw/<area> - if area is epics
+            * Path to devArea(area) with 'work' replaced by 'prod' - see devArea() doc string
+
         """
         if area in ["epics"]:
             return os.path.join("/dls_sw", area)
@@ -190,10 +201,11 @@ class environment(object):
         release numbers without a text suffix
 
         Args:
-            release(str): Area to generate path for
+            release: Area to generate path for
 
         Returns:
-            list: Component parts of release tag
+            Component parts of release tag
+
         """
         components = []
         # first split by dls: 4-5beta2dls1-3 --> 4-5beta2 and 1-3
@@ -228,10 +240,11 @@ class environment(object):
         paths end in a release number
 
         Args:
-            paths(list): Paths to sort
+            paths: Paths to sort
 
         Returns:
-            list: Sorted list of release tags
+            Sorted list of release tags
+
         """
         releases = []
         for path in paths:

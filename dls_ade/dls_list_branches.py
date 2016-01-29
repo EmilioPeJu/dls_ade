@@ -10,16 +10,19 @@ import vcs_git
 
 usage = """
 Default <area> is 'support'.
-List the branches of a module in the <area> area of the repository.
+List the branches of <module_name> in the <area> area of the repository.
 """
 
 
 def make_parser():
     """
-    Takes default parser arguments and adds domain.
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
 
     Returns:
-        Parser with relevant arguments
+        An ArgumentParser instance
     """
 
     parser = ArgParser(usage)

@@ -9,8 +9,8 @@ import vcs_git
 
 usage = """
 Default <area> is 'support'.
-List all modules in a particular <area>.
-If <dom_name> and <area> = 'ioc', list the subdirectories of <dom_name>. 
+List all modules in the <area> area.
+If <dom_name> given and <area> = 'ioc', list the subdirectories of <dom_name>.
 e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 """
 
@@ -34,10 +34,14 @@ def print_module_list(source, area):
 
 def make_parser():
     """
-    Takes default parser arguments and adds domain.
+    Takes ArgParse instance with default arguments and adds
+
+    Flags:
+        * -d (domain)
 
     Returns:
-        ArgParser instance
+        An ArgumentParser instance
+
     """
     parser = ArgParser(usage)
     parser.add_argument("-d", "--domain", action="store",

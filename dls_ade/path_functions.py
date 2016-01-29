@@ -13,7 +13,8 @@ def check_technical_area_valid(area, module):
         module: Module to check
 
     Raises:
-        ValueError: "Missing technical area under beamline"
+        ValueError: Missing technical area under beamline
+
     """
 
     if area == "ioc" and len(module.split('/')) < 2:
@@ -21,7 +22,8 @@ def check_technical_area_valid(area, module):
 
 
 def dev_area_path(area="support"):
-    """Return the full server path for the given area.
+    """
+    Return the full server path for the given area.
 
     Args:
         area: The area of the module.
@@ -34,7 +36,8 @@ def dev_area_path(area="support"):
 
 
 def dev_module_path(module, area="support"):
-    """Return the full server path for the given module and area.
+    """
+    Return the full server path for the given module and area.
 
     Args:
         area: The area of the module.

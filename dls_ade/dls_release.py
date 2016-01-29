@@ -26,21 +26,26 @@ log_mess = "%s: Released version %s. %s"
 
 def make_parser():
     """
-    Takes default parser and adds:
-    * module_name
-    * release
-    * --branch
-    * --force
-    * --no-test-build
-    * --local-build-only
-    * --epics_version
-    * --message
-    * --next_version
-    * --git
-    * --rhel_version or --windows arguments
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+        * release
+
+    Flags:
+        * -b (branch)
+        * -f (force)
+        * -t (no-test-build)
+        * -l (local-build-only)
+        * -e (epics_version)
+        * -m (message)
+        * -n (next_version)
+        * -g (git)
+        * -r (rhel_version) or --w (windows arguments)
 
     Returns:
-        ArgumentParser instance
+        An ArgumentParser instance
+
     """
     parser = ArgParser(usage)
 
@@ -119,10 +124,11 @@ def create_build_object(args):
     Uses parsed arguments to select appropriate build architecture, default is local system os
 
     Args:
-        args(argparse Namespace): Parser arguments
+        args: Parser arguments
 
     Returns:
         Either a Windows or RedHat build object
+
     """
     if args.rhel_version:
         build_object = dlsbuild.RedhatBuild(
@@ -144,14 +150,15 @@ def create_build_object(args):
 
 def create_vcs_object(module, args):
     """
-    Creates either a Git or Svn object depending on flags in args, use module and arguments to construct the objects
+    Creates a Git vcs instance using module and arguments to construct the objects
 
     Args:
-        module(str): Name of module to be released
-        args(argparse Namespace): Parser arguments
+        module: Name of module to be released
+        args: Parser arguments
 
     Returns:
-        Git or Svn object
+        Git vcs instance
+
     """
     if args.git:
         return vcs_git.Git(module, args)
@@ -164,15 +171,16 @@ def check_parsed_arguments_valid(args,  parser):
     Checks that incorrect arguments invoke parser errors
 
     Args:
-        args(argparse Namespace): Parser arguments
-        parser(ArgumentParser: Parser instance
+        args: Parser arguments
+        parser: Parser instance
 
     Raises:
-        Error: Module name not specified
-        Error: Module version not specified
-        Error: Cannot release etc/build or etc/redirector as modules - use configure system instead
-        Error: When git is specified, version number must be provided
-        Error: args.area area not supported by git
+        - Error: Module name not specified
+        - Error: Module version not specified
+        - Error: Cannot release etc/build or etc/redirector as modules - use configure system instead
+        - Error: When git is specified, version number must be provided
+        - Error: <args.area> area not supported by git
+
     """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
     if not args.module_name:
@@ -195,10 +203,11 @@ def format_argument_version(arg_version):
     Replaces '.' with '-' throughout arg_version to match formatting requirements for log message
 
     Args:
-        arg_version(str): Version tag to be formatted
+        arg_version: Version tag to be formatted
 
     Returns:
         Formatted version tag
+
     """
     return arg_version.replace(".", "-")
 
@@ -208,8 +217,8 @@ def next_version_number(releases, module=None):
     Generates appropriate version number for an incremental release
 
     Args:
-        releases(list): Previous release numbers
-        module(str): Name of module to be released
+        releases: Previous release numbers
+        module: Name of module
 
     Returns: Incremented version number
 
@@ -229,9 +238,11 @@ def get_last_release(releases):
     Returns the most recent release number
 
     Args:
-        releases(list): Previous release numbers
+        releases: Previous release numbers
 
-    Returns: Most recent release number
+    Returns:
+        Most recent release number
+
     """
     from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
@@ -347,12 +358,13 @@ def perform_test_build(build_object, local_build, vcs):
     Test build the module and return whether it was successful
 
     Args:
-        build_object(Builder): Either a windows or RedHat builder
-        local_build(bool): Specifier to perform test build only
-        vcs(Git/Svn): Git or Svn version control system instance
+        build_object: Either a windows or RedHat builder instance
+        local_build: Specifier to perform test build only
+        vcs: Git version control system instance
 
     Returns:
-        Message to explaining how the test build went, True or False for whether it failed or not
+        Message explaining how the test build went, True or False for whether it failed or not
+
     """
     message = ''
     test_fail = False
