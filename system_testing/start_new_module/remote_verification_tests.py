@@ -1,6 +1,3 @@
-from pkg_resources import require
-require('nose')
-
 import system_testing as st
 import os
 import shutil

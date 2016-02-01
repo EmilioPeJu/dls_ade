@@ -1,6 +1,3 @@
-from pkg_resources import require
-require('nose')
-
 import os
 import tarfile
 import subprocess

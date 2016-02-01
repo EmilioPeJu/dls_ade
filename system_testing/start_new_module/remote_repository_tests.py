@@ -1,15 +1,12 @@
-from pkg_resources import require
-require('nose')
-
 import system_testing as st
-
 import os
 import shutil
 import tempfile
 import start_new_module_util as snm_util
 
+COMPARISON_FILES = snm_util.COMPARISON_FILES
+
 ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
-COMPARISON_FILES = "comparison_files"
 NEW_GIT_ROOT_DIR = ""
 
 printed_messages = {
@@ -383,7 +380,7 @@ def test_generator_export_to_server():
 
 add_app_settings_list = [
     {
-        'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
+        'description': "test_exported_IOC_module_that_needs_to_add_app_without_conflict_is_created_with_correct_module_name_and_app_name_and_files",
 
         'arguments': "-i testB06/TS/02",
 

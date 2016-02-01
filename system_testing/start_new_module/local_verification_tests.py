@@ -1,12 +1,8 @@
-from pkg_resources import require
-require('nose')
-
 import system_testing as st
 import os
 import shutil
 import tempfile
 
-COMPARISON_FILES = "comparison_files"
 
 # NOTE: 'create_folder' used by this module to create conflicting folder names.
 conflicting_settings_list = [
@@ -34,6 +30,7 @@ conflicting_settings_list = [
         'create_folder': "testB21/testB21-EA-IOC-01"
     },
 ]
+
 
 def test_generator_conflicting_filepaths_expected():
 

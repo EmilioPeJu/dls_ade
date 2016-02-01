@@ -113,6 +113,7 @@ def check_if_repos_equal(path_1, path_2):
                        "path 1: {path_1:s}, path 2: {path_2:s}.")
         raise SettingsError(err_message.format(path_1=path_1, path_2=path_2))
 
+    # .keep files allow git to store otherwise empty folders.
     command_format = ("diff -rq --exclude=.git --exclude=.gitattributes "
                       "--exclude=.keep {path1:s} {path2:s}")
     call_args = command_format.format(path1=path_1, path2=path_2).split()

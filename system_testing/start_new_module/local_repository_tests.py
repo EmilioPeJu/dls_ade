@@ -1,13 +1,10 @@
-from pkg_resources import require
-require('nose')
-
 import system_testing as st
 import os
 import shutil
 import tempfile
 import start_new_module_util as snm_util
 
-COMPARISON_FILES = "comparison_files"
+COMPARISON_FILES = snm_util.COMPARISON_FILES
 
 printed_messages = {
     'python':
@@ -284,7 +281,7 @@ settings_list = [
     },
 
     {
-        'description': "test_local_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
+        'description': "test_local_IOC_module_that_needs_to_add_app_without_conflict_is_created_with_correct_module_name_and_app_name_and_files",
 
         'arguments': "-i testB06/TS/02",
 

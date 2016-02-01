@@ -5,7 +5,7 @@ import tarfile
 
 import start_new_module_util
 
-COMPARISON_FILES = "comparison_files"
+COMPARISON_FILES = "comparison_files_old"
 
 SUBVERSION_SCRIPT_BASE = ("dls-python /dls_sw/prod/common/python/RHEL6-x86_64/"
                           "dls_scripts/3-21/prefix/lib/python2.7/"
