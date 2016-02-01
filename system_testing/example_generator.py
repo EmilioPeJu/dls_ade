@@ -100,6 +100,15 @@ settings_list = [
 
 
 def test_generator():
+    """A basic generator used as an example.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
+
     for test in st.generate_tests_from_dicts("./test_error_script.py",
                                              settings_list):
         yield test
