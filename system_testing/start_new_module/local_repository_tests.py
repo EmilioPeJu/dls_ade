@@ -99,13 +99,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "dls_test_python_module",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "dls_test_python_module",
-
-        'local_comp_path_two': "dls_test_python_module",
+        'path': "dls_test_python_module",
     },
 
     {
@@ -117,13 +113,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "test_tools_module",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "test_tools_module",
-
-        'local_comp_path_two': "test_tools_module",
+        'path': "test_tools_module",
     },
 
     {
@@ -135,13 +127,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "test_support_module",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "test_support_module",
-
-        'local_comp_path_two': "test_support_module",
+        'path': "test_support_module",
     },
 
     {
@@ -153,13 +141,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB21/BL",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB21/BL",
-
-        'local_comp_path_two': "testB21/BL",
+        'path': "testB21/BL",
     },
 
     {
@@ -171,13 +155,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB22/testB22-BL-IOC-01",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB22/testB22-BL-IOC-01",
-
-        'local_comp_path_two': "testB22/testB22-BL-IOC-01",
+        'path': "testB22/testB22-BL-IOC-01",
     },
 
     {
@@ -191,13 +171,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB01/TS",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB01/TS",
-
-        'local_comp_path_two': "testB01/TS",
+        'path': "testB01/TS",
     },
 
     {
@@ -211,13 +187,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB02/TS",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB02/TS",
-
-        'local_comp_path_two': "testB02/TS",
+        'path': "testB02/TS",
     },
 
     {
@@ -231,13 +203,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB03/testB03-TS-IOC-01",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB03/testB03-TS-IOC-01",
-
-        'local_comp_path_two': "testB03/testB03-TS-IOC-01",
+        'path': "testB03/testB03-TS-IOC-01",
     },
 
     {
@@ -251,13 +219,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB04/testB04-TS-IOC-04",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB04/testB04-TS-IOC-04",
-
-        'local_comp_path_two': "testB04/testB04-TS-IOC-04",
+        'path': "testB04/testB04-TS-IOC-04",
     },
 
     {
@@ -271,13 +235,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB05/testB05-TS-IOC-02",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB05/testB05-TS-IOC-02",
-
-        'local_comp_path_two': "testB05/testB05-TS-IOC-02",
+        'path': "testB05/testB05-TS-IOC-02",
     },
 
     {
@@ -291,13 +251,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
 
-        'local_repo_path': "testB06/TS",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB06/TS",
-
-        'local_comp_path_two': "testB06/TS",
+        'path': "testB06/TS",
     },
 
     {
@@ -311,13 +267,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
 
-        'local_repo_path': "testB07/TS",
-
         'repo_comp_method': "local_comp",
 
-        'local_comp_path_one': "testB07/TS",
-
-        'local_comp_path_two': "testB07/TS",
+        'path': "testB07/TS",
     },
 ]
 
@@ -326,10 +278,15 @@ def test_generator_local():
 
     # Search the COMPARISON_FILES folder for folders to compare with.
     for settings_dict in settings_list:
-        comparison_path = settings_dict['local_comp_path_two']
+        path = settings_dict['path']
+
+        settings_dict['local_repo_path'] = path
+        settings_dict['local_comp_path_one'] = path
+
+        # Search the COMPARISON_FILES folder for folders to compare with.
         settings_dict['local_comp_path_two'] = os.path.join(
                 COMPARISON_FILES,
-                comparison_path
+                path
         )
 
     tempdir = tempfile.mkdtemp()
