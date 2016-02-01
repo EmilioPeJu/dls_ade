@@ -125,9 +125,11 @@ These test whether the different modules are correctly created and exported to t
 
 For the most part, these are a reduced subset of the :ref:`local-repository-tests`, but taking only one module of each type (tools, python, support, IOC, IOC-BL (gui)).
 
-Additionally, an 'AddAppToModule' test is also performed, but only with non-conflicting app-names.
+Additionally, an 'AddAppToModule' test is also performed, but only with non-conflicting app-names. The additional tests are commented out.
 
 For 'AddAppToModule', it adds to a previously existing repository (see :ref:`necessary-server-repositories`).
+
+The big difference with these tests is that they must create new repositories on the server every run, but most users (including system testers!) cannot delete things on the server. To get around this, we set the environment variable GIT_ROOT_DIR to an incrementing value, so there are never any conflicts. The file `repo_test_num.txt` located in system_testing/start_new_module contains the previously run test number; if you run the tests while the server still has previously created test repositories, make sure you save this number for the next user!
 
 .. _necessary-server-repositories:
 
