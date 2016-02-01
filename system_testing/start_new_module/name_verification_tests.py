@@ -71,8 +71,6 @@ settings_list = [
 ]
 
 
-# TODO(Martin) Make this one for all the parsing errors.
-# TODO(Martin) Redo check for local files?
 # NOTE: All tests run the script with '-n' in order to prevent creating
 # remote repository files if the tests fail
 def test_generator_parsing_errors_expected():

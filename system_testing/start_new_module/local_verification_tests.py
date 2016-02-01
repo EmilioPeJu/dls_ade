@@ -5,7 +5,7 @@ import tempfile
 
 
 # NOTE: 'create_folder' used by this module to create conflicting folder names.
-conflicting_settings_list = [
+folder_conflict_settings_list = [
     {
         'description': "test_module_creation_fails_if_path_already_exists",
 
@@ -39,11 +39,11 @@ def test_generator_conflicting_filepaths_expected():
 
     os.chdir(tempdir)
 
-    for settings in conflicting_settings_list:
+    for settings in folder_conflict_settings_list:
         os.makedirs(settings.pop('create_folder'))
 
     for test in st.generate_tests_from_dicts("dls-start-new-module.py -n",
-                                             conflicting_settings_list):
+                                             folder_conflict_settings_list):
         yield test
 
     os.chdir(cwd)
