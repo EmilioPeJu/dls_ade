@@ -24,7 +24,7 @@ except ImportError:
 
 
 class SystemsTestingError(Exception):
-    """Class for exceptions relating to systems_testing module."""
+    """Class for exceptions relating to system_testing module."""
     pass
 
 

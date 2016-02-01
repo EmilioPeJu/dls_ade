@@ -1,4 +1,4 @@
-import systems_testing as st
+import system_testing as st
 import os
 import unittest
 import subprocess
@@ -17,7 +17,7 @@ def set_up_mock(test_case_obj, mock_path):
 
 class GetLocalTempCloneTest(unittest.TestCase):
 
-    @patch('systems_testing.vcs_git.temp_clone')
+    @patch('system_testing.vcs_git.temp_clone')
     def test_given_server_repo_path_then_repo_cloned_correctly(self, mock_temp_clone):
 
         mock_repo = MagicMock(working_tree_dir="test_working_tree_dir")
@@ -35,9 +35,9 @@ class DeleteTempRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_gettempdir = patch('systems_testing.tempfile.gettempdir')
-        self.patch_is_git_root_dir = patch('systems_testing.vcs_git.is_git_root_dir')
-        self.patch_rmtree = patch('systems_testing.shutil.rmtree')
+        self.patch_gettempdir = patch('system_testing.tempfile.gettempdir')
+        self.patch_is_git_root_dir = patch('system_testing.vcs_git.is_git_root_dir')
+        self.patch_rmtree = patch('system_testing.shutil.rmtree')
 
         self.addCleanup(self.patch_gettempdir.stop)
         self.addCleanup(self.patch_is_git_root_dir.stop)
@@ -84,7 +84,7 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_a_path_is_empty_then_exception_raised_with_correct_message(self, mock_check_output):
 
         comp_message = "Two paths must be given to compare folders.\npath 1: , path 2: path_two."
@@ -94,14 +94,14 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_subprocess_check_output_given_correct_input(self, mock_check_output):
 
         st.check_if_repos_equal("local_path_one", "local_path_two")
 
         mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', 'local_path_one', 'local_path_two'])
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_subprocess_return_code_1_then_function_returns_false(self, mock_check_output):
         mock_check_output.side_effect = subprocess.CalledProcessError(1, "This just makes the return code 1")
 
@@ -109,7 +109,7 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
         self.assertFalse(return_value)
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_subprocess_return_code_0_then_function_returns_true(self, mock_check_output):
         mock_check_output.return_value = ""
 
@@ -153,7 +153,7 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
 
 class SystemsTestCallScriptTest(unittest.TestCase):
     #
-    # @patch('systems_testing.subprocess.Popen')
+    # @patch('system_testing.subprocess.Popen')
     # def test_given_no_input_to_call_script_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self, mock_popen):
     #     mock_process = MagicMock(returncode=1)
     #     mock_process.communicate.return_value = ("test_out", "test_err")
@@ -177,7 +177,7 @@ class SystemsTestCallScriptTest(unittest.TestCase):
     #     self.assertEqual(st_obj._return_code, 1)
 
     def setUp(self):
-        self.mock_popen = set_up_mock(self, 'systems_testing.subprocess.Popen')
+        self.mock_popen = set_up_mock(self, 'system_testing.subprocess.Popen')
 
     def test_given_no_input_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self):
         mock_process = MagicMock(returncode=1)
@@ -447,12 +447,12 @@ class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
         self.st_obj = st.SystemsTest("test_script", "test_name")
         self.mock_check_remote_repo_exists = set_up_mock(
                 self,
-                "systems_testing.SystemsTest.check_remote_repo_exists"
+                "system_testing.SystemsTest.check_remote_repo_exists"
         )
 
         self.mock_clone_server_repo = set_up_mock(
             self,
-            "systems_testing.SystemsTest.clone_server_repo"
+            "system_testing.SystemsTest.clone_server_repo"
         )
 
     def test_given_no_server_repo_path_then_function_returns(self):
@@ -479,7 +479,7 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
         self.st_obj = st.SystemsTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=False)
+    @patch('system_testing.vcs_git.is_repo_path', return_value=False)
     def test_given_is_repo_path_false_then_assert_failed(self, mock_is_repo_path):
 
         with self.assertRaises(AssertionError):
@@ -487,7 +487,7 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
 
         mock_is_repo_path.assert_called_once_with("test_repo_path")
 
-    @patch('systems_testing.vcs_git.is_repo_path', return_value=True)
+    @patch('system_testing.vcs_git.is_repo_path', return_value=True)
     def test_given_is_repo_path_true_then_no_assertion_failed(self, mock_is_repo_path):
 
         self.st_obj.check_remote_repo_exists()
@@ -500,10 +500,10 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
     def setUp(self):
         self.repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
 
-        self.mock_temp_clone = set_up_mock(self, 'systems_testing.vcs_git.temp_clone')
+        self.mock_temp_clone = set_up_mock(self, 'system_testing.vcs_git.temp_clone')
         self.mock_temp_clone.return_value = self.repo_mock
 
-        self.mock_checkout_remote_branch = set_up_mock(self, 'systems_testing.vcs_git.checkout_remote_branch')
+        self.mock_checkout_remote_branch = set_up_mock(self, 'system_testing.vcs_git.checkout_remote_branch')
 
     def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
 
@@ -545,7 +545,7 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
 class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_get_active_branch = set_up_mock(self, 'systems_testing.vcs_git.get_active_branch')
+        self.mock_get_active_branch = set_up_mock(self, 'system_testing.vcs_git.get_active_branch')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -592,7 +592,7 @@ class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 class SystemsTestRunGitAttributesTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_git_attributes = set_up_mock(self, 'systems_testing.vcs_git.check_git_attributes')
+        self.mock_check_git_attributes = set_up_mock(self, 'system_testing.vcs_git.check_git_attributes')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -686,7 +686,7 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
 class SystemsTestRunComparisonTests(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_folders_equal = set_up_mock(self, 'systems_testing.check_if_repos_equal')
+        self.mock_check_folders_equal = set_up_mock(self, 'system_testing.check_if_repos_equal')
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
@@ -751,7 +751,7 @@ class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
 
         self.st_obj = st.SystemsTest("test_script", "test_name")
 
-        self.mock_delete_temp_repo = set_up_mock(self, "systems_testing.delete_temp_repo")
+        self.mock_delete_temp_repo = set_up_mock(self, "system_testing.delete_temp_repo")
 
     def test_given_server_repo_clone_does_not_exist_then_function_returns(self):
 
