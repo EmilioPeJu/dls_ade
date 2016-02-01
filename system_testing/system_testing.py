@@ -78,7 +78,7 @@ def delete_temp_repo(local_repo_path):
         raise TempdirError(err_message.format(
                 local_repo_path=local_repo_path))
 
-    if not vcs_git.is_git_root_dir(local_repo_path):
+    if not vcs_git.is_local_repo_root(local_repo_path):
         err_message = ("{local_repo_path:s} is not a git root directory, "
                        "cannot delete.")
         raise TempdirError(err_message.format(
@@ -441,7 +441,7 @@ class SystemTest(object):
 
         """
         logging.debug("Checking server repo path given exists.")
-        assert_true(vcs_git.is_repo_path(self._server_repo_path))
+        assert_true(vcs_git.is_server_repo(self._server_repo_path))
 
     def clone_server_repo(self):
         """Clone the server_repo_path to a temp dir and return the path.
