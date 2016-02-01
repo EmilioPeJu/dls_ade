@@ -496,12 +496,12 @@ def main():
     args = parser.parse_args()
 
     raw = set_raw_argument(args.raw)
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
     check_parsed_args_compatible(args.releases, args.earlier_release, args.later_release, parser)
     check_releases_valid(args.releases, parser)
 
-    source = pathf.devModule(args.module_name, args.area)
-    if vcs_git.is_repo_path(source):
+    source = pathf.dev_module_path(args.module_name, args.area)
+    if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
         releases = create_release_list(repo)
         logging.debug(releases)

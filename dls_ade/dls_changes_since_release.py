@@ -37,17 +37,17 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
 
     module = args.module_name
-    source = pathf.devModule(module, args.area)
+    source = pathf.dev_module_path(module, args.area)
     logging.debug(source)
 
     # Check for existence of this module in various places in the repository and note revisions
-    if not vcs_git.is_repo_path(source):
+    if not vcs_git.is_server_repo(source):
         raise Exception("Repository does not contain " + source)
 
-    if vcs_git.is_repo_path(source):
+    if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
 

@@ -5,7 +5,7 @@ import os
 import sys
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
+from dls_ade import path_functions as pathf
 
 usage = """
 Default <area> is 'support'.
@@ -64,10 +64,10 @@ def main():
 
     if module == "":
         # Set source to area folder
-        source = path.devArea(args.area)
+        source = pathf.dev_area_path(args.area)
     else:
         # Set source to module in area folder
-        source = path.devModule(module, args.area)
+        source = pathf.dev_module_path(module, args.area)
 
     if module == "":
         print("Checking out entire " + args.area + " area...\n")

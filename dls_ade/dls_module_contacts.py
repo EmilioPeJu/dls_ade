@@ -73,7 +73,7 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
 
 def get_area_module_list(area):
 
-    repo_list = vcs_git.get_repository_list()
+    repo_list = vcs_git.get_server_repo_list()
 
     modules = []
     for path in repo_list:
@@ -231,7 +231,7 @@ def main():
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")
         for module in modules:
-            source = pathf.devModule(module, args.area)
+            source = pathf.dev_module_path(module, args.area)
             repo = vcs_git.temp_clone(source)
 
             # Retrieve contact info
@@ -260,7 +260,7 @@ def main():
     for module, contact, cc in contacts:
 
         print("Cloning " + module + " from " + args.area + " area...")
-        source = pathf.devModule(module, args.area)
+        source = pathf.dev_module_path(module, args.area)
         repo = vcs_git.temp_clone(source)
 
         edit_summary = edit_contact_info(repo, contact, cc,)

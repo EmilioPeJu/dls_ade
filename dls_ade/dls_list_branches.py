@@ -4,7 +4,7 @@
 import sys
 import shutil
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as path
+from dls_ade import path_functions as pathf
 from dls_ade import vcs_git
 
 usage = """
@@ -27,33 +27,16 @@ def make_parser():
     return parser
 
 
-def check_technical_area(area, module):
-    """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module
-    name or that the technical area is also provided. Raises parser error if not.
-
-    Args:
-        area(str): Area of repository
-        module(str): Name of module
-
-    Raises:
-        Exception: "Missing Technical Area under Beamline"
-    """
-
-    if area == "ioc" and len(module.split('/')) < 2:
-        raise Exception("Missing Technical Area under Beamline")
-
-
 def main():
 
     parser = make_parser()
     args = parser.parse_args()
 
-    check_technical_area(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
 
-    source = path.devModule(args.module_name, args.area)
+    source = pathf.dev_module_path(args.module_name, args.area)
 
-    if not vcs_git.is_repo_path(source):
+    if not vcs_git.is_server_repo(source):
         raise Exception(args.module_name + " does not exist on repo")
 
     print("Branches of " + args.module_name + ":\n")
