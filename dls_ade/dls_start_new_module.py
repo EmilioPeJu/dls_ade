@@ -40,9 +40,8 @@ def make_parser():
         An ArgumentParser instance with additional arguments
     """
     parser = ArgParser(usage)
-    parser.add_argument(
-        "module_name", type=str, default=None,
-        help="name of module")
+    parser.add_module_name_arg()
+
     parser.add_argument(
         "-n", "--no-import", action="store_true", dest="no_import",
         help="Creates the module but doesn't import into svn")
