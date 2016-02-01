@@ -17,14 +17,13 @@ If <dom_name> given and <area> = 'ioc', list the subdirectories of <dom_name>.
 e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 """
 
-
 def print_module_list(source, area):
     """
     Prints the modules in the area of the repository specified by source
 
     Args:
-        source: Suffix of URL to list from
-        area: Area of repository to list
+        source(str): Suffix of URL to list from
+        area(str): Area of repository to list
 
     """
     split_list = vcs_git.get_server_repo_list()
@@ -43,8 +42,7 @@ def make_parser():
         * -d (domain)
 
     Returns:
-        An ArgumentParser instance
-
+        An :class:`argparse.ArgumentParser` instance
     """
     parser = ArgParser(usage)
     parser.add_argument("-d", "--domain", action="store",

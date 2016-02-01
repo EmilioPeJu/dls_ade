@@ -30,8 +30,7 @@ def make_parser():
         * -b (branch)
 
     Returns:
-        An ArgumentParser instance
-
+        An :class:`argparse.ArgumentParser` instance
     """
     parser = ArgParser(usage)
     parser.add_argument("module_name", type=str, default="",
@@ -49,8 +48,8 @@ def check_technical_area(area, module):
     is of the format <domain>/<module> or is not given
 
     Args:
-        area: Area of repository
-        module: Name of module
+        area(str): Area of repository
+        module(str): Name of module
 
     Raises:
         Exception: Missing technical area under beamline
@@ -67,7 +66,7 @@ def check_source_file_path_valid(source):
     Checks if given source path exists on the repository
 
     Args:
-        source: Path to module to be cloned
+        source(str): Path to module to be cloned
 
     Raises:
         Exception: Repository does not contain <source>
@@ -82,7 +81,7 @@ def check_module_file_path_valid(module):
     Checks if the given module already exists in the current directory
 
     Args:
-        module: Name of module to clone
+        module(str): Name of module to clone
 
     Raises:
         Exception: Path already exists: <module>

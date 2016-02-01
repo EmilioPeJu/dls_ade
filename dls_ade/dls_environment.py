@@ -32,14 +32,14 @@ class environment(object):
     If you modify this to suit your site environment, you will be able to use any of the dls modules without
     modification. This module has the idea of areas. An area is simply an  argument that can be passed to devArea
     or prodArea. support and ioc must exist to use modules like the  dependency checker, others may be added. For
-    example the dls support devArea contains all support modules, and is located at /dls_sw/work/R3.14.12.3/support.
-    This is the area for testing modules. There is a similar prodArea at /dls_sw/prod/R3.14.12.3/support for
+    example the dls support devArea contains all support modules, and is located at ``/dls_sw/work/R3.14.12.3/support``.
+    This is the area for testing modules. There is a similar prodArea at ``/dls_sw/prod/R3.14.12.3/support`` for
     releases. These are then used to locate the root of a particular module.
 
     Variables
-        * epics: the version of epics - e.g R3.14.12.3
-        * epics_ver_re: a useful regex for matching the version of epics
-        * areas: the areas that can be passed to devArea() or prodArea()
+        * epics(str): the version of epics - e.g R3.14.12.3
+        * epics_ver_re(:class:`re.RegexObject`): a useful regex for matching the version of epics
+        * areas(list): the areas that can be passed to devArea() or prodArea()
 
     """
 
@@ -84,7 +84,7 @@ class environment(object):
         Return a copy of self
 
         Returns:
-            A copy of the environment instance
+            A copy of the :class:`environment` instance
 
         """
         return environment(self.epicsVer())
@@ -94,8 +94,7 @@ class environment(object):
         Force the version of epics in self
 
         Args:
-            Epics version
-
+            epics(str): EPICS version
         """
         self.epics = epics
 
@@ -201,7 +200,7 @@ class environment(object):
         release numbers without a text suffix
 
         Args:
-            release: Area to generate path for
+            release(str): Area to generate path for
 
         Returns:
             Component parts of release tag
@@ -240,9 +239,9 @@ class environment(object):
         paths end in a release number
 
         Args:
-            paths: Paths to sort
+            paths(list): Paths to sort
 
-        Returns:
+        Returns(str):
             Sorted list of release tags
 
         """
@@ -282,7 +281,12 @@ class environment(object):
 
     def classifyArea(self, path):
         """
-        Classify the area of a path, returning (area, work/prod/invalid, epicsVer)n:
+        Classify the area of a path, returning (area, work/prod/invalid, epicsVer)
+        
+        Args:
+            path(str): Path to a module or area
+        Returns:
+            tuple: A tuple of <area>,<epics version> where <area> can be "work","prod", or "invalid"
         """
         for a in self.areas:
             if path.startswith(self.devArea(a)):
@@ -302,6 +306,11 @@ class environment(object):
         """
         Return a (module, version) tuple for the path, where
         version is "invalid", "work", or a version number
+
+        Args:
+            path(str): Path to a module or area
+        Returns:
+            tuple: A tuple of <module>,<version>
         """
         # classify the area
         area, domain, epicsVer = self.classifyArea(path)
