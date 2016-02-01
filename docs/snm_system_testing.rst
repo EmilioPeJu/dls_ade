@@ -1,7 +1,7 @@
-.. _systems-testing-snm:
+.. _system-testing-snm:
 
-================================
-Start New Module Systems Testing
-================================
+===============================
+Start New Module System Testing
+===============================
 
 This is just an example.
