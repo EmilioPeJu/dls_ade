@@ -129,11 +129,12 @@ def init_repo(path="./"):
     print("Repository created.")
 
 
-def stage_all_files_and_commit(path="./"):
+def stage_all_files_and_commit(path="./", message="Initial commit."):
     """Stage and commit all files in a local git repository.
 
     Args:
         path: The relative or absolute path of the local git repository.
+        message: The commit message to use.
 
     Raises:
         Error: If the path is not a git repository.
@@ -150,7 +151,14 @@ def stage_all_files_and_commit(path="./"):
     print("Staging files...")
     repo.git.add('--all')
     print("Committing files to repo...")
-    msg = repo.git.commit(m="Initial commit")
+
+    # If there are no changes to commit, then GitCommandError will be raised.
+    # There is no reason to raise an exception for this.
+    msg = ""
+    try:
+        msg = repo.git.commit(m=message)
+    except git.exc.GitCommandError as e:
+        pass
     print(msg)
 
 
@@ -261,10 +269,7 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
                        "exist.")
         raise VCSGitError(err_message.format(branch=branch_name))
 
-    if remote_name not in [x.name for x in repo.remotes]:
-        # Remote "origin" does not already exist
-        err_message = "Local repository does not have remote {remote:s}"
-        raise VCSGitError(err_message.format(remote=remote_name))
+    check_remote_exists(repo, remote_name)
 
     # They have overloaded the dictionary lookup to compare string with .name
     remote = repo.remotes[remote_name]
@@ -284,6 +289,23 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
 
     print("Pushing repo to destination...")
     remote.push(branch_name)
+
+
+def check_remote_exists(repo, remote_name):
+    """Raises exception if the given remote name does not exist in the repo.
+
+    Args:
+        repo: The git.Repo object representing the repository.
+        remote_name: The remote name to be checked for.
+
+    Raises:
+        VCSGitError: If the given remote name does not exist.
+
+    """
+    # Remote does not already exist
+    if remote_name not in [x.name for x in repo.remotes]:
+        err_message = "Local repository does not have remote {remote:s}"
+        raise VCSGitError(err_message.format(remote=remote_name))
 
 
 def clone(server_repo_path, local_repo_path):
@@ -306,6 +328,8 @@ def clone(server_repo_path, local_repo_path):
                                             "directory")
 
     pathf.remove_end_slash(server_repo_path)
+
+    print(os.path.join(GIT_SSH_ROOT, server_repo_path))
 
     repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, server_repo_path),
                                os.path.join("./", local_repo_path))
@@ -458,6 +482,24 @@ def get_active_branch(local_repo_path):
     repo = git.Repo(local_repo_path)
 
     return repo.active_branch.name
+
+
+def delete_remote(local_repo_path, remote_name):
+    """Deletes the remote for the given local repository.
+
+    Args:
+        local_repo_path: The path to the local repository.
+        remote_name: The name of the remote to be deleted.
+
+    Raises:
+        VCSGitError: If the given remote name does not exist.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    check_remote_exists(repo, remote_name)
+
+    repo.git.remote("rm", remote_name)
 
 
 class Git(BaseVCS):

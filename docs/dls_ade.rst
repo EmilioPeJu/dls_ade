@@ -36,7 +36,19 @@
 .. automodule:: dls_ade.vcs_git
     :members:
 
-:mod:`dls_ade.new_module_creator` module
+:mod:`dls_ade.module_creator` module
+--------------------------------------
+.. automodule:: dls_ade.module_creator
+    :members:
+    :show-inheritance:
+
+:mod:`dls_ade.module_template` module
+-------------------------------------
+.. automodule:: dls_ade.module_template
+    :members:
+    :show-inheritance:
+
+:mod:`dls_ade.get_module_creator` module
 ----------------------------------------
-.. automodule:: dls_ade.new_module_creator
+.. automodule:: dls_ade.get_module_creator
     :members:

@@ -187,6 +187,7 @@ class ModuleTemplateTools(ModuleTemplate):
 
     For this class to work properly, the following template arguments must be
     specified upon initialisation:
+
         - module_name
         - module_path
         - user_login
@@ -208,9 +209,9 @@ class ModuleTemplateTools(ModuleTemplate):
     def print_message(self):
         message_dict = {'module_path': self._template_args['module_path']}
 
-        message = ("\nPlease add your patch files to the {module_path:s} "
+        message = ("\nPlease add your patch files to the {module_path:s}"
                    "\ndirectory and edit {module_path:s}/build script "
-                   "appropriately")
+                   "appropriately.")
         message = message.format(**message_dict)
 
         print(message)
@@ -237,8 +238,8 @@ class ModuleTemplatePython(ModuleTemplate):
                         'setup_path': os.path.join(module_path, "setup.py")
                         }
 
-        message = ("\nPlease add your python files to the {module_path:s} "
-                   "\ndirectory and edit {setup_path} appropriately.")
+        message = ("\nPlease add your python files to the {module_path:s}"
+                   "\ndirectory and edit {setup_path:s} appropriately.")
         message = message.format(**message_dict)
 
         print(message)
@@ -255,6 +256,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
     For this class to work properly, the following template arguments must be
     specified upon initialisation:
+    
         - module_path
         - user_login
         - app_name
@@ -303,11 +305,23 @@ class ModuleTemplateSupport(ModuleTemplateWithApps):
     These have apps with the same name as the module.
 
     """
+    def __init__(self, template_args, additional_required_args=[]):
+
+        super(ModuleTemplateSupport, self).__init__(
+                template_args,
+                additional_required_args
+        )
+
+        # The difference between this and WithApps' template_files, is that a
+        # number of '.keep' files are included in otherwise empty repositories
+        # created by MakeBaseApp.pl so the folders are included in the git
+        # repository.
+        self._set_template_files_from_area("support")
 
     def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program for file creation.
+        This uses the makeBaseApp.pl program for file creation.
 
         Raises:
             OSError: If system call fails.
@@ -328,18 +342,37 @@ class ModuleTemplateIOC(ModuleTemplateWithApps):
     def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program for file creation.
+        This uses the makeBaseApp.pl program for file creation.
+
+        Note:
+            When using `ModuleCreatorAddAppToModule`, an IOC app is added to a
+            previously existing module. As a result, if only a local module is
+            being created, and the app name conflicts with one on the server,
+            the previously existing app has to be deleted (along with boot
+            files) in order for the app to be created properly. Due to the
+            checks in place, this cannot be pushed to the remote repository
+            using the `ModuleCreatorAddAppToModule` class.
 
         Raises:
             OSError: If system call fails.
 
         """
+        # If there is already an app of the given name, delete it.
+        app_folder = "{app_name:s}App".format(**self._template_args)
+        if os.path.exists(app_folder):
+            shutil.rmtree(app_folder)
+
+        # We need to delete the ioc boot file as well.
+        boot_file = "ioc_boot/ioc{app_name:s}".format(**self._template_args)
+        if os.path.exists(boot_file):
+            shutil.rmtree(boot_file)
+
         os.system('makeBaseApp.pl -t dls {app_name:s}'.format(
             **self._template_args))
         os.system('makeBaseApp.pl -i -t dls {app_name:s}'.format(
             **self._template_args))
-        shutil.rmtree(os.path.join(self._template_args['app_name'] + 'App',
-                                   'opi'))
+
+        shutil.rmtree(os.path.join(app_folder, 'opi'))
 
 
 class ModuleTemplateIOCBL(ModuleTemplateWithApps):
@@ -348,7 +381,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
     def _create_custom_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses makeBaseApp.pl program for file creation.
+        This uses the makeBaseApp.pl program for file creation.
 
         Raises:
             OSError: If system call fails.
@@ -375,7 +408,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
                    "for the ioc's other technical areas and path to scripts."
                    "\nAlso edit {srcMakefile:s} to add all database files "
                    "from these technical areas.\nAn example set of screens"
-                   " has been placed in {opi/edl} . Please modify these.\n")
+                   " has been placed in {opi/edl:s}. Please modify these.")
         message = message.format(**message_dict)
 
         print(message)

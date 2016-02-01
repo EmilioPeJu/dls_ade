@@ -71,11 +71,11 @@ def main():
         module_creator.verify_remote_repo()
 
     module_creator.create_local_module()
-    module_creator.print_message()
 
     if export_to_server:
         module_creator.push_repo_to_remote()
 
+    module_creator.print_message()
 
 if __name__ == "__main__":
     # sys.exit(main())

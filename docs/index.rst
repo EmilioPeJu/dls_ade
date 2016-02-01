@@ -18,8 +18,8 @@ Contents:
 
    dls_ade
    dls_environment
-   systems testing <systems_testing>
-   start_new_module systems testing <snm_systems_testing>
+   system testing <system_testing>
+   start_new_module system testing <snm_system_testing>
    All Other Systems Testing <scripts_system_testing>
 
 Indices and tables
