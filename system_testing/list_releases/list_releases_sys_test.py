@@ -1,4 +1,4 @@
-import systems_testing as st
+import system_testing as st
 
 releases_list = "Previous releases for dls_testpythonmod2 in the repository:\n1-0\n1-1\n2-0\n2-1\n"
 latest_release = "The latest release for dls_testpythonmod2 in the repository is: 2-1\n"

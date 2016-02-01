@@ -1,4 +1,4 @@
-import systems_testing as st
+import system_testing as st
 
 branches_list = "Branches of dls_testpythonmod:\n\nbug-fix\nmaster\nnew-feature\n\n"
 

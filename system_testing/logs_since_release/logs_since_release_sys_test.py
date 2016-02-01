@@ -1,4 +1,4 @@
-import systems_testing as st
+import system_testing as st
 import logs
 
 settings_list = [
