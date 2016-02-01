@@ -33,7 +33,18 @@ folder_conflict_settings_list = [
 
 
 def test_generator_conflicting_filepaths_expected():
+    """Generator for tests involving a conflict of filepaths.
 
+    This will move into a temporary directory which already has a number of
+    folders that will conflict with the file creation process. It
+    will then return the tests with the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
 
@@ -65,7 +76,17 @@ git_root_dir_settings_list = [
 
 
 def test_generator_local_git_repo_root_directory():
+    """Generator for tests requiring operation in a git repository.
 
+    This will move into a temporary directory which is a git repository. It
+    will then return the tests with the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
 
@@ -96,7 +117,18 @@ git_nested_dir_settings_list = [
 
 
 def test_generator_local_git_repo_nested_directory():
+    """Generator for tests requiring a nested directory in a git repository.
 
+    This will move into a temporary directory which is nested inside a git
+    repository. It will then return the tests with the given script and
+    settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
 

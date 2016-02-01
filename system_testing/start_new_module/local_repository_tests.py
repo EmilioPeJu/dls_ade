@@ -275,9 +275,20 @@ settings_list = [
 
 
 def test_generator_local():
+    """Generator for tests relating to local repository creation.
 
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     # Search the COMPARISON_FILES folder for folders to compare with.
     for settings_dict in settings_list:
+        # Path used by multiple fields; only input one to avoid duplication.
         path = settings_dict['path']
 
         settings_dict['local_repo_path'] = path

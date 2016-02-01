@@ -95,7 +95,7 @@ printed_messages = {
 # NOTE: These are (or ought to be) the exact same tests as from local
 # repository tests. The only addition is the addition of a server path used for
 # comparisons. I have copied over all the text, though, in order to make these
-# tests self contained.
+# tests self contained. The commented out tests are superfluous.
 settings_list = [
     {
         'description': "test_exported_python_module_is_created_with_correct_files",
@@ -271,7 +271,13 @@ settings_list = [
 
 
 def setup_module():
+    """Change environment variable and module variables to numbered values.
 
+    This allows us to perform tests without them impacting each other. The file
+    `repo_test_num.txt` contains a single number that indicates the previous
+    GIT_ROOT_DIR used.
+
+    """
     global NEW_GIT_ROOT_DIR
 
     with open("repo_test_num.txt", "r") as f:
@@ -285,18 +291,30 @@ def setup_module():
     test_number += 1
     test_number = str(test_number)
 
+    # The environment variable is set for the use of the script being tested.
     NEW_GIT_ROOT_DIR = "controlstest/targetOS/creation" + test_number
     os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
 
     with open("repo_test_num.txt", "w") as f:
         f.write(test_number)
 
+    # Set so SystemTest object can use the new variable.
     st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
     st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
 def test_generator_export_to_server():
+    """Generator for tests relating to remote server repository creation.
 
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     alter_settings_dictionaries(settings_list)
 
     tempdir = tempfile.mkdtemp()
@@ -340,8 +358,20 @@ add_app_settings_list = [
 
 
 def test_generator_export_add_app_to_server():
+    """Generator for tests where an app is added to a pre-existing repository.
 
+    This will move into a temporary directory to run the tests with the given
+    script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     for settings_dict in add_app_settings_list:
+        # Clone the template repository to a new location.
+
         clone_from = os.path.join(
                 ORIGINAL_GIT_ROOT_DIR,
                 settings_dict['module_area'],
@@ -354,11 +384,9 @@ def test_generator_export_add_app_to_server():
         )
 
         temp_repo = st.vcs_git.temp_clone(clone_from)
-
         local_repo_path = temp_repo.working_tree_dir
 
         st.vcs_git.delete_remote(local_repo_path, "origin")
-
         st.vcs_git.add_new_remote_and_push(clone_to, local_repo_path)
 
     alter_settings_dictionaries(add_app_settings_list)
@@ -383,8 +411,14 @@ def test_generator_export_add_app_to_server():
 
 
 def alter_settings_dictionaries(simplified_settings_list):
+    """Changes the simplified settings list into the SystemTest compliant form.
 
+    Args:
+        simplified_settings_list: A settings list.
+
+    """
     for settings_dict in simplified_settings_list:
+        # `path` is used by four separate keys.
         path = settings_dict['path']
 
         settings_dict['local_repo_path'] = path
@@ -404,7 +438,9 @@ def alter_settings_dictionaries(simplified_settings_list):
 
 
 def teardown_module():
+    """Change environment variable and module variables to the original values.
 
+    """
     os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
     st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
     st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR

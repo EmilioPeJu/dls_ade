@@ -27,7 +27,17 @@ settings_list = [
 
 
 def test_generator_remote_verification():
+    """Generator for tests relating to remote server verification.
 
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
 
