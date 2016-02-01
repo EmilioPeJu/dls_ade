@@ -1,5 +1,10 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+This script removes all O.* directories from a release of a module and tars it up before deleting the release directory.
+<module_name>/<module_release> will be stored as <module_name>/<module_release>.tar.gz.
+Running the script with the -u flag will untar the module and remove the archive (reversing the original process)
+"""
 
 import os
 import sys

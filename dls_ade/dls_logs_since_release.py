@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Print out the commit logs for a module on the repository. A range can be specified with the 'releases' argument,
+a start or an end point can be specified with the relevant flag, otherwise the entire history will be printed.
+These 3 options are mutually exclusive.
+The verbose flag will add date, time, commit message body and diff information to each log entry.
+The raw flag will print the logs without colour.
+"""
 
 from __future__ import unicode_literals
 import os

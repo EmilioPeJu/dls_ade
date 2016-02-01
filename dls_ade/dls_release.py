@@ -1,4 +1,17 @@
 #!/bin/env dls-python
+"""
+Release a module with a specified release version from the repository.
+This script will do a test build of the module, and if it succeeds, will create the release in git.
+It will then write a build request file to the build server,
+causing it to schedule a checkout and build of the git release in prod.
+The branch flag will create the release from a branch of the module instead of master.
+The no-test-build flag will skip the test build and release the module anyway.
+The local build only flag will just run a test build and say whether it was successful or not.
+The message flag will add to the default commit message for the release.
+The next-version flag will set the version as the minimal increment of the previous release.
+The git flag will create the release from the gitolite server
+"""
+
 from pkg_resources import require
 require('python-ldap')
 
@@ -82,7 +95,7 @@ def make_parser():
     parser.add_argument(
         "-m", "--message", action="store", type=str, dest="message",
         default="",
-        help="Add user message to the end of the default svn commit message. "
+        help="Add user message to the end of the default commit message. "
         "The message will be '%s'" %
         (log_mess % ("<module_name>", "<release>", "<message>")))
     parser.add_argument(

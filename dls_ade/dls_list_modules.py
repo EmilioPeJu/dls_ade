@@ -1,5 +1,8 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+List the modules of an area or ioc domain on the repository
+"""
 
 from __future__ import print_function
 import sys

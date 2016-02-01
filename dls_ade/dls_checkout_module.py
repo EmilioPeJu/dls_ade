@@ -1,6 +1,11 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 # new branch
+"""
+Clone a module, an ioc domain or an entire area of the repository.
+When cloning a single module, the branch argument will automatically checkout the given branch.
+"""
+
 import os
 import sys
 from dls_ade import vcs_git

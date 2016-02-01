@@ -1,5 +1,8 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+List the branches of a module on the repository.
+"""
 
 import sys
 import shutil

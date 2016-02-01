@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+List the releases that have been made for a module in prod or on the repository.
+Default epics version and rhel version are the set from you environment,
+to specify different versions the epics version or rhel version flags can be used.
+The git flag will list releases from the repository.
+"""
+
 import os
 import sys
 import shutil

@@ -1,5 +1,8 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Check if a module on the repository has had changes committed to it since the last release was made.
+"""
 
 import sys
 import shutil

@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Check or set the contact information for a module on the repository. By default the contacts of the module are printed
+in a basic format. The CSV flag will print the contacts in CSV format.
+To set a contact and/or cc, the contact and cc flags can be used.
+To set a contact/cc for one or many modules the import flag can be used with a valid CSV file.
+If one contact is changed the other will be left as it was.
+"""
 
 from __future__ import print_function
 import os
@@ -46,12 +53,11 @@ def make_parser():
 
     Positional Arguments:
         * modules
-        * releases
 
     Flags:
         * -c (contact)
         * -d (cc)
-        * -s (verbose)
+        * -s (csv)
         * -m (import)
 
     Returns:
