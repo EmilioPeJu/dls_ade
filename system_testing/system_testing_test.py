@@ -1,4 +1,4 @@
-import systems_testing as st
+import system_testing as st
 import os
 import unittest
 import subprocess
@@ -17,7 +17,7 @@ def set_up_mock(test_case_obj, mock_path):
 
 class GetLocalTempCloneTest(unittest.TestCase):
 
-    @patch('systems_testing.vcs_git.temp_clone')
+    @patch('system_testing.vcs_git.temp_clone')
     def test_given_server_repo_path_then_repo_cloned_correctly(self, mock_temp_clone):
 
         mock_repo = MagicMock(working_tree_dir="test_working_tree_dir")
@@ -35,9 +35,9 @@ class DeleteTempRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.patch_gettempdir = patch('systems_testing.tempfile.gettempdir')
-        self.patch_is_local_repo_root = patch('systems_testing.vcs_git.is_local_repo_root')
-        self.patch_rmtree = patch('systems_testing.shutil.rmtree')
+        self.patch_gettempdir = patch('system_testing.tempfile.gettempdir')
+        self.patch_is_local_repo_root = patch('system_testing.vcs_git.is_local_repo_root')
+        self.patch_rmtree = patch('system_testing.shutil.rmtree')
 
         self.addCleanup(self.patch_gettempdir.stop)
         self.addCleanup(self.patch_is_local_repo_root.stop)
@@ -53,7 +53,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
         comp_message = "/usr/bin/not_in_tempdir is not a temporary folder, cannot delete."
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             st.delete_temp_repo("/usr/bin/not_in_tempdir")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -64,7 +64,7 @@ class DeleteTempRepoTest(unittest.TestCase):
 
         comp_message = "/tmp/not_git_root_dir is not a git root directory, cannot delete."
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             st.delete_temp_repo("/tmp/not_git_root_dir")
 
         self.assertEqual(str(e.exception), comp_message)
@@ -78,30 +78,30 @@ class DeleteTempRepoTest(unittest.TestCase):
         self.mock_rmtree.assert_called_once_with("/tmp/git_root_dir")
 
 
-class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
+class SystemTestCheckIfReposEqualTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_a_path_is_empty_then_exception_raised_with_correct_message(self, mock_check_output):
 
         comp_message = "Two paths must be given to compare folders.\npath 1: , path 2: path_two."
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             st.check_if_repos_equal("", "path_two")
 
         self.assertEqual(str(e.exception), comp_message)
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_subprocess_check_output_given_correct_input(self, mock_check_output):
 
         st.check_if_repos_equal("local_path_one", "local_path_two")
 
         mock_check_output.assert_called_once_with(['diff', '-rq', '--exclude=.git', '--exclude=.gitattributes', '--exclude=.keep', 'local_path_one', 'local_path_two'])
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_subprocess_return_code_1_then_function_returns_false(self, mock_check_output):
         mock_check_output.side_effect = subprocess.CalledProcessError(1, "This just makes the return code 1")
 
@@ -109,7 +109,7 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
 
         self.assertFalse(return_value)
 
-    @patch('systems_testing.subprocess.check_output')
+    @patch('system_testing.subprocess.check_output')
     def test_given_subprocess_return_code_0_then_function_returns_true(self, mock_check_output):
         mock_check_output.return_value = ""
 
@@ -118,7 +118,7 @@ class SystemsTestCheckIfReposEqualTest(unittest.TestCase):
         self.assertTrue(return_value)
 
 
-class SystemsTestLoadSettingsTest(unittest.TestCase):
+class SystemTestLoadSettingsTest(unittest.TestCase):
 
     def test_given_dictionary_contains_only_items_in_settings_list_then_dict_updated_with_all(self):
 
@@ -127,7 +127,7 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
             'std_out_compare_string': "test_output"
         }
 
-        st_obj = st.SystemsTest("test_script.py", "test_name")
+        st_obj = st.SystemTest("test_script.py", "test_name")
 
         st_obj.load_settings(settings)
 
@@ -142,7 +142,7 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
             'std_out': "this should not get updated"
         }
 
-        st_obj = st.SystemsTest("test_script.py", "test_name")
+        st_obj = st.SystemTest("test_script.py", "test_name")
 
         st_obj.load_settings(settings)
 
@@ -151,40 +151,17 @@ class SystemsTestLoadSettingsTest(unittest.TestCase):
         self.assertNotEqual(st_obj._std_out, "this should not get updated")
 
 
-class SystemsTestCallScriptTest(unittest.TestCase):
-    #
-    # @patch('systems_testing.subprocess.Popen')
-    # def test_given_no_input_to_call_script_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self, mock_popen):
-    #     mock_process = MagicMock(returncode=1)
-    #     mock_process.communicate.return_value = ("test_out", "test_err")
-    #     mock_popen.return_value = mock_process
-    #
-    #     st_obj = st.SystemsTest("test_script", "test_name")
-    #     st_obj.load_settings(
-    #             {
-    #                 'arguments': "--area python test_server_repo_path"
-    #             }
-    #     )
-    #
-    #     st_obj.call_script()
-    #
-    #     mock_popen.assert_called_once_with(["test_script", "--area", "python", "test_server_repo_path"],
-    #                                        stdout=subprocess.PIPE,
-    #                                        stderr=subprocess.PIPE)
-    #
-    #     self.assertEqual(st_obj._std_out, "test_out")
-    #     self.assertEqual(st_obj._std_err, "test_err")
-    #     self.assertEqual(st_obj._return_code, 1)
+class SystemTestCallScriptTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_popen = set_up_mock(self, 'systems_testing.subprocess.Popen')
+        self.mock_popen = set_up_mock(self, 'system_testing.subprocess.Popen')
 
     def test_given_no_input_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self):
         mock_process = MagicMock(returncode=1)
         mock_process.communicate.return_value = ("test_out", "test_err")
         self.mock_popen.return_value = mock_process
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj.load_settings(
                 {
                     'arguments': "--area python test_server_repo_path",
@@ -209,7 +186,7 @@ class SystemsTestCallScriptTest(unittest.TestCase):
         mock_process.communicate.return_value = ("test_out", "test_err")
         self.mock_popen.return_value = mock_process
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj.load_settings(
                 {
                     'arguments': "--area python test_server_repo_path",
@@ -235,7 +212,7 @@ class SystemsTestCallScriptTest(unittest.TestCase):
         mock_process.communicate.return_value = ("test_out", "test_err")
         self.mock_popen.return_value = mock_process
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj.load_settings(
                 {
                     'arguments': "--area python test_server_repo_path",
@@ -256,11 +233,11 @@ class SystemsTestCallScriptTest(unittest.TestCase):
         self.assertEqual(st_obj._std_err, "test_err")
         self.assertEqual(st_obj._return_code, 1)
 
-class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
+class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
 
     def test_given_neither_exception_type_nor_message_then_test_passes(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj.check_std_err_for_exception()
 
@@ -268,13 +245,13 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
         comp_message = ("Both exception_type and exception_string must be provided.")
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj.load_settings({
             'exception_type': "test_exception_type"
         })
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             st_obj.check_std_err_for_exception()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -283,20 +260,20 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
         comp_message = ("Both exception_type and exception_string must be provided.")
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj.load_settings({
             'exception_string': "test exception string"
         })
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             st_obj.check_std_err_for_exception()
 
         self.assertEqual(str(e.exception), comp_message)
 
     def test_given_return_code_0_then_assertion_failed(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._return_code = 0
 
         st_obj.load_settings({
@@ -309,7 +286,7 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
     def test_given_exception_not_raised_in_script_then_test_fails(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._return_code = 1
         st_obj._std_err = "\nother_exception_type: other exception string\n"
 
@@ -323,7 +300,7 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
 
     def test_given_exception_raised_in_script_then_test_passes(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._return_code = 1
         st_obj._std_err = "\ntest_exception_type: test exception string\n"
 
@@ -335,11 +312,11 @@ class SystemsTestCheckStdErrForExceptionTest(unittest.TestCase):
         st_obj.check_std_err_for_exception()
 
 
-class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
+class SystemTestCompareStdOutToStringTest(unittest.TestCase):
 
     def test_given_comparison_string_is_none_then_function_returns(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj._std_out_compare_string = None
         st_obj._std_out = "I definitely exist."
@@ -348,7 +325,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
     def test_given_std_out_equal_to_comparison_string_then_test_passes(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -359,7 +336,7 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
 
     def test_given_std_out_not_equal_to_comparison_string_then_test_fails(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -370,11 +347,11 @@ class SystemsTestCompareStdOutToStringTest(unittest.TestCase):
             st_obj.compare_std_out_to_string()
 
 
-class SystemsTestCheckStdOutStartsWithStringTest(unittest.TestCase):
+class SystemTestCheckStdOutStartsWithStringTest(unittest.TestCase):
 
     def test_given_starts_with_string_is_none_then_function_returns(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj._std_out_starts_with_string = None
         st_obj._std_out = "I definitely exist."
@@ -383,7 +360,7 @@ class SystemsTestCheckStdOutStartsWithStringTest(unittest.TestCase):
 
     def test_given_std_out_starts_with_string_then_test_passes(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -394,7 +371,7 @@ class SystemsTestCheckStdOutStartsWithStringTest(unittest.TestCase):
 
     def test_given_std_out_does_not_start_with_comparison_string_then_test_fails(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -405,11 +382,11 @@ class SystemsTestCheckStdOutStartsWithStringTest(unittest.TestCase):
             st_obj.check_std_out_starts_with_string()
 
 
-class SystemsTestCheckStdOutEndsWithStringTest(unittest.TestCase):
+class SystemTestCheckStdOutEndsWithStringTest(unittest.TestCase):
 
     def test_given_ends_with_string_is_none_then_function_returns(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
 
         st_obj._std_out_ends_with_string = None
         st_obj._std_out = "I definitely exist."
@@ -418,7 +395,7 @@ class SystemsTestCheckStdOutEndsWithStringTest(unittest.TestCase):
 
     def test_given_std_out_ends_with_comparison_string_then_test_passes(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -429,7 +406,7 @@ class SystemsTestCheckStdOutEndsWithStringTest(unittest.TestCase):
 
     def test_given_std_out_does_not_end_with_comparison_string_then_test_fails(self):
 
-        st_obj = st.SystemsTest("test_script", "test_name")
+        st_obj = st.SystemTest("test_script", "test_name")
         st_obj._std_out = "String to test for."
 
         st_obj.load_settings({
@@ -440,19 +417,19 @@ class SystemsTestCheckStdOutEndsWithStringTest(unittest.TestCase):
             st_obj.check_std_out_ends_with_string()
 
 
-class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
+class SystemTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
         self.mock_check_remote_repo_exists = set_up_mock(
                 self,
-                "systems_testing.SystemsTest.check_remote_repo_exists"
+                "system_testing.SystemTest.check_remote_repo_exists"
         )
 
         self.mock_clone_server_repo = set_up_mock(
             self,
-            "systems_testing.SystemsTest.clone_server_repo"
+            "system_testing.SystemTest.clone_server_repo"
         )
 
     def test_given_no_server_repo_path_then_function_returns(self):
@@ -472,14 +449,14 @@ class SystemsTestCheckForAndCloneRemoteRepoTest(unittest.TestCase):
         self.mock_clone_server_repo.assert_called_once_with()
 
 
-class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
+class SystemTestCheckRemoteRepoExists(unittest.TestCase):
 
     def setUp(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
-    @patch('systems_testing.vcs_git.is_server_repo', return_value=False)
+    @patch('system_testing.vcs_git.is_server_repo', return_value=False)
     def test_given_is_server_repo_false_then_assert_failed(self, mock_is_server_repo):
 
         with self.assertRaises(AssertionError):
@@ -487,7 +464,7 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
 
         mock_is_server_repo.assert_called_once_with("test_repo_path")
 
-    @patch('systems_testing.vcs_git.is_server_repo', return_value=True)
+    @patch('system_testing.vcs_git.is_server_repo', return_value=True)
     def test_given_is_server_repo_true_then_no_assertion_failed(self, mock_is_server_repo):
 
         self.st_obj.check_remote_repo_exists()
@@ -495,19 +472,19 @@ class SystemsTestCheckRemoteRepoExists(unittest.TestCase):
         mock_is_server_repo.assert_called_once_with("test_repo_path")
 
 
-class SystemsTestCloneServerRepoTest(unittest.TestCase):
+class SystemTestCloneServerRepoTest(unittest.TestCase):
 
     def setUp(self):
         self.repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
 
-        self.mock_temp_clone = set_up_mock(self, 'systems_testing.vcs_git.temp_clone')
+        self.mock_temp_clone = set_up_mock(self, 'system_testing.vcs_git.temp_clone')
         self.mock_temp_clone.return_value = self.repo_mock
 
-        self.mock_checkout_remote_branch = set_up_mock(self, 'systems_testing.vcs_git.checkout_remote_branch')
+        self.mock_checkout_remote_branch = set_up_mock(self, 'system_testing.vcs_git.checkout_remote_branch')
 
     def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj.clone_server_repo()
@@ -517,7 +494,7 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
 
     def test_given_function_called_with_no_branch_set_then_checkout_remote_branch_not_called(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj._branch_name = ""
@@ -530,7 +507,7 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
 
     def test_given_function_called_with_branch_set_then_checkout_remote_branch_called(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj._branch_name = "test_branch_name"
@@ -542,12 +519,12 @@ class SystemsTestCloneServerRepoTest(unittest.TestCase):
         self.mock_checkout_remote_branch.assert_called_once_with("test_branch_name", self.repo_mock)
 
 
-class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
+class SystemTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_get_active_branch = set_up_mock(self, 'systems_testing.vcs_git.get_active_branch')
+        self.mock_get_active_branch = set_up_mock(self, 'system_testing.vcs_git.get_active_branch')
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
 
     def test_given_no_branch_name_then_function_returns_immediately(self):
 
@@ -589,12 +566,12 @@ class SystemsTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
         self.mock_get_active_branch.assert_called_once_with("test_lrp")
 
 
-class SystemsTestRunGitAttributesTest(unittest.TestCase):
+class SystemTestRunGitAttributesTest(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_git_attributes = set_up_mock(self, 'systems_testing.vcs_git.check_git_attributes')
+        self.mock_check_git_attributes = set_up_mock(self, 'system_testing.vcs_git.check_git_attributes')
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
 
     def test_given_no_attributes_dict_then_function_returns(self):
 
@@ -612,7 +589,7 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
 
         comp_message = "As an attributes dict has been provided, either the local_repo_path or server_repo_clone_path must be provided."
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             self.st_obj.run_git_attributes_tests()
 
         self.assertEqual(str(e.exception), comp_message)
@@ -683,12 +660,12 @@ class SystemsTestRunGitAttributesTest(unittest.TestCase):
         self.assertEqual(self.mock_check_git_attributes.call_count, 1)
 
 
-class SystemsTestRunComparisonTests(unittest.TestCase):
+class SystemTestRunComparisonTests(unittest.TestCase):
 
     def setUp(self):
-        self.mock_check_folders_equal = set_up_mock(self, 'systems_testing.check_if_repos_equal')
+        self.mock_check_folders_equal = set_up_mock(self, 'system_testing.check_if_repos_equal')
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
 
     def test_given_no_repo_comp_method_then_function_returns(self):
 
@@ -739,19 +716,19 @@ class SystemsTestRunComparisonTests(unittest.TestCase):
                         "\nlocal_comp, server_comp, all_comp."
                         "\nGot: not_comp")
 
-        with self.assertRaises(st.SystemsTestingError) as e:
+        with self.assertRaises(st.SystemTestingError) as e:
             self.st_obj.run_comparison_tests()
 
         self.assertEqual(str(e.exception), comp_message)
 
 
-class SystemsTestDeleteClonedServerRepo(unittest.TestCase):
+class SystemTestDeleteClonedServerRepo(unittest.TestCase):
 
     def setUp(self):
 
-        self.st_obj = st.SystemsTest("test_script", "test_name")
+        self.st_obj = st.SystemTest("test_script", "test_name")
 
-        self.mock_delete_temp_repo = set_up_mock(self, "systems_testing.delete_temp_repo")
+        self.mock_delete_temp_repo = set_up_mock(self, "system_testing.delete_temp_repo")
 
     def test_given_server_repo_clone_does_not_exist_then_function_returns(self):
 

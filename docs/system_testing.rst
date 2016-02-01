@@ -1,7 +1,7 @@
-.. _systems-testing-overview:
+.. _system-testing-overview:
 
 ===============
-Systems Testing
+System Testing
 ===============
 
 Contents:
@@ -10,26 +10,26 @@ Contents:
 - :ref:`settings-descriptions`
 - :ref:`setting-up-environment`
 - :ref:`test-descriptions`
-    * :ref:`systems-testing-snm`
+    * :ref:`system-testing-snm`
     
 .. _general-overview:
 
 General overview
 ----------------
 
-Our systems testing framework uses nosetests to automatically run each individual systems test. This allows us to use functions such as 'setup_module' and 'teardown_module', in a similar way to that used in unit testing.
+Our system testing framework uses nosetests to automatically run each individual system test. This allows us to use functions such as 'setup_module' and 'teardown_module', in a similar way to that used in unit testing.
 
-With nosetests, if a "test\_" generator is called, nosetests will run every yielded test. In the systems_testing folder, the SystemsTest object represents a single systems test, with the __call__ method overriden to allow it to be run by nosetests.
+With nosetests, if a "test\_" generator is called, nosetests will run every yielded test. In the system_testing folder, the SystemTest object represents a single system test, with the __call__ method overriden to allow it to be run by nosetests.
 
-The SystemsTest init function takes in a set of arguments which specify the script to be run, a description for nosetests and a `settings` dictionary that specifies the tests to be run after the script has been called.
+The SystemTest init function takes in a set of arguments which specify the script to be run, a description for nosetests and a `settings` dictionary that specifies the tests to be run after the script has been called.
 
-The systems_test module also contains a generator. This generator must be passed a script name along with the settings list, and it will extract the description and optional alternative script name from the settings dictionary. All another script has to do is pass these arguments and yield the returned values.
+The system_test module also contains a generator. This generator must be passed a script name along with the settings list, and it will extract the description and optional alternative script name from the settings dictionary. All another script has to do is pass these arguments and yield the returned values.
 
 Each dls_ade script has a separate testing folder. These are explained in more detail in the :ref:`test-descriptions` subsection.
 
 .. _settings-descriptions:
 
-SystemsTest Settings Descriptions
+SystemTest Settings Descriptions
 ---------------------------------
 All provided settings are given as a {string: ...} dictionary. Unless otherwise specified, assume that the dictionary values are also strings.
 
@@ -144,7 +144,7 @@ First, in the dls_ade repository root, run in the terminal:
 
 Then, get the dls_ade repository URL, eg. /path/to/dls_ade. This should not contain the second dls_ade folder name (eg. /path/to/dls_ade/dls_ade).
 
-In the dls_ade/systems_testing folder, run in the terminal:
+In the dls_ade/system_testing folder, run in the terminal:
 
 .. code:: bash
 
@@ -162,12 +162,12 @@ What this will do:
         This is used to access the final python scripts to be tested.
 
 - Set the PYTHONPATH environment variable to include:
-    * /path/to/dls_ade/systems_testing
-        This allows nosetests to use the systems_testing script.
+    * /path/to/dls_ade/system_testing
+        This allows nosetests to use the system_testing script.
     * /path/to/dls_ade
-        This allows the systems_testing module to use the vcs_git module.
+        This allows the system_testing module to use the vcs_git module.
 
-The systems_testing module will prevent you from running any tests if you have
+The system_testing module will prevent you from running any tests if you have
 not yet set the GIT_ROOT_DIR environment variable.
 
 .. _test-descriptions:
@@ -175,6 +175,6 @@ not yet set the GIT_ROOT_DIR environment variable.
 Test Descriptions
 ----------------------------
 
-:ref:`systems-testing-snm`
+:ref:`system-testing-snm`
 
 

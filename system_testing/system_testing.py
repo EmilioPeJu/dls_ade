@@ -23,17 +23,17 @@ except ImportError:
     raise ImportError("PYTHONPATH must contain the dls_ade package")
 
 
-class SystemsTestingError(Exception):
-    """Class for exceptions relating to systems_testing module."""
+class SystemTestingError(Exception):
+    """Class for exceptions relating to system_testing module."""
     pass
 
 
-class SettingsError(SystemsTestingError):
+class SettingsError(SystemTestingError):
     """Class for exceptions relating to invalid settings"""
     pass
 
 
-class TempdirError(SystemsTestingError):
+class TempdirError(SystemTestingError):
     """Class for exceptions relating to issues with temporary directories."""
     pass
 
@@ -130,8 +130,8 @@ def check_if_repos_equal(path_1, path_2):
     return True
 
 
-class SystemsTest(object):
-    """Class for the automatic generation of systems tests using nosetests.
+class SystemTest(object):
+    """Class for the automatic generation of system tests using nosetests.
 
     Attributes:
         _script: The script to be tested.
@@ -593,11 +593,11 @@ class SystemsTest(object):
 
 
 def generate_tests_from_dicts(script, test_settings):
-    """Generator for the automatic construction of systems tests.
+    """Generator for the automatic construction of system tests.
 
     Args:
         script: The script for testing.
-        systems_test_cls: The SystemsTest class (or subclass) to use.
+        system_test_cls: The SystemTest class (or subclass) to use.
         test_settings: The settings for each individual test.
 
     """
@@ -605,6 +605,6 @@ def generate_tests_from_dicts(script, test_settings):
         if 'script' in settings:
             script = settings.pop('script')
         description = settings.pop('description')
-        systems_test = SystemsTest(script, description)
-        systems_test.load_settings(settings)
-        yield systems_test
+        system_test = SystemTest(script, description)
+        system_test.load_settings(settings)
+        yield system_test
