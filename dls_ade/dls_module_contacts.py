@@ -181,7 +181,7 @@ def output_csv_format(contact, cc_contact, module):
         contact: Contact FED-ID
         cc_contact: Contact FED-ID
         module: Module name
-        
+
     """
 
     # Check if <FED-ID>s are specified in repo, if not don't run lookup function

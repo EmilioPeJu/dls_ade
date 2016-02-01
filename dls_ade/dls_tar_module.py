@@ -43,18 +43,13 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
-    parser.add_argument(
-        "module_name", type=str, default=None,
-        help="Name of module to tar")
-    parser.add_argument(
-        "release", type=str, default=None,
-        help="Release number of module to tar")
+    parser.add_module_name_arg()
+    parser.add_release_arg()
+    parser.add_epics_version_flag()
+
     parser.add_argument(
         "-u", "--untar", action="store_true", dest="untar",
         help="Untar archive created with dls-archive-module.py")
-    parser.add_argument(
-        "-e", "--epics_version", action="store", type=str, dest="epics_version",
-        help="Change the epics version, default is " + env.epicsVer() + " (from your environment)")
 
     return parser
 
