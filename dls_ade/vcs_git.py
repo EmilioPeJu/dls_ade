@@ -8,11 +8,8 @@ from pkg_resources import require
 require('GitPython')
 import git
 
-<<<<<<< HEAD
-=======
 import path_functions as pathf
 from exceptions import VCSGitError
->>>>>>> new-git-scripts
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
@@ -371,14 +368,7 @@ def clone_multi(source):
         Error: Repository does not contain <source>
     """
 
-<<<<<<< HEAD
-    split_list = get_repository_list()
-=======
-    if source[-1] == '/':
-        source = source[:-1]
-
     split_list = get_server_repo_list()
->>>>>>> new-git-scripts
     for path in split_list:
         if path.startswith(source):
 
