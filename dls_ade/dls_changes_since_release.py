@@ -34,7 +34,8 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
-    parser.add_argument("module_name", type=str, help="name of module to release")
+    parser.add_module_name_arg()
+
     return parser
 
 

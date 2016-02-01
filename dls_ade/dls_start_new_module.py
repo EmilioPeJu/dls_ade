@@ -41,9 +41,8 @@ def make_parser():
 
     """
     parser = ArgParser(usage)
-    parser.add_argument(
-        "module_name", type=str, default=None,
-        help="name of module")
+    parser.add_module_name_arg()
+
     parser.add_argument(
         "-n", "--no-import", action="store_true", dest="no_import",
         help="Creates the module but doesn't import into svn")
@@ -72,11 +71,11 @@ def main():
         module_creator.verify_remote_repo()
 
     module_creator.create_local_module()
-    module_creator.print_message()
 
     if export_to_server:
         module_creator.push_repo_to_remote()
 
+    module_creator.print_message()
 
 if __name__ == "__main__":
     # sys.exit(main())

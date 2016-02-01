@@ -15,10 +15,12 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_logs_since_release.make_parser()
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'module_name')
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
+    def test_module_name_set(self, parser_mock):
+
+        dls_logs_since_release.make_parser()
+
+        parser_mock.assert_called_once_with()
 
     def test_earlier_argument_has_correct_attributes(self):
         arguments = self.parser._positionals._actions[5]

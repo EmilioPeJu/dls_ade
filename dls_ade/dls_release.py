@@ -62,15 +62,17 @@ def make_parser():
     """
     parser = ArgParser(usage)
 
-    parser.add_argument(
-        "module_name", type=str, default=None,
-        help="name of module to release")
-    parser.add_argument(
-        "release", type=str, default=None,
-        help="release number of module to release")
-    parser.add_argument(
-        "-b", "--branch", action="store", type=str, dest="branch",
-        help="Release from a branch BRANCH")
+    parser.add_module_name_arg()
+    parser.add_release_arg()
+    parser.add_branch_flag(
+        help_msg="Release from a branch")
+    parser.add_git_flag(
+        help_msg="Release from a git tag from the diamond gitolite repository")
+    parser.add_epics_version_flag(
+        help_msg="Change the epics version. This will determine which build "
+                 "server your job is built on for epics modules. Default is "
+                 "from your environment")
+
     parser.add_argument(
         "-f", "--force", action="store_true", dest="force", default=None,
         help="force a release. If the release exists in prod it is removed. "
@@ -87,12 +89,6 @@ def make_parser():
         "-T", "--test_build-only", action="store_true", dest="test_only",
         help="If set, this will only do a test build on the build server")
     parser.add_argument(
-        "-e", "--epics_version", action="store", type=str,
-        dest="epics_version",
-        help="Change the epics version. This will determine which build "
-        "server your job is built on for epics modules. Default is "
-        "from your environment")
-    parser.add_argument(
         "-m", "--message", action="store", type=str, dest="message",
         default="",
         help="Add user message to the end of the default commit message. "
@@ -101,9 +97,6 @@ def make_parser():
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
-    parser.add_argument(
-        "-g", "--git", action="store_true", dest="git",
-        help="Release from a git tag from the diamond gitolite repository")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use one"
