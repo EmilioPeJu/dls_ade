@@ -1,7 +1,8 @@
-import subprocess
 import os
-import tarfile
 import shutil
+import subprocess
+import tarfile
+
 import start_new_module_util
 
 COMPARISON_FILES = "comparison_files"
