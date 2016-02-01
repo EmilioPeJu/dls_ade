@@ -598,7 +598,6 @@ def generate_tests_from_dicts(script, test_settings):
 
     Args:
         script: The script for testing.
-        system_test_cls: The SystemTest class (or subclass) to use.
         test_settings: The settings for each individual test.
 
     """

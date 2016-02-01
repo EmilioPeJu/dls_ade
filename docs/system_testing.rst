@@ -41,6 +41,14 @@ you should be able to perform the tests by running:
 
 This will perform 5 tests on the `test_error_script.py` script, which takes arguments and varies input in a basic way. Only the fourth test should fail.
 
+If you wish to see a simplified version of the SystemTest class, look at `example.py` in the same folder. Running
+
+.. code:: bash
+
+  nosetests example
+
+will demonstrate the tests, of which half should fail.
+
 .. _settings-descriptions:
 
 SystemTest Settings Descriptions

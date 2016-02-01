@@ -1,7 +1,6 @@
 from pkg_resources import require
 require('nose')
 from nose.tools import assert_equal
-import sys
 
 
 class InputTest(object):
