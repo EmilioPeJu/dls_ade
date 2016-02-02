@@ -30,7 +30,8 @@ class ModuleCreator(object):
         _can_push_repo_to_remote(bool): True if can run push_repo_to_remote.
 
     Raises:
-        ModuleCreatorError: Base class for this module's exceptions
+        :class:`~dls_ade.exceptions.ModuleCreatorError`: Base class for this \
+            module's exceptions
 
     """
 
@@ -86,7 +87,8 @@ class ModuleCreator(object):
         conflicts.
 
         Raises:
-            VerificationError: If there is a name conflict with the server.
+            :class:`~dls_ade.exceptions.VerificationError`: If there is a \
+                name conflict with the server.
 
         """
         if self._remote_repo_valid:
@@ -116,7 +118,8 @@ class ModuleCreator(object):
             - The user is currently inside a git repository
 
         Raises:
-            VerificationError: Local module cannot be created.
+            :class:`~dls_ade.exceptions.VerificationError`: Local module \
+                cannot be created.
 
         """
         if self._can_create_local_module:
@@ -156,7 +159,8 @@ class ModuleCreator(object):
             - There is a naming conflict with the remote server
 
         Raises:
-            VerificationError: Local repository cannot be pushed to remote.
+            :class:`~dls_ade.exceptions.VerificationError`: Local repository \
+                cannot be pushed to remote.
 
         """
         if self._can_push_repo_to_remote:
@@ -200,7 +204,8 @@ class ModuleCreator(object):
             the user calling this method twice in succession.
 
         Raises:
-            VerificationError: Local module cannot be created.
+            :class:`~dls_ade.exceptions.VerificationError`: Local module \
+                cannot be created.
             OSError: The abs_module_path already exists (outside interference).
 
         """
@@ -237,8 +242,10 @@ class ModuleCreator(object):
             succession.
 
         Raises:
-            VerificationError: Local repository cannot be pushed to remote.
-            VCSGitError: If issue with adding a new remote and pushing.
+            :class:`~dls_ade.exceptions.VerificationError`: Local repository \
+                cannot be pushed to remote.
+            :class:`~dls_ade.exceptions.VCSGitError`: If issue with adding a \
+                new remote and pushing.
 
         """
         self.verify_can_push_repo_to_remote()
@@ -259,7 +266,8 @@ class ModuleCreatorWithApps(ModuleCreator):
             the newly created module.
 
     Raises:
-        ArgumentError: If 'app_name' not given as a keyword argument
+        :class:`~dls_ade.exceptions.ArgumentError`: If 'app_name' not given \
+            as a keyword argument
 
     """
 
@@ -323,8 +331,10 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
               paths
 
         Raises:
-            VerificationError: If there is an issue with the remote repository.
-            RemoteRepoError: From :meth:`_check_if_remote_repo_has_app`.
+            :class:`~dls_ade.exceptions.VerificationError`: If there is an \
+                issue with the remote repository.
+            :class:`~dls_ade.exceptions.RemoteRepoError`: From \
+                :meth:`_check_if_remote_repo_has_app`.
                 This should never be raised. There is a bug if it is!
 
         """
@@ -367,9 +377,11 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             bool: True if app exists, False otherwise.
 
         Raises:
-            RemoteRepoError: If given repo path does not exist on gitolite.
+            :class:`~dls_ade.exceptions.RemoteRepoError`: If given repo path \
+                does not exist on gitolite.
                 This should never be raised. There is a bug if it is!
-            VCSGitError: Issue with the vcs_git function calls.
+            :class:`~dls_ade.exceptions.VCSGitError`: Issue with the vcs_git \
+                function calls.
 
         """
         if not vcs_git.is_server_repo(remote_repo_path):
@@ -405,9 +417,11 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         This will use the file creation specified in :meth:`_create_files`.
 
         Raises:
-            ArgumentError: From ModuleTemplate.create_files()
+            :class:`~dls_ade.exceptions.ArgumentError`: From \
+                ModuleTemplate.create_files()
             OSError: From ModuleTemplate.create_files()
-            VCSGitError: From stage_all_files_and_commit()
+            :class:`~dls_ade.exceptions.VCSGitError`: From \
+                stage_all_files_and_commit()
 
 
         """
@@ -437,8 +451,10 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         server it was cloned from.
 
         Raises:
-            VerificationError: From :meth:`verify_can_push_repo_to_remote`.
-            VCSGitError: From push_to_remote()
+            :class:`~dls_ade.exceptions.VerificationError`: From \
+                :meth:`verify_can_push_repo_to_remote`.
+            :class:`~dls_ade.exceptions.VCSGitError`: From \
+                :meth:`push_to_remote`
 
         """
         self.verify_can_push_repo_to_remote()

@@ -23,7 +23,8 @@ class ModuleTemplate(object):
          including module-specific phrases such as `module_name`.
 
     Raises:
-        ModuleTemplateError: Base class for this module's exceptions
+        :class:`~dls_ade.exceptions.ModuleTemplateError`: Base class for this \
+        module's exceptions
 
     """
 
@@ -51,7 +52,8 @@ class ModuleTemplate(object):
         """Verify that the template_args fulfill the template requirements.
 
         Raises:
-            VerificationError: If a required placeholder is missing.
+            :class:`~dls_ade.exceptions.VerificationError`: If a required \
+                placeholder is missing.
 
         """
         if not all(key in self._template_args
@@ -74,7 +76,8 @@ class ModuleTemplate(object):
             template_area: The module area for obtaining the templates.
 
         Raises:
-            TemplateFolderError: If template folder does not exist.
+            :class:`~dls_ade.exceptions.TemplateFolderError`: If template \
+                folder does not exist.
 
         """
         templates_folder = MODULE_TEMPLATES
@@ -103,7 +106,8 @@ class ModuleTemplate(object):
                 to allow completion using `template_args` attribute.
 
         Raises:
-            TemplateFolderError: If `template_folder` does not exist.
+            :class:`~dls_ade.exceptions.TemplateFolderError`: If \
+                `template_folder` does not exist.
 
         """
         if not os.path.isdir(template_folder):
@@ -128,7 +132,8 @@ class ModuleTemplate(object):
         creation by default.
 
         Raises:
-            ArgumentError: From :meth:`_create_files_from_template_dict`
+            :class:`~dls_ade.exceptions.ArgumentError`: From \
+                :meth:`_create_files_from_template_dict`
             OSError: From :meth:`_create_files_from_template_dict`
 
         """
@@ -150,7 +155,8 @@ class ModuleTemplate(object):
         file creation by default.
 
         Raises:
-            ArgumentError: If 'file' given is a directory, not a file.
+            :class:`~dls_ade.exceptions.ArgumentError`: If 'file' given is a \
+                directory, not a file.
             OSError: From os.makedirs()
 
         """

@@ -27,7 +27,8 @@ def is_in_local_repo(path="./"):
         bool: True if the path is inside a git repository, false otherwise.
 
     Raises:
-        VCSGitError: If the path given is not a local directory.
+        :class:`~dls_ade.exceptions.VCSGitError`: If the path given is not a \
+            local directory.
 
     """
     if not os.path.isdir(path):
@@ -53,7 +54,8 @@ def is_local_repo_root(path="."):
         bool: True if the path is inside a git repository, false otherwise.
 
     Raises:
-        VCSGitError: If path given is not a local directory (from is_in_local_repo).
+        :class:`~dls_ade.exceptions.VCSGitError`: If path given is not a \
+            local directory (from :func:`is_in_local_repo`).
 
     """
     if not is_in_local_repo(path):
@@ -88,7 +90,7 @@ def get_server_repo_list():
     Returns list of module repository paths from the git server.
 
     Returns:
-        list of str: Repository paths on the server.
+        List[str]: Repository paths on the server.
 
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
@@ -113,7 +115,8 @@ def init_repo(path="./"):
         path(str): The relative or absolute path for the local git repository.
 
     Raises:
-        VCSGitError: If the path is not a directory, or is already a git repository.
+        :class:`~dls_ade.exceptions.VCSGitError`: If the path is not a \
+            directory, or is already a git repository.
 
     """
     if not os.path.isdir(path):
@@ -136,7 +139,8 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
         message: The commit message to use.
 
     Raises:
-        VCSGitError: If the path is not a git repository.
+        :class:`~dls_ade.exceptions.VCSGitError`: If the path is not a git \
+            repository.
 
     """
     if not os.path.isdir(path):
@@ -183,7 +187,8 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
         branch_name(str): The name of the branch to push from / to.
 
     Raises:
-        VCSGitError: If there is an issue with the operation.
+        :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with \
+            the operation.
 
     """
     if not is_local_repo_root(path):
@@ -218,7 +223,8 @@ def create_remote_repo(dest):
         dest(str): The server path for the git repository to be created.
 
     Raises:
-        VCSGitError: If a git repository already exists on the destination path.
+        :class:`~dls_ade.exceptions.VCSGitError`: If a git repository already \
+            exists on the destination path.
 
     """
     if is_server_repo(dest):
@@ -257,7 +263,8 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
         repository path.
 
     Raises:
-        VCSGitError: If there is an issue with the operation.
+        :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with \
+            the operation.
 
     """
     if not is_local_repo_root(path):
@@ -301,7 +308,8 @@ def check_remote_exists(repo, remote_name):
         remote_name: The remote name to be checked for.
 
     Raises:
-        VCSGitError: If the given remote name does not exist.
+        :class:`~dls_ade.exceptions.VCSGitError`: If the given remote name \
+            does not exist.
 
     """
     # Remote does not already exist
@@ -319,8 +327,10 @@ def clone(server_repo_path, local_repo_path):
         local_repo_path(str): Name of module to clone
 
     Raises:
-        VCSGitError: Repository does not contain <source>
-        VCSGitError: <module> already exists in current directory
+        :class:`~dls_ade.exceptions.VCSGitError`: Repository does not contain \
+            <source>
+        :class:`~dls_ade.exceptions.VCSGitError`: <module> already exists in \
+            current directory
 
     """
     if not is_server_repo(server_repo_path):
@@ -370,7 +380,8 @@ def clone_multi(source):
         source(str): Suffix of URL for remote repo area to clone
 
     Raises:
-        VCSGitError: Repository does not contain <source>
+        :class:`~dls_ade.exceptions.VCSGitError`: Repository does not contain \
+            <source>
     """
 
     split_list = get_server_repo_list()
@@ -397,7 +408,7 @@ def list_module_releases(repo):
         repo(:class:`git.Repo`): Git repository instance
 
     Returns:
-        list of str: Release tags of module corresponding to repo
+        List[str]: Release tags of module corresponding to repo
     """
 
     releases = []
@@ -414,7 +425,7 @@ def list_remote_branches(repo):
         repo(:class:`git.Repo`): Git repository instance
 
     Returns:
-        list of str: Branches of current git repository
+        List[str]: Branches of current git repository
 
     """
     branches = []
@@ -488,7 +499,8 @@ def delete_remote(local_repo_path, remote_name):
         remote_name: The name of the remote to be deleted.
 
     Raises:
-        VCSGitError: If the given remote name does not exist.
+        :class:`~dls_ade.exceptions.VCSGitError`: If the given remote name \
+            does not exist.
 
     """
     repo = git.Repo(local_repo_path)

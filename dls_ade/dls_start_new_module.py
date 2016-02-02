@@ -37,16 +37,17 @@ usage = ("Default <area> is 'support'."
 
 def make_parser():
     """
-    Returns default parser with additional, module-specific arguments.
+    Takes ArgParse instance with default arguments and adds
 
-    The additional parser arguments are:
-        - module_name
-        - --no-import
-        - --fullname.
+    Positional Arguments:
+        * module_name
+
+    Flags:
+        * -n (no-import)
+        * -f (fullname)
 
     Returns:
-        An ArgumentParser instance with additional arguments
-
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()
