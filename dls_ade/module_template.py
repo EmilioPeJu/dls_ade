@@ -185,7 +185,7 @@ class ModuleTemplate(object):
 class ModuleTemplateTools(ModuleTemplate):
     """Class for the management of the creation of new Tools modules.
 
-    For this class to work properly, the following template arguments must be
+    For this class to work properly, the following template arguments must be\
     specified upon initialisation:
         - module_name
         - module_path
@@ -247,13 +247,13 @@ class ModuleTemplatePython(ModuleTemplate):
 class ModuleTemplateWithApps(ModuleTemplate):
     """Abstract class to implement the 'app_name' attribute.
 
-    This also includes the app-dependent print message, used by IOC and
+    This also includes the app-dependent print message, used by IOC and\
     Support ModuleTemplate subclasses
 
-    Ensure you use this with :class:`ModuleCreatorWithApps`, in order to
+    Ensure you use this with :class:`ModuleCreatorWithApps`, in order to\
     ensure that the `app_name` value exists.
 
-    For this class to work properly, the following template arguments must be
+    For this class to work properly, the following template arguments must be\
     specified upon initialisation:
         - module_path
         - user_login

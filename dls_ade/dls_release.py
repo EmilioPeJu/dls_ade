@@ -1,4 +1,17 @@
 #!/bin/env dls-python
+"""
+Release a module with a specified release version from the repository.
+This script will do a test build of the module, and if it succeeds, will create the release in git.
+It will then write a build request file to the build server,
+causing it to schedule a checkout and build of the git release in prod.
+The branch flag will create the release from a branch of the module instead of master.
+The no-test-build flag will skip the test build and release the module anyway.
+The local build only flag will just run a test build and say whether it was successful or not.
+The message flag will add to the default commit message for the release.
+The next-version flag will set the version as the minimal increment of the previous release.
+The git flag will create the release from the gitolite server
+"""
+
 from pkg_resources import require
 require('python-ldap')
 
@@ -26,21 +39,26 @@ log_mess = "%s: Released version %s. %s"
 
 def make_parser():
     """
-    Takes default parser and adds:
-    * module_name
-    * release
-    * --branch
-    * --force
-    * --no-test-build
-    * --local-build-only
-    * --epics_version
-    * --message
-    * --next_version
-    * --git
-    * --rhel_version or --windows arguments
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+        * release
+
+    Flags:
+        * -b (branch)
+        * -f (force)
+        * -t (no-test-build)
+        * -l (local-build-only)
+        * -e (epics_version)
+        * -m (message)
+        * -n (next_version)
+        * -g (git)
+        * -r (rhel_version) or --w (windows arguments)
 
     Returns:
-        ArgumentParser instance
+        :class:`argparse.ArgumentParser`: ArgParse instance
+
     """
     parser = ArgParser(usage)
 
@@ -73,7 +91,7 @@ def make_parser():
     parser.add_argument(
         "-m", "--message", action="store", type=str, dest="message",
         default="",
-        help="Add user message to the end of the default svn commit message. "
+        help="Add user message to the end of the default commit message. "
         "The message will be '%s'" %
         (log_mess % ("<module_name>", "<release>", "<message>")))
     parser.add_argument(
@@ -112,10 +130,11 @@ def create_build_object(args):
     Uses parsed arguments to select appropriate build architecture, default is local system os
 
     Args:
-        args(argparse Namespace): Parser arguments
+        args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        Either a Windows or RedHat build object
+        Builder: Either a Windows or RedHat build object
+
     """
     if args.rhel_version:
         build_object = dlsbuild.RedhatBuild(
@@ -137,14 +156,15 @@ def create_build_object(args):
 
 def create_vcs_object(module, args):
     """
-    Creates either a Git or Svn object depending on flags in args, use module and arguments to construct the objects
+    Creates a Git vcs instance using module and arguments to construct the objects
 
     Args:
         module(str): Name of module to be released
-        args(argparse Namespace): Parser arguments
+        args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        Git or Svn object
+        :class:`Git`: Git vcs instance
+
     """
     if args.git:
         return vcs_git.Git(module, args)
@@ -157,15 +177,17 @@ def check_parsed_arguments_valid(args,  parser):
     Checks that incorrect arguments invoke parser errors
 
     Args:
-        args(argparse Namespace): Parser arguments
-        parser(ArgumentParser: Parser instance
+        args(:class:`argparse.Namespace`): Parser arguments
+        parser(:class:`argparse.ArgumentParser`): Parser instance
 
     Raises:
-        Error: Module name not specified
-        Error: Module version not specified
-        Error: Cannot release etc/build or etc/redirector as modules - use configure system instead
-        Error: When git is specified, version number must be provided
-        Error: args.area area not supported by git
+        VCSGitError:
+            * Module name not specified
+            * Module version not specified
+            * Cannot release etc/build or etc/redirector as modules - use configure system instead
+            * When git is specified, version number must be provided
+            * <args.area> area not supported by git
+
     """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
     if not args.module_name:
@@ -191,7 +213,8 @@ def format_argument_version(arg_version):
         arg_version(str): Version tag to be formatted
 
     Returns:
-        Formatted version tag
+        str: Formatted version tag
+
     """
     return arg_version.replace(".", "-")
 
@@ -201,10 +224,11 @@ def next_version_number(releases, module=None):
     Generates appropriate version number for an incremental release
 
     Args:
-        releases(list): Previous release numbers
-        module(str): Name of module to be released
+        releases(list of str): Previous release numbers
+        module(str): Name of module
 
-    Returns: Incremented version number
+    Returns:
+        str: Incremented version number
 
     """
     if len(releases) == 0:
@@ -222,9 +246,11 @@ def get_last_release(releases):
     Returns the most recent release number
 
     Args:
-        releases(list): Previous release numbers
+        releases(list of str): Previous release numbers
 
-    Returns: Most recent release number
+    Returns:
+        str: Most recent release number
+
     """
     from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
@@ -239,7 +265,8 @@ def increment_version_number(last_release):
         last_release(str): Most recent previous release number
 
     Returns:
-        Minimally incremented version number
+        str: Minimally incremented version number
+
     """
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
@@ -256,13 +283,14 @@ def construct_info_message(module, branch, area, version, build_object):
     Gathers info to display during release
 
     Args:
-        module: Module to be released
-        branch: Branch to be released
-        area: Area of module
-        version: Release version
-        build_object: Either a Windows or RedHat build object
+        module(str): Module to be released
+        branch(str): Branch to be released
+        area(str): Area of module
+        version(str): Release version
+        build_object(Builder): Either a Windows or RedHat build object
 
     Returns:
+        str: Info message for user
 
     """
     info = str()
@@ -287,7 +315,7 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
         build_epics(str): Epics version of environment
 
     Returns:
-        True if the build can continue, False if not
+        bool: True if the build can continue, False if not
 
     """
     build_epics = build_epics.replace("_64", "")
@@ -310,7 +338,7 @@ def ask_user_input(question):
         question(str): Question for the user to respond to
 
     Returns:
-        User input
+        str: User input
 
     """
     return raw_input(question)
@@ -324,7 +352,7 @@ def get_module_epics_version(vcs):
         vcs(Git/Svn): Git or Svn version control system instance
 
     Returns:
-        Epics version of most recent release
+        str: Epics version of most recent release
 
     """
     conf_release = vcs.cat("configure/RELEASE")
@@ -340,12 +368,13 @@ def perform_test_build(build_object, local_build, vcs):
     Test build the module and return whether it was successful
 
     Args:
-        build_object(Builder): Either a windows or RedHat builder
+        build_object(Builder): Either a windows or RedHat builder instance
         local_build(bool): Specifier to perform test build only
-        vcs(Git/Svn): Git or Svn version control system instance
+        vcs(:class:`vcs_git.Git`): Git version control system instance
 
     Returns:
-        Message to explaining how the test build went, True or False for whether it failed or not
+        str, bool: Message explaining how the test build went, True or False for whether it failed or not
+
     """
     message = ''
     test_fail = False

@@ -38,6 +38,7 @@ def make_parser():
 
     Returns:
         An ArgumentParser instance with additional arguments
+
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()

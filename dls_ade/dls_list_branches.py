@@ -1,5 +1,8 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+List the branches of a module on the repository.
+"""
 
 import sys
 import shutil
@@ -10,16 +13,19 @@ import vcs_git
 
 usage = """
 Default <area> is 'support'.
-List the branches of a module in the <area> area of the repository.
+List the branches of <module_name> in the <area> area of the repository.
 """
 
 
 def make_parser():
     """
-    Takes default parser arguments and adds domain.
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
 
     Returns:
-        Parser with relevant arguments
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
 
     parser = ArgParser(usage)

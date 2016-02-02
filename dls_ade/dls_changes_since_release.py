@@ -1,5 +1,8 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Check if a module on the repository has had changes committed to it since the last release was made.
+"""
 
 import sys
 import shutil
@@ -15,16 +18,19 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Check if a module in the <area> area of the repository has had changes committed since its last release.
+Check if <module_name> in the <area> area of the repository has had changes committed since its last release.
 """
 
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
 
     Returns:
-        ArgumentParser: Parser with relevant arguments
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
 
     parser = ArgParser(usage)
