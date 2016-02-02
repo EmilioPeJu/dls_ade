@@ -94,7 +94,7 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
         modules(str): Modules argument
         contact(str): Contact argument
         cc(str): CC argument
-        :class:`argparse.ArgumentParser`: Parser instance
+        parser(:class:`argparse.ArgumentParser`): Parser instance
 
     Raises:
         :class:`argparse.ArgumentParser` error:
