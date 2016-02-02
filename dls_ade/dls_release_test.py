@@ -17,22 +17,44 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_release.make_parser()
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'module_name')
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
+    def test_module_name_set(self, parser_mock):
 
-    def test_release_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[5]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'release')
+        dls_release.make_parser()
 
-    def test_branch_option_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-b']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, str)
-        self.assertEqual(option.dest, "branch")
-        self.assertIn("--branch", option.option_strings)
+        parser_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_release_arg')
+    def test_release_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
+    def test_branch_flag_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with(help_msg="Release from a branch")
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_git_flag')
+    def test_git_flag_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with(
+            help_msg="Release from a git tag from the diamond gitolite repository")
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
+    def test_epics_version_flag_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with(
+            help_msg="Change the epics version. "
+                     "This will determine which build server your job is built on for epics modules. "
+                     "Default is from your environment")
 
     def test_force_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-f']
@@ -58,13 +80,6 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "test_only")
         self.assertIn("--test_build-only", option.option_strings)
 
-    def test_epics_version_option_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-e']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, str)
-        self.assertEqual(option.dest, "epics_version")
-        self.assertIn("--epics_version", option.option_strings)
-
     def test_message_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-m']
         self.assertIsInstance(option, _StoreAction)
@@ -78,12 +93,6 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreTrueAction)
         self.assertEqual(option.dest, "next_version")
         self.assertIn("--next_version", option.option_strings)
-
-    def test_git_option_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-g']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "git")
-        self.assertIn("--git", option.option_strings)
 
     def test_rhel_version_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-r']

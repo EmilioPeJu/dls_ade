@@ -17,17 +17,20 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'module_name')
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
+    def test_module_name_set(self, parser_mock):
 
-    def test_branch_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-b']
-        self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.type, str)
-        self.assertEqual(option.dest, "branch")
-        self.assertIn("--branch", option.option_strings)
+        dls_checkout_module.make_parser()
+
+        parser_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
+    def test_branch_set(self, parser_mock):
+
+        dls_checkout_module.make_parser()
+
+        parser_mock.assert_called_once_with(
+            help_msg="Checkout a specific named branch rather than the default (master)")
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):

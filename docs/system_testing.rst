@@ -1,8 +1,8 @@
 .. _system-testing-overview:
 
-===============
+==============
 System Testing
-===============
+==============
 
 Contents:
 ---------
@@ -27,10 +27,32 @@ The system_test module also contains a generator. This generator must be passed 
 
 Each dls_ade script has a separate testing folder. These are explained in more detail in the :ref:`test-descriptions` subsection.
 
+For a simplified set of tests, look at the `example_generator.py` script in the system_testing folder. After :ref:`setting-up-environment`, and running
+
+.. code:: bash
+
+  tar -xzvf test_repos.tar.gz
+
+you should be able to perform the tests by running:
+
+.. code:: bash
+
+  nosetests example_generator
+
+This will perform 5 tests on the `test_error_script.py` script, which takes arguments and varies input in a basic way. Only the fourth test should fail.
+
+If you wish to see a simplified version of the SystemTest class, look at `example.py` in the same folder. Running
+
+.. code:: bash
+
+  nosetests example
+
+will demonstrate the tests, of which half should fail.
+
 .. _settings-descriptions:
 
 SystemTest Settings Descriptions
----------------------------------
+--------------------------------
 All provided settings are given as a {string: ...} dictionary. Unless otherwise specified, assume that the dictionary values are also strings.
 
 .. _basic-settings:
@@ -173,7 +195,7 @@ not yet set the GIT_ROOT_DIR environment variable.
 .. _test-descriptions:
 
 Test Descriptions
-----------------------------
+-----------------
 
 :ref:`system-testing-snm`
 

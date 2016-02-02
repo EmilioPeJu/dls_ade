@@ -26,7 +26,7 @@ revision the most recent release, and <later_release> defaults to the head revis
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name, earlier_release, later_release,
+    Takes default parser arguments and adds module_name, releases, earlier_release, later_release,
     -v: verbose and -r: raw.
 
     Returns:
@@ -34,9 +34,8 @@ def make_parser():
 
     """
     parser = ArgParser(usage)
-    parser.add_argument(
-        "module_name", type=str, default=None,
-        help="Name of module")
+    parser.add_module_name_arg()
+
     parser.add_argument(
         "releases", nargs='*', type=str, default=None,
         help="Releases range to print logs for")
