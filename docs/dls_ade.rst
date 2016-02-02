@@ -71,21 +71,6 @@
 .. automodule:: dls_ade.exceptions
     :members:
 
-:mod:`dls_ade.get_module_creator` module
-----------------------------------------
-.. automodule:: dls_ade.get_module_creator
-    :members:
-
-:mod:`dls_ade.module_creator` module
-------------------------------------
-.. automodule:: dls_ade.module_creator
-    :members:
-
-:mod:`dls_ade.module_template` module
--------------------------------------
-.. automodule:: dls_ade.module_template
-    :members:
-
 :mod:`dls_ade.path_functions` module
 ------------------------------------
 .. automodule:: dls_ade.path_functions
@@ -99,4 +84,21 @@
 :mod:`dls_ade.vcs_git` module
 --------------------------------------
 .. automodule:: dls_ade.vcs_git
+    :members:
+
+:mod:`dls_ade.module_creator` module
+--------------------------------------
+.. automodule:: dls_ade.module_creator
+    :members:
+    :show-inheritance:
+
+:mod:`dls_ade.module_template` module
+-------------------------------------
+.. automodule:: dls_ade.module_template
+    :members:
+    :show-inheritance:
+
+:mod:`dls_ade.get_module_creator` module
+----------------------------------------
+.. automodule:: dls_ade.get_module_creator
     :members:

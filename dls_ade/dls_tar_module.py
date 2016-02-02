@@ -8,11 +8,11 @@ Running the script with the -u flag will untar the module and remove the archive
 
 import os
 import sys
-import vcs_git
-import path_functions as pathf
-from dls_environment import environment
-from argument_parser import ArgParser
-import dlsbuild
+from dls_ade import vcs_git
+from dls_ade.dls_environment import environment
+from dls_ade.argument_parser import ArgParser
+from dls_ade import dlsbuild
+from dls_ade import path_functions as pathf
 
 env = environment()
 
@@ -106,7 +106,7 @@ def main():
 
     check_area_archivable(args.area)
     env.check_epics_version(args.epics_version)
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)

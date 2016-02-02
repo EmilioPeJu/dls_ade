@@ -1,16 +1,14 @@
-#from dls_ade.vcs import BaseVCS
-from vcs import BaseVCS
+from dls_ade.vcs import BaseVCS
 import subprocess
 import os
 import tempfile
 import shutil
-
+from dls_ade import path_functions as pathf
 from pkg_resources import require
 require('GitPython')
 import git
 
-import path_functions as pathf
-from exceptions import VCSGitError
+from dls_ade.exceptions import VCSGitError
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
@@ -130,12 +128,12 @@ def init_repo(path="./"):
     print("Repository created.")
 
 
-def stage_all_files_and_commit(path="./"):
-    """
-    Stage and commit all files in a local git repository.
+def stage_all_files_and_commit(path="./", message="Initial commit."):
+    """Stage and commit all files in a local git repository.
 
     Args:
-        path(str): The relative or absolute path of the local git repository.
+        path: The relative or absolute path of the local git repository.
+        message: The commit message to use.
 
     Raises:
         VCSGitError: If the path is not a git repository.
@@ -152,7 +150,14 @@ def stage_all_files_and_commit(path="./"):
     print("Staging files...")
     repo.git.add('--all')
     print("Committing files to repo...")
-    msg = repo.git.commit(m="Initial commit")
+
+    # If there are no changes to commit, then GitCommandError will be raised.
+    # There is no reason to raise an exception for this.
+    msg = ""
+    try:
+        msg = repo.git.commit(m=message)
+    except git.exc.GitCommandError as e:
+        pass
     print(msg)
 
 
@@ -266,10 +271,7 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
                        "exist.")
         raise VCSGitError(err_message.format(branch=branch_name))
 
-    if remote_name not in [x.name for x in repo.remotes]:
-        # Remote "origin" does not already exist
-        err_message = "Local repository does not have remote {remote:s}"
-        raise VCSGitError(err_message.format(remote=remote_name))
+    check_remote_exists(repo, remote_name)
 
     # They have overloaded the dictionary lookup to compare string with .name
     remote = repo.remotes[remote_name]
@@ -291,6 +293,23 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
     remote.push(branch_name)
 
 
+def check_remote_exists(repo, remote_name):
+    """Raises exception if the given remote name does not exist in the repo.
+
+    Args:
+        repo: The git.Repo object representing the repository.
+        remote_name: The remote name to be checked for.
+
+    Raises:
+        VCSGitError: If the given remote name does not exist.
+
+    """
+    # Remote does not already exist
+    if remote_name not in [x.name for x in repo.remotes]:
+        err_message = "Local repository does not have remote {remote:s}"
+        raise VCSGitError(err_message.format(remote=remote_name))
+
+
 def clone(server_repo_path, local_repo_path):
     """
     Clones a repository on the server to a local directory.
@@ -310,8 +329,9 @@ def clone(server_repo_path, local_repo_path):
         raise VCSGitError(local_repo_path + " already exists in current "
                                             "directory")
 
-    if server_repo_path[-1] == '/':
-        server_repo_path = server_repo_path[:-1]
+    pathf.remove_end_slash(server_repo_path)
+
+    print(os.path.join(GIT_SSH_ROOT, server_repo_path))
 
     repo = git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, server_repo_path),
                                os.path.join("./", local_repo_path))
@@ -333,8 +353,7 @@ def temp_clone(source):
     if not is_server_repo(source):
         raise VCSGitError("Repository does not contain " + source)
 
-    if source[-1] == '/':
-        source = source[:-1]
+    pathf.remove_end_slash(source)
 
     tempdir = tempfile.mkdtemp()
 
@@ -354,13 +373,14 @@ def clone_multi(source):
         VCSGitError: Repository does not contain <source>
     """
 
-    if source[-1] == '/':
-        source = source[:-1]
-
     split_list = get_server_repo_list()
     for path in split_list:
         if path.startswith(source):
-            module = path.split('/')[-1]
+
+            # Remove controls/<area>/ from front of save path
+            module = path.split('/', 2)[-1]
+            print("Module: " + module)
+
             if module not in os.listdir("./"):
                 print("Cloning: " + path + "...")
                 git.Repo.clone_from(os.path.join(GIT_SSH_ROOT, path),
@@ -419,6 +439,63 @@ def checkout_remote_branch(branch, repo):
     if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
         repo.git.checkout("-b", branch, "origin/" + branch)
+
+
+def check_git_attributes(local_repo_path, attributes_dict):
+    """Checks the given local repository for the attributes listed.
+
+    Args:
+        local_repo_path: The path to the local repository.
+        attributes_dict(dict): A dictionary of key-value pairs for attributes.
+
+    Returns:
+        bool: True if all attributes present, False otherwise.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    for attr in attributes_dict:
+        output = repo.git.check_attr((attr + " -- .").split())
+        exp_out = ".: {attr:s}: {value:s}"
+        exp_out = exp_out.format(attr=attr, value=attributes_dict[attr])
+
+        if not exp_out == output:
+            return False
+
+    return True
+
+
+def get_active_branch(local_repo_path):
+    """Returns the active branch of the given local repository.
+
+    Args:
+        local_repo_path: The path to the local repository.
+
+    Returns:
+        str: The name of the active branch.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    return repo.active_branch.name
+
+
+def delete_remote(local_repo_path, remote_name):
+    """Deletes the remote for the given local repository.
+
+    Args:
+        local_repo_path: The path to the local repository.
+        remote_name: The name of the remote to be deleted.
+
+    Raises:
+        VCSGitError: If the given remote name does not exist.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    check_remote_exists(repo, remote_name)
+
+    repo.git.remote("rm", remote_name)
 
 
 class Git(BaseVCS):

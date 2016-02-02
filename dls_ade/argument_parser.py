@@ -53,7 +53,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("module_name", type=str, default=None,
                           help=help_msg)
 
@@ -65,7 +64,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("release", type=str, default=None,
                           help=help_msg)
 
@@ -77,7 +75,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-b", "--branch", action="store", type=str, dest="branch",
                           help=help_msg)
 
@@ -89,7 +86,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-g", "--git", action="store_true", dest="git",
                           help=help_msg)
 
@@ -103,6 +99,5 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
                           help=help_msg)

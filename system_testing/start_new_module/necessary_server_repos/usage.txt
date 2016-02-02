@@ -1,0 +1,23 @@
+controlstest/ioc/testB06/TS
+
+Used in local_repository_tests and remote_repository_tests:
+
+ AddAppToModule with no conflict.
+
+
+controlstest/ioc/testB07/TS
+
+Used in local_repository_tests:
+ AddAppToModule with conflict.
+
+
+controlstest/support/testsupportmod
+
+Used in remote_verification_tests:
+ Server repository path conflict.
+
+
+controlstest/ioc/BTEST/TS
+
+Used in remote_verification_tests:
+ Server app-name conflict.

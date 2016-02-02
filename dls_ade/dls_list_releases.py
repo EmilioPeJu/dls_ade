@@ -11,11 +11,11 @@ import os
 import sys
 import shutil
 import platform
-from dls_environment import environment
+from dls_ade.dls_environment import environment
 import logging
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 
 env = environment()
 logging.basicConfig(level=logging.DEBUG)
@@ -92,10 +92,9 @@ def main():
     env.check_epics_version(args.epics_version)
     pathf.check_technical_area(args.area, args.module_name)
 
-    # >>> Not sure what this is for
-    # # Force options.svn if no releases in the file system
-    # if args.area in ["etc", "tools", "epics"]:
-    #     args.git = True
+    # Force check of repo, not file system, for tools, etc and epics (previous releases are only stored on repo)
+    if args.area in ["etc", "tools", "epics"]:
+        args.git = True
 
     # Check for the existence of releases of this module/IOC    
     releases = []
@@ -111,12 +110,12 @@ def main():
     else:
         # List branches from prod
         target = "prod"
-        prodArea = env.prodArea(args.area)
+        source = env.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
-            prodArea = os.path.join(prodArea, "RHEL{0}-{1}".format(args.rhel_version,
-                                                                   platform.machine()))
-            logging.debug(prodArea)
-        release_dir = os.path.join(prodArea, args.module_name)
+            source = os.path.join(source, "RHEL{0}-{1}".format(args.rhel_version,
+                                                               platform.machine()))
+            logging.debug(source)
+        release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
             for p in os.listdir(release_dir):

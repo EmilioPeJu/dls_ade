@@ -11,13 +11,12 @@ If one contact is changed the other will be left as it was.
 from __future__ import print_function
 import os
 import sys
-import re
 import shutil
 import logging
 import csv
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 from pkg_resources import require
 require("python_ldap>=2.3.12")
 import ldap
@@ -66,7 +65,7 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
-    # 'nargs' makes <modules> an optional positional argument, '*' makes it a list of N entries
+    # nargs='*' makes <modules> an optional positional argument; a list of N entries
     parser.add_argument(
         "modules", nargs='*', type=str, default=None, help="Name(s) of module(s) to list/set contacts for")
     parser.add_argument(
@@ -267,13 +266,26 @@ def edit_contact_info(repo, contact='', cc=''):
 
     """
 
-    # Check that FED-IDs exist, if they don't lookup...() will (possibly) hang and raise an exception
+    current_contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
+    current_cc = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+
+    if contact in [current_contact, ''] and cc in [current_cc, '']:
+        print("Leaving contacts unchanged")
+        return 0
+
+    # Check that FED-IDs exist,
+    # if they don't lookup...() will (possibly) hang and raise an exception
     if contact:
         contact = contact.strip()
         lookup_contact_name(contact)
+    else:
+        contact = current_contact
+
     if cc:
         cc = cc.strip()
         lookup_contact_name(cc)
+    else:
+        cc = current_cc
 
     module = repo.working_tree_dir.split('/')[-1]
 
@@ -297,7 +309,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_parsed_args_compatible(args.imp, args.contact, args.cc)
+    check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc, parser)
 
     # Create the list of modules from args, or the gitolite server if none provided
     modules = []
@@ -345,11 +357,12 @@ def main():
         source = pathf.dev_module_path(module, args.area)
         repo = vcs_git.temp_clone(source)
 
-        commit_message = edit_contact_info(repo, contact, cc,)
+        edit_summary = edit_contact_info(repo, contact, cc,)
 
-        repo.git.add('.gitattributes')
-        repo.git.commit(m=commit_message)
-        repo.git.push("origin", repo.active_branch)
+        if edit_summary != 0:
+            repo.git.add('.gitattributes')
+            repo.git.commit(m=edit_summary)
+            repo.git.push("origin", repo.active_branch)
 
         shutil.rmtree(repo.working_tree_dir)
 

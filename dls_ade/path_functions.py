@@ -4,7 +4,15 @@ from exceptions import ParsingError
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
-def check_technical_area_valid(area, module):
+def remove_end_slash(path_string):
+
+    if path_string and isinstance(path_string, str) and path_string.endswith('/'):
+        path_string = path_string[:-1]
+
+    return path_string
+
+
+def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that the technical area is also provided.
 

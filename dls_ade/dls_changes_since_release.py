@@ -1,15 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
-"""
-Check if a module on the repository has had changes committed to it since the last release was made.
-"""
 
 import sys
 import shutil
 import logging
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 from pkg_resources import require
 require('GitPython')
 import git
@@ -18,21 +15,17 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Check if <module_name> in the <area> area of the repository has had changes committed since its last release.
+Check if a module in the <area> area of the repository has had changes committed since its last release.
 """
 
 
 def make_parser():
     """
-    Takes ArgParse instance with default arguments and adds
-
-    Positional Arguments:
-        * module_name
+    Takes default parser arguments and adds module_name
 
     Returns:
-        :class:`argparse.ArgumentParser`:  ArgParse instance
+        ArgumentParser: Parser with relevant arguments
     """
-
     parser = ArgParser(usage)
     parser.add_module_name_arg()
 
@@ -44,7 +37,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
 
     module = args.module_name
     source = pathf.dev_module_path(module, args.area)

@@ -384,17 +384,16 @@ class ModuleTemplatePrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print, _):
+    def test_given_print_message_called_then_message_printed(self, mock_print):
 
         mt_obj = mt.ModuleTemplateTools({'module_name': "test_module_name",
                                          'module_path': "test_module_path",
                                          'user_login': "test_login"})
 
-        comp_message = ("\nPlease add your patch files to the test_module_path "
+        comp_message = ("\nPlease add your patch files to the test_module_path"
                         "\ndirectory and edit test_module_path/build script "
-                        "appropriately")
+                        "appropriately.")
 
         mt_obj.print_message()
 
@@ -403,9 +402,8 @@ class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print, _):
+    def test_given_print_message_called_then_message_printed(self, mock_print):
 
         mt_obj = mt.ModuleTemplatePython({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
@@ -416,7 +414,7 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
         message_dict = {'module_path': "test_module_path",
                         'setup_path': "test_module_path/setup.py"}
 
-        comp_message = ("\nPlease add your python files to the {module_path:s} "
+        comp_message = ("\nPlease add your python files to the {module_path:s}"
                         "\ndirectory and edit {setup_path} appropriately.")
         comp_message = comp_message.format(**message_dict)
 
@@ -427,9 +425,8 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print, _):
+    def test_given_print_message_called_then_message_printed(self, mock_print):
 
         mt_obj = mt.ModuleTemplateWithApps({'module_name': "test_module_name",
                                                   'module_path': "test_module_path",
@@ -454,9 +451,8 @@ class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
 class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, _):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
 
         mt_obj = mt.ModuleTemplateSupport({'module_name': "test_module_name",
                                             'module_path': "test_module_path",
@@ -472,29 +468,109 @@ class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCCreateCustomFilesTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
-    @patch('dls_ade.module_template.shutil.rmtree')
-    @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, mock_rmtree, _):
+    def setUp(self):
+
+        self.mock_os_system = set_up_mock(self, 'dls_ade.module_template.os.system')
+        self.mock_rmtree = set_up_mock(self, 'dls_ade.module_template.shutil.rmtree')
+        self.mock_exists = set_up_mock(self, 'dls_ade.module_template.os.path.exists')
+
+    def test_given_neither_boot_folder_nor_app_folder_already_exist_then_no_files_deleted_before_creation_functions_called(self):
+        self.mock_exists.side_effect = [False, False]
 
         mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
-                                        'module_path': "test_module_path",
-                                        'user_login': "test_login",
-                                        'app_name': "test_app_name"})
+                                       'module_path': "test_module_path",
+                                       'user_login': "test_login",
+                                       'app_name': "test_app_name"})
 
         mt_obj._create_custom_files()
 
-        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")), call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+        exists_call_list = [call("test_app_nameApp"),
+                            call("ioc_boot/ioctest_app_name")]
 
-        mock_rmtree.assert_called_once_with(os.path.join("{app_name:s}App".format(app_name="test_app_name"), 'opi'))
-        mock_os_system.assert_has_calls(os_system_call_list)
+        rmtree_call_list = [call("test_app_nameApp/opi")]
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")),
+                               call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        self.mock_exists.assert_has_calls(exists_call_list)
+        self.mock_rmtree.assert_has_calls(rmtree_call_list)
+        self.mock_os_system.assert_has_calls(os_system_call_list)
+
+    def test_given_app_folder_already_exists_then_app_deleted_and_correct_functions_called(self):
+        self.mock_exists.side_effect = [True, False]
+
+        mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
+                                       'module_path': "test_module_path",
+                                       'user_login': "test_login",
+                                       'app_name': "test_app_name"})
+
+        mt_obj._create_custom_files()
+
+        exists_call_list = [call("test_app_nameApp"),
+                            call("ioc_boot/ioctest_app_name")]
+
+        rmtree_call_list = [call("test_app_nameApp"),
+                            call("test_app_nameApp/opi")]
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")),
+                               call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        self.mock_exists.assert_has_calls(exists_call_list)
+        self.mock_rmtree.assert_has_calls(rmtree_call_list)
+        self.mock_os_system.assert_has_calls(os_system_call_list)
+
+    def test_given_ioc_boot_folder_already_exists_then_boot_file_deleted_and_correct_functions_called(self):
+        self.mock_exists.side_effect = [False, True]
+
+        mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
+                                       'module_path': "test_module_path",
+                                       'user_login': "test_login",
+                                       'app_name': "test_app_name"})
+
+        mt_obj._create_custom_files()
+
+        exists_call_list = [call("test_app_nameApp"),
+                            call("ioc_boot/ioctest_app_name")]
+
+        rmtree_call_list = [call("ioc_boot/ioctest_app_name"),
+                            call("test_app_nameApp/opi")]
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")),
+                               call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        self.mock_exists.assert_has_calls(exists_call_list)
+        self.mock_rmtree.assert_has_calls(rmtree_call_list)
+        self.mock_os_system.assert_has_calls(os_system_call_list)
+
+    def test_given_both_boot_folder_and_app_folder_already_exist_then_both_folders_deleted_before_creation_functions_called(self):
+        self.mock_exists.side_effect = [True, True]
+
+        mt_obj = mt.ModuleTemplateIOC({'module_name': "test_module_name",
+                                       'module_path': "test_module_path",
+                                       'user_login': "test_login",
+                                       'app_name': "test_app_name"})
+
+        mt_obj._create_custom_files()
+
+        exists_call_list = [call("test_app_nameApp"),
+                            call("ioc_boot/ioctest_app_name")]
+
+        rmtree_call_list = [call("test_app_nameApp"),
+                            call("ioc_boot/ioctest_app_name"),
+                            call("test_app_nameApp/opi")]
+
+        os_system_call_list = [call("makeBaseApp.pl -t dls {app_name:s}".format(app_name="test_app_name")),
+                               call("makeBaseApp.pl -i -t dls {app_name:s}".format(app_name="test_app_name"))]
+
+        self.mock_exists.assert_has_calls(exists_call_list)
+        self.mock_rmtree.assert_has_calls(rmtree_call_list)
+        self.mock_os_system.assert_has_calls(os_system_call_list)
 
 
 class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.os.system')
-    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system, _):
+    def test_given_create_files_called_then_correct_functions_called(self, mock_os_system):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
@@ -508,9 +584,8 @@ class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.ModuleTemplate._set_template_files_from_area')
     @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print, _):
+    def test_given_print_message_called_then_message_printed(self, mock_print):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                          'module_path': "test_module_path",
@@ -527,7 +602,7 @@ class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
                         "for the ioc's other technical areas and path to scripts."
                         "\nAlso edit {srcMakefile:s} to add all database files "
                         "from these technical areas.\nAn example set of screens"
-                        " has been placed in {opi/edl} . Please modify these.\n")
+                        " has been placed in {opi/edl}. Please modify these.")
 
         comp_message = comp_message.format(**message_dict)
 
