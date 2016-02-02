@@ -11,6 +11,7 @@ Contents:
 - :ref:`setting-up-environment`
 - :ref:`test-descriptions`
     * :ref:`system-testing-snm`
+    * :ref:`all-other-system-testing`
     
 .. _general-overview:
 
@@ -198,5 +199,7 @@ Test Descriptions
 -----------------
 
 :ref:`system-testing-snm`
+
+:ref:`all-other-system-testing`
 
 
