@@ -195,9 +195,10 @@ class ModuleCreator(object):
     def create_local_module(self):
         """Creates the folder structure and files in a new git repository.
 
-        This will use the file creation specified in :meth:`create_files`.
-        It will also stage and commit these files to a git repository located
-        in the same directory
+        This will use the file creation specified in
+        :meth:`~dls_ade.module_template.ModuleTemplate.create_files`. It will
+        also stage and commit these files to a git repository located in the
+        same directory
 
         Note:
             This will set `_can_create_local_module` False in order to prevent
@@ -333,8 +334,8 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         Raises:
             :class:`~dls_ade.exceptions.VerificationError`: If there is an \
                 issue with the remote repository.
-            :class:`~dls_ade.exceptions.RemoteRepoError`: From \
-                :meth:`_check_if_remote_repo_has_app`.
+            :class:`~dls_ade.exceptions.RemoteRepoError`: If the given server \
+                path does not exist.
                 This should never be raised. There is a bug if it is!
 
         """
@@ -414,14 +415,16 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
     def create_local_module(self):
         """Creates the folder structure and files in a cloned git repository.
 
-        This will use the file creation specified in :meth:`_create_files`.
+        This will use the file creation specified in
+        :meth:`~dls_ade.module_template.ModuleTemplate.create_files`.
 
         Raises:
             :class:`~dls_ade.exceptions.ArgumentError`: From \
-                ModuleTemplate.create_files()
-            OSError: From ModuleTemplate.create_files()
+                :meth:`~dls_ade.module_template.ModuleTemplate.create_files`
+            OSError: From \
+                :meth:`~dls_ade.module_template.ModuleTemplate.create_files`
             :class:`~dls_ade.exceptions.VCSGitError`: From \
-                stage_all_files_and_commit()
+                :func:`~dls_ade.vcs_git.stage_all_files_and_commit`
 
 
         """
@@ -446,15 +449,15 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server using remote 'origin'.
-
+        :class:`~dls_ade.exceptions.VCSGitError`
         This will push the master branch of the local repository to the remote
         server it was cloned from.
 
         Raises:
             :class:`~dls_ade.exceptions.VerificationError`: From \
-                :meth:`verify_can_push_repo_to_remote`.
+                :meth:`.verify_can_push_repo_to_remote`.
             :class:`~dls_ade.exceptions.VCSGitError`: From \
-                :meth:`push_to_remote`
+                :func:`~dls_ade.vcs_git.push_to_remote`
 
         """
         self.verify_can_push_repo_to_remote()

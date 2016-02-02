@@ -128,7 +128,7 @@ class ModuleTemplate(object):
     def create_files(self):
         """Creates the folder structure and files in the current directory.
 
-        This uses the :meth:`_create_files_from_template_dict` method for file
+        This uses the :meth:`._create_files_from_template_dict` method for file
         creation by default.
 
         Raises:
@@ -155,9 +155,9 @@ class ModuleTemplate(object):
         file creation by default.
 
         Raises:
-            :class:`~dls_ade.exceptions.ArgumentError`: If 'file' given is a \
-                directory, not a file.
-            OSError: From os.makedirs()
+            :class:`~dls_ade.exceptions.ArgumentError`: If dictionary key is \
+                a directory, not a file.
+            OSError: From :func:`os.makedirs`
 
         """
         # dictionary keys are the relative file paths for the documents
