@@ -1,6 +1,11 @@
 :mod:`dls_ade` package
 ===============================
 
+:mod:`dls_ade.argument_parser` module
+-----------------------------------------------
+.. automodule:: dls_ade.argument_parser
+    :members:
+
 :mod:`dls_ade.dls_changes_since_release` module
 -----------------------------------------------
 .. automodule:: dls_ade.dls_changes_since_release
