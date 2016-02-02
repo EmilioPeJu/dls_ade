@@ -125,7 +125,7 @@ class TestCreateBuildObject(unittest.TestCase):
         mock_default.assert_called_once_with(None)
 
     @patch('dls_ade.dls_release.dlsbuild.default_build')
-    def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
+    def test_given_epics_version_then_default_build_called_with_epics_version(self, mock_default):
         version = "R3.14.12.3"
 
         options = FakeOptions(epics_version=version)
@@ -167,17 +167,19 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_build.assert_called_once_with(windows, None)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
     def test_given_any_option_then_set_area_called_with_default_area_option(
-        self, mock_set):
+        self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(options.area)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
-    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set):
+    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set, _1):
         area = 'python'
 
         options = FakeOptions(area=area)
@@ -186,16 +188,18 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(options.area)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
-    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set):
+    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(None)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
-    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set):
+    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set, _1):
         force = True
         options = FakeOptions(force=force)
 
@@ -512,7 +516,8 @@ class TestIncrementVersionNumber(unittest.TestCase):
 
 class TestConstructInfoMessage(unittest.TestCase):
 
-    def test_given_default_args_then_construct_specific_string(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_then_construct_specific_string(self, _1):
         
         module = 'dummy'
         version = '1-0'
@@ -530,7 +535,8 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_branch_then_construct_specific_string_referencing_branch(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_branch_then_construct_specific_string_referencing_branch(self, _1):
 
         module = 'dummy'
         version = '3-5'
@@ -549,7 +555,8 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_ioc_area_then_construct_specific_string(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_ioc_area_then_construct_specific_string(self, _1):
 
         module = 'dummy'
         version = '1-0'
@@ -567,6 +574,7 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self):
 
         module = 'dummy'
