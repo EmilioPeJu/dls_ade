@@ -1,10 +1,11 @@
 from __future__ import print_function
 import os
-import path_functions as pathf
+from dls_ade import path_functions as pathf
 import shutil
 import logging
-import vcs_git
-from exceptions import RemoteRepoError, VerificationError, ArgumentError
+from dls_ade import vcs_git
+from dls_ade.exceptions import (RemoteRepoError, VerificationError,
+                                ArgumentError)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,6 +23,11 @@ class ModuleCreator(object):
             Used for system and git commands.
         _server_repo_path: The git repository server path for module.
         _module_template: Object that handles file and user message creation.
+        _remote_repo_valid(bool): True if conflicting paths exist on server.
+            This flag is separated as the user needs to check this towards
+            the beginning to avoid unnecessary file creation.
+        _can_create_local_module(bool): True if create_local_module callable.
+        _can_push_repo_to_remote(bool): True if push_repo_to_remote callable.
 
     Raises:
         ModuleCreatorError: Base class for this module's exceptions
@@ -64,18 +70,10 @@ class ModuleCreator(object):
         self._module_template = module_template_cls(template_args)
 
         self._remote_repo_valid = False
-        """bool: Specifies whether there are conflicting server file paths.
-        This is separate from `_can_push_repo_to_remote` as the latter
-        considers local issues as well. This flag is separated as the user
-        needs to call this towards the beginning to avoid unnecessary file
-        creation"""
 
         # These boolean values allow us to call the methods in any order
         self._can_create_local_module = False
-        """bool: Specifies whether create_local_module can be called"""
-
         self._can_push_repo_to_remote = False
-        """bool: Specifies whether push_repo_to_remote can be called"""
 
     def verify_remote_repo(self):
         """Verifies there are no name conflicts with the remote repository.

@@ -1,10 +1,10 @@
 from __future__ import print_function
-import path_functions as pathf
+from dls_ade import path_functions as pathf
 import logging
-import vcs_git
-import module_template as mt
-import module_creator as mc
-from exceptions import ParsingError
+from dls_ade import vcs_git
+from dls_ade import module_template as mt
+from dls_ade import module_creator as mc
+from dls_ade.exceptions import ParsingError
 
 logging.basicConfig(level=logging.DEBUG)
 

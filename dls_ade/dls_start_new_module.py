@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 
-import os
 import sys
 from dls_ade.argument_parser import ArgParser
 from dls_ade.get_module_creator import get_module_creator
@@ -78,5 +77,4 @@ def main():
     module_creator.print_message()
 
 if __name__ == "__main__":
-    # sys.exit(main())
-    sys.exit()  # Stops us from running incomplete version!
+    sys.exit(main())

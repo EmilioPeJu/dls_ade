@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import shutil
 import logging
-from exceptions import ArgumentError, TemplateFolderError
+from dls_ade.exceptions import ArgumentError, TemplateFolderError
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -12,6 +12,16 @@ MODULE_TEMPLATES = "module_templates"
 class ModuleTemplate(object):
     """Class for the creation of new module contents.
 
+    Attributes:
+        _template_files(dict): Dictionary containing file templates.
+            Each entry has the (relative) file-path as the key, and the file
+            contents as the value. Either may contain placeholders in the form
+            of {template_arg:s} for use with the string .format() method, each
+            evaluated using the `template_args` attribute.
+        _required_template_args(List[str]): List of all required template_args.
+        _template_args(dict): Dictionary for module-specific phrases. Used for
+         including module-specific phrases such as `module_name`.
+
     Raises:
         ModuleTemplateError: Base class for this module's exceptions
 
@@ -20,22 +30,18 @@ class ModuleTemplate(object):
     def __init__(self, template_args, extra_required_args=[]):
         """Default initialisation of all object attributes.
 
+        Args:
+            template_args: Dictionary for module-specific phrases.
+                Used to replace {} tags in template files.
+            extra_required_args: Additional required template arguments.
+
         """
         self._template_files = {}
-        """dict: Dictionary containing file templates.
-        Each entry has the (relative) file-path as the key, and the file
-        contents as the value. Either may contain placeholders in the form of
-        {template_arg:s} for use with the string .format() method, each
-        evaluated using the `template_args` attribute."""
 
         self._required_template_args = set()
         self._required_template_args.update(extra_required_args)
 
-        """List[str]: List of all required template_args."""
-
         self._template_args = template_args
-        """dict: Dictionary for module-specific phrases in template_files.
-        Used for including module-specific phrases such as `module_name`"""
 
         # The following code ought to be used in subclasses to ensure that the
         # template_args given contain the required ones.
