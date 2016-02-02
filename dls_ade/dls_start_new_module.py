@@ -1,5 +1,14 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Creates a new module and (unless otherwise indicated) imports it to the server.
+
+Can currently create modules in the following areas:
+- python
+- tools
+- support
+- ioc (including BL gui)
+"""
 
 from __future__ import print_function
 

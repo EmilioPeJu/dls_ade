@@ -26,8 +26,8 @@ class ModuleCreator(object):
         _remote_repo_valid(bool): True if conflicting paths exist on server.
             This flag is separated as the user needs to check this towards
             the beginning to avoid unnecessary file creation.
-        _can_create_local_module(bool): True if create_local_module callable.
-        _can_push_repo_to_remote(bool): True if push_repo_to_remote callable.
+        _can_create_local_module(bool): True if can run create_local_module.
+        _can_push_repo_to_remote(bool): True if can run push_repo_to_remote.
 
     Raises:
         ModuleCreatorError: Base class for this module's exceptions
