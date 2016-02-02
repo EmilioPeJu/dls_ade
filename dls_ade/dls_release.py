@@ -18,7 +18,6 @@ require('python-ldap')
 import sys
 import re
 import logging
-# from dls_ade import vcs_svn
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
@@ -53,7 +52,6 @@ def make_parser():
         * -e (epics_version)
         * -m (message)
         * -n (next_version)
-        * -g (git)
         * -r (rhel_version) or --w (windows arguments)
 
     Returns:
@@ -66,8 +64,6 @@ def make_parser():
     parser.add_release_arg()
     parser.add_branch_flag(
         help_msg="Release from a branch")
-    parser.add_git_flag(
-        help_msg="Release from a git tag from the diamond gitolite repository")
     parser.add_epics_version_flag(
         help_msg="Change the epics version. This will determine which build "
                  "server your job is built on for epics modules. Default is "
@@ -76,8 +72,8 @@ def make_parser():
     parser.add_argument(
         "-f", "--force", action="store_true", dest="force", default=None,
         help="force a release. If the release exists in prod it is removed. "
-        "If the release exists in svn it is exported to prod, otherwise "
-        "the release is created in svn from the trunk and exported to prod")
+        "If the release exists in git it is exported to prod, otherwise "
+        "the release is created in git and exported to prod")
     parser.add_argument(
         "-t", "--no-test-build", action="store_true", dest="skip_test",
         help="If set, this will skip the local test build "
@@ -154,24 +150,6 @@ def create_build_object(args):
     return build_object
 
 
-def create_vcs_object(module, args):
-    """
-    Creates a Git vcs instance using module and arguments to construct the objects
-
-    Args:
-        module(str): Name of module to be released
-        args(:class:`argparse.Namespace`): Parser arguments
-
-    Returns:
-        :class:`Git`: Git vcs instance
-
-    """
-    if args.git:
-        return vcs_git.Git(module, args)
-    # else:
-    #     return vcs_svn.Svn(module, args)
-
-
 def check_parsed_arguments_valid(args,  parser):
     """
     Checks that incorrect arguments invoke parser errors
@@ -199,9 +177,9 @@ def check_parsed_arguments_valid(args,  parser):
     elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
-    elif args.next_version and args.git:
+    elif args.next_version:
         parser.error("When git is specified, version number must be provided")
-    elif args.git and args.area not in git_supported_areas:
+    elif args.area not in git_supported_areas:
         parser.error("%s area not supported by git" % args.area)
 
 
@@ -349,7 +327,7 @@ def get_module_epics_version(vcs):
     Get epics version of most recent release
 
     Args:
-        vcs(Git/Svn): Git or Svn version control system instance
+        vcs(:class:`vcs_git.Git`): Git version control system instance
 
     Returns:
         str: Epics version of most recent release
@@ -402,7 +380,7 @@ def main():
     module = args.module_name
 
     build = create_build_object(args)
-    vcs = create_vcs_object(module, args)
+    vcs = vcs_git.Git(module, args)
 
     if args.branch:
         vcs.set_branch(args.branch)

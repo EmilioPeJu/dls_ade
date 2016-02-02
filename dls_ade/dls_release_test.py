@@ -38,14 +38,6 @@ class ParserTest(unittest.TestCase):
 
         parser_mock.assert_called_once_with(help_msg="Release from a branch")
 
-    @patch('dls_ade.dls_changes_since_release.ArgParser.add_git_flag')
-    def test_git_flag_set(self, parser_mock):
-
-        dls_release.make_parser()
-
-        parser_mock.assert_called_once_with(
-            help_msg="Release from a git tag from the diamond gitolite repository")
-
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
     def test_epics_version_flag_set(self, parser_mock):
 
@@ -256,23 +248,11 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self):
-
-        self.args.module_name = "not build"
-        self.args.release = "12"
-        self.args.area = "etc"
-        self.args.git = False
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
     def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self):
 
         self.args.module_name = "redirector"
         self.args.release = "12"
         self.args.area = "support"
-        self.args.git = False
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
@@ -284,7 +264,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.release = "12"
         self.args.area = "support"
         self.args.next_version = True
-        self.args.git = True
 
         expected_error_message = "When git is specified, version number must be provided"
 
@@ -292,24 +271,11 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_message)
 
-    def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self):
-
-        self.args.module_name = "redirector"
-        self.args.release = ""
-        self.args.area = "support"
-        self.args.next_version = True
-        self.args.git = False
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.assertFalse(self.mock_error.call_count)
-
     def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
 
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "archive"
-        self.args.git = True
 
         expected_error_message = self.args.area + " area not supported by git"
 
@@ -322,7 +288,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "epics"
-        self.args.git = True
 
         expected_error_message = self.args.area + " area not supported by git"
 
@@ -335,7 +300,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "matlab"
-        self.args.git = True
 
         expected_error_message = self.args.area + " area not supported by git"
 
@@ -348,7 +312,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "etc"
-        self.args.git = True
 
         expected_error_message = self.args.area + " area not supported by git"
 
@@ -361,38 +324,10 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "tools"
-        self.args.git = True
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
-
-
-class TestCreateVCSObject(unittest.TestCase):
-
-    # @patch('dls_ade.dls_release.vcs_svn.Svn')
-    @patch('dls_ade.dls_release.vcs_git.Git')
-    # def test_given_git_option_then_git_vcs_object_created(self, mock_git, mock_svn):
-    def test_given_git_option_then_git_vcs_object_created(self, mock_git):
-        module = 'dummy'
-        options = FakeOptions(git=True)
-
-        vcs = dls_release.create_vcs_object(module, options)
-
-        mock_git.assert_called_once_with(module, options)
-        # self.assertFalse(mock_svn.called)
-    #
-    # @patch('dls_ade.dls_release.vcs_svn.Svn')
-    # @patch('dls_ade.dls_release.vcs_git.Git')
-    # def test_not_given_git_option_then_svn_vcs_object_created(self, mock_git, mock_svn):
-    #
-    #     module = 'dummy'
-    #     options = FakeOptions()
-    #
-    #     vcs = dls_release.create_vcs_object(module, options)
-    #
-    #     mock_svn.assert_called_once_with(module, options)
-    #     self.assertFalse(mock_git.called)
 
 
 class TestNextVersionNumber(unittest.TestCase):
@@ -746,7 +681,6 @@ class TestMain(unittest.TestCase):
 
         methods_to_patch = [
             'create_build_object',
-            'create_vcs_object',
             'check_parsed_arguments_valid',
             'format_argument_version',
             'next_version_number',
