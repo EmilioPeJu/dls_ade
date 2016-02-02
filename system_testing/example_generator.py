@@ -100,15 +100,18 @@ settings_list = [
 
 
 def test_generator():
-    """A basic generator used as an example.
+    """A system test generator used as an example.
 
     When called by nosetests, nosetests will run every yielded test function.
+
+    Note:
+        Make sure you unpack the `test_repos.tar.gz` tarball to obtain all the
+        repositories needed.
 
     Yields:
         A :class:`system_testing.SystemTest` instance.
 
     """
-
     for test in st.generate_tests_from_dicts("./test_error_script.py",
                                              settings_list):
         yield test

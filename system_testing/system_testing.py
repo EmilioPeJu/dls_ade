@@ -155,6 +155,12 @@ class SystemTest(object):
 
         _local_repo_path: A local path, used for attribute checking.
 
+        _repo_comp_method: Specifies how standard output is tested.
+            This can be: 'local_comp' to test _local_comp_path_one against
+            _local_comp_path_two. 'server_comp' to test _local_comp_path_one
+            against _server_repo_clone_path (cloned from _server_repo_path) or
+            'all_comp' to compare all three paths against each other.
+
         _local_comp_path_one: A local path used for directory comparisons.
         _local_comp_path_two: A local path used for directory comparisons.
 
@@ -165,6 +171,8 @@ class SystemTest(object):
         _branch_name: The name of the repository branch.
             This is used for checking that the given _local_repo_path is on the
             given branch, as well as changing server_repo_clone_path's branch.
+
+        _settings_list: A list of all attributes that may be changed.
 
     Raises:
         Error: Indicates error in this class or in the settings dict.
@@ -200,20 +208,12 @@ class SystemTest(object):
 
         # Used for comparisons
         self._repo_comp_method = ""
-        """string: Specifies the mechanism ny which the standard out is tested.
-        This can be: 'local_comp' to test _local_comp_path_one against
-        _local_comp_path_two. 'server_comp' to test _local_comp_path_one
-        against _server_repo_clone_path (cloned from _server_repo_path) or
-        'all_comp' to compare all three paths against each other."""
 
         self._local_comp_path_one = ""
         self._local_comp_path_two = ""
 
         # Used for attribute checking and comparisons
         self._server_repo_path = ""
-        """The remote repository path.
-        This is used for both git attribute checking as well as directory
-        comparisons (after being cloned to _server_repo_clone_path)"""
 
         self._branch_name = ""
 
@@ -233,8 +233,6 @@ class SystemTest(object):
             'local_comp_path_two',
             'branch_name',
         ]
-        """A list of all attributes that may be changed.
-        This is done by the settings dictionary passed to load_settings."""
 
     def load_settings(self, settings):
         """Loads the given settings dictionary into the relevant variables.
