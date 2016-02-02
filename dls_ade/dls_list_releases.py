@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+List the releases that have been made for a module in prod or on the repository.
+Default epics version and rhel version are the set from you environment,
+to specify different versions the epics version or rhel version flags can be used.
+The git flag will list releases from the repository.
+"""
+
 import os
 import sys
 import shutil
@@ -17,8 +24,8 @@ logging.basicConfig(level=logging.DEBUG)
 usage = """
 Default <area> is 'support'.
 
-List the releases of a module in the release area of <area>. By default uses
-the epics release number from your environment to work out the area on disk to
+List the releases of <module_name> in the <area> area of prod or the repository if -g is true.
+By default uses the epics release number from your environment to work out the area on disk to
 look for the module, this can be overridden with the -e flag.
 """
 
@@ -26,10 +33,11 @@ look for the module, this can be overridden with the -e flag.
 def get_rhel_version():
     """
     Checks if platform is Linux redhat, if so returns base version number from environment (e.g. returns 6 if 6.7),
-    if not returns default of 6
+    if not returns default of 6.
     
     Returns:
-        Rhel version number
+        str: Rhel version number
+
     """
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
@@ -42,10 +50,21 @@ def get_rhel_version():
 
 def make_parser():
     """
-    Takes default parser and adds 'module_name' and 'latest', 'git', 'epics_version' & 'rhel_version'
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+
+    Flags:
+        * -b (branch)
+        * -l (latest)
+        * -g (git)
+        * -e (epics_version)
+        * -r (rhel_version)
 
     Returns:
-        ArgumentParser instance
+        :class:`argparse.ArgumentParser`:  ArgParse instance
+
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()

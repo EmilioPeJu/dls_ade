@@ -26,7 +26,6 @@ def make_parser():
     Returns:
         ArgumentParser: Parser with relevant arguments
     """
-
     parser = ArgParser(usage)
     parser.add_module_name_arg()
 

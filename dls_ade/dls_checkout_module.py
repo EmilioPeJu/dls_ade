@@ -1,7 +1,10 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Clone a module, an ioc domain or an entire area of the repository.
+When cloning a single module, the branch argument will automatically checkout the given branch.
+"""
 
-import os
 import sys
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
@@ -9,19 +12,23 @@ from dls_ade import path_functions as pathf
 
 usage = """
 Default <area> is 'support'.
-Checkout a module in the <area> area of the repository to the current directory.
+Checkout a module from the <area> area of the repository to the current directory.
 If you enter no <module_name>, the whole <area> area will be checked out.
 """
 
 
 def make_parser():
     """
-    Creates default parser and adds module_name, --branch and --force arguments
+    Takes ArgParse instance with default arguments and adds
 
-    Args:
+    Positional Arguments:
+        * module_name
+
+    Flags:
+        * -b (branch)
 
     Returns:
-        An ArgumentParser instance with relevant arguments
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()
@@ -35,15 +42,16 @@ def make_parser():
 
 def check_technical_area(area, module):
     """
-    Checks if given area is IOC and if so, checks that either 'everything' is given as the module name
-    or that the technical area is also provided
+    Checks if given area is IOC and if so, checks that the module name
+    is of the format <domain>/<module> or is not given.
 
     Args:
         area(str): Area of repository
         module(str): Name of module
 
     Raises:
-        Exception: "Missing Technical Area under Beamline"
+        Exception: Missing technical area under beamline
+
     """
     if area == "ioc" and module != "" and len(module.split('/')) < 2:
         raise Exception("Missing Technical Area under Beamline")

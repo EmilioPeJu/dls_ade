@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Print out the commit logs for a module on the repository. A range can be specified with the 'releases' argument,
+a start or an end point can be specified with the relevant flag, otherwise the entire history will be printed.
+These 3 options are mutually exclusive.
+The verbose flag will add date, time, commit message body and diff information to each log entry.
+The raw flag will print the logs without colour.
+"""
 
 from __future__ import unicode_literals
 import os
@@ -17,20 +24,29 @@ logging.basicConfig(level=logging.WARNING)
 
 usage = """
 Default <area> is 'support'.
-Print all the log messages for module <module_name> in the <area> area of svn
-from the revision number when <earlier_release> was done, to the revision
-when <later_release> was done. If not specified, <earlier_release> defaults to
-revision the most recent release, and <later_release> defaults to the head revision.
+Print all the log messages for <module_name> in the <area> area of the repository
+between releases <releases>, or from the revision number when <earlier_release> was done,
+to 'HEAD', or from the first release until <later_release>. These three arguments are
+mutually exclusive.
 """
 
 
 def make_parser():
     """
-    Takes default parser arguments and adds module_name, releases, earlier_release, later_release,
-    -v: verbose and -r: raw.
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * module_name
+        * releases
+
+    Flags:
+        * -e (earlier_release)
+        * -l (later_release)
+        * -v (verbose)
+        * -r (raw)
 
     Returns:
-        ArgumentParser: Parser with relevant arguments
+        :class:`argparse.ArgumentParser`: ArgParse instance
 
     """
     parser = ArgParser(usage)
@@ -57,10 +73,10 @@ def make_parser():
 
 def set_raw_argument(raw):
     """
-    Set raw to True or False based on parsed arguments and environment
+    Set `raw` to True or False based on parsed arguments and environment.
 
     Args:
-        raw: Parser argument allowing user to decide to print in raw
+        raw(bool): Parser argument allowing user to decide to print without colour formatting
 
     Returns:
         True or False to print in raw or not
@@ -76,39 +92,39 @@ def set_raw_argument(raw):
 
 def check_parsed_args_compatible(releases, earlier, later, parser):
     """
-    Check that releases range is specified in the correct way
+    Check that `releases` range is specified in the correct way.
 
     Args:
-        releases: a list of two releases; the start and end point
-        earlier: the start point to print up until HEAD
-        later: the end point to print up to from first release
-        parser: ArgParse instance to handle error
+        releases(list of str): A list of two releases; the start and end point
+        earlier(str): The start point to print up until HEAD
+        later(str): The end point to print up to from first release
+        parser(:class:`argparse.ArgumentParser`): ArgParse instance to handle error
 
     Raises:
-        ArgParse Error: To specify both start and end point, use format
-        (e.g.) 'ethercat 3-1 4-1', not -l and -e flags.
+        :class:`argparse.ArgumentParser` error: To specify both start and end point, use format\
+        'ethercat 3-1 4-1', not -l and -e flags.
 
     """
     if (releases and earlier) or \
             (releases and later) or \
             (earlier and later):
         parser.error("To specify both start and end point, use format "
-                     "(e.g.) 'ethercat 3-1 4-1', not -l and -e flags.")
+                     "'ethercat 3-1 4-1', not -l and -e flags.")
 
 
 def check_releases_valid(releases, parser):
     """
-    Check that two releases given and in correct order
+    Check that two releases given and in correct order.
 
     Args:
-        releases: releases range
-        parser: ArgParse instance to handle error
+        releases(list of str): Releases range requested by user
+        parser(:class:`argparse.ArgumentParser`): ArgParse instance to handle error
 
     Raises:
-        ArgParse Error:
-            [If one release given]: To specify just start or just end point, use -e or -l flag.
-            [If more than two releases given]: Only two releases can be specified (start and end point)
-            [If releases in wrong order]: Input releases in correct order (<earlier_release> <later_release>)
+        :class:`argparse.ArgumentParser` error:
+            * If one release given: To specify just start or just end point, use -e or -l flag.
+            * If more than two releases given: Only two releases can be specified (start and end point)
+            * If releases in wrong order: Input releases in correct order (<earlier_release> <later_release>)
 
     """
     if len(releases) == 1:
@@ -120,18 +136,18 @@ def check_releases_valid(releases, parser):
         env = environment()
         test_list = env.sortReleases([releases[0], releases[1]])
         if releases[1] == test_list[0] and releases[1] != 'HEAD':
-            parser.error("Input releases in correct order (<earlier_release> <later_release>)")
+            parser.error("Input releases in correct order (<earlier> <later>)")
 
 
 def create_release_list(repo):
     """
-    Get a list of tags of the repository
+    Get a list of tags of the repository.
 
     Args:
-        repo (Repo): Git repository instance
+        repo(:class:`git.Repo`): Git repository instance
 
     Returns:
-        list: List of tags of repo
+        list of str: List of tags of repo
 
     """
     release_list = []
@@ -142,19 +158,20 @@ def create_release_list(repo):
 
 def set_log_range(module, releases, earlier, later, releases_list):
     """
-    Set range to get logs for from parsed args or defaults if not given
+    Set range to get logs for from parsed args or defaults if not given.
 
     Args:
-        module: module to get logs for
-        releases: releases range
-        earlier: specified start point
-        later: specified end point
-        releases_list: list of releases from repository
+        module(str): Module to get logs for
+        releases(list of str): Releases range
+        earlier(str): Specified start point
+        later(str): Specified end point
+        releases_list(list of str): List of releases from repository
 
     Raises:
         ValueError: Module <module> does not have a release <start>/<end>
+
     Returns:
-        start and end point to list releases for
+        str, str: Start and end point to list releases for
 
     """
     if releases and len(releases) == 2:
@@ -181,15 +198,15 @@ def set_log_range(module, releases, earlier, later, releases_list):
 
 def get_log_messages(repo, start, end):
     """
-    Create a log_info dictionary and add log messages, commit objects and max author length
+    Create a `log_info` dictionary and add log messages, commit objects and max author length.
 
     Args:
-        repo: git repository instance
-        start: start point of logs
-        end: end point of logs
+        repo(:class:`git.Repo`): Git repository instance
+        start(str): Start point of logs
+        end(str): End point of logs
 
     Returns:
-        Dictionary containing messages, commit objects and the longest author name
+        dict: A dictionary containing messages, commit objects and the longest author name
 
     """
     log_info = {'logs': [], 'commit_objects': {}, 'max_author_length': 0}
@@ -217,16 +234,16 @@ def get_log_messages(repo, start, end):
 
 def get_tags_list(repo, start, end, last_release):
     """
-    Get a list of tags from the repo and return the require range
+    Get a list of tags from the repo and return the require range.
 
     Args:
-        repo: git repository instance
-        start: start point of tags
-        end: end point of tags
-        last_release: most recent release of module
+        repo(:class:`git.Repo`): Git repository instance
+        start(str): Start point of tags
+        end(str): End point of tags
+        last_release(str): Most recent release of module
 
     Returns:
-        list of tags in required range
+        (list of :class:`git.refs.tag`): List of tags in required range
 
     """
     tags = []
@@ -248,17 +265,17 @@ def get_tags_list(repo, start, end, last_release):
 
 def get_tag_messages(tags_range, log_info):
     """
-    Add tag messages, commit objects and update the max author length in log_info
+    Add tag messages, commit objects and update the max author length in `log_info`.
 
     Args:
-        tags_range: Range of tags to get information from
-        log_info: dictionary containing log information from commits
+        tags_range(:class:`git.refs.tag`): Range of tags to get information from
+        log_info(dict): Dictionary containing log information from commits
 
     Raises:
         ValueError: Can't find tag info
 
     Returns:
-        dictionary containing log info for tags
+        dict: A dictionary containing log info for tags
 
     """
     for tag in tags_range:
@@ -293,6 +310,15 @@ def get_tag_messages(tags_range, log_info):
 
 
 def convert_time_stamp(time_stamp):
+    """
+    Convert a unix time stamp into date and time.
+
+    Args:
+        time_stamp(int):
+
+    Returns:
+        str: Date and time
+    """
 
     if isinstance(time_stamp, int):
         ti = time.localtime(time_stamp)
@@ -309,16 +335,16 @@ def convert_time_stamp(time_stamp):
 
 def format_log_messages(log_info, raw, verbose):
     """
-    Take a dictionary containing log information, convert commit_objects into diff info (if verbose) and
-    format into a list of strings; one for each log entry
+    Take a dictionary containing log information, convert commit_objects into diff info (if `verbose` is true) and
+    format into a list of strings; one for each log entry.
 
     Args:
-        log_info: dictionary containing log information from commits
-        raw: a bool for whether to format in raw or in colour
-        verbose: a bool to add extra information (time, date, message body and diff info)
+        log_info(dict): Dictionary containing log information from commits
+        raw(bool): True or False for whether to format in raw or in colour
+        verbose(bool): True or False to add extra information (time, date, message body and diff info)
 
     Returns:
-        a list of strings, each string containing a log entry
+        list of str: A list log entries
     """
 
     blue = 34
@@ -401,15 +427,15 @@ def format_log_messages(log_info, raw, verbose):
 
 def colour(word, col, raw):
     """
-    Formats <word> in given colour <col> and returns it, unless raw is True
+    Formats `word` in given colour `col` and returns it, unless raw is True.
 
     Args:
-        word (str): Text to format
-        col (int): Number corresponding to colour
-        raw (bool): False if colour to be added, True otherwise
+        word(str): Text to format
+        col(int): Number corresponding to colour
+        raw(bool): False if colour to be added, True otherwise
 
     Returns:
-        str: Coloured text or unchanged text if raw is True
+        Coloured text or unchanged text if raw is True
 
     """
     if raw:
@@ -421,14 +447,14 @@ def colour(word, col, raw):
 
 def get_file_changes(commit, prev_commit):
     """
-    Perform a diff object between two commit objects and extract the changed files from it
+    Perform a diff object between two commit objects and extract the changed files from it.
 
     Args:
-        commit: Commit object for commit with file changes
-        prev_commit: Commit object to compare against
+        commit(:class:`git.Commit`): Commit object for commit with file changes
+        prev_commit(:class:`git.Commit`): Commit object for commit to compare against
 
     Returns:
-        A list of the changed files between he two commits
+        list of str: A list of the changed files between the two commits
     """
 
     changed_files = []
@@ -458,15 +484,15 @@ def get_file_changes(commit, prev_commit):
 
 def format_message_width(message, line_len):
     """
-    Takes message and formats each line to be shorter than <line_len>, splits a line into
-    multiple lines if it is too long
+    Takes message and formats each line to be shorter than `line_len`, splits a line into
+    multiple lines if it is too long.
 
     Args:
-        message (str): Message to format
-        line_len (int): Maximum line length to format to
+        message(str): Message to format
+        line_len(int): Maximum line length to format to
 
     Returns:
-        list: Formatted message as list of message parts shorter than max line length
+        list of str: Formatted message as list of message parts shorter than max line length
     """
 
     if not isinstance(message, list):

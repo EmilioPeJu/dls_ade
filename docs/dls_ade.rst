@@ -1,33 +1,83 @@
 :mod:`dls_ade` package
 ===============================
 
-:mod:`dls_ade.dls_list_modules` module
---------------------------------------------
-.. automodule:: dls_ade.dls_list_modules
+:mod:`dls_ade.argument_parser` module
+-----------------------------------------------
+.. automodule:: dls_ade.argument_parser
+    :members:
+
+:mod:`dls_ade.dls_changes_since_release` module
+-----------------------------------------------
+.. automodule:: dls_ade.dls_changes_since_release
     :members:
 
 :mod:`dls_ade.dls_checkout_module` module
---------------------------------------------
+-----------------------------------------
 .. automodule:: dls_ade.dls_checkout_module
     :members:
 
-:mod:`dls_ade.dls_start_new_module` module
+:mod:`dls_ade.dls_environment` module
+-------------------------------------
+.. automodule:: dls_ade.dls_environment
+    :members:
+
+:mod:`dls_ade.dls_list_branches` module
+---------------------------------------
+.. automodule:: dls_ade.dls_list_branches
+    :members:
+
+:mod:`dls_ade.dls_list_modules` module
+--------------------------------------
+.. automodule:: dls_ade.dls_list_modules
+    :members:
+
+:mod:`dls_ade.dls_list_releases` module
+---------------------------------------
+.. automodule:: dls_ade.dls_list_releases
+    :members:
+
+:mod:`dls_ade.dls_logs_since_release` module
 --------------------------------------------
-.. automodule:: dls_ade.dls_start_new_module
+.. automodule:: dls_ade.dls_logs_since_release
+    :members:
+
+:mod:`dls_ade.dls_module_contacts` module
+-----------------------------------------
+.. automodule:: dls_ade.dls_module_contacts
     :members:
 
 :mod:`dls_ade.dls_release` module
---------------------------------------
+---------------------------------
 .. automodule:: dls_ade.dls_release
     :members:
 
+:mod:`dls_ade.dls_start_new_module` module
+------------------------------------------
+.. automodule:: dls_ade.dls_start_new_module
+    :members:
+
+:mod:`dls_ade.dls_tar_module` module
+------------------------------------
+.. automodule:: dls_ade.dls_tar_module
+    :members:
+
 :mod:`dls_ade.dlsbuild` module
---------------------------------------
+------------------------------
 .. automodule:: dls_ade.dlsbuild
     :members:
 
+:mod:`dls_ade.exceptions` module
+--------------------------------
+.. automodule:: dls_ade.exceptions
+    :members:
+
+:mod:`dls_ade.path_functions` module
+------------------------------------
+.. automodule:: dls_ade.path_functions
+    :members:
+
 :mod:`dls_ade.vcs` module
---------------------------------------
+-------------------------
 .. automodule:: dls_ade.vcs
     :members:
 

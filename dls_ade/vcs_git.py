@@ -8,8 +8,7 @@ from pkg_resources import require
 require('GitPython')
 import git
 
-import path_functions as pathf
-from exceptions import VCSGitError
+from dls_ade.exceptions import VCSGitError
 
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
@@ -17,17 +16,18 @@ GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
 
 
 def is_in_local_repo(path="./"):
-    """Returns whether or not the local path is inside a git repository.
+    """
+    Returns whether or not the local path is inside a git repository.
 
     Args:
-        path: The path to check.
+        path(str): The path to check.
             This is the current working directory by default.
 
     Returns:
         bool: True if the path is inside a git repository, false otherwise.
 
     Raises:
-        Error: If the path given is not a local directory.
+        VCSGitError: If the path given is not a local directory.
 
     """
     if not os.path.isdir(path):
@@ -42,17 +42,18 @@ def is_in_local_repo(path="./"):
 
 
 def is_local_repo_root(path="."):
-    """Returns whether or not the local path is the root of a git repository.
+    """
+    Returns whether or not the local path is the root of a git repository.
 
     Args:
-        path: The path to check.
+        path(str): The path to check.
             This is the current working directory by default.
 
     Returns:
         bool: True if the path is inside a git repository, false otherwise.
 
     Raises:
-        Error: If path given is not a local directory (from is_in_local_repo).
+        VCSGitError: If path given is not a local directory (from is_in_local_repo).
 
     """
     if not is_in_local_repo(path):
@@ -87,7 +88,7 @@ def get_server_repo_list():
     Returns list of module repository paths from the git server.
 
     Returns:
-        list: Repository paths on the server.
+        list of str: Repository paths on the server.
 
     """
     list_cmd = "ssh " + GIT_ROOT + " expand controls"
@@ -105,13 +106,14 @@ def get_server_repo_list():
 
 
 def init_repo(path="./"):
-    """Initialise a local git repository.
+    """
+    Initialise a local git repository.
 
     Args:
-        path: The relative or absolute path for the local git repository.
+        path(str): The relative or absolute path for the local git repository.
 
     Raises:
-        Error: If the path is not a directory, or is already a git repository.
+        VCSGitError: If the path is not a directory, or is already a git repository.
 
     """
     if not os.path.isdir(path):
@@ -134,7 +136,7 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
         message: The commit message to use.
 
     Raises:
-        Error: If the path is not a git repository.
+        VCSGitError: If the path is not a git repository.
 
     """
     if not os.path.isdir(path):
@@ -161,7 +163,8 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
 
 def add_new_remote_and_push(dest, path="./", remote_name="origin",
                             branch_name="master"):
-    """Adds a remote to a git repository, and pushes to the gitolite server.
+    """
+    Adds a remote to a git repository, and pushes to the gitolite server.
 
     This will fail if:
         - The path given is not a git repository.
@@ -174,13 +177,13 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
         :func:`push_to_remote` to push to its defined server path.
 
     Args:
-        dest: The server path for the git repository.
-        path: The relative or absolute path for the local git repository.
-        remote_name: The git repository's alias for the destination path.
-        branch_name: The name of the branch to push from / to.
+        dest(str): The server path for the git repository.
+        path(str): The relative or absolute path for the local git repository.
+        remote_name(str): The git repository's alias for the destination path.
+        branch_name(str): The name of the branch to push from / to.
 
     Raises:
-        Error: If there is an issue with the operation.
+        VCSGitError: If there is an issue with the operation.
 
     """
     if not is_local_repo_root(path):
@@ -208,13 +211,14 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
 
 
 def create_remote_repo(dest):
-    """Create a git repository on the given gitolite server path.
+    """
+    Create a git repository on the given gitolite server path.
 
     Args:
-        dest: The server path for the git repository to be created.
+        dest(str): The server path for the git repository to be created.
 
     Raises:
-        Error: If a git repository already exists on the destination path.
+        VCSGitError: If a git repository already exists on the destination path.
 
     """
     if is_server_repo(dest):
@@ -233,12 +237,13 @@ def create_remote_repo(dest):
 
 
 def push_to_remote(path="./", remote_name="origin", branch_name="master"):
-    """Pushes to the server path given by its remote name, on the given branch.
+    """
+    Pushes to the server path given by its remote name, on the given branch.
 
     Args:
-        path: The relative or absolute path for the local git repository.
-        remote_name: The git repository's remote name to push to.
-        branch_name: The name of the branch to push from / to.
+        path(str): The relative or absolute path for the local git repository.
+        remote_name(str): The git repository's remote name to push to.
+        branch_name(str): The name of the branch to push from / to.
 
     This will fail if:
         - The path given is not a git repository.
@@ -252,7 +257,7 @@ def push_to_remote(path="./", remote_name="origin", branch_name="master"):
         repository path.
 
     Raises:
-        Error: If there is an issue with the operation.
+        VCSGitError: If there is an issue with the operation.
 
     """
     if not is_local_repo_root(path):
@@ -314,8 +319,8 @@ def clone(server_repo_path, local_repo_path):
         local_repo_path(str): Name of module to clone
 
     Raises:
-        Error: Repository does not contain <source>
-        Error: <module> already exists in current directory
+        VCSGitError: Repository does not contain <source>
+        VCSGitError: <module> already exists in current directory
 
     """
     if not is_server_repo(server_repo_path):
@@ -339,10 +344,10 @@ def temp_clone(source):
     Clones repo to /tmp directory and returns the relevant git.Repo object.
 
     Args:
-        source: server repository path to clone
+        source(str): server repository path to clone
 
     Returns:
-        git.Repo object
+        :class:`git.Repo`: Repository instance
 
     """
     if not is_server_repo(source):
@@ -365,7 +370,7 @@ def clone_multi(source):
         source(str): Suffix of URL for remote repo area to clone
 
     Raises:
-        Error: Repository does not contain <source>
+        VCSGitError: Repository does not contain <source>
     """
 
     split_list = get_server_repo_list()
@@ -389,10 +394,10 @@ def list_module_releases(repo):
     Return list of release tags of module.
 
     Args:
-        repo: Git repository instance
+        repo(:class:`git.Repo`): Git repository instance
 
     Returns:
-        Release tags of module corresponding to repo
+        list of str: Release tags of module corresponding to repo
     """
 
     releases = []
@@ -406,10 +411,10 @@ def list_remote_branches(repo):
     Lists remote branches of current git repository
 
     Args:
-        repo: Repository instance
+        repo(:class:`git.Repo`): Git repository instance
 
     Returns:
-        list: Branches of current git repository
+        list of str: Branches of current git repository
 
     """
     branches = []
@@ -428,7 +433,8 @@ def checkout_remote_branch(branch, repo):
 
     Args:
         branch(str): Remote branch to create locally
-        repo: Repository instance
+        repo(:class:`git.Repo`): Git repository instance
+
     """
     if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
@@ -532,9 +538,12 @@ class Git(BaseVCS):
         """
         Fetch contents of file in repository, if version not set then uses master.
 
-        :param filename: File to fetch from
-        :return: Contents of file
-        :rtype: str
+        Args:
+            filename(str): File to fetch from
+
+        Returns:
+            str: Contents of file
+
         """
         tag = 'master'
         if self._version:
@@ -549,9 +558,11 @@ class Git(BaseVCS):
         """
         Return list of release tags of module.
 
-        :return: Release tags of module
-        :rtype: list
+        Returns:
+            list of str: Release tags of module
+
         """
+
         if not hasattr(self, 'releases'):
             self.releases = []
             for tag in self.client.tags:
@@ -562,8 +573,12 @@ class Git(BaseVCS):
         """
         Git support will not do a commit, so log message not needed.
 
-        :param message:
-        :return:
+        Args:
+            message:
+
+        Returns:
+            None
+
         """
         return None
 
@@ -571,9 +586,12 @@ class Git(BaseVCS):
         """
         Check if version corresponds to a previous release.
 
-        :param version: Release tag to check for
-        :return: True or False for whether the version exists or not
-        :rtype: bool
+        Args:
+            version(bool): True or False for whether the version exists or not
+
+        Returns:
+            str: Release tag to check for
+
         """
         return version in self.list_releases()
 
@@ -582,11 +600,11 @@ class Git(BaseVCS):
 
     def set_version(self, version):
         """
-        Set version release tag.
+        Set version release tag for self
 
-        :param version: Version release tag
-        :type version: str
-        :return: Null
+        Args:
+            version(str): Version release tag
+
         """
         if not self.check_version_exists(version):
             raise VCSGitError('version does not exist')

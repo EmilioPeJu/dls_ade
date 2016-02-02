@@ -1,5 +1,12 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+"""
+Check or set the contact information for a module on the repository. By default the contacts of the module are printed
+in a basic format. The CSV flag will print the contacts in CSV format.
+To set a contact and/or cc, the contact and cc flags can be used.
+To set a contact/cc for one or many modules the import flag can be used with a valid CSV file.
+If one contact is changed the other will be left as it was.
+"""
 
 from __future__ import print_function
 import os
@@ -7,9 +14,9 @@ import sys
 import shutil
 import logging
 import csv
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 from pkg_resources import require
 require("python_ldap>=2.3.12")
 import ldap
@@ -18,8 +25,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Utility for setting and showing primary contact (contact) and secondary contact
-(cc) properties.
+Set or get primary contact (contact) and secondary contact (cc) properties
+for <modules> (can just give one module)
 
 e.g.
 %prog ip autosave calc
@@ -32,13 +39,30 @@ e.g.
 # Set the python module pysvn to have contact tmc43 and cc jr76
 
 %prog -m /tmp/module_contacts_backup.csv
-# Import the module contacts and cc from the csv file and set them in svn.
-# The csv file must be in the same format as produced by the -s command, but
-# any specified contact and cc names are ignored, only fed-ids are used.
+# Import the module contact and cc from /tmp/module_contacts_backup.csv
+# and set them in svn. The csv file must be in the same format as produced
+# by the -s command, but any specified contact and cc names are ignored,
+# only fed-ids are used.
 """
 
 
 def make_parser():
+    """
+    Takes ArgParse instance with default arguments and adds
+
+    Positional Arguments:
+        * modules
+
+    Flags:
+        * -c (contact)
+        * -d (cc)
+        * -s (csv)
+        * -m (import)
+
+    Returns:
+        :class:`argparse.ArgumentParser`: ArgParse instance
+
+    """
 
     parser = ArgParser(usage)
     # nargs='*' makes <modules> an optional positional argument; a list of N entries
@@ -61,6 +85,23 @@ def make_parser():
 
 
 def check_parsed_args_compatible(imp, modules, contact, cc, parser):
+    """
+    Check that the combination of arguments are compatible.
+
+    Args:
+        imp(str): CSV import specifier
+        modules(str): Modules argument
+        contact(str): Contact argument
+        cc(str): CC argument
+        parser(:class:`argparse.ArgumentParser`): Parser instance
+
+    Raises:
+        :class:`argparse.ArgumentParser` error:
+            * --import cannot be used with --contact or --cc
+            * You cannot set all modules in an area to one contact/cc, enter a specific module.
+
+    """
+
     if imp and (contact or cc):
         parser.error("--import cannot be used with --contact or --cc")
 
@@ -72,6 +113,16 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
 
 
 def get_area_module_list(area):
+    """
+    Get list of modules in a specified area of the repository.
+
+    Args:
+        area(str): Area of repository
+
+    Returns:
+        list of str: List of modules
+
+    """
 
     repo_list = vcs_git.get_server_repo_list()
 
@@ -84,6 +135,16 @@ def get_area_module_list(area):
 
 
 def lookup_contact_name(fed_id):
+    """
+    Perform an LDAP search to find the Name and Surname corresponding to a FED-ID.
+
+    Args:
+        fed_id(str): FED-ID to search for
+
+    Returns:
+        str: Contact name
+
+    """
 
     # Set up ldap search parameters
     l = ldap.initialize('ldap://altfed.cclrc.ac.uk')
@@ -116,6 +177,15 @@ def lookup_contact_name(fed_id):
 
 
 def output_csv_format(contact, cc_contact, module):
+    """
+    Print out contact info in CSV format.
+
+    Args:
+        contact(str): Contact FED-ID
+        cc_contact(str): Contact FED-ID
+        module(str): Module name
+
+    """
 
     # Check if <FED-ID>s are specified in repo, if not don't run lookup function
     if contact != 'unspecified':
@@ -133,6 +203,18 @@ def output_csv_format(contact, cc_contact, module):
 
 
 def import_from_csv(modules, area, imp):
+    """
+    Extract contact info from a given CSV file.
+
+    Args:
+        modules(str): List of valid modules
+        area(str): Area of modules that are having contacts changed
+        imp(str): File path for CSV to get info from
+
+    Returns:
+        A list of tuples containing module, contact and cc
+
+    """
 
     reader = csv.reader(open(imp, "rb"))
     # Extract data from reader object
@@ -171,6 +253,18 @@ def import_from_csv(modules, area, imp):
 
 
 def edit_contact_info(repo, contact='', cc=''):
+    """
+    Write to .gitattributes file to change contacts of repo.
+
+    Args:
+        repo(:class:`git.Repo`): Repository instance of module
+        contact(str): Contact FED-ID
+        cc(str): CC FED-ID
+
+    Returns:
+        str: Commit message summarising changes made
+
+    """
 
     current_contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
     current_cc = repo.git.check_attr("module-cc", ".").split(' ')[-1]
