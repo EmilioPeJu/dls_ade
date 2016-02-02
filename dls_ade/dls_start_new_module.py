@@ -19,9 +19,10 @@ from dls_ade.get_module_creator import get_module_creator
 usage = ("Default <area> is 'support'."
          "\nStart a new diamond module of a particular type."
          "\nUses makeBaseApp with the dls template for a 'support' or 'ioc' "
-         "module, and uses the default templates in new_module_templates for "
-         "both Python and Tools modules."
-         "\nCreates this module and imports it into git."
+         "module, and uses default templates for both Python and Tools "
+         "modules."
+         "\nIf the --no-import flag is used, the module will not be exported "
+         "to the server."
          "\nIf the -i flag is used, <module_name> is expected to be of the "
          "form 'Domain/Technical Area/IOC number' i.e. BL02I/VA/03"
          "\nThe IOC number can be omitted, in which case, it defaults to "
@@ -49,7 +50,9 @@ def make_parser():
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
     """
-    parser = ArgParser(usage)
+    supported_areas = ["support", "ioc", "python", "tools"]
+
+    parser = ArgParser(usage, supported_areas)
     parser.add_module_name_arg()
 
     parser.add_argument(
