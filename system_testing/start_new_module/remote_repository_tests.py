@@ -1,15 +1,12 @@
-from pkg_resources import require
-require('nose')
-
 import system_testing as st
-
 import os
 import shutil
 import tempfile
 import start_new_module_util as snm_util
 
+COMPARISON_FILES = snm_util.COMPARISON_FILES
+
 ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
-COMPARISON_FILES = "comparison_files"
 NEW_GIT_ROOT_DIR = ""
 
 printed_messages = {
@@ -98,7 +95,7 @@ printed_messages = {
 # NOTE: These are (or ought to be) the exact same tests as from local
 # repository tests. The only addition is the addition of a server path used for
 # comparisons. I have copied over all the text, though, in order to make these
-# tests self contained.
+# tests self contained. The commented out tests are superfluous.
 settings_list = [
     {
         'description': "test_exported_python_module_is_created_with_correct_files",
@@ -109,15 +106,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "dls_test_python_module",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "dls_test_python_module",
-
-        'local_comp_path_two': "dls_test_python_module",
-
-        'server_repo_path': "dls_test_python_module",
+        'path': "dls_test_python_module",
 
         'module_area': "python",
     },
@@ -131,15 +122,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "test_tools_module",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "test_tools_module",
-
-        'local_comp_path_two': "test_tools_module",
-
-        'server_repo_path': "test_tools_module",
+        'path': "test_tools_module",
 
         'module_area': "tools",
 
@@ -154,15 +139,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "test_support_module",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "test_support_module",
-
-        'local_comp_path_two': "test_support_module",
-
-        'server_repo_path': "test_support_module",
+        'path': "test_support_module",
 
         'module_area': "support",
     },
@@ -176,15 +155,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB21/BL",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "testB21/BL",
-
-        'local_comp_path_two': "testB21/BL",
-
-        'server_repo_path': "testB21/BL",
+        'path': "testB21/BL",
 
         'module_area': "ioc",
     },
@@ -198,15 +171,9 @@ settings_list = [
     #
     #     'attributes_dict': {'module-contact': os.getlogin()},
     #
-    #     'local_repo_path': "testB22/testB22-BL-IOC-01",
-    #
     #     'repo_comp_method': "all_comp",
     #
-    #     'local_comp_path_one': "testB22/testB22-BL-IOC-01",
-    #
-    #     'local_comp_path_two': "testB22/testB22-BL-IOC-01",
-    #
-    #     'server_repo_path': "testB22/testB22-BL-IOC-01",
+    #     'path': "testB22/testB22-BL-IOC-01",
     #
     #     'module_area': "ioc",
     # },
@@ -222,15 +189,9 @@ settings_list = [
     #
     #     'attributes_dict': {'module-contact': os.getlogin()},
     #
-    #     'local_repo_path': "testB01/TS",
-    #
     #     'repo_comp_method': "all_comp",
     #
-    #     'local_comp_path_one': "testB01/TS",
-    #
-    #     'local_comp_path_two': "testB01/TS",
-    #
-    #     'server_repo_path': "testB01/TS",
+    #     'path': "testB01/TS",
     #
     #     'module_area': "ioc",
     # },
@@ -246,15 +207,9 @@ settings_list = [
     #
     #     'attributes_dict': {'module-contact': os.getlogin()},
     #
-    #     'local_repo_path': "testB02/TS",
-    #
     #     'repo_comp_method': "all_comp",
     #
-    #     'local_comp_path_one': "testB02/TS",
-    #
-    #     'local_comp_path_two': "testB02/TS",
-    #
-    #     'server_repo_path': "testB02/TS",
+    #     'path': "testB02/TS",
     #
     #     'module_area': "ioc",
     # },
@@ -270,15 +225,9 @@ settings_list = [
     #
     #     'attributes_dict': {'module-contact': os.getlogin()},
     #
-    #     'local_repo_path': "testB03/testB03-TS-IOC-01",
-    #
     #     'repo_comp_method': "all_comp",
     #
-    #     'local_comp_path_one': "testB03/testB03-TS-IOC-01",
-    #
-    #     'local_comp_path_two': "testB03/testB03-TS-IOC-01",
-    #
-    #     'server_repo_path': "testB03/testB03-TS-IOC-01",
+    #     'path': "testB03/testB03-TS-IOC-01",
     #
     #     'module_area': "ioc",
     # },
@@ -294,15 +243,9 @@ settings_list = [
     #
     #     'attributes_dict': {'module-contact': os.getlogin()},
     #
-    #     'local_repo_path': "testB04/testB04-TS-IOC-04",
-    #
     #     'repo_comp_method': "all_comp",
     #
-    #     'local_comp_path_one': "testB04/testB04-TS-IOC-04",
-    #
-    #     'local_comp_path_two': "testB04/testB04-TS-IOC-04",
-    #
-    #     'server_repo_path': "testB04/testB04-TS-IOC-04",
+    #     'path': "testB04/testB04-TS-IOC-04",
     #
     #     'module_area': "ioc",
     # },
@@ -318,15 +261,9 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'local_repo_path': "testB05/testB05-TS-IOC-02",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "testB05/testB05-TS-IOC-02",
-
-        'local_comp_path_two': "testB05/testB05-TS-IOC-02",
-
-        'server_repo_path': "testB05/testB05-TS-IOC-02",
+        'path': "testB05/testB05-TS-IOC-02",
 
         'module_area': "ioc",
     },
@@ -334,7 +271,13 @@ settings_list = [
 
 
 def setup_module():
+    """Change environment variable and module variables to numbered values.
 
+    This allows us to perform tests without them impacting each other. The file
+    `repo_test_num.txt` contains a single number that indicates the previous
+    GIT_ROOT_DIR used.
+
+    """
     global NEW_GIT_ROOT_DIR
 
     with open("repo_test_num.txt", "r") as f:
@@ -348,18 +291,30 @@ def setup_module():
     test_number += 1
     test_number = str(test_number)
 
+    # The environment variable is set for the use of the script being tested.
     NEW_GIT_ROOT_DIR = "controlstest/targetOS/creation" + test_number
     os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
 
     with open("repo_test_num.txt", "w") as f:
         f.write(test_number)
 
+    # Set so SystemTest object can use the new variable.
     st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
     st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
 def test_generator_export_to_server():
+    """Generator for tests relating to remote server repository creation.
 
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     alter_settings_dictionaries(settings_list)
 
     tempdir = tempfile.mkdtemp()
@@ -383,7 +338,7 @@ def test_generator_export_to_server():
 
 add_app_settings_list = [
     {
-        'description': "test_exported_IOC_module_that_needs_to_add_app_is_created_with_correct_module_name_and_app_name_and_files",
+        'description': "test_exported_IOC_module_that_needs_to_add_app_without_conflict_is_created_with_correct_module_name_and_app_name_and_files",
 
         'arguments': "-i testB06/TS/02",
 
@@ -393,15 +348,9 @@ add_app_settings_list = [
 
         'attributes_dict': {'module-contact': "ORIGINAL_USER_NAME"},
 
-        'local_repo_path': "testB06/TS",
-
         'repo_comp_method': "all_comp",
 
-        'local_comp_path_one': "testB06/TS",
-
-        'local_comp_path_two': "testB06/TS",
-
-        'server_repo_path': "testB06/TS",
+        'path': "testB06/TS",
 
         'module_area': "ioc",
     },
@@ -409,25 +358,35 @@ add_app_settings_list = [
 
 
 def test_generator_export_add_app_to_server():
+    """Generator for tests where an app is added to a pre-existing repository.
 
+    This will move into a temporary directory to run the tests with the given
+    script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     for settings_dict in add_app_settings_list:
+        # Clone the template repository to a new location.
+
         clone_from = os.path.join(
                 ORIGINAL_GIT_ROOT_DIR,
                 settings_dict['module_area'],
-                settings_dict['server_repo_path'],
+                settings_dict['path'],
         )
 
         clone_to = st.vcs_git.pathf.dev_module_path(
-            settings_dict['server_repo_path'],
-            settings_dict['module_area']
+            settings_dict['path'],
+            settings_dict['module_area'],
         )
 
         temp_repo = st.vcs_git.temp_clone(clone_from)
-
         local_repo_path = temp_repo.working_tree_dir
 
         st.vcs_git.delete_remote(local_repo_path, "origin")
-
         st.vcs_git.add_new_remote_and_push(clone_to, local_repo_path)
 
     alter_settings_dictionaries(add_app_settings_list)
@@ -452,23 +411,36 @@ def test_generator_export_add_app_to_server():
 
 
 def alter_settings_dictionaries(simplified_settings_list):
+    """Changes the simplified settings list into the SystemTest compliant form.
 
+    Args:
+        simplified_settings_list: A settings list.
+
+    """
     for settings_dict in simplified_settings_list:
+        # `path` is used by four separate keys.
+        path = settings_dict['path']
+
+        settings_dict['local_repo_path'] = path
+        settings_dict['local_comp_path_one'] = path
+
         # Search the COMPARISON_FILES folder for folders to compare with.
         settings_dict['local_comp_path_two'] = os.path.join(
                 COMPARISON_FILES,
-                settings_dict['local_comp_path_two']
+                path,
         )
 
         # Create the full server repo path from the given simplified version.
         settings_dict['server_repo_path'] = st.vcs_git.pathf.dev_module_path(
-            settings_dict['server_repo_path'],
-            settings_dict['module_area']
+            path,
+            settings_dict['module_area'],
         )
 
 
 def teardown_module():
+    """Change environment variable and module variables to the original values.
 
+    """
     os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
     st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
     st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR

@@ -5,7 +5,7 @@ import tarfile
 
 import start_new_module_util
 
-COMPARISON_FILES = "comparison_files"
+COMPARISON_FILES = "comparison_files_old"
 
 SUBVERSION_SCRIPT_BASE = ("dls-python /dls_sw/prod/common/python/RHEL6-x86_64/"
                           "dls_scripts/3-21/prefix/lib/python2.7/"
@@ -14,7 +14,15 @@ SUBVERSION_SCRIPT_BASE = ("dls-python /dls_sw/prod/common/python/RHEL6-x86_64/"
 
 
 def call_start_new_module(call_args):
+    """Call the start_new_module script with the given args.
 
+    Note:
+        This script expects you to have the DEFAULT environment variables, so
+        dls_start_new_module.py is the svn version of the script.
+
+    Args:
+        call_args: A string giving the arguments for the script.
+    """
     call = (SUBVERSION_SCRIPT_BASE + call_args).split()
 
     subprocess.check_call(call)

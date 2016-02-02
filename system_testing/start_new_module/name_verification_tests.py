@@ -71,12 +71,20 @@ settings_list = [
 ]
 
 
-# TODO(Martin) Make this one for all the parsing errors.
-# TODO(Martin) Redo check for local files?
 # NOTE: All tests run the script with '-n' in order to prevent creating
 # remote repository files if the tests fail
 def test_generator_parsing_errors_expected():
+    """Generator for tests relating to name verification.
 
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
 
