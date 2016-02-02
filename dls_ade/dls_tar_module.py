@@ -34,11 +34,11 @@ def make_parser():
         * release
 
     Flags:
-        * -u: untar
-        * -e: epics_version
+        * -u: `untar`
+        * -e: `epics_version`
 
     Returns:
-        An ArgumentParser instance with the relevant arguments
+        :class:`argparse.ArgumentParser`: ArgParse instance
 
     """
 
@@ -59,10 +59,10 @@ def check_area_archivable(area):
     Checks parsed area is a valid option and returns a parser error if not
 
     Args:
-        area: Area to check
+        area(str): Area to check
 
     Raises:
-        ValueError: Modules in area <args.area> cannot be archived
+        ValueError: Modules in area `args.area` cannot be archived
 
     """
     if area not in ["support", "ioc", "python", "matlab"]:
@@ -71,16 +71,20 @@ def check_area_archivable(area):
 
 def check_file_paths(release_dir, archive, untar):
     """
-    Checks if the file to untar exists and the directory to build it a does not (if untar is True), or
-    checks if the opposite is true (if untar is False)
+    Checks if the file to untar exists and the directory to build it a does not (if `untar` is True), or
+    checks if the opposite is true (if `untar` is False)
 
     Args:
-        release_dir: Directory to build to or to tar from
-        archive: File to build from or to tar into
-        untar: True if building, False if archiving
+        release_dir(str): Directory to build to or to tar from
+        archive(str): File to build from or to tar into
+        untar(bool): True if building, False if archiving
 
     Raises:
-        IOError: Source does not exist or target already exists
+        IOError:
+            * `untar` true and archive doesn't exist: Archive <archive> doesn't exist
+            * `untar` true and path already exists: Path <release_dir> already exists
+            * `untar` false and archive already exists: Archive <archive> doesn't exist
+            * `untar` false and path doesn't exist: Path <release_dir> already exists
 
     """
     if untar:

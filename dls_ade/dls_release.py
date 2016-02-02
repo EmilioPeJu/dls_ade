@@ -57,7 +57,7 @@ def make_parser():
         * -r (rhel_version) or --w (windows arguments)
 
     Returns:
-        An ArgumentParser instance
+        :class:`argparse.ArgumentParser`: ArgParse instance
 
     """
     parser = ArgParser(usage)
@@ -130,10 +130,10 @@ def create_build_object(args):
     Uses parsed arguments to select appropriate build architecture, default is local system os
 
     Args:
-        args: Parser arguments
+        args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        Either a Windows or RedHat build object
+        Builder: Either a Windows or RedHat build object
 
     """
     if args.rhel_version:
@@ -159,11 +159,11 @@ def create_vcs_object(module, args):
     Creates a Git vcs instance using module and arguments to construct the objects
 
     Args:
-        module: Name of module to be released
-        args: Parser arguments
+        module(str): Name of module to be released
+        args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        Git vcs instance
+        :class:`Git`: Git vcs instance
 
     """
     if args.git:
@@ -177,15 +177,16 @@ def check_parsed_arguments_valid(args,  parser):
     Checks that incorrect arguments invoke parser errors
 
     Args:
-        args: Parser arguments
-        parser: Parser instance
+        args(:class:`argparse.Namespace`): Parser arguments
+        parser(:class:`argparse.ArgumentParser`): Parser instance
 
     Raises:
-        - Error: Module name not specified
-        - Error: Module version not specified
-        - Error: Cannot release etc/build or etc/redirector as modules - use configure system instead
-        - Error: When git is specified, version number must be provided
-        - Error: <args.area> area not supported by git
+        VCSGitError:
+            * Module name not specified
+            * Module version not specified
+            * Cannot release etc/build or etc/redirector as modules - use configure system instead
+            * When git is specified, version number must be provided
+            * <args.area> area not supported by git
 
     """
     git_supported_areas = ['support', 'ioc', 'python', 'tools']
@@ -209,10 +210,10 @@ def format_argument_version(arg_version):
     Replaces '.' with '-' throughout arg_version to match formatting requirements for log message
 
     Args:
-        arg_version: Version tag to be formatted
+        arg_version(str): Version tag to be formatted
 
     Returns:
-        Formatted version tag
+        str: Formatted version tag
 
     """
     return arg_version.replace(".", "-")
@@ -223,10 +224,11 @@ def next_version_number(releases, module=None):
     Generates appropriate version number for an incremental release
 
     Args:
-        releases: Previous release numbers
-        module: Name of module
+        releases(list of str): Previous release numbers
+        module(str): Name of module
 
-    Returns: Incremented version number
+    Returns:
+        str: Incremented version number
 
     """
     if len(releases) == 0:
@@ -244,10 +246,10 @@ def get_last_release(releases):
     Returns the most recent release number
 
     Args:
-        releases: Previous release numbers
+        releases(list of str): Previous release numbers
 
     Returns:
-        Most recent release number
+        str: Most recent release number
 
     """
     from dls_environment import environment
@@ -263,7 +265,8 @@ def increment_version_number(last_release):
         last_release(str): Most recent previous release number
 
     Returns:
-        Minimally incremented version number
+        str: Minimally incremented version number
+
     """
     numre = re.compile("\d+|[^\d]+")
     tokens = numre.findall(last_release)
@@ -280,13 +283,14 @@ def construct_info_message(module, branch, area, version, build_object):
     Gathers info to display during release
 
     Args:
-        module: Module to be released
-        branch: Branch to be released
-        area: Area of module
-        version: Release version
-        build_object: Either a Windows or RedHat build object
+        module(str): Module to be released
+        branch(str): Branch to be released
+        area(str): Area of module
+        version(str): Release version
+        build_object(Builder): Either a Windows or RedHat build object
 
     Returns:
+        str: Info message for user
 
     """
     info = str()
@@ -311,7 +315,7 @@ def check_epics_version_consistent(module_epics, option_epics, build_epics):
         build_epics(str): Epics version of environment
 
     Returns:
-        True if the build can continue, False if not
+        bool: True if the build can continue, False if not
 
     """
     build_epics = build_epics.replace("_64", "")
@@ -334,7 +338,7 @@ def ask_user_input(question):
         question(str): Question for the user to respond to
 
     Returns:
-        User input
+        str: User input
 
     """
     return raw_input(question)
@@ -348,7 +352,7 @@ def get_module_epics_version(vcs):
         vcs(Git/Svn): Git or Svn version control system instance
 
     Returns:
-        Epics version of most recent release
+        str: Epics version of most recent release
 
     """
     conf_release = vcs.cat("configure/RELEASE")
@@ -364,12 +368,12 @@ def perform_test_build(build_object, local_build, vcs):
     Test build the module and return whether it was successful
 
     Args:
-        build_object: Either a windows or RedHat builder instance
-        local_build: Specifier to perform test build only
-        vcs: Git version control system instance
+        build_object(Builder): Either a windows or RedHat builder instance
+        local_build(bool): Specifier to perform test build only
+        vcs(:class:`vcs_git.Git`): Git version control system instance
 
     Returns:
-        Message explaining how the test build went, True or False for whether it failed or not
+        str, bool: Message explaining how the test build went, True or False for whether it failed or not
 
     """
     message = ''

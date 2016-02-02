@@ -17,9 +17,27 @@ If <dom_name> given and <area> = 'ioc', list the subdirectories of <dom_name>.
 e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
 """
 
+
+def make_parser():
+    """
+    Takes ArgParse instance with default arguments and adds
+
+    Flags:
+        * -d (domain) :class:`argparse.ArgumentParser`
+
+    Returns:
+        :class:`argparse.ArgumentParser`: Parser instance
+    """
+    parser = ArgParser(usage)
+    parser.add_argument("-d", "--domain", action="store",
+                        type=str, dest="domain_name",
+                        help="domain of ioc to list")
+    return parser
+
+
 def print_module_list(source, area):
     """
-    Prints the modules in the area of the repository specified by source
+    Prints the modules in the area of the repository specified by source.
 
     Args:
         source(str): Suffix of URL to list from
@@ -32,23 +50,6 @@ def print_module_list(source, area):
         if module_path.startswith(source + '/'):
             # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
             print(module_path.split('/', 2)[-1])
-
-
-def make_parser():
-    """
-    Takes ArgParse instance with default arguments and adds
-
-    Flags:
-        * -d (domain)
-
-    Returns:
-        An :class:`argparse.ArgumentParser` instance
-    """
-    parser = ArgParser(usage)
-    parser.add_argument("-d", "--domain", action="store",
-                        type=str, dest="domain_name",
-                        help="domain of ioc to list")
-    return parser
 
 
 def main():

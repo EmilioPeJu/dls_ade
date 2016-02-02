@@ -61,7 +61,7 @@ def make_parser():
         * -m (import)
 
     Returns:
-        An ArgumentParser instance
+        :class:`argparse.ArgumentParser`: ArgParse instance
 
     """
 
@@ -90,15 +90,17 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
     Check that the combination of arguments are compatible.
 
     Args:
-        imp: CSV import specifier
-        modules: Modules argument
-        contact: Contact argument
-        cc: CC argument
-        parser: Parser instance
+        imp(str): CSV import specifier
+        modules(str): Modules argument
+        contact(str): Contact argument
+        cc(str): CC argument
+        :class:`argparse.ArgumentParser`: Parser instance
 
     Raises:
-        * --import cannot be used with --contact or --cc
-        * You cannot set all modules in an area to one contact/cc, enter a specific module.
+        :class:`argparse.ArgumentParser` error:
+            * --import cannot be used with --contact or --cc
+            * You cannot set all modules in an area to one contact/cc, enter a specific module.
+
     """
 
     if imp and (contact or cc):
@@ -113,13 +115,14 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
 
 def get_area_module_list(area):
     """
-    Get list of modules in a specified area of the repository
+    Get list of modules in a specified area of the repository.
 
     Args:
-        area: Area of repository
+        area(str): Area of repository
 
     Returns:
-        List of modules
+        list of str: List of modules
+
     """
 
     repo_list = vcs_git.get_server_repo_list()
@@ -134,13 +137,14 @@ def get_area_module_list(area):
 
 def lookup_contact_name(fed_id):
     """
-    Perform an LDAP search to find the Name and Surname corresponding to a FED-ID
+    Perform an LDAP search to find the Name and Surname corresponding to a FED-ID.
 
     Args:
-        fed_id: FED-ID to search for
+        fed_id(str): FED-ID to search for
 
     Returns:
-        Contact name
+        str: Contact name
+
     """
 
     # Set up ldap search parameters
@@ -175,12 +179,12 @@ def lookup_contact_name(fed_id):
 
 def output_csv_format(contact, cc_contact, module):
     """
-    Print out contact info in CSV format
+    Print out contact info in CSV format.
 
     Args:
-        contact: Contact FED-ID
-        cc_contact: Contact FED-ID
-        module: Module name
+        contact(str): Contact FED-ID
+        cc_contact(str): Contact FED-ID
+        module(str): Module name
 
     """
 
@@ -201,15 +205,16 @@ def output_csv_format(contact, cc_contact, module):
 
 def import_from_csv(modules, area, imp):
     """
-    Extract contact info from a given CSV file
+    Extract contact info from a given CSV file.
 
     Args:
-        modules: List of valid modules
-        area: Area of modules that are having contacts changed
-        imp: File path for CSV to get info from
+        modules(str): List of valid modules
+        area(str): Area of modules that are having contacts changed
+        imp(str): File path for CSV to get info from
 
     Returns:
         A list of tuples containing module, contact and cc
+
     """
 
     reader = csv.reader(open(imp, "rb"))
@@ -253,12 +258,12 @@ def edit_contact_info(repo, contact='', cc=''):
     Write to .gitattributes file to change contacts of repo.
 
     Args:
-        repo: Repository instance of module
-        contact: Contact FED-ID
-        cc: CC FED-ID
+        repo(:class:`git.Repo`): Repository instance of module
+        contact(str): Contact FED-ID
+        cc(str): CC FED-ID
 
     Returns:
-        Commit message summarising changes made
+        str: Commit message summarising changes made
 
     """
 

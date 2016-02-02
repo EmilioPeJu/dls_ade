@@ -33,10 +33,11 @@ look for the module, this can be overridden with the -e flag.
 def get_rhel_version():
     """
     Checks if platform is Linux redhat, if so returns base version number from environment (e.g. returns 6 if 6.7),
-    if not returns default of 6
+    if not returns default of 6.
     
     Returns:
-        Rhel version number
+        str: Rhel version number
+
     """
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
@@ -62,7 +63,8 @@ def make_parser():
         * -r (rhel_version)
 
     Returns:
-        An ArgumentParser instance
+        :class:`argparse.ArgumentParser`:  ArgParse instance
+
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()

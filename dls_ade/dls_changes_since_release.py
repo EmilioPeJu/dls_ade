@@ -30,7 +30,7 @@ def make_parser():
         * module_name
 
     Returns:
-        An :class:`argparse.ArgumentParser` instance
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
 
     parser = ArgParser(usage)

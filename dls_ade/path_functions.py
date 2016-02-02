@@ -9,8 +9,8 @@ def check_technical_area_valid(area, module):
     Checks if given area is IOC and if so, checks that the technical area is also provided.
 
     Args:
-        area: Area of repository
-        module: Module to check
+        area(str): Area of repository
+        module(str): Module to check
 
     Raises:
         ValueError: Missing technical area under beamline
@@ -26,7 +26,7 @@ def dev_area_path(area="support"):
     Return the full server path for the given area.
 
     Args:
-        area: The area of the module.
+        area(str): The area of the module.
 
     Returns:
         str: The full server path for the given area.
@@ -40,8 +40,8 @@ def dev_module_path(module, area="support"):
     Return the full server path for the given module and area.
 
     Args:
-        area: The area of the module.
-        module: The module name.
+        area(str): The area of the module.
+        module(str): The module name.
 
     Returns:
         str: The full server path for the given module.

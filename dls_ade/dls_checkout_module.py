@@ -30,7 +30,7 @@ def make_parser():
         * -b (branch)
 
     Returns:
-        An :class:`argparse.ArgumentParser` instance
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()
@@ -45,7 +45,7 @@ def make_parser():
 def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that the module name
-    is of the format <domain>/<module> or is not given
+    is of the format <domain>/<module> or is not given.
 
     Args:
         area(str): Area of repository
@@ -63,7 +63,7 @@ def check_technical_area(area, module):
 
 def check_source_file_path_valid(source):
     """
-    Checks if given source path exists on the repository
+    Checks if given source path exists on the repository.
 
     Args:
         source(str): Path to module to be cloned
@@ -78,13 +78,13 @@ def check_source_file_path_valid(source):
 
 def check_module_file_path_valid(module):
     """
-    Checks if the given module already exists in the current directory
+    Checks if the given module already exists in the current directory.
 
     Args:
         module(str): Name of module to clone
 
     Raises:
-        Exception: Path already exists: <module>
+        Exception: Path already exists: 'module'
 
     """
     if os.path.isdir(module):
