@@ -35,8 +35,6 @@ def make_parser():
     parser.add_branch_flag(
         help_msg="Checkout a specific named branch rather than the default (master)")
 
-    parser.add_argument("-f", "--force", action="store_true", dest="force",
-                        help="force the checkout, disable warnings")
     return parser
 
 
