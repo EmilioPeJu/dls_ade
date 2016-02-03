@@ -41,7 +41,7 @@ class EnvironmentInitTest(unittest.TestCase):
 
 class CheckEpicsVersionTest(unittest.TestCase):
 
-    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    @patch('dls_ade.dls_environment.environment.setEpics')
     def test_given_epics_version_with_R_and_match_then_set(self, mock_set_epics):
         env = dls_environment.environment()
         epics_version = "R3.14.8.2"
@@ -50,7 +50,7 @@ class CheckEpicsVersionTest(unittest.TestCase):
 
         mock_set_epics.assert_called_once_with(epics_version)
 
-    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    @patch('dls_ade.dls_environment.environment.setEpics')
     def test_given_epics_version_without_R_and_match_then_set(self, mock_set_epics):
         env = dls_environment.environment()
         epics_version = "3.14.8.2"
@@ -59,7 +59,7 @@ class CheckEpicsVersionTest(unittest.TestCase):
 
         mock_set_epics.assert_called_once_with("R" + epics_version)
 
-    @patch('dls_ade.dls_list_releases.environment.setEpics')
+    @patch('dls_ade.dls_environment.environment.setEpics')
     def test_given_epics_version_with_R_and_not_match_then_raise_error(self, mock_set_epics):
         env = dls_environment.environment()
         epics_version = "R3"
