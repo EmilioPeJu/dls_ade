@@ -13,9 +13,11 @@ ioc_list = "Modules in ioc:\n\n" \
            "BTEST/BTEST-EB-IOC-03\n" \
            "BTEST/BTEST-EB-IOC-0\n" \
            "BTEST/BTEST-VA-IOC-04\n" \
-           "BTEST/TS\n"
+           "BTEST/TS\n" \
+           "testB06/TS\n" \
+           "testB07/TS\n"
 
-ioc_domain_list = "Modules in ioc:\n\n" \
+ioc_domain_list = "Modules in BTEST:\n\n" \
                   "BTEST/BTEST-EB-IOC-03\n" \
                   "BTEST/BTEST-EB-IOC-0\n" \
                   "BTEST/BTEST-VA-IOC-04\n" \
@@ -28,16 +30,6 @@ settings_list = [
         'description': "list_support",
 
         'std_out_compare_string': support_list,
-
-    },
-
-    # List everything in python area
-    {
-        'description': "list_python",
-
-        'arguments': "-p",
-
-        'std_out_compare_string': python_list,
 
     },
 
