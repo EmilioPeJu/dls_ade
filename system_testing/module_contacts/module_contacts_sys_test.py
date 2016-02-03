@@ -10,6 +10,10 @@ csv_output = 'Module,Contact,Contact Name,CC,CC Name\n' \
              'Performing search for mef65357...\n' \
              'dls_testpythonmod,lkz95212,Martin Gaughran,mef65357,Gary Yendell\n'
 
+default_contact = 'lkz95212'
+default_cc = 'mef65357'
+new_contact = 'up45'
+new_cc = 'tmc43'
 
 settings_list = [
 
@@ -37,10 +41,10 @@ settings_list = [
     {
         'description': "set_contacts",
 
-        'arguments': "-p dls_testpythonmod -c mef65357 -d lkz95212",
+        'arguments': "-p dls_testpythonmod -c up45 -d tmc43",
 
-        'attributes_dict': {'module-contact': 'mef65357',
-                            'module-cc': 'lkz95212'},
+        'attributes_dict': {'module-contact': new_contact,
+                            'module-cc': new_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
@@ -50,10 +54,10 @@ settings_list = [
     {
         'description': "set_contact_not_cc",
 
-        'arguments': "-p dls_testpythonmod -c mef65357",
+        'arguments': "-p dls_testpythonmod -c up45",
 
-        'attributes_dict': {'module-contact': 'mef65357',
-                            'module-cc': 'mef65357'},
+        'attributes_dict': {'module-contact': new_contact,
+                            'module-cc': default_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
@@ -63,10 +67,10 @@ settings_list = [
     {
         'description': "set_cc_not_contact",
 
-        'arguments': "-p dls_testpythonmod -d lkz95212",
+        'arguments': "-p dls_testpythonmod -d tmc43",
 
-        'attributes_dict': {'module-contact': 'lkz95212',
-                            'module-cc': 'lkz95212'},
+        'attributes_dict': {'module-contact': default_contact,
+                            'module-cc': new_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
@@ -78,8 +82,8 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod -m python_test_csv.txt",
 
-        'attributes_dict': {'module-contact': 'mef65357',
-                            'module-cc': 'lkz95212'},
+        'attributes_dict': {'module-contact': new_contact,
+                            'module-cc': new_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
@@ -91,8 +95,8 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod -m contact_python_test_csv.txt",
 
-        'attributes_dict': {'module-contact': 'mef65357',
-                            'module-cc': 'mef65357'},
+        'attributes_dict': {'module-contact': new_contact,
+                            'module-cc': default_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
@@ -104,8 +108,8 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod -m cc_python_test_csv.txt",
 
-        'attributes_dict': {'module-contact': 'lkz95212',
-                            'module-cc': 'lkz95212'},
+        'attributes_dict': {'module-contact': default_contact,
+                            'module-cc': new_cc},
 
         'server_repo_path': "controlstest/python/dls_testpythonmod",
 
