@@ -2,6 +2,7 @@ import system_testing as st
 
 releases_list = "Previous releases for dls_testpythonmod2 in the repository:\n1-0\n1-1\n2-0\n2-1\n"
 latest_release = "The latest release for dls_testpythonmod2 in the repository is: 2-1\n"
+no_git_release = "Repository does not contain controlstest/python/testpythonmod"
 prod_releases_list = "Previous releases for dummy in prod:\n0-3\n0-5\n0-6\n0-7\n0-8\n"
 latest_prod_release = "The latest release for dummy in prod is: 0-8\n"
 e_release_list = "Previous releases for symbols in prod:\n1-9\n1-10\n"
@@ -29,6 +30,18 @@ settings_list = [
 
     },
 
+    # List last release for python module on repo
+    {
+        'description': "raise_exception_for_non_existent_module_git",
+
+        'arguments': "-p testpythonmod -g",
+
+        'exception_type': "dls_ade.exceptions.VCSGitError",
+
+        'exception_string': no_git_release,
+
+    },
+
     # List releases for support module in prod
     {
         'description': "list_prod_releases",
@@ -46,6 +59,16 @@ settings_list = [
         'arguments': "dummy -l",
 
         'std_out_compare_string': latest_prod_release,
+
+    },
+
+    # List last release for python module on repo
+    {
+        'description': "raise_exception_for_non_existent_module_prod",
+
+        'arguments': "dummy2",
+
+        'std_out_compare_string': "No releases made for R3.14.12.3\n",
 
     },
 
