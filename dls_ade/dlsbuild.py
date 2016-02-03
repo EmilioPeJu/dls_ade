@@ -69,7 +69,6 @@ def default_server():
     if os == "Windows":
         server = "windows%s-%s" % (
             platform.version().split(".")[0], platform.machine())
-        return WindowsBuild(server, epics)
     else:
         server = "%s%s-%s" % (
             platform.dist()[0], platform.dist()[1].split(".")[0],
