@@ -43,10 +43,6 @@ def main():
     source = pathf.dev_module_path(module, args.area)
     logging.debug(source)
 
-    # Check for existence of this module in various places in the repository and note revisions
-    if not vcs_git.is_server_repo(source):
-        raise Exception("Repository does not contain " + source)
-
     if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
