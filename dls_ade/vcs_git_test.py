@@ -11,6 +11,17 @@ def setUpModule():
     vcs_git.GIT_ROOT_DIR = "controlstest"
 
 
+def set_up_mock(test_case_object, path):
+
+    patch_obj = patch(path)
+
+    test_case_object.addCleanup(patch_obj.stop)
+
+    mock_obj = patch_obj.start()
+
+    return mock_obj
+
+
 class IsGitDirTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
@@ -222,7 +233,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         self.mock_is_dir.assert_called_once_with("non_repo_path")
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_both_tests_pass_then_repo_staged_and_committed_correctly(self):
+    def test_given_both_tests_pass_then_repo_staged_and_committed_with_correct_defaults(self):
 
         self.mock_is_dir.return_value = True
         self.mock_is_local_repo_root.return_value = True
@@ -230,7 +241,17 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit("test_path")
 
         self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.git.commit.assert_called_once_with(m="Initial commit")
+        self.mock_repo.git.commit.assert_called_once_with(m="Initial commit.")
+
+    def test_given_both_tests_pass_and_both_arguments_supplied_then_repo_committed_with_correct_arguments(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
+
+        vcs_git.stage_all_files_and_commit("test_path", "test_message")
+
+        self.mock_repo.git.add.assert_called_once_with("--all")
+        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
 
     def test_given_no_input_then_sensible_default_applied(self):
 
@@ -240,6 +261,17 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit()
 
         self.mock_is_dir.assert_called_once_with("./")
+
+    def test_given_git_commit_raises_exception_then_function_does_not_raise_exception(self):
+
+        self.mock_is_dir.return_value = True
+        self.mock_is_local_repo_root.return_value = True
+        self.mock_repo.git.commit.side_effect = vcs_git.git.exc.GitCommandError("", 1)
+
+        vcs_git.stage_all_files_and_commit("test_path", "test_message")
+
+        self.mock_repo.git.add.assert_called_once_with("--all")
+        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
 
 
 class AddNewRemoteAndPushTest(unittest.TestCase):
@@ -558,6 +590,41 @@ class PushToRemoteTest(unittest.TestCase):
         mock_remote.push.assert_called_once_with("master")
 
 
+class CheckRemoteExistsTest(unittest.TestCase):
+
+    class RemoteEntry(object):
+        def __init__(self, name):
+            self.name = name
+
+    class StubGitRepo(object):  # Used to mock out the git.Repo() function
+        def __init__(self, remotes_list):
+
+            self.remotes_list = remotes_list  # set this to a list eg. [RemoteEntry("branch_name")] for list comprehension
+
+        @property
+        def remotes(self):
+            return self.remotes_list
+
+    def test_given_remote_name_does_not_exist_then_exception_raised_with_correct_message(self):
+
+        remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        comp_message = "Local repository does not have remote {remote:s}".format(remote="test_remote")
+
+        with self.assertRaises(vcs_git.VCSGitError) as e:
+            vcs_git.check_remote_exists(mock_repo, "test_remote")
+
+        self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_remote_name_exists_then_no_exception_raised(self):
+
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        vcs_git. check_remote_exists(mock_repo, "test_remote")
+
+
 class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_server_repo', return_value=False)
@@ -678,6 +745,16 @@ class CloneMultiTest(unittest.TestCase):
 
         mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'test_module', "./test_module")
 
+    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["controls/ioc/BL/module"])
+    @patch('os.listdir', return_value=["not_test_module"])
+    @patch('git.Repo.clone_from')
+    def test_given_ioc_area_name_then_clone_with_domain_in_file_name(self, mock_clone_from, _1, _2):
+        source = "controls/ioc/"
+
+        vcs_git.clone_multi(source)
+
+        mock_clone_from.assert_called_once_with(vcs_git.GIT_SSH_ROOT + source + 'BL/module', "./BL/module")
+
 
 class ListRemoteBranchesTest(unittest.TestCase):
 
@@ -742,6 +819,135 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
         vcs_git.checkout_remote_branch(branch, repo)
 
         self.assertFalse(repo.git.checkout.call_count)
+
+
+class CheckGitAttributesTest(unittest.TestCase):
+
+    @staticmethod
+    def check_attr_side_effect(argument):
+        if argument == "attr1 -- .".split():
+            return ".: attr1: Valueofattr1"
+        elif argument == "attr2 -- .".split():
+            return ".: attr2: Now_with_spaces"
+        elif argument == "attr3-name -- .".split():
+            return ".: attr3-name: But_spaces_arent_really_allowed"
+        elif argument == "attr-not-exist -- .".split():
+            return ".: attr-not-exist: unspecified"
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_all_attributes_exist_then_function_returns_true(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_then_function_returns_false(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "I_do_not_exist"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertFalse(return_value)
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_given_some_attributes_dont_exist_but_we_set_value_to_unspecified_then_function_returns_True(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        mock_repo.git.check_attr.side_effect = CheckGitAttributesTest.check_attr_side_effect
+
+        attributes_dict = {
+            'attr1': "Valueofattr1",
+            'attr2': "Now_with_spaces",
+            'attr3-name': "But_spaces_arent_really_allowed",
+            'attr-not-exist': "unspecified"
+        }
+
+        return_value = vcs_git.check_git_attributes("test_repo_path", attributes_dict)
+
+        self.assertTrue(return_value)
+
+
+class GetActiveBranchTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo')
+    def test_returns_active_branch_correctly(self, mock_repo_class):
+
+        mock_repo = MagicMock()
+        type(mock_repo.active_branch).name = PropertyMock(return_value="current_active_branch")
+        mock_repo_class.return_value = mock_repo
+
+        return_value = vcs_git.get_active_branch("test_repo_path")
+
+        self.assertEqual(return_value, "current_active_branch")
+
+
+class DeleteRemoteTest(unittest.TestCase):
+
+    class RemoteEntry(object):
+        def __init__(self, name):
+            self.name = name
+
+    class StubGitRepo(object):  # Used to mock out the git.Repo() function
+        def __init__(self, remotes_list, mock_repo_git=MagicMock()):
+
+            self.remotes_list = remotes_list  # set this to a list eg. [RemoteEntry("branch_name")] for list comprehension
+            self.git = mock_repo_git
+
+        @property
+        def remotes(self):
+            return self.remotes_list
+
+    def setUp(self):
+        self.mock_git_repo = set_up_mock(self, 'dls_ade.vcs_git.git.Repo')
+
+    def test_given_remote_does_not_exist_then_exception_raised_with_correct_message(self):
+
+        remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
+        mock_repo = DeleteRemoteTest.StubGitRepo(remotes_list)
+        self.mock_git_repo.return_value = mock_repo
+
+        with self.assertRaises(vcs_git.VCSGitError) as e:
+            vcs_git.delete_remote("local/repository/path", "test_remote")
+
+        self.assertTrue("test_remote" in str(e.exception))
+
+        self.mock_git_repo.assert_called_once_with("local/repository/path")
+
+    def test_given_remote_does_exist_then_remote_properly_deleted(self):
+
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo_git = MagicMock()
+        mock_repo = DeleteRemoteTest.StubGitRepo(remotes_list, mock_repo_git)
+        self.mock_git_repo.return_value = mock_repo
+
+        vcs_git.delete_remote("local/repository/path", "test_remote")
+
+        self.mock_git_repo.assert_called_once_with("local/repository/path")
+        mock_repo_git.remote.assert_called_once_with("rm", "test_remote")
 
 
 class GitClassInitTest(unittest.TestCase):

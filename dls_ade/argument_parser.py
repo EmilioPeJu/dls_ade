@@ -11,13 +11,13 @@ class ArgParser(ArgumentParser):
 
     """
 
-    def __init__(self, usage_v):
+    def __init__(self, usage_v, applicable_areas=areas):
         super(ArgParser, self).__init__(description=usage_v)
 
         area = self.add_mutually_exclusive_group(required=True)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="Set area, e.g. " + ", ".join(areas))
+            help="Set area, e.g. " + ", ".join(applicable_areas))
         area.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="Set 'python' area")
@@ -53,7 +53,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("module_name", type=str, default=None,
                           help=help_msg)
 
@@ -65,7 +64,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("release", type=str, default=None,
                           help=help_msg)
 
@@ -77,7 +75,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-b", "--branch", action="store", type=str, dest="branch",
                           help=help_msg)
 
@@ -89,7 +86,6 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-g", "--git", action="store_true", dest="git",
                           help=help_msg)
 
@@ -103,6 +99,5 @@ class ArgParser(ArgumentParser):
             help_msg: Help message relevant to module calling function
 
         """
-
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
                           help=help_msg)

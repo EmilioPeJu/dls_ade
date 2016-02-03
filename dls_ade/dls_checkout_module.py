@@ -1,12 +1,10 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
-# new branch
 """
 Clone a module, an ioc domain or an entire area of the repository.
 When cloning a single module, the branch argument will automatically checkout the given branch.
 """
 
-import os
 import sys
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
@@ -55,40 +53,8 @@ def check_technical_area(area, module):
         Exception: Missing technical area under beamline
 
     """
-    if area == "ioc" \
-            and module != "everything" \
-            and len(module.split('/')) < 2:
+    if area == "ioc" and module != "" and len(module.split('/')) < 2:
         raise Exception("Missing Technical Area under Beamline")
-
-
-def check_source_file_path_valid(source):
-    """
-    Checks if given source path exists on the repository.
-
-    Args:
-        source(str): Path to module to be cloned
-
-    Raises:
-        Exception: Repository does not contain <source>
-
-    """
-    if not vcs_git.is_server_repo(source):
-        raise Exception("Repository does not contain " + source)
-
-
-def check_module_file_path_valid(module):
-    """
-    Checks if the given module already exists in the current directory.
-
-    Args:
-        module(str): Name of module to clone
-
-    Raises:
-        Exception: Path already exists: 'module'
-
-    """
-    if os.path.isdir(module):
-        raise Exception("Path already exists: " + module)
 
 
 def main():
@@ -96,7 +62,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    if args.module_name == "everything":
+    if args.module_name == "":
         answer = raw_input("Would you like to checkout the whole " +
                            args.area + " area? This may take some time. Enter Y or N: ")
         if answer.upper() != "Y":
@@ -106,19 +72,21 @@ def main():
 
     module = args.module_name
 
-    if module == "everything":
+    if module == "":
         # Set source to area folder
         source = pathf.dev_area_path(args.area)
     else:
         # Set source to module in area folder
         source = pathf.dev_module_path(module, args.area)
 
-    if module == "everything":
+    if module == "":
         print("Checking out entire " + args.area + " area...\n")
+        vcs_git.clone_multi(source)
+    elif module.endswith('/') and args.area == 'ioc':
+        print("Checking out " + module + " technical area...")
         vcs_git.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        check_module_file_path_valid(module)
         repo = vcs_git.clone(source, module)
 
         if args.branch:

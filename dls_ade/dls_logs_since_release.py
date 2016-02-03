@@ -14,10 +14,10 @@ import sys
 import shutil
 import time
 from operator import itemgetter
-from argument_parser import ArgParser
-from dls_environment import environment
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade.dls_environment import environment
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 import logging
 
 logging.basicConfig(level=logging.WARNING)
@@ -521,7 +521,7 @@ def main():
     args = parser.parse_args()
 
     raw = set_raw_argument(args.raw)
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
     check_parsed_args_compatible(args.releases, args.earlier_release, args.later_release, parser)
     check_releases_valid(args.releases, parser)
 

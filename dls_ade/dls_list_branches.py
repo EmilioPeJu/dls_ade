@@ -6,10 +6,9 @@ List the branches of a module on the repository.
 
 import sys
 import shutil
-import path_functions as pathf
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 
 usage = """
 Default <area> is 'support'.
@@ -38,7 +37,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    pathf.check_technical_area_valid(args.area, args.module_name)
+    pathf.check_technical_area(args.area, args.module_name)
 
     source = pathf.dev_module_path(args.module_name, args.area)
 

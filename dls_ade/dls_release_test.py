@@ -12,6 +12,15 @@ from argparse import _StoreTrueAction
 logging.basicConfig(level=logging.DEBUG)
 
 
+def set_up_mock(self, path):
+
+    patch_obj = patch(path)
+    self.addCleanup(patch_obj.stop)
+    mock_obj = patch_obj.start()
+
+    return mock_obj
+
+
 class ParserTest(unittest.TestCase):
 
     def setUp(self):
@@ -107,6 +116,10 @@ class ParserTest(unittest.TestCase):
 
 class TestCreateBuildObject(unittest.TestCase):
 
+    def setUp(self):
+
+        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+
     @patch('dls_ade.dls_release.dlsbuild.default_build')
     def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
 
@@ -117,7 +130,7 @@ class TestCreateBuildObject(unittest.TestCase):
         mock_default.assert_called_once_with(None)
 
     @patch('dls_ade.dls_release.dlsbuild.default_build')
-    def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
+    def test_given_epics_version_then_default_build_called_with_epics_version(self, mock_default):
         version = "R3.14.12.3"
 
         options = FakeOptions(epics_version=version)
@@ -159,17 +172,19 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_build.assert_called_once_with(windows, None)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
     def test_given_any_option_then_set_area_called_with_default_area_option(
-        self, mock_set):
+        self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(options.area)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
-    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set):
+    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set, _1):
         area = 'python'
 
         options = FakeOptions(area=area)
@@ -178,16 +193,18 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(options.area)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
-    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set):
+    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(None)
 
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
-    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set):
+    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set, _1):
         force = True
         options = FakeOptions(force=force)
 
@@ -447,7 +464,12 @@ class TestIncrementVersionNumber(unittest.TestCase):
 
 class TestConstructInfoMessage(unittest.TestCase):
 
-    def test_given_default_args_then_construct_specific_string(self):
+    def setUp(self):
+
+        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_then_construct_specific_string(self, _1):
         
         module = 'dummy'
         version = '1-0'
@@ -465,7 +487,8 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_branch_then_construct_specific_string_referencing_branch(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_branch_then_construct_specific_string_referencing_branch(self, _1):
 
         module = 'dummy'
         version = '3-5'
@@ -484,7 +507,8 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_ioc_area_then_construct_specific_string(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_ioc_area_then_construct_specific_string(self, _1):
 
         module = 'dummy'
         version = '1-0'
@@ -502,7 +526,8 @@ class TestConstructInfoMessage(unittest.TestCase):
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self, _1):
 
         module = 'dummy'
         version = '1-0'
@@ -673,44 +698,6 @@ class TestPerformTestBuild(unittest.TestCase):
             self.fake_build, local_build, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
-
-
-class TestMain(unittest.TestCase):
-
-    def setUp(self):
-
-        methods_to_patch = [
-            'create_build_object',
-            'check_parsed_arguments_valid',
-            'format_argument_version',
-            'next_version_number',
-            'get_last_release',
-            'increment_version_number',
-            'construct_info_message',
-            'check_epics_version_consistent',
-            'ask_user_input',
-            'perform_test_build',
-            'ArgParser.parse_args',
-        ]
-
-        self.patch = {}
-        self.mocks = {}
-        for method in methods_to_patch:
-            self.patch[method] = patch('dls_ade.dls_release.' + method)
-            self.addCleanup(self.patch[method].stop)
-            self.mocks[method] = self.patch[method].start()
-
-        self.mocks['ArgParser.parse_args'].return_value = ['', '']
-
-        self.manager = MagicMock()
-
-    def test_nothing(self):
-
-        self.assertEqual(0, self.mocks['create_build_object'].call_count)
-
-    def test_god_function_does_things_in_the_right_order(self):
-
-        pass
 
 
 class FakeOptions(object):

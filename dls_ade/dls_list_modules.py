@@ -6,10 +6,9 @@ List the modules of an area or ioc domain on the repository
 
 from __future__ import print_function
 import sys
-from argument_parser import ArgParser
-import path_functions as pathf
-import vcs_git
-
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import vcs_git
 usage = """
 Default <area> is 'support'.
 List all modules in the <area> area.
