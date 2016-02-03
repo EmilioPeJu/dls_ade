@@ -599,6 +599,8 @@ class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
     def test_given_verify_can_create_local_module_passes_then_flag_set_false_and_clone_and_create_files_called(self):
 
+        expected_commit_message = "Added app, test_app, to module."
+
         self.nmc_obj.create_local_module()
 
         self.assertFalse(self.nmc_obj._can_create_local_module)
@@ -608,7 +610,7 @@ class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
         self.mock_vcs_git.clone.assert_called_once_with(self.nmc_obj._server_repo_path, self.nmc_obj.abs_module_path)
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.abs_module_path)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(self.nmc_obj.abs_module_path, expected_commit_message)
 
     def test_given_verify_can_create_local_module_fails_then_exception_raised_with_correct_message(self):
 

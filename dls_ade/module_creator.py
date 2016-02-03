@@ -1,10 +1,11 @@
 from __future__ import print_function
 import os
-import path_functions as pathf
+from dls_ade import path_functions as pathf
 import shutil
 import logging
-import vcs_git
-from exceptions import RemoteRepoError, VerificationError, ArgumentError
+from dls_ade import vcs_git
+from dls_ade.exceptions import (RemoteRepoError, VerificationError,
+                                ArgumentError)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,9 +23,15 @@ class ModuleCreator(object):
             Used for system and git commands.
         _server_repo_path: The git repository server path for module.
         _module_template: Object that handles file and user message creation.
+        _remote_repo_valid(bool): True if conflicting paths exist on server.
+            This flag is separated as the user needs to check this towards
+            the beginning to avoid unnecessary file creation.
+        _can_create_local_module(bool): True if can run create_local_module.
+        _can_push_repo_to_remote(bool): True if can run push_repo_to_remote.
 
     Raises:
-        ModuleCreatorError: Base class for this module's exceptions
+        :class:`~dls_ade.exceptions.ModuleCreatorError`: Base class for this \
+            module's exceptions
 
     """
 
@@ -40,7 +47,7 @@ class ModuleCreator(object):
                 created as well as affecting the repository server path.
             module_template_cls: Class for module_template object.
                 Must be a non-abstract subclass of ModuleTemplate.
-           kwargs: Additional arguments for module creation.
+            kwargs: Additional arguments for module creation.
 
         """
         self._area = area
@@ -64,18 +71,10 @@ class ModuleCreator(object):
         self._module_template = module_template_cls(template_args)
 
         self._remote_repo_valid = False
-        """bool: Specifies whether there are conflicting server file paths.
-        This is separate from `_can_push_repo_to_remote` as the latter
-        considers local issues as well. This flag is separated as the user
-        needs to call this towards the beginning to avoid unnecessary file
-        creation"""
 
         # These boolean values allow us to call the methods in any order
         self._can_create_local_module = False
-        """bool: Specifies whether create_local_module can be called"""
-
         self._can_push_repo_to_remote = False
-        """bool: Specifies whether push_repo_to_remote can be called"""
 
     def verify_remote_repo(self):
         """Verifies there are no name conflicts with the remote repository.
@@ -88,7 +87,8 @@ class ModuleCreator(object):
         conflicts.
 
         Raises:
-            VerificationError: If there is a name conflict with the server.
+            :class:`~dls_ade.exceptions.VerificationError`: If there is a \
+                name conflict with the server.
 
         """
         if self._remote_repo_valid:
@@ -118,7 +118,8 @@ class ModuleCreator(object):
             - The user is currently inside a git repository
 
         Raises:
-            VerificationError: Local module cannot be created.
+            :class:`~dls_ade.exceptions.VerificationError`: Local module \
+                cannot be created.
 
         """
         if self._can_create_local_module:
@@ -158,7 +159,8 @@ class ModuleCreator(object):
             - There is a naming conflict with the remote server
 
         Raises:
-            VerificationError: Local repository cannot be pushed to remote.
+            :class:`~dls_ade.exceptions.VerificationError`: Local repository \
+                cannot be pushed to remote.
 
         """
         if self._can_push_repo_to_remote:
@@ -193,16 +195,18 @@ class ModuleCreator(object):
     def create_local_module(self):
         """Creates the folder structure and files in a new git repository.
 
-        This will use the file creation specified in :meth:`create_files`.
-        It will also stage and commit these files to a git repository located
-        in the same directory
+        This will use the file creation specified in
+        :meth:`~dls_ade.module_template.ModuleTemplate.create_files`. It will
+        also stage and commit these files to a git repository located in the
+        same directory
 
         Note:
             This will set `_can_create_local_module` False in order to prevent
             the user calling this method twice in succession.
 
         Raises:
-            VerificationError: Local module cannot be created.
+            :class:`~dls_ade.exceptions.VerificationError`: Local module \
+                cannot be created.
             OSError: The abs_module_path already exists (outside interference).
 
         """
@@ -239,8 +243,10 @@ class ModuleCreator(object):
             succession.
 
         Raises:
-            VerificationError: Local repository cannot be pushed to remote.
-            VCSGitError: If issue with adding a new remote and pushing.
+            :class:`~dls_ade.exceptions.VerificationError`: Local repository \
+                cannot be pushed to remote.
+            :class:`~dls_ade.exceptions.VCSGitError`: If issue with adding a \
+                new remote and pushing.
 
         """
         self.verify_can_push_repo_to_remote()
@@ -261,7 +267,8 @@ class ModuleCreatorWithApps(ModuleCreator):
             the newly created module.
 
     Raises:
-        ArgumentError: If 'app_name' not given as a keyword argument
+        :class:`~dls_ade.exceptions.ArgumentError`: If 'app_name' not given \
+            as a keyword argument
 
     """
 
@@ -325,8 +332,10 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
               paths
 
         Raises:
-            VerificationError: If there is an issue with the remote repository.
-            RemoteRepoError: From :meth:`_check_if_remote_repo_has_app`.
+            :class:`~dls_ade.exceptions.VerificationError`: If there is an \
+                issue with the remote repository.
+            :class:`~dls_ade.exceptions.RemoteRepoError`: If the given server \
+                path does not exist.
                 This should never be raised. There is a bug if it is!
 
         """
@@ -369,9 +378,11 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             bool: True if app exists, False otherwise.
 
         Raises:
-            RemoteRepoError: If given repo path does not exist on gitolite.
+            :class:`~dls_ade.exceptions.RemoteRepoError`: If given repo path \
+                does not exist on gitolite.
                 This should never be raised. There is a bug if it is!
-            VCSGitError: Issue with the vcs_git function calls.
+            :class:`~dls_ade.exceptions.VCSGitError`: Issue with the vcs_git \
+                function calls.
 
         """
         if not vcs_git.is_server_repo(remote_repo_path):
@@ -404,12 +415,16 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
     def create_local_module(self):
         """Creates the folder structure and files in a cloned git repository.
 
-        This will use the file creation specified in :meth:`_create_files`.
+        This will use the file creation specified in
+        :meth:`~dls_ade.module_template.ModuleTemplate.create_files`.
 
         Raises:
-            ArgumentError: From ModuleTemplate.create_files()
-            OSError: From ModuleTemplate.create_files()
-            VCSGitError: From stage_all_files_and_commit()
+            :class:`~dls_ade.exceptions.ArgumentError`: From \
+                :meth:`~dls_ade.module_template.ModuleTemplate.create_files`
+            OSError: From \
+                :meth:`~dls_ade.module_template.ModuleTemplate.create_files`
+            :class:`~dls_ade.exceptions.VCSGitError`: From \
+                :func:`~dls_ade.vcs_git.stage_all_files_and_commit`
 
 
         """
@@ -425,17 +440,24 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         self._module_template.create_files()
         os.chdir(self._cwd)
 
-        vcs_git.stage_all_files_and_commit(self.abs_module_path)
+        commit_message = ("Added app, {app_name:s}, to module.".format(
+            app_name=self._app_name
+        ))
+
+        vcs_git.stage_all_files_and_commit(self.abs_module_path,
+                                           commit_message)
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server using remote 'origin'.
-
+        :class:`~dls_ade.exceptions.VCSGitError`
         This will push the master branch of the local repository to the remote
         server it was cloned from.
 
         Raises:
-            VerificationError: From :meth:`verify_can_push_repo_to_remote`.
-            VCSGitError: From push_to_remote()
+            :class:`~dls_ade.exceptions.VerificationError`: From \
+                :meth:`.verify_can_push_repo_to_remote`.
+            :class:`~dls_ade.exceptions.VCSGitError`: From \
+                :func:`~dls_ade.vcs_git.push_to_remote`
 
         """
         self.verify_can_push_repo_to_remote()
