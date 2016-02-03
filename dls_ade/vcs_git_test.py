@@ -712,6 +712,36 @@ class TempCloneTest(unittest.TestCase):
         mock_clone_from.assert_called_once_with(root + source, "tempdir")
 
 
+class ListModuleReleases(unittest.TestCase):
+
+    def test_given_repo_with_tags_then_listed(self):
+
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+        tag_inst_1 = MagicMock()
+        tag_inst_1.name = '1-0'
+        tag_inst_2 = MagicMock()
+        tag_inst_2.name = '2-0'
+        tag_inst_3 = MagicMock()
+        tag_inst_3.name = '2-1'
+
+        repo_inst.tags = [tag_inst_1, tag_inst_2, tag_inst_3]
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertEqual(releases, ['1-0', '2-0', '2-1'])
+
+    def test_given_repo_with_no_tags_then_empty_list_returned(self):
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+
+        repo_inst.tags = []
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertFalse(releases)
+
+
 class CloneMultiTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["controls/area/test_module"])
