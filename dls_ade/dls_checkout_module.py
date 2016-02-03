@@ -52,7 +52,7 @@ def check_technical_area(area, module):
         module(str): Name of module
 
     Raises:
-        Exception: Missing technical area under beamline
+        :class:`exception.Exception`: Missing technical area under beamline
 
     """
     if area == "ioc" \
@@ -69,7 +69,7 @@ def check_source_file_path_valid(source):
         source(str): Path to module to be cloned
 
     Raises:
-        Exception: Repository does not contain <source>
+        :class:`exception.Exception`: Repository does not contain <source>
 
     """
     if not vcs_git.is_server_repo(source):
@@ -84,7 +84,7 @@ def check_module_file_path_valid(module):
         module(str): Name of module to clone
 
     Raises:
-        Exception: Path already exists: 'module'
+        :class:`exception.Exception`: Path already exists: 'module'
 
     """
     if os.path.isdir(module):

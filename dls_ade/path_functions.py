@@ -13,7 +13,7 @@ def check_technical_area_valid(area, module):
         module(str): Module to check
 
     Raises:
-        ValueError: Missing technical area under beamline
+        :class:`exceptions.ValueError`: Missing technical area under beamline
 
     """
 

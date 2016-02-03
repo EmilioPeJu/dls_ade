@@ -258,7 +258,7 @@ def edit_contact_info(repo, contact='', cc=''):
     Write to .gitattributes file to change contacts of repo.
 
     Args:
-        repo(:class:`git.Repo`): Repository instance of module
+        repo(:class:`~git.repo.base.Repo`): Repository instance of module
         contact(str): Contact FED-ID
         cc(str): CC FED-ID
 

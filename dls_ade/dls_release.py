@@ -133,7 +133,7 @@ def create_build_object(args):
         args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        Builder: Either a Windows or RedHat build object
+        :class:`~dls_ade.dlsbuild.Builder`: Either a Windows or RedHat build object
 
     """
     if args.rhel_version:
@@ -163,7 +163,7 @@ def create_vcs_object(module, args):
         args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        :class:`Git`: Git vcs instance
+        :class:`dls_ade.vcs_git.Git`: Git vcs instance
 
     """
     if args.git:
@@ -181,7 +181,7 @@ def check_parsed_arguments_valid(args,  parser):
         parser(:class:`argparse.ArgumentParser`): Parser instance
 
     Raises:
-        VCSGitError:
+        :class:`dls_ade.exceptions.VCSGitError`:
             * Module name not specified
             * Module version not specified
             * Cannot release etc/build or etc/redirector as modules - use configure system instead
@@ -287,7 +287,7 @@ def construct_info_message(module, branch, area, version, build_object):
         branch(str): Branch to be released
         area(str): Area of module
         version(str): Release version
-        build_object(Builder): Either a Windows or RedHat build object
+        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a Windows or RedHat build object
 
     Returns:
         str: Info message for user
@@ -349,7 +349,7 @@ def get_module_epics_version(vcs):
     Get epics version of most recent release
 
     Args:
-        vcs(Git/Svn): Git or Svn version control system instance
+        vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
 
     Returns:
         str: Epics version of most recent release
@@ -368,9 +368,9 @@ def perform_test_build(build_object, local_build, vcs):
     Test build the module and return whether it was successful
 
     Args:
-        build_object(Builder): Either a windows or RedHat builder instance
+        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a windows or RedHat builder instance
         local_build(bool): Specifier to perform test build only
-        vcs(:class:`vcs_git.Git`): Git version control system instance
+        vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
 
     Returns:
         str, bool: Message explaining how the test build went, True or False for whether it failed or not
