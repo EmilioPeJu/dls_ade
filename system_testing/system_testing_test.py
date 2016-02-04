@@ -151,6 +151,71 @@ class SystemTestLoadSettingsTest(unittest.TestCase):
         self.assertNotEqual(st_obj._std_out, "this should not get updated")
 
 
+class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
+
+    def setUp(self):
+
+        self.mock_vcs_git = set_up_mock(self, 'system_testing.vcs_git')
+
+        self.st_obj = st.SystemTest("test_script", "test_name")
+
+    def test_given_no_default_server_repo_path_then_function_returns_immediately(self):
+
+        self.st_obj.load_settings({})
+
+        self.st_obj.set_server_repo_to_default()
+
+        self.assertFalse(self.mock_vcs_git.temp_clone.called)
+
+    def test_given_default_server_repo_path_but_no_server_repo_path_then_function_raises_exception_with_correct_message(self):
+
+        self.st_obj.load_settings({
+            'default_server_repo_path': "path/to/default",
+        })
+
+        with self.assertRaises(st.SettingsError) as e:
+            self.st_obj.set_server_repo_to_default()
+
+        self.assertTrue(all(x in str(e.exception) for x in ["default_server_repo_path"]))
+
+        self.assertFalse(self.mock_vcs_git.temp_clone.called)
+
+    def test_given_both_paths_and_server_repo_does_not_already_exist_then_vcs_git_functions_called_correctly(self):
+
+        mock_temp_repo = MagicMock(working_tree_dir="tempdir")
+        self.mock_vcs_git.temp_clone.return_value = mock_temp_repo
+        self.mock_vcs_git.is_server_repo.return_value = False
+
+        self.st_obj.load_settings({
+            'default_server_repo_path': "path/to/default",
+            'server_repo_path': "path/to/new",
+        })
+
+        self.st_obj.set_server_repo_to_default()
+
+        self.mock_vcs_git.temp_clone.assert_called_once_with("path/to/default")
+        self.mock_vcs_git.delete_remote.assert_called_once_with("tempdir", "origin")
+        self.mock_vcs_git.add_new_remote_and_push.assert_called_once_with("path/to/new", "tempdir")
+
+    def test_given_both_paths_and_server_repo_already_exists_then_vcs_git_functions_called_correctly(self):
+
+        mock_temp_repo = MagicMock(working_tree_dir="tempdir", active_branch="test_branch")
+        self.mock_vcs_git.temp_clone.return_value = mock_temp_repo
+        self.mock_vcs_git.is_server_repo.return_value = True
+
+        self.st_obj.load_settings({
+            'default_server_repo_path': "path/to/default",
+            'server_repo_path': "path/to/altered",
+        })
+
+        self.st_obj.set_server_repo_to_default()
+
+        self.mock_vcs_git.temp_clone.assert_called_once_with("path/to/default")
+        self.mock_vcs_git.delete_remote.assert_called_once_with("tempdir", "origin")
+
+        mock_temp_repo.create_remote.assert_called_once_with("origin", "path/to/altered")
+        mock_temp_repo.git.push.assert_called_once_with("origin", "test_branch", "-f")
+
 class SystemTestCallScriptTest(unittest.TestCase):
 
     def setUp(self):

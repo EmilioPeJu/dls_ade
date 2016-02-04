@@ -301,37 +301,37 @@ def setup_module():
     st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
-def test_generator_export_to_server():
-    """Generator for tests relating to remote server repository creation.
-
-    This will move into a temporary directory before returning the tests with
-    the given script and settings list.
-
-    When called by nosetests, nosetests will run every yielded test function.
-
-    Yields:
-        A :class:`system_testing.SystemTest` instance.
-
-    """
-    alter_settings_dictionaries(settings_list)
-
-    tempdir = tempfile.mkdtemp()
-    cwd = os.getcwd()
-
-    # Unpack tar in tempdir and change to match currently logged in user.
-    snm_util.untar_comparison_files_and_insert_user_login(
-            COMPARISON_FILES + ".tar.gz", tempdir
-    )
-
-    os.chdir(tempdir)
-
-    for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-                                             settings_list):
-        yield test
-
-    os.chdir(cwd)
-
-    shutil.rmtree(tempdir)
+# def test_generator_export_to_server():
+#     """Generator for tests relating to remote server repository creation.
+#
+#     This will move into a temporary directory before returning the tests with
+#     the given script and settings list.
+#
+#     When called by nosetests, nosetests will run every yielded test function.
+#
+#     Yields:
+#         A :class:`system_testing.SystemTest` instance.
+#
+#     """
+#     alter_settings_dictionaries(settings_list)
+#
+#     tempdir = tempfile.mkdtemp()
+#     cwd = os.getcwd()
+#
+#     # Unpack tar in tempdir and change to match currently logged in user.
+#     snm_util.untar_comparison_files_and_insert_user_login(
+#             COMPARISON_FILES + ".tar.gz", tempdir
+#     )
+#
+#     os.chdir(tempdir)
+#
+#     for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+#                                              settings_list):
+#         yield test
+#
+#     os.chdir(cwd)
+#
+#     shutil.rmtree(tempdir)
 
 
 add_app_settings_list = [
@@ -368,24 +368,13 @@ def test_generator_export_add_app_to_server():
 
     """
     for settings_dict in add_app_settings_list:
-        # Clone the template repository to a new location.
+        # Set the server repository to the default to start with.
 
-        clone_from = os.path.join(
+        settings_dict['default_server_repo_path'] = os.path.join(
                 ORIGINAL_GIT_ROOT_DIR,
                 settings_dict['module_area'],
                 settings_dict['path'],
         )
-
-        clone_to = st.vcs_git.pathf.dev_module_path(
-            settings_dict['path'],
-            settings_dict['module_area'],
-        )
-
-        temp_repo = st.vcs_git.temp_clone(clone_from)
-        local_repo_path = temp_repo.working_tree_dir
-
-        st.vcs_git.delete_remote(local_repo_path, "origin")
-        st.vcs_git.add_new_remote_and_push(clone_to, local_repo_path)
 
     alter_settings_dictionaries(add_app_settings_list)
 
