@@ -327,11 +327,8 @@ def get_module_epics_version(vcs):
     Get epics version of most recent release
 
     Args:
-<<<<<<< HEAD
         vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
-=======
-        vcs(:class:`vcs_git.Git`): Git version control system instance
->>>>>>> new-git-scripts
+
 
     Returns:
         str: Epics version of most recent release
