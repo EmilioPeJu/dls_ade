@@ -4,10 +4,6 @@ support_list = "Modules in support:\n\n" \
                "testsupportmod\n" \
                "testsupportmo\n"
 
-python_list = "Modules in python:\n\n" \
-              "dls_testpythonmod2\n" \
-              "dls_testpythonmod\n"
-
 ioc_list = "Modules in ioc:\n\n" \
            "BTEST2/TS\n" \
            "BTEST/BTEST-EB-IOC-03\n" \
@@ -25,17 +21,15 @@ ioc_domain_list = "Modules in BTEST:\n\n" \
 
 settings_list = [
 
-    # List everything in support area
     {
-        'description': "list_support",
+        'description': "list_modules_in_support_area",
 
         'std_out_compare_string': support_list,
 
     },
 
-    # List everything in ioc area
     {
-        'description': "list_ioc",
+        'description': "list_modules_in_ioc_area",
 
         'arguments': "-i",
 
@@ -43,9 +37,8 @@ settings_list = [
 
     },
 
-    # List everything in an ioc domain
     {
-        'description': "list_ioc_domain",
+        'description': "list_modules_in_domain_in_ioc_area",
 
         'arguments': "-i BTEST",
 

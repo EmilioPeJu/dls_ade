@@ -3,9 +3,8 @@ import logs
 
 settings_list = [
 
-    # Print logs for module in python area
     {
-        'description': "print_logs",
+        'description': "print_all_logs_for_module",
 
         'arguments': "-p dls_testpythonmod2",
 
@@ -13,9 +12,8 @@ settings_list = [
 
     },
 
-    # Print verbose logs for module in python area
     {
-        'description': "print_verbose_logs",
+        'description': "print_all_logs_for_module_with_verbose",
 
         'arguments': "-p dls_testpythonmod2 -v",
 
@@ -23,9 +21,8 @@ settings_list = [
 
     },
 
-    # Print range logs for module in python area
     {
-        'description': "print_range_logs",
+        'description': "print_logs_in_given_range",
 
         'arguments': "-p dls_testpythonmod2 1-1 2-0",
 
@@ -33,9 +30,8 @@ settings_list = [
 
     },
 
-    # Print verbose range logs for module in python area
     {
-        'description': "print_verbose_range_logs",
+        'description': "print_logs_in_given_range_with_verbose",
 
         'arguments': "-p dls_testpythonmod2 1-1 2-0 -v",
 
@@ -43,9 +39,8 @@ settings_list = [
 
     },
 
-    # Print earlier logs for module in python area
     {
-        'description': "print_earlier_logs",
+        'description': "print_logs_from_earlier_arg_to_HEAD",
 
         'arguments': "-p dls_testpythonmod2 -e 1-1",
 
@@ -53,9 +48,8 @@ settings_list = [
 
     },
 
-    # Print verbose earlier logs for module in python area
     {
-        'description': "print_verbose_earlier_logs",
+        'description': "print_logs_from_earlier_arg_to_HEAD_with_verbose",
 
         'arguments': "-p dls_testpythonmod2 -e 1-1 -v",
 
@@ -63,9 +57,8 @@ settings_list = [
 
     },
 
-    # Print later logs for module in python area
     {
-        'description': "print_later_logs",
+        'description': "print_logs_from_first_release_to_later_arg",
 
         'arguments': "-p dls_testpythonmod2 -l 2-0",
 
@@ -73,9 +66,8 @@ settings_list = [
 
     },
 
-    # Print verbose later logs for module in python area
     {
-        'description': "print_verbose_later_logs",
+        'description': "print_logs_from_first_release_to_later_arg_with_verbose",
 
         'arguments': "-p dls_testpythonmod2 -l 2-0 -v",
 

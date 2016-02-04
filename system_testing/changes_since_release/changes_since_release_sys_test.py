@@ -6,9 +6,8 @@ exception_msg = "Repository does not contain controlstest/python/testpythonmod"
 
 settings_list = [
 
-    # List everything in python area
     {
-        'description': "changes_made",
+        'description': "test_module_with_changes_made_since_release",
 
         'arguments': "-p dls_testpythonmod",
 
@@ -16,9 +15,8 @@ settings_list = [
 
     },
 
-    # List everything in python area
     {
-        'description': "no_changes_made",
+        'description': "test_module_with_no_changes_made_since_release",
 
         'arguments': "-p dls_testpythonmod2",
 
@@ -38,7 +36,7 @@ settings_list = [
     },
 
     {
-        'description': "no_releases_done",
+        'description': "test_module_with_no_releases_done",
 
         'arguments': "-i testB06/TS",
 

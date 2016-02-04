@@ -19,7 +19,6 @@ new_cc = 'tmc43'
 
 settings_list = [
 
-    # Check contacts of python module
     {
         'description': "check_contacts",
 
@@ -29,9 +28,8 @@ settings_list = [
 
     },
 
-    # Check contacts of python module in CSV format
     {
-        'description': "check_contacts_CSV",
+        'description': "check_contacts_with_CSV_format",
 
         'arguments': "-p dls_testpythonmod -s",
 
@@ -39,9 +37,8 @@ settings_list = [
 
     },
 
-    # Set contacts of python module
     {
-        'description': "set_contacts",
+        'description': "set_both_contacts",
 
         'arguments': "-p dls_testpythonmod3 -c up45 -d tmc43",
 
@@ -52,9 +49,8 @@ settings_list = [
 
     },
 
-    # Set contact of python module
     {
-        'description': "set_contact_not_cc",
+        'description': "set_contact_leave_cc_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -c up45",
 
@@ -65,9 +61,8 @@ settings_list = [
 
     },
 
-    # Set cc of python module
     {
-        'description': "set_cc_not_contact",
+        'description': "set_cc_leave_contact_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -d tmc43",
 
@@ -78,9 +73,8 @@ settings_list = [
 
     },
 
-    # Set contacts of python module with CSV
     {
-        'description': "set_contacts_CSV",
+        'description': "set_both_contacts_using_CSV_file",
 
         'arguments': "-p dls_testpythonmod3 -m python_test_csv.txt",
 
@@ -91,9 +85,8 @@ settings_list = [
 
     },
 
-    # Set contact of python module with CSV
     {
-        'description': "set_contact_not_cc_CSV",
+        'description': "set_contact_using_CSV_file_leave_cc_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -m contact_python_test_csv.txt",
 
@@ -104,9 +97,8 @@ settings_list = [
 
     },
 
-    # Set cc of python module with CSV
     {
-        'description': "set_cc_not_contact_CSV",
+        'description': "set_cc_using_CSV_file_leave_contact_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -m cc_python_test_csv.txt",
 

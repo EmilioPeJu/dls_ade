@@ -9,9 +9,8 @@ from nose.tools import assert_equal, assert_true, assert_false
 
 settings_list = [
 
-    # Checkout one module from python area and check it is correctly cloned
     {
-        'description': "checkout_module",
+        'description': "checkout_a_single_module",
 
         'arguments': "-p dls_testpythonmod",
 
@@ -23,9 +22,8 @@ settings_list = [
 
     },
 
-    # Checkout one module from python area, change branch and check it is correctly cloned
     {
-        'description': "checkout_and_change_branch",
+        'description': "checkout_a_single_module_and_change_branch",
 
         'arguments': "-p dls_testpythonmod -b bug-fix",
 
@@ -59,7 +57,7 @@ def test_generator():
         shutil.rmtree(tempdir)
 
 
-def test_checkout_area():
+def test_checkout_entire_area():
 
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
@@ -92,7 +90,7 @@ def test_checkout_area():
     shutil.rmtree(tempdir)
 
 
-def test_checkout_domain():
+def test_checkout_entire_ioc_domain():
 
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()
