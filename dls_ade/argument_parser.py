@@ -7,13 +7,13 @@ areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
 
 class ArgParser(ArgumentParser):
 
-    def __init__(self, usage_v):
+    def __init__(self, usage_v, supported_areas=areas):
         super(ArgParser, self).__init__(description=usage_v)
 
         area = self.add_mutually_exclusive_group(required=False)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="Set area, e.g. " + ", ".join(areas))
+            help="Set area, e.g. " + ", ".join(supported_areas))
         area.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="Set 'python' area")
