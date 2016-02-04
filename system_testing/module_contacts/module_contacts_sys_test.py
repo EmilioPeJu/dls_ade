@@ -124,10 +124,11 @@ def test_generator():
 
     for test in st.generate_tests_from_dicts("dls-module-contacts.py",
                                              settings_list):
-        yield test
 
         # Reset repo to initial state
         repo.git.push("dummy_repo", repo.active_branch, "-f")
+
+        yield test
 
     os.chdir(cwd)
     shutil.rmtree(repo.working_tree_dir)
