@@ -301,37 +301,37 @@ def setup_module():
     st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
-# def test_generator_export_to_server():
-#     """Generator for tests relating to remote server repository creation.
-#
-#     This will move into a temporary directory before returning the tests with
-#     the given script and settings list.
-#
-#     When called by nosetests, nosetests will run every yielded test function.
-#
-#     Yields:
-#         A :class:`system_testing.SystemTest` instance.
-#
-#     """
-#     alter_settings_dictionaries(settings_list)
-#
-#     tempdir = tempfile.mkdtemp()
-#     cwd = os.getcwd()
-#
-#     # Unpack tar in tempdir and change to match currently logged in user.
-#     snm_util.untar_comparison_files_and_insert_user_login(
-#             COMPARISON_FILES + ".tar.gz", tempdir
-#     )
-#
-#     os.chdir(tempdir)
-#
-#     for test in st.generate_tests_from_dicts("dls-start-new-module.py",
-#                                              settings_list):
-#         yield test
-#
-#     os.chdir(cwd)
-#
-#     shutil.rmtree(tempdir)
+def test_generator_export_to_server():
+    """Generator for tests relating to remote server repository creation.
+
+    This will move into a temporary directory before returning the tests with
+    the given script and settings list.
+
+    When called by nosetests, nosetests will run every yielded test function.
+
+    Yields:
+        A :class:`system_testing.SystemTest` instance.
+
+    """
+    alter_settings_dictionaries(settings_list)
+
+    tempdir = tempfile.mkdtemp()
+    cwd = os.getcwd()
+
+    # Unpack tar in tempdir and change to match currently logged in user.
+    snm_util.untar_comparison_files_and_insert_user_login(
+            COMPARISON_FILES + ".tar.gz", tempdir
+    )
+
+    os.chdir(tempdir)
+
+    for test in st.generate_tests_from_dicts("dls-start-new-module.py",
+                                             settings_list):
+        yield test
+
+    os.chdir(cwd)
+
+    shutil.rmtree(tempdir)
 
 
 add_app_settings_list = [
