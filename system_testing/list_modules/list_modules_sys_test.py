@@ -72,10 +72,7 @@ def teardown_module():
 
 def test_generator():
 
-    setup_module()
-
     for test in st.generate_tests_from_dicts("dls-list-modules.py",
                                              settings_list):
         yield test
 
-    teardown_module()
