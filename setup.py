@@ -13,7 +13,7 @@ for root, subFolders, files in os.walk("dlsbuild_scripts"):
     build_scripts += [os.path.join(root, x) for x in files if x.endswith(".bat") or x.endswith(".sh") ]
 
 template_files = []
-for root, _, files in os.walk("new_module_templates"):
+for root, _, files in os.walk("module_templates"):
     template_files += [os.path.join(root, x) for x in files]
 
 additional_files = build_scripts + template_files

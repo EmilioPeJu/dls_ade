@@ -57,7 +57,7 @@ def make_parser():
 
     parser.add_argument(
         "-n", "--no-import", action="store_true", dest="no_import",
-        help="Creates the module but doesn't import into svn")
+        help="Creates the module but doesn't store it on the server")
     parser.add_argument(
         "-f", "--fullname", action="store_true", dest="fullname",
         help="create new-style ioc, with full ioc name in path")

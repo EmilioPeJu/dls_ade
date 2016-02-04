@@ -287,10 +287,8 @@ def setup_module():
         raise Exception("The file repo_test_num.txt must contain the current "
                         "test number.")
 
-    test_number = int(test_number)
-    test_number += 1
-    test_number = str(test_number)
-
+    test_number = str(int(test_number) + 1)
+    
     # The environment variable is set for the use of the script being tested.
     NEW_GIT_ROOT_DIR = "controlstest/targetOS/creation" + test_number
     os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
