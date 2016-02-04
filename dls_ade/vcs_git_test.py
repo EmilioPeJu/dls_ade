@@ -9,6 +9,7 @@ from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
 def setUpModule():
     vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     vcs_git.GIT_ROOT_DIR = "controlstest"
+    vcs_git.pathf.GIT_ROOT_DIR = "controlstest"
 
 
 def set_up_mock(test_case_object, path):
