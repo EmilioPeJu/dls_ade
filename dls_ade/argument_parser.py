@@ -32,12 +32,12 @@ class ArgParser(ArgumentParser):
 
     def add_module_name_arg(self, help_msg="Name of module"):
 
-        self.add_argument("module_name", type=str, default=None,
+        self.add_argument("module_name", type=str, default="",
                           help=help_msg)
 
     def add_release_arg(self, help_msg="Release of module"):
 
-        self.add_argument("release", type=str, default=None,
+        self.add_argument("release", type=str, default="",
                           help=help_msg)
 
     def add_branch_flag(self, help_msg="Branch of repository"):
