@@ -344,7 +344,7 @@ def format_log_messages(log_info, raw, verbose):
         verbose(bool): True or False to add extra information (time, date, message body and diff info)
 
     Returns:
-        list of str: A list log entries
+        list[str]: A list log entries
     """
 
     blue = 34
@@ -454,7 +454,7 @@ def get_file_changes(commit, prev_commit):
         prev_commit(:class:`~git.objects.commit.Commit`): Commit object for commit to compare against
 
     Returns:
-        list of str: A list of the changed files between the two commits
+        list[str]: A list of the changed files between the two commits
     """
 
     changed_files = []
@@ -492,7 +492,7 @@ def format_message_width(message, line_len):
         line_len(int): Maximum line length to format to
 
     Returns:
-        list of str: Formatted message as list of message parts shorter than max line length
+        list[str]: Formatted message as list of message parts shorter than max line length
     """
 
     if not isinstance(message, list):
