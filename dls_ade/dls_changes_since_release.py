@@ -54,7 +54,7 @@ def main():
             # return so last_release_num can't be referenced before assignment
             return 1
     else:
-        raise Exception(source + "does not exist on the repository.")
+        raise Exception(source + " does not exist on the repository.")
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made
