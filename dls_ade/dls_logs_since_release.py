@@ -314,7 +314,7 @@ def convert_time_stamp(time_stamp):
     Convert a unix time stamp into date and time.
 
     Args:
-        time_stamp(int):
+        time_stamp(int): Unix time stamp
 
     Returns:
         str: Date and time
