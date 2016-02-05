@@ -150,7 +150,8 @@ Attribute comparison settings
     to take place.
     
     Note: 
-    This is the same as the path used for :ref:`systest-folder-comparison-settings`.
+        This is the same path as used for
+        :ref:`systest-folder-comparison-settings`.
 
 .. _systest-folder-comparison-settings:
 
@@ -179,9 +180,15 @@ Folder comparison settings
     This is the server repository path. This does not include the server name.
     The repository is cloned to a local directory in order for the comparison
     to take place.
-    
-    Note: 
-    This is the same as the path used for :ref:`systest-attribute-comparison-settings`.
+
+    Note:
+        This is the same path as used for
+        :ref:`systest-attribute-comparison-settings`.
+
+`.git`, `.gitattributes` and `.keep` folders and files are all ignored for this
+comparison.
+
+
 
 .. _systest-branch-comparison-settings:
 
