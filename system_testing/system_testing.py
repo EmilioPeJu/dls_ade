@@ -315,7 +315,10 @@ class SystemTest(object):
         vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
 
         if vcs_git.is_server_repo(self._server_repo_path):
-            temp_repo.create_remote("origin", self._server_repo_path)
+            temp_repo.create_remote(
+                    "origin",
+                    os.path.join(vcs_git.GIT_SSH_ROOT, self._server_repo_path)
+            )
             temp_repo.git.push("origin", temp_repo.active_branch, "-f")
 
         else:

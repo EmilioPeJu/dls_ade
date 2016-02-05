@@ -202,6 +202,7 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
         mock_temp_repo = MagicMock(working_tree_dir="tempdir", active_branch="test_branch")
         self.mock_vcs_git.temp_clone.return_value = mock_temp_repo
         self.mock_vcs_git.is_server_repo.return_value = True
+        self.mock_vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT"
 
         self.st_obj.load_settings({
             'default_server_repo_path': "path/to/default",
@@ -213,8 +214,9 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
         self.mock_vcs_git.temp_clone.assert_called_once_with("path/to/default")
         self.mock_vcs_git.delete_remote.assert_called_once_with("tempdir", "origin")
 
-        mock_temp_repo.create_remote.assert_called_once_with("origin", "path/to/altered")
+        mock_temp_repo.create_remote.assert_called_once_with("origin", "ssh://GIT_SSH_ROOT/path/to/altered")
         mock_temp_repo.git.push.assert_called_once_with("origin", "test_branch", "-f")
+
 
 class SystemTestCallScriptTest(unittest.TestCase):
 
