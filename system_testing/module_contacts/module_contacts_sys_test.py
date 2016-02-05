@@ -1,9 +1,5 @@
 import system_testing as st
 import os
-import shutil
-from dls_ade import vcs_git
-
-GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
 sys_test_dir_path = os.path.realpath(os.path.dirname(__file__))
 
@@ -20,7 +16,7 @@ new_cc = 'tmc43'
 settings_list = [
 
     {
-        'description': "check_contacts",
+        'description': "print_module_contacts",
 
         'arguments': "-p dls_testpythonmod",
 
@@ -29,7 +25,7 @@ settings_list = [
     },
 
     {
-        'description': "check_contacts_with_CSV_format",
+        'description': "print_module_contacts_in_CSV_format",
 
         'arguments': "-p dls_testpythonmod -s",
 
@@ -45,29 +41,35 @@ settings_list = [
         'attributes_dict': {'module-contact': new_contact,
                             'module-cc': new_cc},
 
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
+
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
     },
 
     {
-        'description': "set_contact_leave_cc_unchanged",
+        'description': "set_contact_leaving_cc_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -c up45",
 
         'attributes_dict': {'module-contact': new_contact,
                             'module-cc': default_cc},
 
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
+
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
     },
 
     {
-        'description': "set_cc_leave_contact_unchanged",
+        'description': "set_cc_leaving_contact_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -d tmc43",
 
         'attributes_dict': {'module-contact': default_contact,
                             'module-cc': new_cc},
+
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
 
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
@@ -81,29 +83,35 @@ settings_list = [
         'attributes_dict': {'module-contact': new_contact,
                             'module-cc': new_cc},
 
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
+
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
     },
 
     {
-        'description': "set_contact_using_CSV_file_leave_cc_unchanged",
+        'description': "set_contact_using_CSV_file_leaving_cc_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -m contact_python_test_csv.txt",
 
         'attributes_dict': {'module-contact': new_contact,
                             'module-cc': default_cc},
 
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
+
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
     },
 
     {
-        'description': "set_cc_using_CSV_file_leave_contact_unchanged",
+        'description': "set_cc_using_CSV_file_leaving_contact_unchanged",
 
         'arguments': "-p dls_testpythonmod3 -m cc_python_test_csv.txt",
 
         'attributes_dict': {'module-contact': default_contact,
                             'module-cc': new_cc},
+
+        'default_server_repo_path': "controlstest/python/dls_testpythonmod",
 
         'server_repo_path': "controlstest/python/dls_testpythonmod3",
 
@@ -117,18 +125,9 @@ def test_generator():
     cwd = os.getcwd()
     os.chdir(sys_test_dir_path)
 
-    repo = vcs_git.temp_clone("controlstest/python/dls_testpythonmod")
-    repo.create_remote("dummy_repo",
-                       os.path.join(GIT_SSH_ROOT,
-                                    "controlstest/python/dls_testpythonmod3"))
-
     for test in st.generate_tests_from_dicts("dls-module-contacts.py",
                                              settings_list):
-
-        # Reset repo to initial state
-        repo.git.push("dummy_repo", repo.active_branch, "-f")
 
         yield test
 
     os.chdir(cwd)
-    shutil.rmtree(repo.working_tree_dir)
