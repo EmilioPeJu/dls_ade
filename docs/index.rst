@@ -17,9 +17,9 @@ Contents:
    :maxdepth: 2
 
    dls_ade
-   system testing <system_testing>
-   start_new_module system testing <snm_system_testing>
-   All Other Systems Testing <all_other_system_testing>
+   System Testing Framework <system_testing>
+   Start New Module System Testing <snm_system_testing>
+   All Other Scripts System Testing <all_other_system_testing>
 
 Indices and tables
 ------------------

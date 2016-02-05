@@ -575,10 +575,10 @@ class Git(BaseVCS):
 
         """
 
-        if not hasattr(self, 'releases'):
-            releases = []
-            for tag in self.client.tags:
-                releases.append(tag.name)
+        releases = []
+        for tag in self.client.tags:
+            releases.append(tag.name)
+
         return releases
 
     def set_log_message(self, message):

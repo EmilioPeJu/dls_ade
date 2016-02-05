@@ -29,7 +29,7 @@ Changes since release has no arguments, but has two main outputs depending on th
 Checkout Module System Testing
 ------------------------------
 
-Checkout module has four tests; a standard checkout, a checkout with a branch change and the checkout of an entire area or ioc domain. These shouldn't be affected by any other test because the check is to simply compare what has been checked out to what is on the repo.
+Checkout module has four tests; a standard checkout, a checkout with a branch change and the checkout of an entire area or ioc domain. The multi clone tests use the designated mock repository area so that the tests will not be affected by module additions to the root areas.
 
 .. _list-branches-st:
 
@@ -69,7 +69,7 @@ Logs since release has three optional mutually exclusive arguments, releases, ea
 Module Contacts System Testing
 ------------------------------
 
-Module contacts has four main functions, reading contacts in default and CSV format and setting contacts manually or with a CSV file. There are two tests for checking contacts, with default and CSV format. There are choices and two methods for setting contacts, setting both and setting one but leaving the other unchanged for both the manual and import methods giving six tests and eight in total. The state of the repo is reset after each test.
+Module contacts has four main functions, reading contacts in default and CSV format and setting contacts manually or with a CSV file. There are two tests for checking contacts, with default and CSV format. There are choices and two methods for setting contacts, setting both and setting one but leaving the other unchanged for both the manual and import methods giving six tests and eight in total. The state of the dls_testpythonmod3 is reset to the default state (using dls_testpythonmod) before each test.
 
 .. _tar-module-st:
 
