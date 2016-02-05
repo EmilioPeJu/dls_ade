@@ -526,10 +526,10 @@ class Git(BaseVCS):
         if not is_server_repo(server_repo_path):
             raise VCSGitError('repo not found on gitolite server')
 
-        self.repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
+        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
         self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
 
-        self.client = git.Repo.clone_from(self._remote_repo, self.repo_dir)
+        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
         self._version = None
 
     @property
