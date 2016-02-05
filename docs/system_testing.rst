@@ -1,4 +1,4 @@
-.. _system-testing-overview:
+.. _system-testing:
 
 ==============
 System Testing
@@ -6,15 +6,15 @@ System Testing
 
 Contents:
 ---------
-- :ref:`general-overview`
-- :ref:`settings-descriptions`
-- :ref:`setting-up-environment`
-- :ref:`test-descriptions`
+- :ref:`systest-general-overview`
+- :ref:`systest-settings-descriptions`
+- :ref:`systest-setting-up-environment`
+- :ref:`systest-test-descriptions`
 
     * :ref:`system-testing-snm`
     * :ref:`all-other-system-testing`
     
-.. _general-overview:
+.. _systest-general-overview:
 
 General overview
 ----------------
@@ -39,7 +39,7 @@ All another script has to do is pass these arguments and yield the returned
 values.
 
 Each dls_ade script has a separate testing folder. These are explained in more
-detail in the :ref:`test-descriptions` subsection.
+detail in the :ref:`systest-test-descriptions` subsection.
 
 To run a particular test, run
 
@@ -51,7 +51,7 @@ in the test's directory. The '-v' command is optional, but will show the name
 of each test as it is run.
 
 For a simplified set of tests, look at the `example_generator.py` script in the
-system_testing folder. After :ref:`setting-up-environment`, and running
+system_testing folder. After :ref:`systest-setting-up-environment`, and running
 
 .. code:: bash
 
@@ -75,14 +75,14 @@ If you wish to see a simplified version of the SystemTest class, look at
 
 will demonstrate the tests, of which half should fail.
 
-.. _settings-descriptions:
+.. _systest-settings-descriptions:
 
 SystemTest Settings Descriptions
 --------------------------------
 All provided settings are given as a {string: ...} dictionary. Unless
 otherwise specified, assume that the dictionary values are also strings.
 
-.. _basic-settings:
+.. _systest-basic-settings:
 
 Basic settings
 ~~~~~~~~~~~~~~
@@ -97,7 +97,7 @@ These two settings handle the running of the script.
     the process will still register the input (as though pressing Enter without
     any text).
 
-.. _server-default-settings:
+.. _systest-server-default-settings:
 
 Server default settings
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ running the script.
     The 'server_repo_path' is overwritten by this repository's contents. This
     means any commit history etc. is deleted.
 
-.. _exception-comparison-settings:
+.. _systest-exception-comparison-settings:
 
 Exception comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +118,7 @@ Exception comparison settings
 - exception_string
     Exception string to test for.
 
-.. _standard-output-comparison-settings:
+.. _systest-standard-output-comparison-settings:
 
 Standard output comparison setttings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,7 +132,7 @@ result, logging messages do not interfere with these tests.
 - std_out_ends_with_string
     A string which is compared against only the end of the output.
 
-.. _attribute-comparison-settings:
+.. _systest-attribute-comparison-settings:
 
 Attribute comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,9 +150,9 @@ Attribute comparison settings
     to take place.
     
     Note: 
-    This is the same as the path used for :ref:`folder-comparison-settings`.
+    This is the same as the path used for :ref:`systest-folder-comparison-settings`.
 
-.. _folder-comparison-settings:
+.. _systest-folder-comparison-settings:
 
 Folder comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,9 +181,9 @@ Folder comparison settings
     to take place.
     
     Note: 
-    This is the same as the path used for :ref:`attribute-comparison-settings`.
+    This is the same as the path used for :ref:`systest-attribute-comparison-settings`.
 
-.. _branch-comparison-settings:
+.. _systest-branch-comparison-settings:
 
 Branch comparison settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,7 +193,7 @@ Branch comparison settings
     checked out afterwards. The local_repo_path repository is also checked to
     make sure that this is its active branch.
 
-.. _setting-up-environment:
+.. _systest-setting-up-environment:
 
 Setting up the testing environment
 ----------------------------------
@@ -256,7 +256,7 @@ The system_testing module will prevent you from running any tests if you have
 not yet set the GIT_ROOT_DIR environment variable (performed by the setup
 script).
 
-.. _test-descriptions:
+.. _systest-test-descriptions:
 
 Test Descriptions
 -----------------
