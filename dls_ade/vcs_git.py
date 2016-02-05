@@ -153,8 +153,8 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     repo = git.Repo(path)
     print("Staging files...")
     repo.git.add('--all')
-    print("Committing files to repo...")
 
+    print("Committing files to repo...")
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
     msg = ""
@@ -526,10 +526,10 @@ class Git(BaseVCS):
         if not is_server_repo(server_repo_path):
             raise VCSGitError('repo not found on gitolite server')
 
-        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
+        self.repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
         self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
 
-        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
+        self.client = git.Repo.clone_from(self._remote_repo, self.repo_dir)
         self._version = None
 
     @property
@@ -628,6 +628,13 @@ class Git(BaseVCS):
 
     def release_version(self, version):
         raise NotImplementedError('version release for git not implemented')
+
+    def add_tag_to_repo(self, tag, message):
+
+        self.client.create_tag(tag, message)
+
+        origin = self.client.remotes.origin
+        origin.push('--follow-tags')
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"

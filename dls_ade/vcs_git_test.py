@@ -1332,6 +1332,32 @@ class GitReleaseVersionTest(unittest.TestCase):
             self.vcs.release_version('some-version')
 
 
+class AddTagToRepoTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    def setUp(self, mtemp, mclone):
+
+        self.patch_is_server_repo = patch('dls_ade.vcs_git.is_server_repo')
+        self.addCleanup(self.patch_is_server_repo.stop)
+        self.mock_is_server_repo = self.patch_is_server_repo.start()
+
+        self.mock_is_server_repo.return_value = True
+
+        self.module = 'dummy'
+        self.options = FakeOptions()
+
+        self.vcs = vcs_git.Git(self.module, self.options)
+
+    @patch('dls_ade.vcs_git.git')
+    def test_tag_added_and_push_called(self, _1):
+
+        self.vcs.add_tag_to_repo('1-0', 'Release 1-0')
+
+        self.vcs.client.create_tag.assert_called_once_with('1-0', 'Release 1-0')
+        self.vcs.client.remotes.origin.push.assert_called_once_with('--follow-tags')
+
+
 class FakeTag(object):
     def __init__(self, name):
         self.name = name

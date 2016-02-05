@@ -421,6 +421,8 @@ def main():
 
     build.submit(vcs, test=args.test_only)
 
+    vcs.add_tag_to_repo(version, "Release " + version)
+
 
 if __name__ == "__main__":
     main()
