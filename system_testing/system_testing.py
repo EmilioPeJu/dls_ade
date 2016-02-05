@@ -142,7 +142,10 @@ class SystemTest(object):
         _std_err: The standard error of the script called.
         _return_code: The return code of the script called.
 
-        _server_repo_clone_path: The path to a clone of the server repo.
+        _server_repo_clone_path: The path to a clone of `_server_repo_path`.
+
+        _default_server_repo_path: A server path pointing to a default repo.
+            This is used to set `_server_repo_path` to a default state.
 
         _exception_type: The exception type to test for in standard error.
         _exception_string: The exception string to test for in standard error.
@@ -156,21 +159,23 @@ class SystemTest(object):
         _local_repo_path: A local path, used for attribute checking.
 
         _repo_comp_method: Specifies how standard output is tested.
-            This can be: 'local_comp' to test _local_comp_path_one against
-            _local_comp_path_two. 'server_comp' to test _local_comp_path_one
-            against _server_repo_clone_path (cloned from _server_repo_path) or
-            'all_comp' to compare all three paths against each other.
+            This can be: 'local_comp' to test `_local_comp_path_one` against
+            `_local_comp_path_two`. 'server_comp' to test
+            `_local_comp_path_one` against `_server_repo_clone_path` (cloned
+            from `_server_repo_path`) or 'all_comp' to compare all three paths
+            against each other.
 
         _local_comp_path_one: A local path used for directory comparisons.
         _local_comp_path_two: A local path used for directory comparisons.
 
         _server_repo_path: The remote repository path.
             This is used for both git attribute checking as well as directory
-            comparisons (after being cloned to _server_repo_clone_path)
+            comparisons (after being cloned to `_server_repo_clone_path`)
 
         _branch_name: The name of the repository branch.
-            This is used for checking that the given _local_repo_path is on the
-            given branch, as well as changing server_repo_clone_path's branch.
+            This is used for checking that the given `_local_repo_path` is on
+            the given branch, as well as changing `_server_repo_clone_path`'s
+            branch.
 
         _settings_list: A list of all attributes that may be changed.
 
@@ -193,17 +198,24 @@ class SystemTest(object):
         # Used for attribute checking and comparisons
         self._server_repo_clone_path = ""
 
+        # Used to initialise a server repo to a default state.
+        self._default_server_repo_path = ""
+
+        # Used to tests exceptions
         self._exception_type = ""
         self._exception_string = ""
 
+        # Used to test output
         self._std_out_compare_string = None
         self._std_out_starts_with_string = None
         self._std_out_ends_with_string = None
+
+        # Used to alter script interaction
         self._arguments = ""
         self._input = None
-        self._attributes_dict = {}
 
         # Used for attribute checking
+        self._attributes_dict = {}
         self._local_repo_path = ""
 
         # Used for comparisons
@@ -215,9 +227,12 @@ class SystemTest(object):
         # Used for attribute checking and comparisons
         self._server_repo_path = ""
 
+        # Used to check for branch names, and also changes the branch of the
+        # local `_server_repo_clone_path` repo.
         self._branch_name = ""
 
         self._settings_list = [  # List of valid variables to update.
+            'default_server_repo_path',
             'exception_type',
             'exception_string',
             'std_out_compare_string',
@@ -238,6 +253,7 @@ class SystemTest(object):
         """Loads the given settings dictionary into the relevant variables.
 
         Note: This will only load the following variables:
+            - default_server_repo_path
             - exception_type
             - exception_string
             - std_out_compare_string
@@ -276,8 +292,35 @@ class SystemTest(object):
             VCSGitError: From run_tests().
 
         """
+        self.set_server_repo_to_default()
         self.call_script()
         self.run_tests()
+
+    def set_server_repo_to_default(self):
+        """Sets the given server repository to a default state.
+
+        Note:
+            If used on an existing server repository, all commit history will
+            be overwritten.
+
+        """
+        if not self._default_server_repo_path:
+            return
+
+        if not self._server_repo_path:
+            raise SettingsError("If 'default_server_repo_path is set, then"
+                                "'server_repo_path' must also be set.")
+
+        temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
+        vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
+
+        if vcs_git.is_server_repo(self._server_repo_path):
+            temp_repo.create_remote("origin", self._server_repo_path)
+            temp_repo.git.push("origin", temp_repo.active_branch, "-f")
+
+        else:
+            vcs_git.add_new_remote_and_push(self._server_repo_path,
+                                            temp_repo.working_tree_dir)
 
     def call_script(self):
         """Call the script and store output, error and return code.

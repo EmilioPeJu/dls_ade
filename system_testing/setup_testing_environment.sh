@@ -2,8 +2,11 @@
 
 export GIT_ROOT_DIR="controlstest"
 
-if [ $# -eq 1 ]
+if [ $# -eq 3 ]
   then
-    export PATH=$1/prefix/bin:$PATH
-    export PYTHONPATH=$1:$1/system_testing:$PYTHONPATH
+    export PATH=$1:$PATH
+    export PYTHONPATH=$2:$3:$PYTHONPATH
+  else
+    echo Please give the /bin, the /...egg folder and the system_testing folder paths.
+    return 1
 fi

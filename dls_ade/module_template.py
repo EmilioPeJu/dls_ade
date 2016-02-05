@@ -121,7 +121,13 @@ class ModuleTemplate(object):
                     contents = f.read()
                 rel_path = os.path.relpath(file_path, template_folder)
                 logging.debug("rel path: " + rel_path)
-                template_files[rel_path] = contents
+
+                # This stops the installer from compiling the .py files.
+                if rel_path.endswith(".py_template"):
+                    rel_path = rel_path[:-9]
+                    template_files[rel_path] = contents
+                else:
+                    template_files[rel_path] = contents
 
         return template_files
 
