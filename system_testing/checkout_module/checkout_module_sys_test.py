@@ -8,6 +8,9 @@ from dls_ade import vcs_git
 from nose.tools import assert_equal, assert_true, assert_false
 import unittest
 
+ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
+NEW_GIT_ROOT_DIR = "controlstest/targetOS/mock_repo"
+
 settings_list = [
 
     {
@@ -58,36 +61,26 @@ def test_generator():
         shutil.rmtree(tempdir)
 
 
-class CheckoutEntireAreaTest(unittest.TestCase):
+class MultiCheckoutTest(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(CheckoutEntireAreaTest, self).__init__()
-        self.ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
-        self.NEW_GIT_ROOT_DIR = ""
-
-    def runTest(self):
-        self.test_checkout_entire_area()
-
-    def setup_module(self):
+    def setUp(self):
         """Change environment variable and module variables.
 
         """
-
         # The environment variable is set for the use of the script being tested.
-        self.NEW_GIT_ROOT_DIR = "controlstest/targetOS/mock_repo"
-        os.environ['GIT_ROOT_DIR'] = self.NEW_GIT_ROOT_DIR
+        os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
 
         # Set so SystemTest object can use the new variable.
-        st.vcs_git.GIT_ROOT_DIR = self.NEW_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = self.NEW_GIT_ROOT_DIR
+        st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
+        st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
-    def teardown_module(self):
+    def tearDown(self):
         """Change environment variable and module variables to the original values.
 
         """
-        os.environ['GIT_ROOT_DIR'] = self.ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.GIT_ROOT_DIR = self.ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = self.ORIGINAL_GIT_ROOT_DIR
+        os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
+        st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
+        st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
 
     def test_checkout_entire_area(self):
 
@@ -95,10 +88,14 @@ class CheckoutEntireAreaTest(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(tempdir)
 
-        modules = ["controlstest/python/dls_testpythonmod",
-                   "controlstest/python/dls_testpythonmod2"]
+        modules = ["controlstest/targetOS/mock_repo/ioc/BTEST/BTEST-EB-IOC-03",
+                   "controlstest/targetOS/mock_repo/ioc/BTEST/TS",
+                   "controlstest/targetOS/mock_repo/ioc/BTEST2/TS"]
+        
+        should_not_clone = ["controlstest/targetOS/mock_repo/python/dls_testpythonmod",
+                            "controlstest/targetOS/mock_repo/support/testsupportmod"]
 
-        process = subprocess.Popen("dls-checkout-module.py -p".split(),
+        process = subprocess.Popen("dls-checkout-module.py -i".split(),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE)
@@ -108,9 +105,13 @@ class CheckoutEntireAreaTest(unittest.TestCase):
         logging.debug("Standard out:\n" + std_out)
         logging.debug("Standard error:\n" + std_err)
 
+        # Check correct folders have been created
         for path in modules:
             assert_true(os.path.isdir(path.split('/', 2)[-1]))
+        for path in should_not_clone:
+            assert_false(os.path.isdir(path.split('/', 2)[-1]))
 
+        # Check modules have been cloned correctly
         for path in modules:
             repo = path.split('/', 2)[-1]
             clone = vcs_git.temp_clone(path)
@@ -121,48 +122,18 @@ class CheckoutEntireAreaTest(unittest.TestCase):
         os.chdir(cwd)
         shutil.rmtree(tempdir)
 
-
-class CheckoutEntireIOCTest(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(CheckoutEntireIOCTest, self).__init__()
-        self.ORIGINAL_GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR')
-        self.NEW_GIT_ROOT_DIR = ""
-
-    def runTest(self):
-        self.test_checkout_entire_ioc_domain()
-
-    def setup_module(self):
-        """Change environment variable and module variables.
-
-        """
-
-        # The environment variable is set for the use of the script being tested.
-        self.NEW_GIT_ROOT_DIR = "controlstest/targetOS/mock_repo"
-        os.environ['GIT_ROOT_DIR'] = self.NEW_GIT_ROOT_DIR
-
-        # Set so SystemTest object can use the new variable.
-        st.vcs_git.GIT_ROOT_DIR = self.NEW_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = self.NEW_GIT_ROOT_DIR
-
-    def teardown_module(self):
-        """Change environment variable and module variables to the original values.
-
-        """
-        os.environ['GIT_ROOT_DIR'] = self.ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.GIT_ROOT_DIR = self.ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = self.ORIGINAL_GIT_ROOT_DIR
-
     def test_checkout_entire_ioc_domain(self):
 
         tempdir = tempfile.mkdtemp()
         cwd = os.getcwd()
         os.chdir(tempdir)
 
-        modules = ["controlstest/ioc/BTEST/BTEST-EB-IOC-03",
-                   "controlstest/ioc/BTEST/TS"]
+        modules = ["controlstest/targetOS/mock_repo/ioc/BTEST/BTEST-EB-IOC-03",
+                   "controlstest/targetOS/mock_repo/ioc/BTEST/TS"]
 
-        should_not_clone = "controlstest/ioc/BTEST2/TS"
+        should_not_clone = ["controlstest/targetOS/mock_repo/ioc/BTEST2/TS",
+                            "controlstest/targetOS/mock_repo/python/dls_testpythonmod",
+                            "controlstest/targetOS/mock_repo/support/testsupportmod"]
 
         process = subprocess.Popen("dls-checkout-module.py -i BTEST/".split(),
                                    stdout=subprocess.PIPE,
@@ -174,10 +145,13 @@ class CheckoutEntireIOCTest(unittest.TestCase):
         logging.debug("Standard out:\n" + std_out)
         logging.debug("Standard error:\n" + std_err)
 
+        # Check correct folders have been created
         for path in modules:
             assert_true(os.path.isdir(path.split('/', 2)[-1]))
-            assert_false(os.path.isdir(should_not_clone))
+        for path in should_not_clone:
+            assert_false(os.path.isdir(path.split('/', 2)[-1]))
 
+        # Check modules have been cloned correctly
         for path in modules:
             repo = path.split('/', 2)[-1]
             clone = vcs_git.temp_clone(path)
