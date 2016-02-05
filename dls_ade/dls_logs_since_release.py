@@ -101,7 +101,7 @@ def check_parsed_args_compatible(releases, earlier, later, parser):
         parser(:class:`argparse.ArgumentParser`): ArgParse instance to handle error
 
     Raises:
-        :class:`argparse.ArgumentParser` error: To specify both start and end point, use format\
+        :class:`argparse.ArgumentParser.error`: To specify both start and end point, use format\
         'ethercat 3-1 4-1', not -l and -e flags.
 
     """
@@ -121,7 +121,7 @@ def check_releases_valid(releases, parser):
         parser(:class:`argparse.ArgumentParser`): ArgParse instance to handle error
 
     Raises:
-        :class:`argparse.ArgumentParser` error:
+        :class:`argparse.ArgumentParser.error`:
             * If one release given: To specify just start or just end point, use -e or -l flag.
             * If more than two releases given: Only two releases can be specified (start and end point)
             * If releases in wrong order: Input releases in correct order (<earlier_release> <later_release>)
@@ -144,7 +144,7 @@ def create_release_list(repo):
     Get a list of tags of the repository.
 
     Args:
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
 
     Returns:
         list of str: List of tags of repo
@@ -168,7 +168,7 @@ def set_log_range(module, releases, earlier, later, releases_list):
         releases_list(list of str): List of releases from repository
 
     Raises:
-        ValueError: Module <module> does not have a release <start>/<end>
+        :class:`exception.ValueError`: Module <module> does not have a release <start>/<end>
 
     Returns:
         str, str: Start and end point to list releases for
@@ -201,7 +201,7 @@ def get_log_messages(repo, start, end):
     Create a `log_info` dictionary and add log messages, commit objects and max author length.
 
     Args:
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
         start(str): Start point of logs
         end(str): End point of logs
 
@@ -237,13 +237,13 @@ def get_tags_list(repo, start, end, last_release):
     Get a list of tags from the repo and return the require range.
 
     Args:
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
         start(str): Start point of tags
         end(str): End point of tags
         last_release(str): Most recent release of module
 
     Returns:
-        (list of :class:`git.refs.tag`): List of tags in required range
+        list[:class:`~git.refs.tag.TagReference`]: List of tags in required range
 
     """
     tags = []
@@ -268,11 +268,11 @@ def get_tag_messages(tags_range, log_info):
     Add tag messages, commit objects and update the max author length in `log_info`.
 
     Args:
-        tags_range(:class:`git.refs.tag`): Range of tags to get information from
+        tags_range(list[:class:`~git.refs.tag.TagReference`]): Range of tags to get information from
         log_info(dict): Dictionary containing log information from commits
 
     Raises:
-        ValueError: Can't find tag info
+        :class:`exception.ValueError`: Can't find tag info
 
     Returns:
         dict: A dictionary containing log info for tags
@@ -314,7 +314,7 @@ def convert_time_stamp(time_stamp):
     Convert a unix time stamp into date and time.
 
     Args:
-        time_stamp(int):
+        time_stamp(int): Unix time stamp
 
     Returns:
         str: Date and time
@@ -344,7 +344,7 @@ def format_log_messages(log_info, raw, verbose):
         verbose(bool): True or False to add extra information (time, date, message body and diff info)
 
     Returns:
-        list of str: A list log entries
+        list[str]: A list log entries
     """
 
     blue = 34
@@ -450,11 +450,11 @@ def get_file_changes(commit, prev_commit):
     Perform a diff object between two commit objects and extract the changed files from it.
 
     Args:
-        commit(:class:`git.Commit`): Commit object for commit with file changes
-        prev_commit(:class:`git.Commit`): Commit object for commit to compare against
+        commit(:class:`~git.objects.commit.Commit`): Commit object for commit with file changes
+        prev_commit(:class:`~git.objects.commit.Commit`): Commit object for commit to compare against
 
     Returns:
-        list of str: A list of the changed files between the two commits
+        list[str]: A list of the changed files between the two commits
     """
 
     changed_files = []
@@ -492,7 +492,7 @@ def format_message_width(message, line_len):
         line_len(int): Maximum line length to format to
 
     Returns:
-        list of str: Formatted message as list of message parts shorter than max line length
+        list[str]: Formatted message as list of message parts shorter than max line length
     """
 
     if not isinstance(message, list):

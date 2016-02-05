@@ -62,7 +62,7 @@ def check_area_archivable(area):
         area(str): Area to check
 
     Raises:
-        ValueError: Modules in area `args.area` cannot be archived
+        :class:`exceptions.ValueError`: Modules in area <args.area> cannot be archived
 
     """
     if area not in ["support", "ioc", "python", "matlab"]:
