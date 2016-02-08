@@ -50,7 +50,7 @@ def check_technical_area(area, module):
         module(str): Name of module
 
     Raises:
-        Exception: Missing technical area under beamline
+        :class:`exception.Exception`: Missing technical area under beamline
 
     """
     if area == "ioc" and module != "" and len(module.split('/')) < 2:
