@@ -22,6 +22,17 @@ class ArgParser(ArgumentParser):
             help="Set 'ioc' area")
 
     def parse_args(self, args=None, namespace=None):
+        """
+        Parses shortcut flags for setting area; support by default, python if -p, ioc if -i.
+
+        Args:
+            args(:class:`argparse.Namespace`): Parser arguments
+            namespace(:class:`argparse.Namespace`): Parser namespace
+
+        Returns:
+            :class:`argparse.Namespace`: Updated parser arguments
+
+        """
         args = super(ArgParser, self).parse_args(args, namespace)
         # setup area
         if args.ioc:
