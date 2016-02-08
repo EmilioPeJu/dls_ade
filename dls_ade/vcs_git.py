@@ -510,6 +510,22 @@ def delete_remote(local_repo_path, remote_name):
     repo.git.remote("rm", remote_name)
 
 
+def push_all_branches_and_tags(local_repo_path, server_repo_path,
+                               remote_name=None):
+
+    if remote_name:
+        delete_remote(local_repo_path, remote_name)
+    else:
+        remote_name = "origin"
+
+    repo = git.Repo(local_repo_path)
+
+    repo.create_remote(remote_name, os.path.join(GIT_SSH_ROOT,
+                                                 server_repo_path))
+    repo.git.push(remote_name, "*:*")
+    repo.git.push(remote_name, "--tags")
+
+
 class Git(BaseVCS):
 
     def __init__(self, module, options):
