@@ -24,7 +24,7 @@ def make_parser():
     Takes default parser arguments and adds module_name
 
     Returns:
-        ArgumentParser: Parser with relevant arguments
+        :class:`argparse.ArgumentParser`:  ArgParse instance
     """
     parser = ArgParser(usage)
     parser.add_module_name_arg()

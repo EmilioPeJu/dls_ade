@@ -28,7 +28,7 @@ def make_parser():
         :class:`argparse.ArgumentParser`: Parser instance
     """
     parser = ArgParser(usage)
-    parser.add_argument("domain_name", nargs="?", action="store", type=str,
+    parser.add_argument("domain_name", nargs="?", type=str,
                         help="domain of ioc to list")
     return parser
 

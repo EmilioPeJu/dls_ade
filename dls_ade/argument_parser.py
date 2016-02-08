@@ -31,28 +31,58 @@ class ArgParser(ArgumentParser):
         return args
 
     def add_module_name_arg(self, help_msg="Name of module"):
+        """
+        Add module_name argument with module specific help message.
+
+        Args:
+            help_msg(str): Help message relevant to module calling function
+        """
 
         self.add_argument("module_name", type=str, default="",
                           help=help_msg)
 
     def add_release_arg(self, help_msg="Release of module"):
+        """
+        Add release argument with module specific help message.
 
-        self.add_argument("release", type=str, default="",
+        Args:
+            help_msg(str): Help message relevant to module calling function
+
+        """
+        self.add_argument("release", type=str, default=None,
                           help=help_msg)
 
     def add_branch_flag(self, help_msg="Branch of repository"):
+        """
+        Add branch flag argument with module specific help message.
 
+        Args:
+            help_msg(str): Help message relevant to module calling function
+
+        """
         self.add_argument("-b", "--branch", action="store", type=str, dest="branch",
                           help=help_msg)
 
     def add_git_flag(self, help_msg="Use git repository"):
+        """
+        Add git flag argument with module specific help message.
 
+        Args:
+            help_msg(str): Help message relevant to module calling function
+
+        """
         self.add_argument("-g", "--git", action="store_true", dest="git",
                           help=help_msg)
 
     def add_epics_version_flag(self, help_msg="Change the epics version, "
                                               "default is " + env.epicsVer() +
                                               " (from your environment)"):
+        """
+        Add epics version flag argument with module specific help message.
 
+        Args:
+            help_msg(str): Help message relevant to module calling function
+
+        """
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
                           default=env.epicsVer(), help=help_msg)

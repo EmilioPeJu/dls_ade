@@ -357,7 +357,7 @@ def temp_clone(source):
         source(str): server repository path to clone
 
     Returns:
-        :class:`git.Repo`: Repository instance
+        :class:`~git.repo.base.Repo`: Repository instance
 
     """
     if not is_server_repo(source):
@@ -405,7 +405,7 @@ def list_module_releases(repo):
     Return list of release tags of module.
 
     Args:
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
 
     Returns:
         List[str]: Release tags of module corresponding to repo
@@ -422,7 +422,7 @@ def list_remote_branches(repo):
     Lists remote branches of current git repository
 
     Args:
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
 
     Returns:
         List[str]: Branches of current git repository
@@ -444,7 +444,7 @@ def checkout_remote_branch(branch, repo):
 
     Args:
         branch(str): Remote branch to create locally
-        repo(:class:`git.Repo`): Git repository instance
+        repo(:class:`~git.repo.base.Repo`): Git repository instance
 
     """
     if branch in list_remote_branches(repo):
@@ -511,6 +511,10 @@ def delete_remote(local_repo_path, remote_name):
 
 
 class Git(BaseVCS):
+    """
+    A class to handle generic vcs operations in a git context.
+
+    """
 
     def __init__(self, module, options):
 

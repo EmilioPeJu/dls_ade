@@ -59,7 +59,7 @@ class environment(object):
             epics_version(str): Epics version to check
 
         Raises:
-            Exception: Expected epics version like R3.14.8.2, got <epics_version>
+            :class:`exception.Exception`: Expected epics version like R3.14.8.2, got <epics_version>
 
         """
         if epics_version:
@@ -84,7 +84,7 @@ class environment(object):
         Return a copy of self.
 
         Returns:
-            :class:`environment`: A copy of the environment instance
+            :class:`~dls_ade.dls_environment.environment`: A copy of the environment instance
 
         """
         return environment(self.epicsVer())
