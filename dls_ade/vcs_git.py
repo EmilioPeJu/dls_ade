@@ -626,9 +626,9 @@ class Git(BaseVCS):
             raise VCSGitError('version does not exist')
         self._version = version
 
-    def release_version(self, version, message):
+    def release_version(self, version):
 
-        self.client.create_tag(version, message)
+        self.client.create_tag(version, "Release " + version)
 
         origin = self.client.remotes.origin
         origin.push(self.client.active_branch, '--follow-tags')

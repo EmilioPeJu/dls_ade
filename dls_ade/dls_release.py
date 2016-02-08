@@ -417,7 +417,7 @@ def main():
         sys.exit(0)
 
     if not vcs.check_version_exists(version) and not args.test_only:
-        vcs.release_version(version, "Release " + version)
+        vcs.release_version(version)
 
     build.submit(vcs, test=args.test_only)
 
