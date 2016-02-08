@@ -6,7 +6,10 @@ areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
 
 
 class ArgParser(ArgumentParser):
+    """
+    Makes a custom parser class with area arguments by default.
 
+    """
     def __init__(self, usage_v, supported_areas=areas):
         super(ArgParser, self).__init__(description=usage_v)
 
