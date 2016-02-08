@@ -960,7 +960,7 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
 
         self.mock_git.Repo.return_value = self.mock_repo
 
-    def test_given_remote_passed_then_remote_deleted_and_rest_of_function_called_correctly(self):
+    def test_given_function_called_then_remote_deleted_and_rest_of_function_called_correctly(self):
 
         vcs_git.push_all_branches_and_tags("test_local_path", "test_server_path", "test_remote")
 
@@ -971,20 +971,6 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
         self.mock_repo.create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_server_path")
 
         push_call_list = [call("test_remote", "*:*"), call("test_remote", "--tags")]
-
-        self.mock_repo.git.push.assert_has_calls(push_call_list)
-
-    def test_given_remote_not_passed_then_origin_created_and_rest_of_function_called_correctly(self):
-
-        vcs_git.push_all_branches_and_tags("test_local_path", "test_server_path")
-
-        self.assertFalse(self.mock_delete.called)
-
-        self.mock_git.Repo.assert_called_once_with("test_local_path")
-
-        self.mock_repo.create_remote.assert_called_once_with("origin", "ssh://GIT_SSH_ROOT/test_server_path")
-
-        push_call_list = [call("origin", "*:*"), call("origin", "--tags")]
 
         self.mock_repo.git.push.assert_has_calls(push_call_list)
 

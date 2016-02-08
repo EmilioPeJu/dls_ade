@@ -27,9 +27,7 @@ def push_repo(local_path):
 
 
 def untar_files(tar_path, extract_path):
-    """Untar the comparison files tarball and insert the current user's name.
-
-    The string USER_LOGIN_NAME will be replaced by the current user's login.
+    """Untar the tarball into the extraction path.
 
     Args:
         tar_path: The path to the tarball.

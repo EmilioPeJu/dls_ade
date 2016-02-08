@@ -511,12 +511,20 @@ def delete_remote(local_repo_path, remote_name):
 
 
 def push_all_branches_and_tags(local_repo_path, server_repo_path,
-                               remote_name=None):
+                               remote_name):
+    """Push all branches a tags of a local repository to the given server path.
 
-    if remote_name:
-        delete_remote(local_repo_path, remote_name)
-    else:
-        remote_name = "origin"
+    Args:
+        local_repo_path: The path to the local repository.
+        server_repo_path: The path on the server for the repository.
+        remote_name: The name of the remote to push with.
+
+    Raises:
+        :class:`~dls_ade.exceptions.VCSGitError`: From \
+            :func:`.check_remote_exists`.
+
+    """
+    delete_remote(local_repo_path, remote_name)
 
     repo = git.Repo(local_repo_path)
 
