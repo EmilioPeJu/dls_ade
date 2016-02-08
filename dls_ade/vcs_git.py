@@ -603,10 +603,10 @@ class Git(BaseVCS):
         Check if version corresponds to a previous release.
 
         Args:
-            version(bool): True or False for whether the version exists or not
+            version(str): True or False for whether the version exists or not
 
         Returns:
-            str: Release tag to check for
+            bool: Release tag to check for
 
         """
         return version in self.list_releases()
@@ -626,12 +626,9 @@ class Git(BaseVCS):
             raise VCSGitError('version does not exist')
         self._version = version
 
-    def release_version(self, version):
-        raise NotImplementedError('version release for git not implemented')
+    def release_version(self, version, message):
 
-    def add_tag_to_repo(self, tag, message):
-
-        self.client.create_tag(tag, message)
+        self.client.create_tag(version, message)
 
         origin = self.client.remotes.origin
         origin.push(self.client.active_branch, '--follow-tags')
