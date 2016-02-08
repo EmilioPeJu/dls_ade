@@ -612,7 +612,7 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
     def set_branch(self, branch):
-        raise NotImplementedError('branch handling for git not implemented')
+        self.client.heads[branch].checkout()
 
     def set_version(self, version):
         """
@@ -634,7 +634,7 @@ class Git(BaseVCS):
         self.client.create_tag(tag, message)
 
         origin = self.client.remotes.origin
-        origin.push('--follow-tags')
+        origin.push(self.client.active_branch, '--follow-tags')
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"
