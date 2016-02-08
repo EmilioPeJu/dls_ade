@@ -50,7 +50,7 @@ class ArgParser(ArgumentParser):
         Add module_name argument with module specific help message.
 
         Args:
-            help_msg: Help message relevant to module calling function
+            help_msg(str): Help message relevant to module calling function
 
         """
         self.add_argument("module_name", type=str, default=None,
@@ -61,7 +61,7 @@ class ArgParser(ArgumentParser):
         Add release argument with module specific help message.
 
         Args:
-            help_msg: Help message relevant to module calling function
+            help_msg(str): Help message relevant to module calling function
 
         """
         self.add_argument("release", type=str, default=None,
@@ -72,7 +72,7 @@ class ArgParser(ArgumentParser):
         Add branch flag argument with module specific help message.
 
         Args:
-            help_msg: Help message relevant to module calling function
+            help_msg(str): Help message relevant to module calling function
 
         """
         self.add_argument("-b", "--branch", action="store", type=str, dest="branch",
@@ -83,7 +83,7 @@ class ArgParser(ArgumentParser):
         Add git flag argument with module specific help message.
 
         Args:
-            help_msg: Help message relevant to module calling function
+            help_msg(str): Help message relevant to module calling function
 
         """
         self.add_argument("-g", "--git", action="store_true", dest="git",
@@ -96,7 +96,7 @@ class ArgParser(ArgumentParser):
         Add epics version flag argument with module specific help message.
 
         Args:
-            help_msg: Help message relevant to module calling function
+            help_msg(str): Help message relevant to module calling function
 
         """
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
