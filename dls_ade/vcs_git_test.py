@@ -1281,11 +1281,6 @@ class GitSettersTest(unittest.TestCase):
 
         self.vcs = vcs_git.Git(self.module, self.options)
 
-    def test_when_set_branch_called_then_raise_notimplementederror(self):
-
-        with self.assertRaises(NotImplementedError):
-            self.vcs.set_branch('some_branch')
-
     def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
         with self.assertRaises(vcs_git.VCSGitError):
@@ -1352,10 +1347,12 @@ class AddTagToRepoTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git')
     def test_tag_added_and_push_called(self, _1):
 
+        branch = self.vcs.client.active_branch
+
         self.vcs.add_tag_to_repo('1-0', 'Release 1-0')
 
         self.vcs.client.create_tag.assert_called_once_with('1-0', 'Release 1-0')
-        self.vcs.client.remotes.origin.push.assert_called_once_with('--follow-tags')
+        self.vcs.client.remotes.origin.push.assert_called_once_with(branch, '--follow-tags')
 
 
 class FakeTag(object):
