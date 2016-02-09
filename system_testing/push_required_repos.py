@@ -17,7 +17,7 @@ def push_repo(local_path):
     if not vcs_git.is_server_repo(server_repo_path):
 
         vcs_git.push_all_branches_and_tags(local_path, server_repo_path,
-                                           "origin")
+                                           "systest")
 
         print("Pushed to server:")
     else:
