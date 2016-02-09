@@ -449,7 +449,9 @@ def checkout_remote_branch(branch, repo):
     """
     if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
-        repo.git.checkout("-b", branch, "origin/" + branch)
+        origin = repo.remotes.origin
+        remote = origin.refs[branch]
+        remote.checkout(b=branch)
 
 
 def check_git_attributes(local_repo_path, attributes_dict):
