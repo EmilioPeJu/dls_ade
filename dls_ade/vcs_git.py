@@ -159,6 +159,9 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     # There is no reason to raise an exception for this.
     msg = ""
     try:
+        index = repo.index
+        index.add(['.gitattributes'])
+        index.commit(message)
         msg = repo.git.commit(m=message)
     except git.exc.GitCommandError as e:
         pass

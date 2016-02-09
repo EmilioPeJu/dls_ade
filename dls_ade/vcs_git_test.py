@@ -786,7 +786,6 @@ class ListRemoteBranchesTest(unittest.TestCase):
         repo.references = ["origin/1-5-8fixes", "origin/3-x-branch",
                                         "origin/3104_rev14000a_support"]
 
-
         branches = vcs_git.list_remote_branches(repo)
 
         self.assertIn('1-5-8fixes', branches)
@@ -802,11 +801,15 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
         branch = "test_module"
 
         repo = MagicMock()
+        origin = MagicMock()
+        remote = MagicMock()
         mock_git.Repo = repo
+        repo.remotes.origin.return_value = origin
+        origin.refs.return_value = remote
 
         vcs_git.checkout_remote_branch(branch, repo)
 
-        repo.git.checkout.assert_called_once_with("-b", branch, "origin/" + branch)
+        repo.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b='test_module')
 
     @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
