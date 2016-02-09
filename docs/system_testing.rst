@@ -75,6 +75,121 @@ If you wish to see a simplified version of the SystemTest class, look at
 
 will demonstrate the tests, of which half should fail.
 
+.. _systest-setting-up-environment:
+
+Setting up the testing environment
+----------------------------------
+
+In order to run the tests, you must set up the testing environment
+appropriately. In order to do this, a bash script is provided that will change
+all necessary environment variables, as well as push all the required
+repositories to the server.
+
+First, in the dls_ade repository root, run in the terminal:
+
+.. code:: bash
+
+  make clean && make install
+
+For the environment variables, you need three paths:
+
+1. The path to the bin folder.
+    These are the executables that are run by the end user. From the root of
+    the repository, this is `prefix/bin`.
+
+2. The path to the python library egg.
+    From the root of the repository, this is
+    `prefix/lib/pythonx.x/site-packages/dls_ade-y.y-pyx.x.egg`, where `x`
+    varies depending on python or dls_ade version numbers.
+
+3. The path to the system_testing folder.
+    From the root of the repository, this is just `system_testing`
+
+To get the absolute path, use:
+
+.. code:: bash
+
+  readlink -f relative/path/to/folder
+
+In the dls_ade/system_testing folder, run in the terminal:
+
+.. code:: bash
+
+  source setup_testing_environment.sh /path/to/bin /path/to/egg /path/to/system_testing
+
+What this script will do:
+
+- Set the global environment variable GIT_ROOT_DIR to "controlstest".
+    GIT_ROOT_DIR specifies the 'root' of the server directory tree for the
+    controls group git repositories. Normally it is simply "controls", but
+    "controlstest" is a safe area for testing.
+
+- Set the PATH environment variable to include:
+    * bin/ folder
+        This is used to access the final python scripts to be tested.
+
+- Set the PYTHONPATH environment variable to include:
+    * system_testing folder
+        This allows us to use the system_testing module.
+    * library egg folder
+        This allows the scripts in bin/, as well as the system_testing module,
+        to access the dls_ade modules.
+
+- Upload the repositories in `necessary_server_repos/controlstest.tar.gz`.
+    These are uploaded to the server, for use by system test scripts. A
+    repository is not exported if it already exists on the server. See
+    :ref:`systest-auto-export` for more details.
+
+The system_testing module will prevent you from running any tests if you have
+not yet set the GIT_ROOT_DIR environment variable (performed by the setup
+script).
+
+.. _systest-auto-export:
+
+Automatic Export of Repositories
+--------------------------------
+
+The tarball `system_testing/necessary_server_repos/controlstest.tar.gz` stores
+a folder named `controlstest` that contains a number of git repositories. These
+are uploaded for system testing.
+
+In the `necessary_server_repos` folder is a text file, `repo_list.txt`. This is
+a list of all the repositories in the tarball, given by their path relative to
+the `controlstest` folder. Underneath each entry is a list of system tests
+where it is used, along with a brief description of its purpose.
+
+These repositories are uploaded to the server, using their relative file paths
+to determine their server location. For example, a repository located in
+`controlstest/support/test_support_module` will be uploaded to the server with
+`controlstest/support/test_support_module` as a path. It will not find
+repositories that are nested inside another repository.
+
+All local branches and tags will be pushed by this function. If you clone down
+a server repository with multiple branches and tags, the tags are downloaded
+automatically but only the `master` branch is cloned. As a result, this script
+will only push the master branch along with all the tags.
+
+To allow additional branches to be exported when using this script, checkout
+the remote branch `branch_name` using
+
+.. code:: bash
+
+  git checkout -b branch_name origin/branch_name
+
+assuming the remote name is origin.
+
+To edit the repositories, simply untar them:
+
+.. code:: bash
+
+  tar -xzvf controlstest.tar.gz
+
+Add or edit your repository, and tar them back up again:
+
+.. code:: bash
+
+  tar -czvf controlstest.tar.gz controlstest/
+
 .. _systest-settings-descriptions:
 
 SystemTest Settings Descriptions
@@ -199,69 +314,6 @@ Branch comparison settings
     When the server_repo_path is cloned, this specifies the branch to be
     checked out afterwards. The local_repo_path repository is also checked to
     make sure that this is its active branch.
-
-.. _systest-setting-up-environment:
-
-Setting up the testing environment
-----------------------------------
-
-In order to run the tests, you must set up the testing environment
-appropriately. In order to do this, a bash script is provided that will change
-all necessary environment variables.
-
-First, in the dls_ade repository root, run in the terminal:
-
-.. code:: bash
-  
-  make clean && make install
-
-For the environment variables, you need three paths:
-
-1. The path to the bin folder.
-    These are the executables that are run by the end user. From the root of
-    the repository, this is `prefix/bin`.
-
-2. The path to the python library egg.
-    From the root of the repository, this is
-    `prefix/lib/pythonx.x/site-packages/dls_ade-y.y-pyx.x.egg`, where `x`
-    varies depending on python or dls_ade version numbers.
-
-3. The path to the system_testing folder.
-    From the root of the repository, this is just `system_testing`
-
-To get the absolute path, use:
-
-.. code:: bash
-
-  readlink -f relative/path/to/folder
-
-In the dls_ade/system_testing folder, run in the terminal:
-
-.. code:: bash
-
-  source setup_testing_environment.sh /path/to/bin /path/to/egg /path/to/system_testing
-
-What this script will do:
-
-- Set the global environment variable GIT_ROOT_DIR to "controlstest". 
-    GIT_ROOT_DIR specifies the 'root' of the server directory tree for the
-    controls group git repositories. Normally it is simply "controls", but
-    "controlstest" is a safe area for testing.
-
-- Set the PATH environment variable to include:
-    * bin/ folder
-        This is used to access the final python scripts to be tested.
-
-- Set the PYTHONPATH environment variable to include:
-    * system_testing folder
-        This allows us to use the system_testing module.
-    * library egg folder
-        This allows the scripts in bin/, as well as the system_testing module,
-        to access the dls_ade modules.
-
-The system_testing module will prevent you from running any tests if you have
-not yet set the GIT_ROOT_DIR environment variable (performed by the setup
-script).
 
 .. _systest-test-descriptions:
 
