@@ -32,33 +32,30 @@ class PrintModuleListTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.subprocess.check_output')
     def test_subprocess_called_with_correct_list(self, mock_sub):
         source = "test/source"
-        area = "test/area"
         list_cmd = "ssh " + dls_list_modules.vcs_git.GIT_ROOT + " expand controls"
 
-        dls_list_modules.print_module_list(source, area)
+        dls_list_modules.print_module_list(source)
 
         mock_sub.assert_called_once_with(list_cmd.split())
 
     @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module", "test/source2/module2"])
     def test_given_valid_source_then_print_called(self, _1):
         source = "test/source"
-        area = "test/area"
 
         with patch.object(builtins, 'print') as mock_print:
-            dls_list_modules.print_module_list(source, area)
+            dls_list_modules.print_module_list(source)
 
         call_args = mock_print.call_args_list
-        self.assertEqual(call_args[1][0][0], 'module')
+        self.assertEqual(call_args[0][0][0], 'module')
         # Check that module2 from source2 is not printed
-        self.assertEqual(len(call_args), 2)
+        self.assertEqual(len(call_args), 1)
 
     @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module"])
     def test_given_invalid_source_then_print_not_called(self, _1):
         source = "test/not_source"
-        area = "test/area"
 
         with patch.object(builtins, 'print') as mock_print:
-            dls_list_modules.print_module_list(source, area)
+            dls_list_modules.print_module_list(source)
 
         # Check that only called once (twice if source valid)
-        mock_print.assert_called_once_with(ANY)
+        self.assertFalse(mock_print.call_count)

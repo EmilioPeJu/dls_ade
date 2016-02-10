@@ -201,7 +201,7 @@ def add_new_remote_and_push(dest, path="./", remote_name="origin",
                        "exist.")
         raise VCSGitError(err_message.format(branch=branch_name))
 
-    if remote_name in [x.name for x in repo.remotes]:
+    if has_remote(repo, remote_name):
         # <remote_name> already exists - use push_to_remote_repo instead!
         err_message = ("Cannot push local repository to destination as remote "
                        "{remote:s} is already defined")
@@ -311,10 +311,20 @@ def check_remote_exists(repo, remote_name):
             does not exist.
 
     """
-    # Remote does not already exist
-    if remote_name not in [x.name for x in repo.remotes]:
+    if not has_remote(repo, remote_name):
         err_message = "Local repository does not have remote {remote:s}"
         raise VCSGitError(err_message.format(remote=remote_name))
+
+
+def has_remote(repo, remote_name):
+    """Returns true if the given repository already has the named remote.
+
+    Args:
+        repo: The git.Repo object representing the repository.
+        remote_name: The remote name to be looked for.
+
+    """
+    return remote_name in [x.name for x in repo.remotes]
 
 
 def clone(server_repo_path, local_repo_path):
@@ -511,6 +521,31 @@ def delete_remote(local_repo_path, remote_name):
     repo.git.remote("rm", remote_name)
 
 
+def push_all_branches_and_tags(local_repo_path, server_repo_path, remote_name):
+    """Push all branches a tags of a local repository to the given server path.
+
+    Args:
+        local_repo_path: The path to the local repository.
+        server_repo_path: The path on the server for the repository.
+        remote_name: The name of the remote to push with.
+            This will be deleted if it already exists.
+
+    Raises:
+        :class:`~dls_ade.exceptions.VCSGitError`: From \
+            :func:`.check_remote_exists`.
+
+    """
+    repo = git.Repo(local_repo_path)
+
+    if has_remote(repo, remote_name):
+        delete_remote(local_repo_path, remote_name)
+
+    repo.create_remote(remote_name, os.path.join(GIT_SSH_ROOT,
+                                                 server_repo_path))
+    repo.git.push(remote_name, "*:*")
+    repo.git.push(remote_name, "--tags")
+
+
 class Git(BaseVCS):
     """
     A class to handle generic vcs operations in a git context.
@@ -580,11 +615,11 @@ class Git(BaseVCS):
 
         """
 
-        if not hasattr(self, 'releases'):
-            self.releases = []
-            for tag in self.client.tags:
-                self.releases.append(tag.name)
-        return self.releases
+        releases = []
+        for tag in self.client.tags:
+            releases.append(tag.name)
+
+        return releases
 
     def set_log_message(self, message):
         """

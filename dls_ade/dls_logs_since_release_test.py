@@ -194,36 +194,6 @@ class CheckReleasesValidTest(unittest.TestCase):
         dls_logs_since_release.check_releases_valid(releases, self.parser)
 
 
-class CreateReleaseListTest(unittest.TestCase):
-
-    def test_given_repo_with_tags_then_listed(self):
-
-        repo_inst = MagicMock()
-        dls_logs_since_release.vcs_git.git.repo = repo_inst
-        tag_inst_1 = MagicMock()
-        tag_inst_1.name = '1-0'
-        tag_inst_2 = MagicMock()
-        tag_inst_2.name = '2-0'
-        tag_inst_3 = MagicMock()
-        tag_inst_3.name = '2-1'
-
-        repo_inst.tags = [tag_inst_1, tag_inst_2, tag_inst_3]
-
-        releases = dls_logs_since_release.create_release_list(repo_inst)
-
-        self.assertEqual(releases, ['1-0', '2-0', '2-1'])
-
-    def test_given_repo_with_no_tags_then_empty_list_returned(self):
-        repo_inst = MagicMock()
-        dls_logs_since_release.vcs_git.git.repo = repo_inst
-
-        repo_inst.tags = []
-
-        releases = dls_logs_since_release.create_release_list(repo_inst)
-
-        self.assertFalse(releases)
-
-
 class SetLogRangeTest(unittest.TestCase):
 
     def setUp(self):

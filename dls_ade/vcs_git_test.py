@@ -3,12 +3,13 @@ import os
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
+from mock import patch, ANY, MagicMock, PropertyMock, call  # @UnresolvedImport
 
 
 def setUpModule():
     vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     vcs_git.GIT_ROOT_DIR = "controlstest"
+    vcs_git.pathf.GIT_ROOT_DIR = "controlstest"
 
 
 def set_up_mock(test_case_object, path):
@@ -625,6 +626,40 @@ class CheckRemoteExistsTest(unittest.TestCase):
         vcs_git. check_remote_exists(mock_repo, "test_remote")
 
 
+class HasRemoteTest(unittest.TestCase):
+
+    class RemoteEntry(object):
+        def __init__(self, name):
+            self.name = name
+
+    class StubGitRepo(object):  # Used to mock out the git.Repo() function
+        def __init__(self, remotes_list):
+
+            self.remotes_list = remotes_list  # set this to a list eg. [RemoteEntry("branch_name")] for list comprehension
+
+        @property
+        def remotes(self):
+            return self.remotes_list
+
+    def test_given_remote_name_does_not_exist_then_function_returns_false(self):
+
+        remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        value = vcs_git.has_remote(mock_repo, "test_remote")
+
+        self.assertFalse(value)
+
+    def test_given_remote_name_exists_then_function_returns_true(self):
+
+        remotes_list = [self.RemoteEntry("test_remote")]
+        mock_repo = self.StubGitRepo(remotes_list)
+
+        value = vcs_git.has_remote(mock_repo, "test_remote")
+
+        self.assertTrue(value)
+
+
 class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_server_repo', return_value=False)
@@ -710,6 +745,36 @@ class TempCloneTest(unittest.TestCase):
         vcs_git.temp_clone(source)
 
         mock_clone_from.assert_called_once_with(root + source, "tempdir")
+
+
+class ListModuleReleases(unittest.TestCase):
+
+    def test_given_repo_with_tags_then_listed(self):
+
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+        tag_inst_1 = MagicMock()
+        tag_inst_1.name = '1-0'
+        tag_inst_2 = MagicMock()
+        tag_inst_2.name = '2-0'
+        tag_inst_3 = MagicMock()
+        tag_inst_3.name = '2-1'
+
+        repo_inst.tags = [tag_inst_1, tag_inst_2, tag_inst_3]
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertEqual(releases, ['1-0', '2-0', '2-1'])
+
+    def test_given_repo_with_no_tags_then_empty_list_returned(self):
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+
+        repo_inst.tags = []
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertFalse(releases)
 
 
 class CloneMultiTest(unittest.TestCase):
@@ -951,6 +1016,48 @@ class DeleteRemoteTest(unittest.TestCase):
 
         self.mock_git_repo.assert_called_once_with("local/repository/path")
         mock_repo_git.remote.assert_called_once_with("rm", "test_remote")
+
+
+class PushAllBranchesAndTagsTest(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_git = set_up_mock(self, "dls_ade.vcs_git.git")
+        self.mock_delete = set_up_mock(self, "dls_ade.vcs_git.delete_remote")
+        self.mock_has_remote = set_up_mock(self, "dls_ade.vcs_git.has_remote")
+
+        self.mock_repo = MagicMock()
+
+        self.mock_git.Repo.return_value = self.mock_repo
+
+    def test_given_remote_does_not_exist_then_remote_not_deleted_and_rest_of_function_called_correctly(self):
+
+        self.mock_has_remote.return_value = False
+
+        vcs_git.push_all_branches_and_tags("test_local_path", "test_server_path", "test_remote")
+
+        self.mock_git.Repo.assert_called_once_with("test_local_path")
+
+        self.mock_repo.create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_server_path")
+
+        push_call_list = [call("test_remote", "*:*"), call("test_remote", "--tags")]
+
+        self.mock_repo.git.push.assert_has_calls(push_call_list)
+
+    def test_given_remote_exists_then_remote_deleted_and_rest_of_function_called_correctly(self):
+
+        self.mock_has_remote.return_value = True
+
+        vcs_git.push_all_branches_and_tags("test_local_path", "test_server_path", "test_remote")
+
+        self.mock_delete.assert_called_once_with("test_local_path", "test_remote")
+
+        self.mock_git.Repo.assert_called_once_with("test_local_path")
+
+        self.mock_repo.create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_server_path")
+
+        push_call_list = [call("test_remote", "*:*"), call("test_remote", "--tags")]
+
+        self.mock_repo.git.push.assert_has_calls(push_call_list)
 
 
 class GitClassInitTest(unittest.TestCase):

@@ -188,6 +188,24 @@ class ModuleTemplateGetTemplateFilesFromFolderTest(unittest.TestCase):
 
         self.assertEqual(comp_dict, template_files)
 
+    def test_given_file_ends_with_py_template_then_template_dict_correctly_created(self):
+
+        self.mock_os.path.join = os.path.join  # We want 'join' and 'relpath' to work as normal here
+        self.mock_os.path.relpath = os.path.relpath
+        self.mock_os.path.isdir.return_value = True
+        file_handle_mock = self.open_mock()
+
+        self.mock_os.walk.return_value = iter([["test_template_folder", "", ["file1.py_template", "file2.txt"]]])
+
+        file_handle_mock.read.side_effect = ["file1 text goes here", "file2 text goes here"]
+
+        with patch.object(builtins, 'open', self.open_mock):
+            template_files = self.mt_obj._get_template_files_from_folder("test_template_folder")
+
+        comp_dict = {"file1.py": "file1 text goes here", "file2.txt": "file2 text goes here"}
+
+        self.assertEqual(comp_dict, template_files)
+
 
 class ModuleTemplateCreateFilesTest(unittest.TestCase):
 
