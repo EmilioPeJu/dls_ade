@@ -19,7 +19,8 @@ Contents:
    dls_ade
    System Testing Framework <system_testing>
    Start New Module System Testing <snm_system_testing>
-   All Other Scripts System Testing <all_other_system_testing>
+   Start New Module Info <start_new_module_info>
+   All Other System Testing <all_other_system_testing>
 
 Indices and tables
 ------------------

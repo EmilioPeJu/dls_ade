@@ -308,7 +308,7 @@ class SystemTest(object):
             return
 
         if not self._server_repo_path:
-            raise SettingsError("If 'default_server_repo_path is set, then"
+            raise SettingsError("If 'default_server_repo_path is set, then "
                                 "'server_repo_path' must also be set.")
 
         temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
