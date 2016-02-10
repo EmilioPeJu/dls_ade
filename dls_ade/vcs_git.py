@@ -155,11 +155,12 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     repo.git.add('--all')
     print("Committing files to repo...")
 
+    index = repo.index
+
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
     try:
-        index = repo.index
-        index.commit(m=message)
+        index.commit(message)
     except git.exc.GitCommandError as e:
         pass
 
