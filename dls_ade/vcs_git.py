@@ -631,7 +631,7 @@ class Git(BaseVCS):
         self.client.create_tag(version, "Release " + version)
 
         origin = self.client.remotes.origin
-        origin.push(self.client.active_branch, '--follow-tags')
+        origin.push(self.client.active_branch, '--tags')
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"
