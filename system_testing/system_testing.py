@@ -58,6 +58,8 @@ def get_local_temp_clone(server_repo_path):
 
     tempdir = repo.working_tree_dir
 
+    logging.debug("Server repo path cloned to: " + tempdir)
+
     return tempdir
 
 
@@ -117,11 +119,13 @@ def check_if_repos_equal(path_1, path_2):
     command_format = ("diff -rq --exclude=.git --exclude=.gitattributes "
                       "--exclude=.keep {path1:s} {path2:s}")
     call_args = command_format.format(path1=path_1, path2=path_2).split()
+
+    logging.debug("Testing folders for equality.")
+    logging.debug("Comparison path one: " + path_1)
+    logging.debug("Comparison path two: " + path_2)
     try:
         subprocess.check_output(call_args)
     except subprocess.CalledProcessError as e:
-        logging.debug("diff path one: " + path_1)
-        logging.debug("diff path two: " + path_2)
         logging.debug(e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False
@@ -278,7 +282,10 @@ class SystemTest(object):
                               if key in self._settings_list})
 
         logging.debug("The test's local variables are:")
-        logging.debug(self.__dict__)
+        for key, value in self.__dict__.iteritems():
+            logging.debug(str(key) + ": " + str(value))
+
+        logging.debug("End of local variables.")
 
     def __call__(self):
         """Defined for the use of nosetests.
@@ -311,6 +318,10 @@ class SystemTest(object):
             raise SettingsError("If 'default_server_repo_path is set, then "
                                 "'server_repo_path' must also be set.")
 
+        logging.debug("Setting server repo to default.")
+        logging.debug("'Default' server repo path: " +
+                      self._default_server_repo_path)
+
         temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
         vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
 
@@ -335,8 +346,7 @@ class SystemTest(object):
         """
         call_args = (self._script + " " + self._arguments).split()
 
-        logging.debug("About to call script with:")
-        logging.debug(call_args)
+        logging.debug("About to call script with: " + " ".join(call_args))
 
         # If no input is given, this will prevent communicate() from sending
         # data to the child process.
@@ -353,8 +363,7 @@ class SystemTest(object):
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
-        logging.debug("return code:")
-        logging.debug(self._return_code)
+        logging.debug("return code: " + str(self._return_code))
 
     def run_tests(self):
         """Performs the entire test suite.
@@ -404,19 +413,20 @@ class SystemTest(object):
             AssertionError: If the test does not pass.
 
         """
-        logging.debug("Checking standard error for given exception.")
-
         if not self._exception_type or not self._exception_string:
             if not self._exception_type and not self._exception_string:
                 return
             raise SettingsError("Both exception_type and exception_string "
                                 "must be provided.")
 
+        logging.debug("Checking return code is not 0.")
         assert_false(self._return_code == 0)
 
         expected_string = "\n{exc_t:s}: {exc_s:s}\n"
         expected_string = expected_string.format(exc_t=self._exception_type,
                                                  exc_s=self._exception_string)
+
+        logging.debug("Expected error string: " + expected_string)
 
         assert_true(self._std_err.endswith(expected_string))
 
@@ -648,7 +658,10 @@ def generate_tests_from_dicts(script, test_settings):
     for settings in test_settings:
         if 'script' in settings:
             script = settings.pop('script')
+
         description = settings.pop('description')
+
         system_test = SystemTest(script, description)
         system_test.load_settings(settings)
+
         yield system_test
