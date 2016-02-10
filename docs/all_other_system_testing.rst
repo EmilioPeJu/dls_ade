@@ -21,9 +21,7 @@ Contents:
 Changes Since Release System Testing
 ------------------------------------
 
-Changes since release has no arguments, but has two possible outputs depending on the state of the repository, so there are two tests. One test with a repo that has had no changes since the last tag and one that has had changes.
-
-The no change test could obviously fail if any changes are made so none of the other tests that commit changes back to the repo operate on dls_testpythonmod2 to keep this in the required state.
+Changes since release has no arguments, but has two main outputs depending on the state of the repository, so there are two tests. One test with a repo that has had no changes since the last tag and one that has had changes. There is also a test for when no releases have been made for a module and one to make sure an exception is raised if the module does not exist.
 
 .. _checkout-module-st:
 
@@ -31,7 +29,7 @@ The no change test could obviously fail if any changes are made so none of the o
 Checkout Module System Testing
 ------------------------------
 
-Checkout module has four tests; a standard checkout, a checkout with a branch change and the checkout of an entire area or ioc domain. These shouldn't be affected by any other test because the check is to simply compare what has been checked out to what is on the repo.
+Checkout module has four tests; a standard checkout, a checkout with a branch change and the checkout of an entire area or ioc domain. The multi clone tests use the designated mock repository area so that the tests will not be affected by module additions to the root areas.
 
 .. _list-branches-st:
 
@@ -47,7 +45,7 @@ List branches just has one test as only has one function, all that changes is th
 List Modules System Testing
 ---------------------------
 
-List modules has one test for an area and one test for listing an ioc domain, as the implementation for that is slightly different.
+List modules has one test for an area and one test for listing an ioc domain, as the implementation for that is slightly different. These tests use a mock repository folder nested in the targetOS area. This should not be changed, or these tests will fail.
 
 .. _list-releases-st:
 
@@ -55,7 +53,7 @@ List modules has one test for an area and one test for listing an ioc domain, as
 List Releases System Testing
 ----------------------------
 
-List releases has four arguments giving six useful functions, so there is a test for each of these. Listing from the repo with and without the latest flag. Listing from prod with default and non-default epics version, with and without the latest flag.
+List releases has four arguments giving six useful functions, so there is a test for each of these. Listing releases for a module on the repo, with and without the latest flag. Listing releases for a module in prod with default and non-default epics version, with and without the latest flag.
 
 .. _logs-since-release-st:
 
@@ -63,7 +61,7 @@ List releases has four arguments giving six useful functions, so there is a test
 Logs Since Release System Testing
 ---------------------------------
 
-Logs since release has three optional mutually exclusive arguments, releases, earlier and later, plus two optional flags, verbose and raw. The raw and coloured output is the same when read in by the systems test framework, so the raw flag is not tested separately. This leads to eight test in total. Default and the three range arguments, all with and without the verbose flag.
+Logs since release has three optional mutually exclusive arguments, releases, earlier and later, plus two optional flags, verbose and raw. The raw and coloured output is the same when read in by the systems test framework, so the raw flag is not tested separately. This leads to eight test in total. Default (all logs for a module) and the three range arguments, each with and without the verbose flag.
 
 .. _module_contacts-st:
 
@@ -71,7 +69,7 @@ Logs since release has three optional mutually exclusive arguments, releases, ea
 Module Contacts System Testing
 ------------------------------
 
-Module contacts has four main functions, reading contacts in default and CSV format and setting contacts manually or with a CSV file. There are four tests plus an extra one to make sure one contact can be set while leaving the other unchanged. The state of the repo is reset after each test.
+Module contacts has four main functions, reading contacts in default and CSV format and setting contacts manually or with a CSV file. There are two tests for checking contacts, with default and CSV format. There are choices and two methods for setting contacts, setting both and setting one but leaving the other unchanged for both the manual and import methods giving six tests and eight in total. The state of the dls_testpythonmod3 is reset to the default state (using dls_testpythonmod) before each test.
 
 .. _tar-module-st:
 

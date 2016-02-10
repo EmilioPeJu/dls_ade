@@ -43,10 +43,6 @@ def main():
     source = pathf.dev_module_path(module, args.area)
     logging.debug(source)
 
-    # Check for existence of this module in various places in the repository and note revisions
-    if not vcs_git.is_server_repo(source):
-        raise Exception("Repository does not contain " + source)
-
     if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
@@ -58,7 +54,7 @@ def main():
             # return so last_release_num can't be referenced before assignment
             return 1
     else:
-        raise Exception(source + "does not exist on the repository.")
+        raise Exception(source + " does not exist on the repository.")
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made

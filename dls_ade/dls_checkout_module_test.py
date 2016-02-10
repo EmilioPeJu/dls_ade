@@ -17,13 +17,6 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_checkout_module.make_parser()
 
-    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
-    def test_module_name_set(self, parser_mock):
-
-        dls_checkout_module.make_parser()
-
-        parser_mock.assert_called_once_with()
-
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
     def test_branch_set(self, parser_mock):
 
@@ -31,6 +24,12 @@ class MakeParserTest(unittest.TestCase):
 
         parser_mock.assert_called_once_with(
             help_msg="Checkout a specific named branch rather than the default (master)")
+
+    def test_module_name_has_correct_attributes(self):
+        arguments = self.parser._positionals._actions[5]
+        self.assertEqual(arguments.type, str)
+        self.assertEqual(arguments.nargs, '?')
+        self.assertEqual(arguments.dest, 'module_name')
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):

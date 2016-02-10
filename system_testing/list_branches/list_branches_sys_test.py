@@ -4,9 +4,8 @@ branches_list = "Branches of dls_testpythonmod:\n\nbug-fix\nmaster\nnew-feature\
 
 settings_list = [
 
-    # List releases for python module on repo
     {
-        'description': "list_branches",
+        'description': "list_the_branches_for_a_module_on_the_repository",
 
         'arguments': "-p dls_testpythonmod",
 

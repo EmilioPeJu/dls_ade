@@ -33,7 +33,7 @@ def make_parser():
     return parser
 
 
-def print_module_list(source, area):
+def print_module_list(source):
     """
     Prints the modules in the area of the repository specified by source.
 
@@ -43,7 +43,6 @@ def print_module_list(source, area):
 
     """
     split_list = vcs_git.get_server_repo_list()
-    print("Modules in " + area + ":\n")
     for module_path in split_list:
         if module_path.startswith(source + '/'):
             # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
@@ -56,11 +55,13 @@ def main():
     args = parser.parse_args()
     
     if args.area == "ioc" and args.domain_name:
+        print("Modules in " + args.domain_name + ":\n")
         source = pathf.dev_module_path(args.domain_name, args.area)
     else:
+        print("Modules in " + args.area + ":\n")
         source = pathf.dev_area_path(args.area)
 
-    print_module_list(source, args.area)
+    print_module_list(source)
 
 
 if __name__ == "__main__":
