@@ -10,3 +10,5 @@ if [ $# -eq 3 ]
     echo Please give the /bin, the /...egg folder and the system_testing folder paths.
     return 1
 fi
+
+dls-python push_required_repos.py

@@ -1,0 +1,32 @@
+* controlstest/ioc/testB06/TS
+    Start new module:
+        Used in local_repository_tests and remote_repository_tests:
+            AddAppToModule with no conflict.
+
+* controlstest/ioc/testB07/TS
+    Start new module:
+        Used in local_repository_tests:
+            AddAppToModule with conflict.
+ 
+* controlstest/ioc/BTEST/TS
+    Start new module:
+        Used in remote_verification_tests:
+            Server app-name conflict.
+
+controlstest/ioc/BTEST/BTEST-EB-IOC-03
+controlstest/ioc/BTEST/BTEST-EB-IOC-0
+controlstest/ioc/BTEST/BTEST-VA-IOC-04
+controlstest/ioc/BTEST2/TS
+
+* controlstest/support/testsupportmod
+    Start new module:
+        Used in remote_verification_tests:
+            Server repository path conflict.
+
+controlstest/python/dls_testpythonmod
+controlstest/python/dls_testpythonmod2
+controlstest/targetOS/mock_repo/support/testsupportmod
+controlstest/targetOS/mock_repo/python/dls_testpythonmod
+controlstest/targetOS/mock_repo/ioc/BTEST2/TS
+controlstest/targetOS/mock_repo/ioc/BTEST/BTEST-EB-IOC-03
+controlstest/targetOS/mock_repo/ioc/BTEST/TS
