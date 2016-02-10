@@ -603,10 +603,10 @@ class Git(BaseVCS):
         Check if version corresponds to a previous release.
 
         Args:
-            version(str): True or False for whether the version exists or not
+            version(str): Release tag to check for
 
         Returns:
-            bool: Release tag to check for
+            bool: True or False for whether the version exists or not
 
         """
         return version in self.list_releases()
