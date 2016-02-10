@@ -139,23 +139,6 @@ def check_releases_valid(releases, parser):
             parser.error("Input releases in correct order (<earlier> <later>)")
 
 
-def create_release_list(repo):
-    """
-    Get a list of tags of the repository.
-
-    Args:
-        repo(:class:`~git.repo.base.Repo`): Git repository instance
-
-    Returns:
-        list of str: List of tags of repo
-
-    """
-    release_list = []
-    for tag in repo.tags:
-        release_list.append(tag.name)
-    return release_list
-
-
 def set_log_range(module, releases, earlier, later, releases_list):
     """
     Set range to get logs for from parsed args or defaults if not given.
@@ -528,7 +511,7 @@ def main():
     source = pathf.dev_module_path(args.module_name, args.area)
     if vcs_git.is_server_repo(source):
         repo = vcs_git.temp_clone(source)
-        releases = create_release_list(repo)
+        releases = vcs_git.list_module_releases(repo)
         logging.debug(releases)
     else:
         raise Exception("Module " + args.module_name + " doesn't exist in " + source)

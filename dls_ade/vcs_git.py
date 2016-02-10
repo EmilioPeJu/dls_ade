@@ -614,11 +614,11 @@ class Git(BaseVCS):
 
         """
 
-        if not hasattr(self, 'releases'):
-            self.releases = []
-            for tag in self.client.tags:
-                self.releases.append(tag.name)
-        return self.releases
+        releases = []
+        for tag in self.client.tags:
+            releases.append(tag.name)
+
+        return releases
 
     def set_log_message(self, message):
         """
@@ -638,10 +638,10 @@ class Git(BaseVCS):
         Check if version corresponds to a previous release.
 
         Args:
-            version(bool): True or False for whether the version exists or not
+            version(str): Release tag to check for
 
         Returns:
-            str: Release tag to check for
+            bool: True or False for whether the version exists or not
 
         """
         return version in self.list_releases()

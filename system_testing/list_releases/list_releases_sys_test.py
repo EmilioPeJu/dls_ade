@@ -2,6 +2,8 @@ import system_testing as st
 
 releases_list = "Previous releases for dls_testpythonmod2 in the repository:\n1-0\n1-1\n2-0\n2-1\n"
 latest_release = "The latest release for dls_testpythonmod2 in the repository is: 2-1\n"
+no_git_release = "Repository does not contain controlstest/python/testpythonmod"
+no_prod_release = "dummy2: No releases made for R3.14.12.3\n"
 prod_releases_list = "Previous releases for dummy in prod:\n0-3\n0-5\n0-6\n0-7\n0-8\n"
 latest_prod_release = "The latest release for dummy in prod is: 0-8\n"
 e_release_list = "Previous releases for symbols in prod:\n1-9\n1-10\n"
@@ -9,9 +11,8 @@ e_latest_release = "The latest release for symbols in prod is: 1-10\n"
 
 settings_list = [
 
-    # List releases for python module on repo
     {
-        'description': "list_repo_releases",
+        'description': "list_releases_for_a_module_on_the_repository",
 
         'arguments': "-p dls_testpythonmod2 -g",
 
@@ -19,9 +20,8 @@ settings_list = [
 
     },
 
-    # List last release for python module on repo
     {
-        'description': "list_last_repo_release",
+        'description': "list_the_latest_release_for_a_module_on_the_repository",
 
         'arguments': "-p dls_testpythonmod2 -g -l",
 
@@ -29,9 +29,19 @@ settings_list = [
 
     },
 
-    # List releases for support module in prod
     {
-        'description': "list_prod_releases",
+        'description': "raise_exception_for_a_non_existent_module_on_repository",
+
+        'arguments': "-p testpythonmod -g",
+
+        'exception_type': "dls_ade.exceptions.VCSGitError",
+
+        'exception_string': no_git_release,
+
+    },
+
+    {
+        'description': "list_releases_for_a_module_in_prod",
 
         'arguments': "dummy",
 
@@ -39,9 +49,8 @@ settings_list = [
 
     },
 
-    # List releases for support module in prod
     {
-        'description': "list_latest_prod_release",
+        'description': "list_the_latest_release_for_a_module_in_prod",
 
         'arguments': "dummy -l",
 
@@ -49,9 +58,17 @@ settings_list = [
 
     },
 
-    # List releases for support module in prod
     {
-        'description': "list_prod_releases_other_epics",
+        'description': "raise_exception_for_non_existent_module_in_prod",
+
+        'arguments': "dummy2",
+
+        'std_out_compare_string': no_prod_release,
+
+    },
+
+    {
+        'description': "list_the_latest_release_for_a_module_in_prod_with_another_epics_version",
 
         'arguments': "symbols -e R3.14.8.2",
 
@@ -59,9 +76,8 @@ settings_list = [
 
     },
 
-    # List releases for support module in prod
     {
-        'description': "list_latest_prod_release_other_epics",
+        'description': "list_the_latest_release_for_a_module_in_prod_with_another_epics_version",
 
         'arguments': "symbols -e R3.14.8.2 -l",
 

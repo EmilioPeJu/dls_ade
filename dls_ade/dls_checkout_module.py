@@ -31,12 +31,12 @@ def make_parser():
         :class:`argparse.ArgumentParser`:  ArgParse instance
     """
     parser = ArgParser(usage)
-    parser.add_module_name_arg()
     parser.add_branch_flag(
         help_msg="Checkout a specific named branch rather than the default (master)")
 
-    parser.add_argument("-f", "--force", action="store_true", dest="force",
-                        help="force the checkout, disable warnings")
+    parser.add_argument("module_name", nargs="?", type=str, default="",
+                        help="Name of module")
+
     return parser
 
 

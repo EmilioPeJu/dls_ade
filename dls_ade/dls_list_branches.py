@@ -41,9 +41,6 @@ def main():
 
     source = pathf.dev_module_path(args.module_name, args.area)
 
-    if not vcs_git.is_server_repo(source):
-        raise Exception(args.module_name + " does not exist on repo")
-
     print("Branches of " + args.module_name + ":\n")
 
     repo = vcs_git.temp_clone(source)

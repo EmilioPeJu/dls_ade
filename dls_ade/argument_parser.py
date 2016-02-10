@@ -10,14 +10,13 @@ class ArgParser(ArgumentParser):
     Makes a custom parser class with area arguments by default.
 
     """
-
-    def __init__(self, usage_v, applicable_areas=areas):
+    def __init__(self, usage_v, supported_areas=areas):
         super(ArgParser, self).__init__(description=usage_v)
 
         area = self.add_mutually_exclusive_group(required=False)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="Set area, e.g. " + ", ".join(applicable_areas))
+            help="Set area, e.g. " + ", ".join(supported_areas))
         area.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="Set 'python' area")
@@ -51,9 +50,9 @@ class ArgParser(ArgumentParser):
 
         Args:
             help_msg(str): Help message relevant to module calling function
-
         """
-        self.add_argument("module_name", type=str, default=None,
+
+        self.add_argument("module_name", type=str, default="",
                           help=help_msg)
 
     def add_release_arg(self, help_msg="Release of module"):
@@ -100,4 +99,4 @@ class ArgParser(ArgumentParser):
 
         """
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
-                          help=help_msg)
+                          default=env.epicsVer(), help=help_msg)
