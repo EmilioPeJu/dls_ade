@@ -1328,7 +1328,7 @@ class GitReleaseVersionTest(unittest.TestCase):
         self.vcs.release_version('1-0')
 
         self.vcs.client.create_tag.assert_called_once_with('1-0', 'Release 1-0')
-        self.vcs.client.remotes.origin.push.assert_called_once_with(branch, '--follow-tags')
+        self.vcs.client.remotes.origin.push.assert_called_once_with(branch, '--tags')
 
 
 class FakeTag(object):
