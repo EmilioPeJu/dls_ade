@@ -9,6 +9,7 @@ from mock import patch, ANY, MagicMock, PropertyMock, call  # @UnresolvedImport
 def setUpModule():
     vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     vcs_git.GIT_ROOT_DIR = "controlstest"
+    vcs_git.pathf.GIT_ROOT_DIR = "controlstest"
 
 
 def set_up_mock(test_case_object, path):
@@ -744,6 +745,36 @@ class TempCloneTest(unittest.TestCase):
         vcs_git.temp_clone(source)
 
         mock_clone_from.assert_called_once_with(root + source, "tempdir")
+
+
+class ListModuleReleases(unittest.TestCase):
+
+    def test_given_repo_with_tags_then_listed(self):
+
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+        tag_inst_1 = MagicMock()
+        tag_inst_1.name = '1-0'
+        tag_inst_2 = MagicMock()
+        tag_inst_2.name = '2-0'
+        tag_inst_3 = MagicMock()
+        tag_inst_3.name = '2-1'
+
+        repo_inst.tags = [tag_inst_1, tag_inst_2, tag_inst_3]
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertEqual(releases, ['1-0', '2-0', '2-1'])
+
+    def test_given_repo_with_no_tags_then_empty_list_returned(self):
+        repo_inst = MagicMock()
+        vcs_git.git.repo = repo_inst
+
+        repo_inst.tags = []
+
+        releases = vcs_git.list_module_releases(repo_inst)
+
+        self.assertFalse(releases)
 
 
 class CloneMultiTest(unittest.TestCase):
