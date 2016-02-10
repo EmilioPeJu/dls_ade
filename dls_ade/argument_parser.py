@@ -14,7 +14,7 @@ class ArgParser(ArgumentParser):
     def __init__(self, usage_v, applicable_areas=areas):
         super(ArgParser, self).__init__(description=usage_v)
 
-        area = self.add_mutually_exclusive_group(required=True)
+        area = self.add_mutually_exclusive_group(required=False)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
             help="Set area, e.g. " + ", ".join(applicable_areas))

@@ -368,24 +368,13 @@ def test_generator_export_add_app_to_server():
 
     """
     for settings_dict in add_app_settings_list:
-        # Clone the template repository to a new location.
+        # Set the server repository to the default to start with.
 
-        clone_from = os.path.join(
+        settings_dict['default_server_repo_path'] = os.path.join(
                 ORIGINAL_GIT_ROOT_DIR,
                 settings_dict['module_area'],
                 settings_dict['path'],
         )
-
-        clone_to = st.vcs_git.pathf.dev_module_path(
-            settings_dict['path'],
-            settings_dict['module_area'],
-        )
-
-        temp_repo = st.vcs_git.temp_clone(clone_from)
-        local_repo_path = temp_repo.working_tree_dir
-
-        st.vcs_git.delete_remote(local_repo_path, "origin")
-        st.vcs_git.add_new_remote_and_push(clone_to, local_repo_path)
 
     alter_settings_dictionaries(add_app_settings_list)
 
