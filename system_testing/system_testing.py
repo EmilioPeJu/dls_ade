@@ -9,18 +9,29 @@ from pkg_resources import require
 require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
-# Make sure env var is set.(PYTHONPATH must also be set, but cannot
-# easily test it is correct)
-try:
-    os.environ['GIT_ROOT_DIR']
-except KeyError:
-    raise EnvironmentError("GIT_ROOT_DIR must be set")
+
+ENVIRONMENT_CORRECT = False
+
 
 try:
     from dls_ade import vcs_git
 except ImportError:
     vcs_git = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
+
+
+def check_environment():
+    """Checks that the environment has been set up correctly for testing."""
+    # Make sure env var is set.(PYTHONPATH must also be set, but cannot
+    # easily test it is correct)
+    try:
+        os.environ['GIT_ROOT_DIR']
+    except KeyError:
+        raise EnvironmentError("GIT_ROOT_DIR must be set")
+
+    global ENVIRONMENT_CORRECT
+
+    ENVIRONMENT_CORRECT = True
 
 
 class SystemTestingError(Exception):
@@ -36,6 +47,13 @@ class SettingsError(SystemTestingError):
 class TempdirError(SystemTestingError):
     """Class for exceptions relating to issues with temporary directories."""
     pass
+
+
+class GitRootDirError(SystemTestingError):
+    """Class for exceptions raised when GIT_ROOT_DIR is not set."""
+    def __init__(self):
+        err_message = "Cannot call functions if GIT_ROOT_DIR not set."
+        super(GitRootDirError, self).__init__(err_message)
 
 
 def get_local_temp_clone(server_repo_path):
@@ -189,10 +207,14 @@ class SystemTest(object):
             class or in the settings dict.
         :class:`AssertionError`: Indicates a failure of the script being \
             tested.
+        :class:`.GitRootDirError`: Indicates if GIT_ROOT_DIR is not set.
 
     """
 
     def __init__(self, script, description):
+        if not ENVIRONMENT_CORRECT:
+            raise GitRootDirError()
+
         self._script = script
         self.description = description
 
@@ -666,7 +688,17 @@ def generate_tests_from_dicts(script, test_settings):
         script: The script to be tested.
         test_settings: The settings for each individual test.
 
+    Raises:
+        :class:`.SettingsError`: From :class:`.SystemTest`
+        :class:`.TempdirError`: From :class:`.SystemTest`
+        :class:`dls_ade.exceptions.VCSGitError`: From :class:`.SystemTest`
+        :class:`AssertionError`: From :class:`.SystemTest`
+        :class:`.GitRootDirError`: Indicates if GIT_ROOT_DIR is not set.
+
     """
+    if not ENVIRONMENT_CORRECT:
+        raise GitRootDirError()
+
     for settings in test_settings:
         if 'script' in settings:
             script = settings.pop('script')
