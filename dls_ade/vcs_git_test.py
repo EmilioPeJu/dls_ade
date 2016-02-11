@@ -1430,9 +1430,7 @@ class GitReleaseVersionTest(unittest.TestCase):
 
     def test_given_version_then_create_tag_and_push(self):
 
-        branch = self.vcs.client.active_branch
-
-        self.vcs.release_version('1-0')
+        self.vcs.release_version('1-0', message='Release 1-0')
 
         self.vcs.client.create_tag.assert_called_once_with('1-0', message='Release 1-0')
         self.vcs.client.remotes.origin.push.assert_called_once_with('1-0')
