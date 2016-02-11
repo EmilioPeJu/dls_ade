@@ -24,6 +24,9 @@ def check_environment():
     """Checks that the environment has been set up correctly for testing."""
     # Make sure env var is set.(PYTHONPATH must also be set, but cannot
     # easily test it is correct)
+    if ENVIRONMENT_CORRECT:
+        return
+
     try:
         os.environ['GIT_ROOT_DIR']
     except KeyError:
@@ -212,8 +215,7 @@ class SystemTest(object):
     """
 
     def __init__(self, script, description):
-        if not ENVIRONMENT_CORRECT:
-            raise GitRootDirError()
+        check_environment()
 
         self._script = script
         self.description = description
@@ -696,8 +698,7 @@ def generate_tests_from_dicts(script, test_settings):
         :class:`.GitRootDirError`: Indicates if GIT_ROOT_DIR is not set.
 
     """
-    if not ENVIRONMENT_CORRECT:
-        raise GitRootDirError()
+    check_environment()
 
     for settings in test_settings:
         if 'script' in settings:

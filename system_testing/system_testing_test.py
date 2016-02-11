@@ -1,10 +1,13 @@
 import system_testing as st
-import os
 import unittest
 import subprocess
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
+
+
+def setup_module(self):
+    st.ENVIRONMENT_CORRECT = True
 
 
 def set_up_mock(test_case_obj, mock_path):
@@ -814,3 +817,7 @@ class SystemTestDeleteClonedServerRepo(unittest.TestCase):
         self.mock_delete_temp_repo.assert_called_once_with("test/repo/clone/path")
 
         self.assertEqual(self.st_obj._server_repo_clone_path, "")
+
+
+def teardown_module():
+    st.ENVIRONMENT_CORRECT = False
