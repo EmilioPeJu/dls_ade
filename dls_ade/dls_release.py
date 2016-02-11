@@ -50,6 +50,7 @@ def make_parser():
         * -t (no-test-build)
         * -l (local-build-only)
         * -e (epics_version)
+        * -T (test_build_only
         * -m (message)
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
