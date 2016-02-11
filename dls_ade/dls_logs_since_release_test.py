@@ -227,7 +227,7 @@ class SetLogRangeTest(unittest.TestCase):
 
         start, end = dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
 
-        self.assertEqual(start, '1-0')
+        self.assertEqual(start, '')
         self.assertEqual(end, '4-4')
 
     def test_given_none_then_use_defaults(self):
@@ -237,7 +237,7 @@ class SetLogRangeTest(unittest.TestCase):
 
         start, end = dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
 
-        self.assertEqual(start, '1-0')
+        self.assertEqual(start, '')
         self.assertEqual(end, 'HEAD')
 
     def test_given_invalid_start_then_error(self):
@@ -267,8 +267,6 @@ class GetLogMessagesTest(unittest.TestCase):
 
     @patch('dls_ade.dls_logs_since_release.time.localtime', return_value=[2014, 8, 12, 13, 50, 10, 1, 224, 1])
     def test_extracts_commit_information(self, _1):
-        start = '4-1'
-        end = '4-4'
 
         repo_inst = MagicMock()
         commit = MagicMock()
@@ -281,7 +279,7 @@ class GetLogMessagesTest(unittest.TestCase):
         commit_list = [commit]
         repo_inst.iter_commits.return_value = commit_list
 
-        log_info = dls_logs_since_release.get_log_messages(repo_inst, start, end)
+        log_info = dls_logs_since_release.get_log_messages(repo_inst)
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
@@ -335,7 +333,7 @@ class GetTagMessagesTest(unittest.TestCase):
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (RELEASE: 4-1)',
                                                u'12/08/2014 13:50:10',
                                                u' make "sdos" public to allow checks on the sdo_observers list']]})
 
@@ -361,7 +359,7 @@ class GetTagMessagesTest(unittest.TestCase):
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (RELEASE: 4-1)',
                                                u'12/08/2014 13:50:10',
                                                u' make "sdos" public to allow checks on the sdo_observers list']]})
 
