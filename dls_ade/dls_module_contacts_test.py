@@ -230,17 +230,15 @@ class OutputContactInfoTest(unittest.TestCase):
     @patch('dls_ade.dls_module_contacts.lookup_contact_name', side_effect=["test_contact_name", "test_cc_name"])
     @patch('dls_ade.vcs_git.git')
     @patch('dls_ade.vcs_git.clone')
-    def test_given_contacts_then_print_csv_format(self, mock_clone, mock_git, _2):
+    def test_given_contacts_then_output_csv_format(self, mock_clone, mock_git, _2):
         self.args.csv = True
         module = "test_module"
         contact = "test_contact"
         cc = "test_cc"
 
-        with patch.object(builtins, 'print') as mock_print:
-            dls_module_contacts.output_csv_format(contact, cc, module)
+        output = dls_module_contacts.output_csv_format(contact, cc, module)
 
-        call_args = mock_print.call_args_list
-        self.assertEqual(call_args[0][0][0], "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
+        self.assertEqual(output, "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
 
 
 class ImportFromCSVTest(unittest.TestCase):

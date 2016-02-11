@@ -128,7 +128,7 @@ def get_area_module_list(area):
 
     modules = []
     for path in repo_list:
-        if area in path:
+        if area in path and path.split('/')[-1] not in modules:
             modules.append(path.split('/')[-1])
 
     return modules
@@ -185,8 +185,10 @@ def output_csv_format(contact, cc_contact, module):
         cc_contact(str): Contact FED-ID
         module(str): Module name
 
-    """
+    Returns:
+        str: Formatted output
 
+    """
     # Check if <FED-ID>s are specified in repo, if not don't run lookup function
     if contact != 'unspecified':
         contact_name = lookup_contact_name(contact)
@@ -197,9 +199,11 @@ def output_csv_format(contact, cc_contact, module):
     else:
         cc_name = cc_contact
 
-    print("{module},{contact},{contact_name},{cc},{cc_name}".format(
+    output = "{module},{contact},{contact_name},{cc},{cc_name}".format(
         module=module, contact=contact, contact_name=contact_name,
-        cc=cc_contact, cc_name=cc_name))
+        cc=cc_contact, cc_name=cc_name)
+
+    return output
 
 
 def import_from_csv(modules, area, imp):
@@ -322,8 +326,8 @@ def main():
 
     # If no contacts or csv file provided to edit, default script operation: print contacts
     if not (args.contact or args.cc or args.imp):
-        if args.csv:
-            print("Module,Contact,Contact Name,CC,CC Name")
+
+        print_out = []
         for module in modules:
             source = pathf.dev_module_path(module, args.area)
             repo = vcs_git.temp_clone(source)
@@ -333,11 +337,17 @@ def main():
             cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
 
             if args.csv:
-                output_csv_format(contact, cc_contact, module)
+                print_out.append(output_csv_format(contact, cc_contact, module))
             else:
-                print("Contact: " + contact + " (CC: " + cc_contact + ")")
+                print_out.append("Contact: " + contact + " (CC: " + cc_contact + ")")
 
             shutil.rmtree(repo.working_tree_dir)
+
+        if args.csv:
+            print("Module,Contact,Contact Name,CC,CC Name")
+        for entry in print_out:
+            print(entry)
+
         return 0
 
     # If we get to this point, we are assigning contacts
