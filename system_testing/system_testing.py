@@ -571,17 +571,20 @@ class SystemTest(object):
         """Run the local path comparison tests.
 
         The repo_comp_method must be one of the following:
-            - local_comp: compares the two local paths, named with
-            local_comp_path_one and local_comp_path_two.
-            - server_comp: compares local_comp_path_one with the
-            server_repo_clone_path.
+            - local_comp: compares the two local paths.
+                Paths are local_comp_path_one and local_comp_path_two.
+            - server_comp: compares a local path with the cloned server repo.
+                Paths are local_comp_path_one and server_repo_clone_path.
             - all_comp: compares all three paths against one another.
+                Paths are local_comp_path_one, local_comp_path_two and
+                server_repo_clone_path.
 
         Raises:
-            SettingsError: From check_if_folders_equal
+            SettingsError: From check_if_folders_equal.
             SettingsError: If the repo_comp_method has an unexpected value.
             AssertionError: If the test does not pass.
-            subprocess.CalledProcessError: From check_if_repos_equal
+            subprocess.CalledProcessError: From check_if_repos_equal.
+
         """
         if not self._repo_comp_method:
             return
