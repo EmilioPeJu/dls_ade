@@ -647,7 +647,9 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
     def set_branch(self, branch):
-        self.client.heads[branch].checkout()
+        origin = self.client.remotes.origin
+        remote = origin.refs[branch]
+        remote.checkout(b=branch)
 
     def set_version(self, version):
         """
@@ -661,12 +663,13 @@ class Git(BaseVCS):
             raise VCSGitError('version does not exist')
         self._version = version
 
-    def release_version(self, version):
+    def release_version(self, version, message=""):
 
-        self.client.create_tag(version, "Release " + version)
+        self.client.create_tag(version, message=message)
 
         origin = self.client.remotes.origin
-        origin.push(self.client.active_branch, '--tags')
+        # This is equivalent to 'git push origin <tag_name>'
+        origin.push(version)
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"
