@@ -155,14 +155,13 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     repo.git.add('--all')
 
     print("Committing files to repo...")
+    index = repo.index
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
-    msg = ""
     try:
-        msg = repo.git.commit(m=message)
+        index.commit(message)
     except git.exc.GitCommandError as e:
         pass
-    print(msg)
 
 
 def add_new_remote_and_push(dest, path="./", remote_name="origin",
@@ -459,7 +458,9 @@ def checkout_remote_branch(branch, repo):
     """
     if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
-        repo.git.checkout("-b", branch, "origin/" + branch)
+        origin = repo.remotes.origin
+        remote = origin.refs[branch]
+        remote.checkout(b=branch)
 
 
 def check_git_attributes(local_repo_path, attributes_dict):
