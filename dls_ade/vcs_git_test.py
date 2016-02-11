@@ -1408,25 +1408,15 @@ class GitSettersTest(unittest.TestCase):
         version = '0-2'
 
         with self.assertRaises(vcs_git.VCSGitError):
-            self.vcs.set_version(version);
+            self.vcs.set_version(version)
 
+    def test_given_branch_then_checkout(self):
 
-class GitReleaseVersionTest(unittest.TestCase):
+        branch = "test_branch"
 
-    @patch('dls_ade.vcs_git.git.Repo.clone_from')
-    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
-    def setUp(self, mtemp, mclone):
+        self.vcs.set_branch(branch)
 
-        self.patch_is_server_repo = patch('dls_ade.vcs_git.is_server_repo')
-        self.addCleanup(self.patch_is_server_repo.stop)
-        self.mock_is_server_repo = self.patch_is_server_repo.start()
-
-        self.mock_is_server_repo.return_value = True
-
-        self.module = 'dummy'
-        self.options = FakeOptions()
-
-        self.vcs = vcs_git.Git(self.module, self.options)
+        self.vcs.client.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b=branch)
 
     def test_given_version_then_create_tag_and_push(self):
 
