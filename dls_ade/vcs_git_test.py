@@ -242,7 +242,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit("test_path")
 
         self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.git.commit.assert_called_once_with(m="Initial commit.")
+        self.mock_repo.index.commit.assert_called_once_with("Initial commit.")
 
     def test_given_both_tests_pass_and_both_arguments_supplied_then_repo_committed_with_correct_arguments(self):
 
@@ -252,7 +252,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit("test_path", "test_message")
 
         self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
+        self.mock_repo.index.commit.assert_called_once_with("test_message")
 
     def test_given_no_input_then_sensible_default_applied(self):
 
@@ -272,7 +272,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
         vcs_git.stage_all_files_and_commit("test_path", "test_message")
 
         self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.git.commit.assert_called_once_with(m="test_message")
+        self.mock_repo.index.commit.assert_called_once_with("test_message")
 
 
 class AddNewRemoteAndPushTest(unittest.TestCase):
@@ -871,7 +871,7 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
 
         vcs_git.checkout_remote_branch(branch, repo)
 
-        repo.git.checkout.assert_called_once_with("-b", branch, "origin/" + branch)
+        repo.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b=branch)
 
     @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
@@ -883,7 +883,7 @@ class CheckoutRemoteBranchTest(unittest.TestCase):
 
         vcs_git.checkout_remote_branch(branch, repo)
 
-        self.assertFalse(repo.git.checkout.call_count)
+        self.assertFalse(repo.remotes.origin.refs.__getitem__().checkout.call_count)
 
 
 class CheckGitAttributesTest(unittest.TestCase):
@@ -1387,11 +1387,6 @@ class GitSettersTest(unittest.TestCase):
         self.options = FakeOptions()
 
         self.vcs = vcs_git.Git(self.module, self.options)
-
-    def test_when_set_branch_called_then_raise_notimplementederror(self):
-
-        with self.assertRaises(NotImplementedError):
-            self.vcs.set_branch('some_branch')
 
     def test_given_vcs_when_version_not_set_then_get_version_raise_error(self):
 
