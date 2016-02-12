@@ -247,7 +247,7 @@ class SetLogRangeTest(unittest.TestCase):
         try:
             dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     def test_given_invalid_end_then_error(self):
         releases = ['1-0', '4-5']
@@ -258,7 +258,7 @@ class SetLogRangeTest(unittest.TestCase):
         try:
             dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class GetLogMessagesTest(unittest.TestCase):
@@ -398,7 +398,7 @@ class GetTagMessagesTest(unittest.TestCase):
         try:
             dls_logs_since_release.get_tag_messages(tag_list, log_info)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class ConvertTimeStamp(unittest.TestCase):

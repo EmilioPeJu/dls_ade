@@ -67,7 +67,7 @@ class CheckEpicsVersionTest(unittest.TestCase):
         try:
             env.check_epics_version(epics_version)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class SetEpicsFromEnvTest(unittest.TestCase):

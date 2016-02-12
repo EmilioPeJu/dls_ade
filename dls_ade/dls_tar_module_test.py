@@ -48,7 +48,7 @@ class CheckAreaArchivableTest(unittest.TestCase):
         try:
             dls_tar_module.check_area_archivable(area)
         except Exception as error:
-            self.assertEqual(error.message, "Modules in area " + area + " cannot be archived")
+            self.assertEqual(str(error), "Modules in area " + area + " cannot be archived")
 
     def test_given_support_area_then_no_error_raised(self):
         area = 'support'
@@ -93,7 +93,7 @@ class CheckFilePaths(unittest.TestCase):
         try:
             dls_tar_module.check_file_paths(release_dir, archive, untar)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=False)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=False)
@@ -106,7 +106,7 @@ class CheckFilePaths(unittest.TestCase):
         try:
             dls_tar_module.check_file_paths(release_dir, archive, untar)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=True)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=False)
@@ -128,7 +128,7 @@ class CheckFilePaths(unittest.TestCase):
         try:
             dls_tar_module.check_file_paths(release_dir, archive, untar)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_tar_module.os.path.isfile', return_value=True)
     @patch('dls_ade.dls_tar_module.os.path.isdir', return_value=True)
@@ -141,4 +141,4 @@ class CheckFilePaths(unittest.TestCase):
         try:
             dls_tar_module.check_file_paths(release_dir, archive, untar)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)

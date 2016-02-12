@@ -55,7 +55,7 @@ class CheckTechnicalAreaTest(unittest.TestCase):
         try:
             dls_checkout_module.check_technical_area(area, module)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_msg)
+            self.assertEqual(str(error), expected_error_msg)
 
 
 if __name__ == '__main__':

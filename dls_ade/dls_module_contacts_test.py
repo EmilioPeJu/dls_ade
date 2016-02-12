@@ -265,7 +265,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_no_contact_then_error_raised(self, mock_csv):
@@ -279,7 +279,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_contact_then_no_error_raised(self, mock_csv):
@@ -319,7 +319,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_contact_defined_twice_then_error_raised(self, mock_csv):
@@ -336,7 +336,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class EditContactInfoTest(unittest.TestCase):
