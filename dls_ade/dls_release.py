@@ -216,7 +216,7 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            print "Last release for {module} was {last_release}".format(module=module, last_release=last_release)
+            print("Last release for {module} was {last_release}".format(module=module, last_release=last_release))
     return version
 
 
@@ -397,7 +397,7 @@ def main():
     vcs.set_log_message(
         (log_mess % (module, version, args.message)).strip())
 
-    print construct_info_message(module, args.branch, args.area, version, build)
+    print(construct_info_message(module, args.branch, args.area, version, build))
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
@@ -410,7 +410,7 @@ def main():
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
             build, args.local_build, vcs)
-        print test_build_message
+        print(test_build_message)
         if test_build_fail:
             sys.exit(1)
 
