@@ -10,7 +10,7 @@ from pkg_resources import require
 require("python_ldap>=2.3.12")
 import ldap
 
-from dls_environment import environment
+from dls_ade.dls_environment import environment
 
 build_scripts = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "dlsbuild_scripts")
