@@ -244,7 +244,7 @@ def import_from_csv(modules, area, imp):
             if len(row) > 3:
                 cc = row[3].strip()
             else:
-                cc = "unspecified"
+                cc = ""
 
             if module not in modules:
                 raise Exception("Module {module} not in {area} area".format(module=module, area=area))

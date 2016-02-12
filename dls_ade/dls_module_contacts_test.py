@@ -240,6 +240,18 @@ class OutputContactInfoTest(unittest.TestCase):
 
         self.assertEqual(output, "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
 
+    @patch('dls_ade.vcs_git.git')
+    @patch('dls_ade.vcs_git.clone')
+    def test_given_unspecified_contacts_then_output_csv_format(self, mock_clone, mock_git):
+        self.args.csv = True
+        module = "test_module"
+        contact = "unspecified"
+        cc = "unspecified"
+
+        output = dls_module_contacts.output_csv_format(contact, cc, module)
+
+        self.assertEqual(output, "test_module,unspecified,unspecified,unspecified,unspecified")
+
 
 class ImportFromCSVTest(unittest.TestCase):
 
@@ -277,7 +289,20 @@ class ImportFromCSVTest(unittest.TestCase):
         area = "test_area"
         imp = "test_file"
         mock_csv.reader.return_value = \
-            [["Module", "Contact", "Contact Name", "CC", "CC Name"], ["test_module", "user"]]
+            [["Module", "Contact", "Contact Name", "CC", "CC Name"],
+             ["test_module", "user1", "user1"]]
+
+        with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
+            dls_module_contacts.import_from_csv(modules, area, imp)
+
+    @patch('dls_ade.dls_module_contacts.csv')
+    def test_given_title_module_contact_and_cc_then_no_error_raised(self, mock_csv):
+        modules = ["test_module"]
+        area = "test_area"
+        imp = "test_file"
+        mock_csv.reader.return_value = \
+            [["Module", "Contact", "Contact Name", "CC", "CC Name"],
+             ["test_module", "user1", "user1", "user2", "user2"]]
 
         with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
             dls_module_contacts.import_from_csv(modules, area, imp)
@@ -344,16 +369,17 @@ class EditContactInfoTest(unittest.TestCase):
         self.assertFalse(len(mock_file.write.call_args_list))
 
     @patch('dls_ade.dls_module_contacts.lookup_contact_name')
-    def test_given_empty_and_unchanged_contact_then_do_not_set(self, _1):
+    def test_given_changed_and_empty_contact_then_do_not_set(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
         repo_inst.git.check_attr.side_effect = ['user123', 'user456']
 
         with patch.object(builtins, 'open', mock_open(read_data='test_data')):
             with open('test_file') as mock_file:
-                dls_module_contacts.edit_contact_info(repo_inst, "", "user456")
+                dls_module_contacts.edit_contact_info(repo_inst, "user789", "")
 
-        self.assertFalse(len(mock_file.write.call_args_list))
+        self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user789\n")
+        self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
 
     @patch('dls_ade.dls_module_contacts.lookup_contact_name')
     def test_given_empty_and_changed_contact_then_change_one_keep_other(self, _1):
