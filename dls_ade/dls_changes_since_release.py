@@ -7,9 +7,6 @@ import logging
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import vcs_git
-from pkg_resources import require
-require('GitPython')
-import git
 
 logging.basicConfig(level=logging.DEBUG)
 
