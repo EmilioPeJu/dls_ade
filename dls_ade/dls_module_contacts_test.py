@@ -69,20 +69,20 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error = parse_error_patch.start()
 
     def test_given_imp_not_contact_not_cc_then_no_error_raised(self):
-        imp = True
-        modules = ''
-        contact = False
-        cc = False
+        imp = "test_file"
+        modules = "test_module"
+        contact = ""
+        cc = ""
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_given_imp_contact_not_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = True
-        cc = False
+        imp = "test_file"
+        modules = "test_module"
+        contact = "test_contact"
+        cc = ""
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -90,10 +90,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_not_contact_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = False
-        cc = True
+        imp = "test_file"
+        modules = "test_module"
+        contact = ""
+        cc = "test_cc"
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -101,10 +101,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_contact_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = True
-        cc = True
+        imp = "test_file"
+        modules = "test"
+        contact = "test_contact"
+        cc = "test_cc"
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -112,10 +112,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_contact_no_module_then_error(self):
-        imp = False
-        modules = ''
-        contact = True
-        cc = False
+        imp = ""
+        modules = ""
+        contact = "test_contact"
+        cc = ""
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -123,10 +123,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_cc_no_module_then_error(self):
-        imp = False
-        modules = ''
-        contact = False
-        cc = True
+        imp = ""
+        modules = ""
+        contact = ""
+        cc = "test_cc"
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -134,10 +134,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_cc_and_contact_no_module_then_error(self):
-        imp = False
+        imp = ''
         modules = ''
-        contact = True
-        cc = True
+        contact = "test_contact"
+        cc = "test_cc"
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -145,20 +145,20 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_contact_module_then_no_error(self):
-        imp = False
-        modules = 'test'
-        contact = True
-        cc = False
+        imp = ""
+        modules = "test_module"
+        contact = "test_contact"
+        cc = ""
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_no_imp_cc_module_then_no_error(self):
-        imp = False
-        modules = 'test'
-        contact = False
-        cc = True
+        imp = ""
+        modules = "test_module"
+        contact = ""
+        cc = "test_cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
