@@ -9,6 +9,7 @@ import sys
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import vcs_git
+
 usage = """
 Default <area> is 'support'.
 List all modules in the <area> area.

@@ -1,6 +1,6 @@
 from dls_ade import path_functions
 import unittest
-from exceptions import ParsingError
+from dls_ade.exceptions import ParsingError
 
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 

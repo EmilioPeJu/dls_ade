@@ -2,8 +2,6 @@
 
 from __future__ import print_function
 from dls_ade import dls_module_contacts
-from argparse import _StoreAction
-from argparse import _StoreTrueAction
 import unittest
 from pkg_resources import require
 require("mock")

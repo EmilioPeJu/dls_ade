@@ -1,6 +1,5 @@
 #!/bin/env dls-python
 
-
 from __future__ import print_function
 from sys import version_info
 if version_info.major == 2:
@@ -9,7 +8,6 @@ else:
     import builtins
 
 import unittest
-from argparse import _StoreAction
 from pkg_resources import require
 import dls_list_modules
 require("mock")

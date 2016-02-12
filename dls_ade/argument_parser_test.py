@@ -1,7 +1,7 @@
 #!/bin/env dls-python
 
 import unittest
-from argument_parser import ArgParser
+from dls_ade.argument_parser import ArgParser
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 

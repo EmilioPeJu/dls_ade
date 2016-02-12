@@ -1,5 +1,5 @@
 import os
-from exceptions import ParsingError
+from dls_ade.exceptions import ParsingError
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 

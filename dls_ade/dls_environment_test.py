@@ -1,7 +1,6 @@
 #!/bin/env dls-python
 
 import unittest
-import logging
 from dls_ade import dls_environment
 from pkg_resources import require
 require("mock")

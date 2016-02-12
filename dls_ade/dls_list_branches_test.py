@@ -1,15 +1,11 @@
 #!/bin/env dls-python
 
 import unittest
-
 from pkg_resources import require
-
 from dls_ade import dls_list_branches
 
 require("mock")
 from mock import patch, MagicMock
-from argparse import _StoreAction
-from argparse import _StoreTrueAction
 
 
 class MakeParserTest(unittest.TestCase):

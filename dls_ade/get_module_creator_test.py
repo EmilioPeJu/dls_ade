@@ -4,7 +4,7 @@ import unittest
 import logging
 
 import dls_ade.get_module_creator as get_mc
-from exceptions import ParsingError
+from dls_ade.exceptions import ParsingError
 from pkg_resources import require
 require("mock")
 from mock import patch, MagicMock
