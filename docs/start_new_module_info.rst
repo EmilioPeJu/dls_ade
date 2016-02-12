@@ -46,7 +46,7 @@ modules use only these for creation. More information can be found in
 :ref:`snm-info-templates`.
 
 Finally, to make sure that the script works as intended, we have performed
-complete :ref:`system-testing` of our finished script. More information can be
+complete :ref:`system-testing-info` of our finished script. More information can be
 found in :ref:`system-testing-snm`.
 
 .. _snm-info-module-creator:
@@ -150,9 +150,9 @@ know if you wish to edit these in the future:
 - The use of `.gitattribute` files for module contacts.
     Module contacts are stored in .gitattribute files in the module's root
     directory.
-- :ref:`system-testing` comparison folders need to be changed after editing
+- :ref:`system-testing-info` comparison folders need to be changed after editing
     In order to ensure that the program works as intended,
-    :ref:`system-testing` uses a number of folders that the program
+    :ref:`system-testing-info` uses a number of folders that the program
     output is checked against to ensure that everything works as intended.
     Look at :ref:`snm-comparison-files-creation` to find out more.
 - Where templates are set in :class:`~dls_ade.module_template.ModuleTemplate`
@@ -166,5 +166,5 @@ know if you wish to edit these in the future:
 
 System Testing
 --------------
-The :ref:`system-testing` information for :mod:`~dls_ade.dls_start_new_module`
+The :ref:`system-testing-info` information for :mod:`~dls_ade.dls_start_new_module`
 can be found in :ref:`system-testing-snm`.

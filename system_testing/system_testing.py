@@ -9,18 +9,32 @@ from pkg_resources import require
 require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
-# Make sure env var is set.(PYTHONPATH must also be set, but cannot
-# easily test it is correct)
-try:
-    os.environ['GIT_ROOT_DIR']
-except KeyError:
-    raise EnvironmentError("GIT_ROOT_DIR must be set")
+
+ENVIRONMENT_CORRECT = False
+
 
 try:
     from dls_ade import vcs_git
 except ImportError:
     vcs_git = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
+
+
+def check_environment():
+    """Checks that the environment has been set up correctly for testing."""
+    # Make sure env var is set.(PYTHONPATH must also be set, but cannot
+    # easily test it is correct)
+    if ENVIRONMENT_CORRECT:
+        return
+
+    try:
+        os.environ['GIT_ROOT_DIR']
+    except KeyError:
+        raise EnvironmentError("GIT_ROOT_DIR must be set")
+
+    global ENVIRONMENT_CORRECT
+
+    ENVIRONMENT_CORRECT = True
 
 
 class SystemTestingError(Exception):
@@ -38,6 +52,13 @@ class TempdirError(SystemTestingError):
     pass
 
 
+class GitRootDirError(SystemTestingError):
+    """Class for exceptions raised when GIT_ROOT_DIR is not set."""
+    def __init__(self):
+        err_message = "Cannot call functions if GIT_ROOT_DIR not set."
+        super(GitRootDirError, self).__init__(err_message)
+
+
 def get_local_temp_clone(server_repo_path):
     """Obtain the root directory for a temporary clone of the given repository.
 
@@ -49,7 +70,8 @@ def get_local_temp_clone(server_repo_path):
             This will always be located in a temporary folder.
 
     Raises:
-        VCSGitError: From vcs_git.temp_clone.
+        :class:`~dls_ade.exceptions.VCSGitError`: From \
+            :func:`dls_ade,vcs_git.temp_clone`.
 
     """
     logging.debug("Cloning server repo path: " + server_repo_path)
@@ -57,6 +79,8 @@ def get_local_temp_clone(server_repo_path):
     repo = vcs_git.temp_clone(server_repo_path)
 
     tempdir = repo.working_tree_dir
+
+    logging.debug("Server repo path cloned to: " + tempdir)
 
     return tempdir
 
@@ -68,8 +92,8 @@ def delete_temp_repo(local_repo_path):
         local_repo_path: The path to the temporary directory.
 
     Raises:
-        TempdirError: If the path given is not a temporary folder.
-        TempdirError: If the path given is not for a git repository.
+        :class:`.TempdirError`: If the path given is not a temporary folder.
+        :class:`.TempdirError`: If the path given is not for a git repository.
 
     """
     if not os.path.realpath(local_repo_path).startswith(tempfile.gettempdir()):
@@ -93,8 +117,8 @@ def check_if_repos_equal(path_1, path_2):
     This involves all files and folders (plus names) being identical. The
     names of the folders themselves are ignored.
 
-    The .git folder is ignored, as it is different even for a cloned
-    repository. The .gitattributes file is also ignored.
+    The `.git` folder is ignored, as it is different even for a cloned
+    repository. The `.gitattributes` file is also ignored.
 
     Args:
         path_1: The first path for comparison.
@@ -104,8 +128,9 @@ def check_if_repos_equal(path_1, path_2):
         bool: True if the directories are equal, False otherwise.
 
     Raises:
-        SettingsError: If either of the two paths are blank.
-        subprocess.CalledProcessError: If there is an error with the command.
+        :class:`.SettingsError`: If either of the two paths are blank.
+        :class:`subprocess.CalledProcessError`: If there is an unexpected \
+            error in :func:`subprocess.check_output`.
 
     """
     if not (path_1 and path_2):
@@ -117,11 +142,13 @@ def check_if_repos_equal(path_1, path_2):
     command_format = ("diff -rq --exclude=.git --exclude=.gitattributes "
                       "--exclude=.keep {path1:s} {path2:s}")
     call_args = command_format.format(path1=path_1, path2=path_2).split()
+
+    logging.debug("Testing folders for equality.")
+    logging.debug("Comparison path one: " + path_1)
+    logging.debug("Comparison path two: " + path_2)
     try:
         subprocess.check_output(call_args)
     except subprocess.CalledProcessError as e:
-        logging.debug("diff path one: " + path_1)
-        logging.debug("diff path two: " + path_2)
         logging.debug(e.output)
         if e.returncode == 1:  # Indicates files are different.
             return False
@@ -180,14 +207,20 @@ class SystemTest(object):
         _settings_list: A list of all attributes that may be changed.
 
     Raises:
-        Error: Indicates error in this class or in the settings dict.
-        VCSGitError: Indicates error in this class or in the settings dict.
-        AssertionError: Indicates a failure of the script being tested.
+        :class:`.SettingsError`: Indicates issues with given settings.
+        :class:`.TempdirError`: Indicates problem when acting on a temporary \
+            directory.
+        :class:`dls_ade.exceptions.VCSGitError`: Indicates error in this \
+            class or in the settings dict.
+        :class:`AssertionError`: Indicates a failure of the script being \
+            tested.
+        :class:`.GitRootDirError`: Indicates if GIT_ROOT_DIR is not set.
 
     """
 
     def __init__(self, script, description):
-        """Initialises attributes."""
+        check_environment()
+
         self._script = script
         self.description = description
 
@@ -278,7 +311,10 @@ class SystemTest(object):
                               if key in self._settings_list})
 
         logging.debug("The test's local variables are:")
-        logging.debug(self.__dict__)
+        for key, value in self.__dict__.iteritems():
+            logging.debug(str(key) + ": " + str(value))
+
+        logging.debug("End of local variables.")
 
     def __call__(self):
         """Defined for the use of nosetests.
@@ -286,10 +322,11 @@ class SystemTest(object):
         This is considered the test function.
 
         Raises:
-            SettingsError: From run_tests().
-            TempdirError: From run_tests()
-            AssertionError: From run_tests().
-            VCSGitError: From run_tests().
+            :class:`.SettingsError`: From :meth:`.run_tests`.
+            :class:`.SettingsError`: From :meth:`.set_server_repo_to_default`.
+            :class:`.TempdirError`: From :meth:`.run_tests`
+            :class:`AssertionError`: From :meth:`.run_tests`.
+            :class:`dls_ade.exceptions.VCSGitError`: From :meth:`.run_tests`.
 
         """
         self.set_server_repo_to_default()
@@ -303,6 +340,11 @@ class SystemTest(object):
             If used on an existing server repository, all commit history will
             be overwritten.
 
+        Raises:
+            :class:`.SettingsError`: If default given but no server repo.
+            :class:`dls_ade.exceptions.VCSGitError`: From \
+                :mod:`~dls_ade.vcs_git` functions.
+
         """
         if not self._default_server_repo_path:
             return
@@ -310,6 +352,10 @@ class SystemTest(object):
         if not self._server_repo_path:
             raise SettingsError("If 'default_server_repo_path is set, then "
                                 "'server_repo_path' must also be set.")
+
+        logging.debug("Setting server repo to default.")
+        logging.debug("'Default' server repo path: " +
+                      self._default_server_repo_path)
 
         temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
         vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
@@ -331,12 +377,11 @@ class SystemTest(object):
         If `input` is set, this will pass the input to the child process.
 
         Raises:
-            ValueError: From Popen().
+            :class:`ValueError`: From Popen().
         """
         call_args = (self._script + " " + self._arguments).split()
 
-        logging.debug("About to call script with:")
-        logging.debug(call_args)
+        logging.debug("About to call script with: " + " ".join(call_args))
 
         # If no input is given, this will prevent communicate() from sending
         # data to the child process.
@@ -353,17 +398,16 @@ class SystemTest(object):
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
-        logging.debug("return code:")
-        logging.debug(self._return_code)
+        logging.debug("return code: " + str(self._return_code))
 
     def run_tests(self):
         """Performs the entire test suite.
 
         Raises:
-            SettingsError: From the tests.
-            TempdirError: From :meth:`delete_cloned_server_repo()`
-            AssertionError: From the tests.
-            VCSGitError: From the tests.
+            :class:`.SettingsError`: From the tests.
+            :class:`.TempdirError`: From :meth:`delete_cloned_server_repo`
+            :class:`AssertionError`: From the tests.
+            :class:`dls_ade.exceptions.VCSGitError`: From the tests.
 
         """
         logging.debug("Performing tests.")
@@ -385,9 +429,9 @@ class SystemTest(object):
         This includes exception testing.
 
         Raises:
-            SettingsError: From the comparison tests.
-            AssertionError: From the comparison tests.
-            VCSGitError: From the comparison tests.
+            :class:`.SettingsError`: From the comparison tests.
+            :class:`AssertionError`: From the comparison tests.
+            :class:`dls_ade.exceptions.VCSGitError`: From the comparison tests.
 
         """
         self.check_std_err_for_exception()
@@ -400,23 +444,25 @@ class SystemTest(object):
         """Check the standard error for the exception information.
 
         Raises:
-            SettingsError: If either the exception type or string is blank.
-            AssertionError: If the test does not pass.
+            :class:`.SettingsError`: If either the exception type or string \
+                is blank while the other is not.
+            :class:`AssertionError`: If the test does not pass.
 
         """
-        logging.debug("Checking standard error for given exception.")
-
         if not self._exception_type or not self._exception_string:
             if not self._exception_type and not self._exception_string:
                 return
             raise SettingsError("Both exception_type and exception_string "
                                 "must be provided.")
 
+        logging.debug("Checking return code is not 0.")
         assert_false(self._return_code == 0)
 
         expected_string = "\n{exc_t:s}: {exc_s:s}\n"
         expected_string = expected_string.format(exc_t=self._exception_type,
                                                  exc_s=self._exception_string)
+
+        logging.debug("Expected error string: " + expected_string)
 
         assert_true(self._std_err.endswith(expected_string))
 
@@ -424,7 +470,7 @@ class SystemTest(object):
         """Compare the standard output to std_out_compare_string.
 
         Raises:
-            AssertionError: If the test does not pass.
+            :class:`AssertionError`: If the test does not pass.
 
         """
         if self._std_out_compare_string is None:
@@ -438,7 +484,7 @@ class SystemTest(object):
         """Check if the standard output starts with std_out_starts_with_string.
 
         Raises:
-            AssertionError: If the test does not pass.
+            :class:`AssertionError`: If the test does not pass.
 
         """
         if self._std_out_starts_with_string is None:
@@ -453,7 +499,7 @@ class SystemTest(object):
         """Check if the standard output ends with std_out_ends_with_string.
 
         Raises:
-            AssertionError: If the test does not pass.
+            :class:`AssertionError`: If the test does not pass.
 
         """
         if self._std_out_ends_with_string is None:
@@ -468,8 +514,8 @@ class SystemTest(object):
         """Checks server repo path exists and clones it.
 
         Raises:
-            AssertionError: From check_remote_repo_exists
-            VCSGitError: from clone_server_repo
+            :class:`AssertionError`: From check_remote_repo_exists
+            :class:`dls_ade.exceptions.VCSGitError`: from clone_server_repo
 
         """
         if not self._server_repo_path:
@@ -483,7 +529,7 @@ class SystemTest(object):
         """Check that the server_repo_path exists on the server.
 
         Raises:
-            AssertionError: If the test does not pass.
+            :class:`AssertionError`: If the test does not pass.
 
         """
         logging.debug("Checking server repo path given exists.")
@@ -511,6 +557,10 @@ class SystemTest(object):
         """Perform all repository-related tests.
 
         These are the tests that require a git repository to be given.
+
+        Raises:
+            :class:`.SettingsError`: From :meth:`.run_git_attributes_tests`
+            :class:`.AssertionError`: From :meth:`.run_git_attributes_tests`
 
         """
         self.check_local_repo_active_branch()
@@ -540,8 +590,9 @@ class SystemTest(object):
         """Perform the git attributes tests.
 
         Raises:
-            SettingsError: If no path is provided given an attributes dict.
-            AssertionError: If the test does not pass.
+            :class:`.SettingsError`: If no path is provided given an \
+                attributes dictionary.
+            :class:`.AssertionError`: If the test does not pass.
 
         """
         if not self._attributes_dict:
@@ -571,17 +622,22 @@ class SystemTest(object):
         """Run the local path comparison tests.
 
         The repo_comp_method must be one of the following:
-            - local_comp: compares the two local paths, named with
-            local_comp_path_one and local_comp_path_two.
-            - server_comp: compares local_comp_path_one with the
-            server_repo_clone_path.
-            - all_comp: compares all three paths against one another.
+            - `local_comp`: Compares the two local paths.
+                Paths are local_comp_path_one and local_comp_path_two.
+            - `server_comp`: Compares a local path with the cloned server repo.
+                Paths are local_comp_path_one and server_repo_clone_path.
+            - `all_comp`: Compares all three paths against one another.
+                Paths are local_comp_path_one, local_comp_path_two and
+                server_repo_clone_path.
 
         Raises:
-            SettingsError: From check_if_folders_equal
-            SettingsError: If the repo_comp_method has an unexpected value.
-            AssertionError: If the test does not pass.
-            subprocess.CalledProcessError: From check_if_repos_equal
+            :class:`.SettingsError`: From :func:`.check_if_repos_equal`.
+            :class:`.SettingsError`: If the `repo_comp_method` has an \
+                unexpected value.
+            :class:`AssertionError`: If the test does not pass.
+            :class:`subprocess.CalledProcessError`: From \
+                :func:`.check_if_repos_equal`.
+
         """
         if not self._repo_comp_method:
             return
@@ -622,8 +678,8 @@ class SystemTest(object):
         """Deletes the clone of the server repository.
 
         Raises:
-            TempdirError: If the clone's path is not a directory.
-            TempdirError: If the clone's path is not a git repository.
+            :class:`.TempdirError`: If the clone path is not a directory.
+            :class:`.TempdirError`: If the clone path is not a git repository.
 
         """
         if not self._server_repo_clone_path:
@@ -641,14 +697,26 @@ def generate_tests_from_dicts(script, test_settings):
     """Generator for the automatic construction of system tests.
 
     Args:
-        script: The script for testing.
+        script: The script to be tested.
         test_settings: The settings for each individual test.
 
+    Raises:
+        :class:`.SettingsError`: From :class:`.SystemTest`
+        :class:`.TempdirError`: From :class:`.SystemTest`
+        :class:`dls_ade.exceptions.VCSGitError`: From :class:`.SystemTest`
+        :class:`AssertionError`: From :class:`.SystemTest`
+        :class:`.GitRootDirError`: Indicates if GIT_ROOT_DIR is not set.
+
     """
+    check_environment()
+
     for settings in test_settings:
         if 'script' in settings:
             script = settings.pop('script')
+
         description = settings.pop('description')
+
         system_test = SystemTest(script, description)
         system_test.load_settings(settings)
+
         yield system_test
