@@ -24,6 +24,9 @@ def check_environment():
     """Checks that the environment has been set up correctly for testing."""
     # Make sure env var is set.(PYTHONPATH must also be set, but cannot
     # easily test it is correct)
+
+    global ENVIRONMENT_CORRECT
+
     if ENVIRONMENT_CORRECT:
         return
 
@@ -31,8 +34,6 @@ def check_environment():
         os.environ['GIT_ROOT_DIR']
     except KeyError:
         raise EnvironmentError("GIT_ROOT_DIR must be set")
-
-    global ENVIRONMENT_CORRECT
 
     ENVIRONMENT_CORRECT = True
 
