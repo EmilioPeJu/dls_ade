@@ -28,7 +28,7 @@ class ModuleTemplate(object):
 
     """
 
-    def __init__(self, template_args, extra_required_args=[]):
+    def __init__(self, template_args, extra_required_args=None):
         """Default initialisation of all object attributes.
 
         Args:
@@ -40,7 +40,9 @@ class ModuleTemplate(object):
         self._template_files = {}
 
         self._required_template_args = set()
-        self._required_template_args.update(extra_required_args)
+
+        if extra_required_args is not None:
+            self._required_template_args.update(extra_required_args)
 
         self._template_args = template_args
 
@@ -212,14 +214,17 @@ class ModuleTemplateTools(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args, additional_required_args=[]):
+    def __init__(self, template_args, additional_required_args=None):
         """Initialise template args and default template files."""
 
         required_args = ['module_name', 'module_path', 'user_login']
 
+        if additional_required_args is not None:
+            required_args += additional_required_args
+
         super(ModuleTemplateTools, self).__init__(
                 template_args,
-                required_args + additional_required_args
+                required_args
         )
 
         self._set_template_files_from_area("tools")
@@ -238,14 +243,17 @@ class ModuleTemplateTools(ModuleTemplate):
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
 
-    def __init__(self, template_args, additional_required_args=[]):
+    def __init__(self, template_args, additional_required_args=None):
         """Initialise template args and default template files."""
 
         required_args = ['module_name', 'module_path', 'user_login']
 
+        if additional_required_args is not None:
+            required_args += additional_required_args
+
         super(ModuleTemplatePython, self).__init__(
                 template_args,
-                required_args + additional_required_args
+                required_args
         )
 
         self._set_template_files_from_area("python")
@@ -281,13 +289,16 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
     """
 
-    def __init__(self, template_args, additional_required_args=[]):
+    def __init__(self, template_args, additional_required_args=None):
 
         required_args = ['module_path', 'app_name', 'user_login']
 
+        if additional_required_args is not None:
+            required_args += additional_required_args
+
         super(ModuleTemplateWithApps, self).__init__(
                 template_args,
-                required_args + additional_required_args
+                required_args
         )
 
         self._set_template_files_from_area("default")
@@ -323,7 +334,10 @@ class ModuleTemplateSupport(ModuleTemplateWithApps):
     These have apps with the same name as the module.
 
     """
-    def __init__(self, template_args, additional_required_args=[]):
+    def __init__(self, template_args, additional_required_args=None):
+
+        if additional_required_args is None:
+            additional_required_args = []
 
         super(ModuleTemplateSupport, self).__init__(
                 template_args,

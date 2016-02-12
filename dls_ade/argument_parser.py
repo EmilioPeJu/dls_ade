@@ -10,8 +10,11 @@ class ArgParser(ArgumentParser):
     Makes a custom parser class with area arguments by default.
 
     """
-    def __init__(self, usage_v, supported_areas=areas):
+    def __init__(self, usage_v, supported_areas=None):
         super(ArgParser, self).__init__(description=usage_v)
+
+        if supported_areas is None:
+            supported_areas = areas
 
         area = self.add_mutually_exclusive_group(required=False)
         area.add_argument(
