@@ -1093,7 +1093,7 @@ class GitClassInitTest(unittest.TestCase):
 
         try:
             vcs_git.Git('dummy', FakeOptions())
-        except vcs_git.VCSGitError, e:
+        except vcs_git.VCSGitError as e:
             self.fail(e)
 
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
