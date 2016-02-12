@@ -23,7 +23,7 @@ def set_up_mock(test_case_object, path):
     return mock_obj
 
 
-class IsGitDirTest(unittest.TestCase):
+class IsInLocalRepoTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
         path = "/not/a/path"
@@ -50,7 +50,7 @@ class IsGitDirTest(unittest.TestCase):
         self.assertTrue(return_value)
 
 
-class IsGitRootDirTest(unittest.TestCase):
+class IsLocalRepoRootTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_in_local_repo', return_value=True)
     @patch('dls_ade.vcs_git.git')
