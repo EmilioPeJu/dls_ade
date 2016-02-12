@@ -5,6 +5,9 @@
     Changes Since Release:
         Used as an example of a module that has had no releases made:
             test_module_with_no_releases_done
+    List Releases
+        A module to test the 'no releases made' option
+            print_no_releases_made_for_a_module_on_the_repository
 
 * controlstest/ioc/testB07/TS
     Start new module:
@@ -16,15 +19,32 @@
         Used in remote_verification_tests:
             Server app-name conflict.
 
-controlstest/ioc/BTEST/BTEST-EB-IOC-03
-controlstest/ioc/BTEST/BTEST-EB-IOC-0
-controlstest/ioc/BTEST/BTEST-VA-IOC-04
-controlstest/ioc/BTEST2/TS
-
 * controlstest/support/testsupportmod
     Start new module:
         Used in remote_verification_tests:
             Server repository path conflict.
+
+* controlstest/python/dls_testpythonmod
+    List Branches:
+        A module that has branches:
+            list_the_branches_for_a_module_on_the_repository
+    Module Contacts:
+        Used to check module contacts and to reset created repo after each test:
+            print_module_contacts
+            print_module_contacts_in_CSV_format
+            set_both_contacts
+            set_contact_leaving_cc_unchanged
+            set_cc_leaving_contact_unchanged
+            set_both_contacts_using_CSV_file
+            set_contact_using_CSV_file_leaving_cc_unchanged
+            set_cc_using_CSV_file_leaving_contact_unchanged
+    Changes Since Release:
+        A module that has had changes made since release:
+            test_module_with_changes_made_since_release
+    Checkout Module:
+        A module with branches that can be cloned:
+            checkout_a_single_module
+            checkout_a_single_module_and_change_branch
 
 * controlstest/python/dls_testpythonmod2
     List Branches:
@@ -45,30 +65,8 @@ controlstest/ioc/BTEST2/TS
             print_logs_in_given_range_with_verbose
             print_logs_from_earlier_arg_to_HEAD
             print_logs_from_earlier_arg_to_HEAD_with_verbose
-            print_logs_from_first_release_to_later_arg
-            print_logs_from_first_release_to_later_arg_with_verbose
-
-* controlstest/python/dls_testpythonmod
-    List Branches:
-        A module that has branches:
-            list_the_branches_for_a_module_on_the_repository
-    Module Contacts:
-        Used to check module contacts and to reset created repo after each test:
-            print_module_contacts
-            print_module_contacts_in_CSV_format
-            set_both_contact
-            set_contact_leaving_cc_unchanged
-            set_cc_leaving_contact_unchanged
-            set_both_contacts_using_CSV_file
-            set_contact_using_CSV_file_leaving_cc_unchanged
-            set_cc_using_CSV_file_leaving_contact_unchanged
-    Changes Since Release:
-        A module that has had changes made since release:
-            test_module_with_changes_made_since_release
-    Checkout Module:
-        A module with branches that can be cloned:
-            checkout_a_single_module
-            checkout_a_single_module_and_change_branch
+            print_logs_from_start_to_later_arg
+            print_logs_from_start_to_later_arg_with_verbose
 
 * controlstest/targetOS/mock_repo/ioc/BTEST2/TS
   controlstest/targetOS/mock_repo/ioc/BTEST/BTEST-EB-IOC-03
