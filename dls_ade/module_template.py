@@ -110,8 +110,12 @@ class ModuleTemplate(object):
                 `template_folder` does not exist.
 
         """
+        logging.debug("About to get template files from folder.")
+
         if not os.path.isdir(template_folder):
             raise TemplateFolderError(template_folder)
+
+        logging.debug("Template files to add (relative paths):")
 
         template_files = {}
         for dir_path, _, files in os.walk(template_folder):
@@ -120,7 +124,8 @@ class ModuleTemplate(object):
                 with open(file_path, "r") as f:
                     contents = f.read()
                 rel_path = os.path.relpath(file_path, template_folder)
-                logging.debug("rel path: " + rel_path)
+
+                logging.debug("        " + rel_path)
 
                 # This stops the installer from compiling the .py files.
                 if rel_path.endswith(".py_template"):
@@ -167,12 +172,15 @@ class ModuleTemplate(object):
 
         """
         # dictionary keys are the relative file paths for the documents
+        logging.debug("About to create files from template.")
+        logging.debug("Template files to create (relative paths):")
         for path, contents in self._template_files.iteritems():
             # Using template_args allows us to insert eg. module_name
             rel_path = path.format(**self._template_args)
-            logging.debug("rel_path: " + rel_path)
 
             dir_path = os.path.dirname(rel_path)
+
+            logging.debug("        " + rel_path)
 
             # Stops us from overwriting files in folder (eg .gitignore and
             # .gitattributes when adding to Old-Style IOC modules
