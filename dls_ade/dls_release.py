@@ -21,6 +21,7 @@ import logging
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
+from dls_environment import environment
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -230,7 +231,6 @@ def get_last_release(releases):
         str: Most recent release number
 
     """
-    from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
     return last_release
 
