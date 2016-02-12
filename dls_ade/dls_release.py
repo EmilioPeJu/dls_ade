@@ -33,7 +33,7 @@ server, causing it to schedule a checkout and build of the git release in
 prod.
 """
 
-log_mess = "%s: Released version %s. %s"
+log_mess = "{module}: Released version {version}. {message}"
 
 
 def make_parser():
@@ -89,8 +89,7 @@ def make_parser():
         "-m", "--message", action="store", type=str, dest="message",
         default="",
         help="Add user message to the end of the default commit message. "
-        "The message will be '%s'" %
-        (log_mess % ("<module_name>", "<release>", "<message>")))
+        "The message will be <module_name>: Released version <release>. <message>")
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
@@ -366,6 +365,7 @@ def perform_test_build(build_object, local_build, vcs):
         message += "Performing test build on local system"
         if build_object.test(vcs) != 0:
             test_fail = True
+            message += "\nTest build failed."
         else:
             message += "\nTest build successful."
             if not local_build:
@@ -392,10 +392,13 @@ def main():
         version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args.release)
-    vcs.set_version(version)
 
-    vcs.set_log_message(
-        (log_mess % (module, version, args.message)).strip())
+    commit_msg = log_mess.format(module=module, version=version, message=args.message)
+
+    if not vcs.check_version_exists(version) and not args.test_only:
+        vcs.release_version(version, commit_msg)
+
+    vcs.set_version(version)
 
     print(construct_info_message(module, args.branch, args.area, version, build))
 
@@ -416,9 +419,6 @@ def main():
 
     if args.local_build:
         sys.exit(0)
-
-    if not vcs.check_version_exists(version) and not args.test_only:
-        vcs.release_version(version)
 
     build.submit(vcs, test=args.test_only)
 

@@ -153,16 +153,15 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     repo = git.Repo(path)
     print("Staging files...")
     repo.git.add('--all')
-    print("Committing files to repo...")
 
+    print("Committing files to repo...")
+    index = repo.index
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
-    msg = ""
     try:
-        msg = repo.git.commit(m=message)
+        index.commit(message)
     except git.exc.GitCommandError as e:
         pass
-    print(msg)
 
 
 def add_new_remote_and_push(dest, path="./", remote_name="origin",
@@ -459,7 +458,9 @@ def checkout_remote_branch(branch, repo):
     """
     if branch in list_remote_branches(repo):
         print("Checking out " + branch + " branch.")
-        repo.git.checkout("-b", branch, "origin/" + branch)
+        origin = repo.remotes.origin
+        remote = origin.refs[branch]
+        remote.checkout(b=branch)
 
 
 def check_git_attributes(local_repo_path, attributes_dict):
@@ -647,7 +648,9 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
     def set_branch(self, branch):
-        raise NotImplementedError('branch handling for git not implemented')
+        origin = self.client.remotes.origin
+        remote = origin.refs[branch]
+        remote.checkout(b=branch)
 
     def set_version(self, version):
         """
@@ -661,8 +664,13 @@ class Git(BaseVCS):
             raise VCSGitError('version does not exist')
         self._version = version
 
-    def release_version(self, version):
-        raise NotImplementedError('version release for git not implemented')
+    def release_version(self, version, message=""):
+
+        self.client.create_tag(version, message=message)
+
+        origin = self.client.remotes.origin
+        # This is equivalent to 'git push origin <tag_name>'
+        origin.push(version)
 
 # sanity check: ensure class fully implements the interface (abc)
 assert issubclass(Git, BaseVCS), "Git is not a base class of BaseVCS"

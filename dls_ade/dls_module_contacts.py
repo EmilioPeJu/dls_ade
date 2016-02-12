@@ -211,7 +211,7 @@ def import_from_csv(modules, area, imp):
     Extract contact info from a given CSV file.
 
     Args:
-        modules(str): List of valid modules
+        modules(list): List of valid modules
         area(str): Area of modules that are having contacts changed
         imp(str): File path for CSV to get info from
 
@@ -370,9 +370,12 @@ def main():
         edit_summary = edit_contact_info(repo, contact, cc,)
 
         if edit_summary != 0:
-            repo.git.add('.gitattributes')
-            repo.git.commit(m=edit_summary)
-            repo.git.push("origin", repo.active_branch)
+            index = repo.index
+            index.add(['.gitattributes'])
+            index.commit(edit_summary)
+
+            origin = repo.remotes.origin
+            origin.push(repo.active_branch)
 
         shutil.rmtree(repo.working_tree_dir)
 
