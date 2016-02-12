@@ -160,7 +160,7 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     # There is no reason to raise an exception for this.
     try:
         index.commit(message)
-    except git.exc.GitCommandError as e:
+    except git.exc.GitCommandError:
         pass
 
 
