@@ -220,7 +220,7 @@ def import_from_csv(modules, area, imp):
 
     """
 
-    reader = csv.reader(open(imp, "rb"))
+    reader = csv.reader(open(imp, "r"))
     # Extract data from reader object
     csv_file = []
     for row in reader:
@@ -293,7 +293,7 @@ def edit_contact_info(repo, contact='', cc=''):
 
     module = repo.working_tree_dir.split('/')[-1]
 
-    with open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'wb') as git_attr_file:
+    with open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'w') as git_attr_file:
 
         commit_message = ''
         if contact:
