@@ -21,7 +21,7 @@ import logging
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
-from dls_environment import environment
+from dls_ade.dls_environment import environment
 
 logging.basicConfig(level=logging.DEBUG)
 
