@@ -9,12 +9,6 @@ from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, call
 
-from sys import version_info
-if version_info.major == 2:
-    import __builtin__ as builtins  # Allows for Python 2/3 compatibility, 'builtins' is namespace for inbuilt functions
-else:
-    import builtins
-
 logging.basicConfig(level=logging.DEBUG)
 
 
