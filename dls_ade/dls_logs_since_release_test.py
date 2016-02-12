@@ -310,6 +310,28 @@ class GetTagsListTest(unittest.TestCase):
 
         self.assertEqual(tags_range, [tag_2, tag_3])
 
+    def test_given_range_with_HEAD_then_extract(self):
+        start = '4-1'
+        end = 'HEAD'
+        last_release = '4-4'
+        tag_1 = MagicMock()
+        tag_1.name = '3-3'
+        tag_2 = MagicMock()
+        tag_2.name = '4-1'
+        tag_3 = MagicMock()
+        tag_3.name = '4-2'
+        tag_4 = MagicMock()
+        tag_4.name = '4-3'
+        tag_5 = MagicMock()
+        tag_5.name = '4-4'
+
+        repo_inst = MagicMock()
+        repo_inst.tags = [tag_1, tag_2, tag_3, tag_4, tag_5]
+
+        tags_range = dls_logs_since_release.get_tags_list(repo_inst, start, end, last_release)
+
+        self.assertEqual(tags_range, [tag_2, tag_3, tag_4, tag_5])
+
 
 class GetTagMessagesTest(unittest.TestCase):
 
@@ -372,7 +394,7 @@ class GetTagMessagesTest(unittest.TestCase):
         del tag.object.author  # Make sure hasattr(mock, author) fails
         del tag.object.object.author
 
-        tag_list = []
+        tag_list = [tag]
         log_info = {u'commit_objects': {}, u'max_author_length': 0, u'logs': []}
 
         try:
