@@ -9,7 +9,7 @@ else:
 
 import unittest
 from pkg_resources import require
-import dls_list_modules
+from dls_ade import dls_list_modules
 require("mock")
 from mock import patch, ANY, MagicMock
 
