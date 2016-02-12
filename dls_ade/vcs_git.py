@@ -610,7 +610,7 @@ class Git(BaseVCS):
         Return list of release tags of module.
 
         Returns:
-            list of str: Release tags of module
+            list[str]: Release tags of module
 
         """
 

@@ -185,8 +185,6 @@ def get_log_messages(repo):
 
     Args:
         repo(:class:`~git.repo.base.Repo`): Git repository instance
-        start(str): Start point of logs
-        end(str): End point of logs
 
     Returns:
         dict: A dictionary containing messages, commit objects and the longest author name
