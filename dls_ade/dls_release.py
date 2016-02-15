@@ -21,6 +21,7 @@ import logging
 from dls_ade import vcs_git
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
+from dls_ade.dls_environment import environment
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -50,6 +51,7 @@ def make_parser():
         * -t (no-test-build)
         * -l (local-build-only)
         * -e (epics_version)
+        * -T (test_build_only
         * -m (message)
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
@@ -214,7 +216,7 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            print "Last release for {module} was {last_release}".format(module=module, last_release=last_release)
+            print("Last release for {module} was {last_release}".format(module=module, last_release=last_release))
     return version
 
 
@@ -229,7 +231,6 @@ def get_last_release(releases):
         str: Most recent release number
 
     """
-    from dls_environment import environment
     last_release = environment().sortReleases(releases)[-1].split("/")[-1]
     return last_release
 
@@ -399,7 +400,7 @@ def main():
 
     vcs.set_version(version)
 
-    print construct_info_message(module, args.branch, args.area, version, build)
+    print(construct_info_message(module, args.branch, args.area, version, build))
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
@@ -412,7 +413,7 @@ def main():
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
             build, args.local_build, vcs)
-        print test_build_message
+        print(test_build_message)
         if test_build_fail:
             sys.exit(1)
 

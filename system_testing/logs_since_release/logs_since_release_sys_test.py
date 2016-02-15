@@ -58,7 +58,7 @@ settings_list = [
     },
 
     {
-        'description': "print_logs_from_first_release_to_later_arg",
+        'description': "print_logs_from_start_to_later_arg",
 
         'arguments': "-p dls_testpythonmod2 -l 2-0",
 
@@ -67,7 +67,7 @@ settings_list = [
     },
 
     {
-        'description': "print_logs_from_first_release_to_later_arg_with_verbose",
+        'description': "print_logs_from_start_to_later_arg_with_verbose",
 
         'arguments': "-p dls_testpythonmod2 -l 2-0 -v",
 

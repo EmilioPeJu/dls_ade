@@ -10,7 +10,7 @@ from pkg_resources import require
 require("python_ldap>=2.3.12")
 import ldap
 
-from dls_environment import environment
+from dls_ade.dls_environment import environment
 
 build_scripts = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "dlsbuild_scripts")
@@ -221,27 +221,27 @@ class Builder:
         build_dir = os.path.join(
             root_dir, "work", "etc", "build", "test", build_name)
 
-        print "Test build of module in "+build_dir
+        print("Test build of module in " + build_dir)
 
         params = self.build_params(
             build_dir, vcs, build_name)
 
         dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/", "_"))
         filename = os.path.join(dirname, build_name+self.exten)
-        print "Got build file "+filename+" to build module in "+build_dir
+        print("Got build file "+filename+" to build module in " + build_dir)
         with open(filename, "w") as f:
             f.write(self.build_script(params))
 
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
-        print "Created build file "+filename+" to build module in "+build_dir
-        print "Performing local test build..."
+        print("Created build file " + filename + " to build module in " + build_dir)
+        print("Performing local test build...")
         status = subprocess.call(
-            "/bin/env -i \"$(/bin/env | grep SSH)\" "+filename, shell=True)
+            "/bin/env -i \"$(/bin/env | grep SSH)\" " + filename, shell=True)
         if status != 0:
-            print "Local test build failed. Results are in "+build_dir
+            print("Local test build failed. Results are in " + build_dir)
         else:
-            print "Local test build succeeded"
+            print("Local test build succeeded")
             shutil.rmtree(build_dir)
         return status
 
@@ -275,7 +275,7 @@ class Builder:
                 params["build_dir"], params["module"], params["version"],
                 params["build_name"], self.server]) + "\n")
 
-        print "Build request file: %s\nCreated in : %s" % (filename, pathname)
+        print("Build request file: %s\nCreated in : %s" % (filename, pathname))
 
 
 class WindowsBuild(Builder):
@@ -325,9 +325,9 @@ if __name__ == "__main__":
     bld = WindowsBuild("64")
     bld.set_area("support")
     bld.set_epics("R3.14.12.3")
-    print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
+    print("build_script is:\n" + bld.build_script({"test": root_dir + "/test"}))
 
     bld = ArchiveBuild(True)
     bld.set_area("archive")
     bld.set_epics("R3.14.12.3")
-    print "build_script is:\n"+bld.build_script({"test" : root_dir+"/test"})
+    print("build_script is:\n"+bld.build_script({"test": root_dir+"/test"}))

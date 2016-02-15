@@ -230,9 +230,9 @@ class environment(object):
                     components.append(0)
                     components.append(subpart)
             # pad to 6 elements
-            components += [0, '']*((6-len(components))/2)
+            components += [0, ''] * int((6-len(components))/2)
         # pad to 12 elements
-        components += [0, '']*((12-len(components))/2)
+        components += [0, ''] * int((12-len(components))/2)
         logging.debug(components)
         return components
 

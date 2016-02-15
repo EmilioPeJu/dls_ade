@@ -1,6 +1,6 @@
 from dls_ade import path_functions
 import unittest
-from exceptions import ParsingError
+from dls_ade.exceptions import ParsingError
 
 GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
 
@@ -55,7 +55,7 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
         try:
             path_functions.check_technical_area(area, module)
         except ParsingError as error:
-            self.assertEqual(error.message, expected_error_msg)
+            self.assertEqual(str(error), expected_error_msg)
 
 
 class ModuleAreaTests(unittest.TestCase):

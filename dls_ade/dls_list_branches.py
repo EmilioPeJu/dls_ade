@@ -47,7 +47,7 @@ def main():
 
     branches = vcs_git.list_remote_branches(repo)
     for branch in branches:
-        print branch
+        print(branch)
     print("")
 
     shutil.rmtree(repo.working_tree_dir)

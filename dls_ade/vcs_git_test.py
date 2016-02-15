@@ -23,7 +23,7 @@ def set_up_mock(test_case_object, path):
     return mock_obj
 
 
-class IsGitDirTest(unittest.TestCase):
+class IsInLocalRepoTest(unittest.TestCase):
 
     def test_given_invalid_file_path_then_error_raised(self):
         path = "/not/a/path"
@@ -50,7 +50,7 @@ class IsGitDirTest(unittest.TestCase):
         self.assertTrue(return_value)
 
 
-class IsGitRootDirTest(unittest.TestCase):
+class IsLocalRepoRootTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.is_in_local_repo', return_value=True)
     @patch('dls_ade.vcs_git.git')
@@ -128,6 +128,19 @@ class IsRepoPathTest(unittest.TestCase):
     def test_given_path_does_not_exist_then_return_false(self, mock_check):
 
         self.assertFalse(vcs_git.is_server_repo("controls/test/pa"))
+
+
+class GetServerRepoListTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.subprocess.check_output')
+    def test_given_expand_output_then_format_and_return(self, sub_mock):
+
+        sub_mock.return_value = "R   W 	(alan.greer)	controls/support/ADAndor\n" \
+                                "R   W 	(ronaldo.mercado)	controls/support/ethercat\n"
+
+        repo_list = vcs_git.get_server_repo_list()
+
+        self.assertEqual(repo_list, ["controls/support/ADAndor", "controls/support/ethercat"])
 
 
 class InitRepoTest(unittest.TestCase):
@@ -789,16 +802,17 @@ class CloneMultiTest(unittest.TestCase):
 
         self.assertFalse(mock_clone_from.call_count)
 
-    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["controls/area/test_module"])
+    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["controls/area/test_module",
+                                                                 "controls/area/test_module2"])
     @patch('os.listdir', return_value=["test_module"])
     @patch('dls_ade.vcs_git.is_server_repo', return_value=True)
     @patch('git.Repo.clone_from')
-    def test_given_existing_module_name_then_not_cloned(self, mock_clone_from, mock_is_server_repo, _1, _2):
-        source = "area/test_module"
+    def test_given_one_existing_module_one_not_then_clone_one(self, mock_clone_from, mock_is_server_repo, _1, _2):
+        source = "controls/area"
 
         vcs_git.clone_multi(source)
 
-        self.assertFalse(mock_clone_from.call_count)
+        self.assertEqual(mock_clone_from.call_count, 1)
 
     @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["controls/area/test_module"])
     @patch('os.listdir', return_value=["not_test_module"])
@@ -1079,7 +1093,7 @@ class GitClassInitTest(unittest.TestCase):
 
         try:
             vcs_git.Git('dummy', FakeOptions())
-        except vcs_git.VCSGitError, e:
+        except vcs_git.VCSGitError as e:
             self.fail(e)
 
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')

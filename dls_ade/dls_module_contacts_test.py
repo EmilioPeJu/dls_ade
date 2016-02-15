@@ -2,8 +2,6 @@
 
 from __future__ import print_function
 from dls_ade import dls_module_contacts
-from argparse import _StoreAction
-from argparse import _StoreTrueAction
 import unittest
 from pkg_resources import require
 require("mock")
@@ -69,20 +67,20 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error = parse_error_patch.start()
 
     def test_given_imp_not_contact_not_cc_then_no_error_raised(self):
-        imp = True
-        modules = ''
-        contact = False
-        cc = False
+        imp = "test_file"
+        modules = "test_module"
+        contact = ""
+        cc = ""
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_given_imp_contact_not_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = True
-        cc = False
+        imp = "test_file"
+        modules = "test_module"
+        contact = "test_contact"
+        cc = ""
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -90,10 +88,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_not_contact_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = False
-        cc = True
+        imp = "test_file"
+        modules = "test_module"
+        contact = ""
+        cc = "test_cc"
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -101,10 +99,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_imp_contact_cc_then_error_raised(self):
-        imp = True
-        modules = 'test'
-        contact = True
-        cc = True
+        imp = "test_file"
+        modules = "test"
+        contact = "test_contact"
+        cc = "test_cc"
         expected_error_message = "--import cannot be used with --contact or --cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -112,10 +110,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_contact_no_module_then_error(self):
-        imp = False
-        modules = ''
-        contact = True
-        cc = False
+        imp = ""
+        modules = ""
+        contact = "test_contact"
+        cc = ""
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -123,10 +121,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_cc_no_module_then_error(self):
-        imp = False
-        modules = ''
-        contact = False
-        cc = True
+        imp = ""
+        modules = ""
+        contact = ""
+        cc = "test_cc"
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -134,10 +132,10 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_cc_and_contact_no_module_then_error(self):
-        imp = False
+        imp = ''
         modules = ''
-        contact = True
-        cc = True
+        contact = "test_contact"
+        cc = "test_cc"
         expected_error_message = "You cannot set all modules in an area to one contact/cc, enter a specific module."
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
@@ -145,20 +143,20 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_no_imp_contact_module_then_no_error(self):
-        imp = False
-        modules = 'test'
-        contact = True
-        cc = False
+        imp = ""
+        modules = "test_module"
+        contact = "test_contact"
+        cc = ""
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
 
     def test_no_imp_cc_module_then_no_error(self):
-        imp = False
-        modules = 'test'
-        contact = False
-        cc = True
+        imp = ""
+        modules = "test_module"
+        contact = ""
+        cc = "test_cc"
 
         dls_module_contacts.check_parsed_args_compatible(imp, modules, contact, cc, self.parser)
 
@@ -230,17 +228,27 @@ class OutputContactInfoTest(unittest.TestCase):
     @patch('dls_ade.dls_module_contacts.lookup_contact_name', side_effect=["test_contact_name", "test_cc_name"])
     @patch('dls_ade.vcs_git.git')
     @patch('dls_ade.vcs_git.clone')
-    def test_given_contacts_then_print_csv_format(self, mock_clone, mock_git, _2):
+    def test_given_contacts_then_output_csv_format(self, mock_clone, mock_git, _2):
         self.args.csv = True
         module = "test_module"
         contact = "test_contact"
         cc = "test_cc"
 
-        with patch.object(builtins, 'print') as mock_print:
-            dls_module_contacts.output_csv_format(contact, cc, module)
+        output = dls_module_contacts.output_csv_format(contact, cc, module)
 
-        call_args = mock_print.call_args_list
-        self.assertEqual(call_args[0][0][0], "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
+        self.assertEqual(output, "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
+
+    @patch('dls_ade.vcs_git.git')
+    @patch('dls_ade.vcs_git.clone')
+    def test_given_unspecified_contacts_then_output_csv_format(self, mock_clone, mock_git):
+        self.args.csv = True
+        module = "test_module"
+        contact = "unspecified"
+        cc = "unspecified"
+
+        output = dls_module_contacts.output_csv_format(contact, cc, module)
+
+        self.assertEqual(output, "test_module,unspecified,unspecified,unspecified,unspecified")
 
 
 class ImportFromCSVTest(unittest.TestCase):
@@ -257,7 +265,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_no_contact_then_error_raised(self, mock_csv):
@@ -271,7 +279,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_contact_then_no_error_raised(self, mock_csv):
@@ -279,7 +287,20 @@ class ImportFromCSVTest(unittest.TestCase):
         area = "test_area"
         imp = "test_file"
         mock_csv.reader.return_value = \
-            [["Module", "Contact", "Contact Name", "CC", "CC Name"], ["test_module", "user"]]
+            [["Module", "Contact", "Contact Name", "CC", "CC Name"],
+             ["test_module", "user1", "user1"]]
+
+        with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
+            dls_module_contacts.import_from_csv(modules, area, imp)
+
+    @patch('dls_ade.dls_module_contacts.csv')
+    def test_given_title_module_contact_and_cc_then_no_error_raised(self, mock_csv):
+        modules = ["test_module"]
+        area = "test_area"
+        imp = "test_file"
+        mock_csv.reader.return_value = \
+            [["Module", "Contact", "Contact Name", "CC", "CC Name"],
+             ["test_module", "user1", "user1", "user2", "user2"]]
 
         with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
             dls_module_contacts.import_from_csv(modules, area, imp)
@@ -298,7 +319,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     @patch('dls_ade.dls_module_contacts.csv')
     def test_given_title_module_contact_defined_twice_then_error_raised(self, mock_csv):
@@ -315,7 +336,7 @@ class ImportFromCSVTest(unittest.TestCase):
             with patch.object(builtins, 'open', mock_open(read_data="mock_read")):
                 dls_module_contacts.import_from_csv(modules, area, imp)
         except Exception as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class EditContactInfoTest(unittest.TestCase):
@@ -346,16 +367,17 @@ class EditContactInfoTest(unittest.TestCase):
         self.assertFalse(len(mock_file.write.call_args_list))
 
     @patch('dls_ade.dls_module_contacts.lookup_contact_name')
-    def test_given_empty_and_unchanged_contact_then_do_not_set(self, _1):
+    def test_given_changed_and_empty_contact_then_do_not_set(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
         repo_inst.git.check_attr.side_effect = ['user123', 'user456']
 
         with patch.object(builtins, 'open', mock_open(read_data='test_data')):
             with open('test_file') as mock_file:
-                dls_module_contacts.edit_contact_info(repo_inst, "", "user456")
+                dls_module_contacts.edit_contact_info(repo_inst, "user789", "")
 
-        self.assertFalse(len(mock_file.write.call_args_list))
+        self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user789\n")
+        self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
 
     @patch('dls_ade.dls_module_contacts.lookup_contact_name')
     def test_given_empty_and_changed_contact_then_change_one_keep_other(self, _1):

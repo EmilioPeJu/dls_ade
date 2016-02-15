@@ -160,7 +160,7 @@ def stage_all_files_and_commit(path="./", message="Initial commit."):
     # There is no reason to raise an exception for this.
     try:
         index.commit(message)
-    except git.exc.GitCommandError as e:
+    except git.exc.GitCommandError:
         pass
 
 
@@ -611,7 +611,7 @@ class Git(BaseVCS):
         Return list of release tags of module.
 
         Returns:
-            list of str: Release tags of module
+            list[str]: Release tags of module
 
         """
 

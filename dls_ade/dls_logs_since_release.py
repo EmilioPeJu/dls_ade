@@ -164,14 +164,14 @@ def set_log_range(module, releases, earlier, later, releases_list):
         start = earlier
         end = 'HEAD'
     elif later:
-        start = releases_list[0]
+        start = ""
         end = later
     else:
-        start = releases_list[0]
+        start = ""
         end = 'HEAD'
 
     # Check that releases exist
-    if start not in releases_list:
+    if start not in releases_list and start != "":
         raise ValueError("Module " + module + " does not have a release " + start)
     if end not in releases_list and end != 'HEAD':
         raise ValueError("Module " + module + " does not have a release " + end)
@@ -179,14 +179,12 @@ def set_log_range(module, releases, earlier, later, releases_list):
     return start, end
 
 
-def get_log_messages(repo, start, end):
+def get_log_messages(repo):
     """
     Create a `log_info` dictionary and add log messages, commit objects and max author length.
 
     Args:
         repo(:class:`~git.repo.base.Repo`): Git repository instance
-        start(str): Start point of logs
-        end(str): End point of logs
 
     Returns:
         dict: A dictionary containing messages, commit objects and the longest author name
@@ -194,7 +192,7 @@ def get_log_messages(repo, start, end):
     """
     log_info = {'logs': [], 'commit_objects': {}, 'max_author_length': 0}
 
-    for commit in repo.iter_commits(rev=start + ".." + end):
+    for commit in repo.iter_commits():
         sha = commit.hexsha[:7]
         author = commit.author.name
         summary = commit.summary.replace('\n', ' ')
@@ -276,7 +274,7 @@ def get_tag_messages(tags_range, log_info):
         summary = tag_info.summary.replace('\n', ' ')
         # Summary is included in message, so just get extra part
         message = tag_info.message[len(summary):].replace('\n', ' ')
-        summary += ' (' + tag.name + ')'
+        summary += ' (RELEASE: ' + tag.name + ')'
 
         formatted_time = convert_time_stamp(time_stamp)
 
@@ -521,11 +519,18 @@ def main():
 
     # Create log info from log messages
     # log_info is a dictionary in the form {logs(list), commit_objects(dict), max_author_length(int)}
-    log_info = get_log_messages(repo, start, end)
+    log_info = get_log_messages(repo)
 
-    # Append tag info to log info from tag messages
-    tags = get_tags_list(repo, start, end, releases[-1])
-    log_info = get_tag_messages(tags, log_info)
+    if len(releases) > 0:
+
+        if start == "":
+            tag_start = releases[0]
+        else:
+            tag_start = start
+
+        # Append tag info to log info from tag messages
+        tags = get_tags_list(repo, tag_start, end, releases[-1])
+        log_info = get_tag_messages(tags, log_info)
 
     # Check if there are any logs, exit if not
     if not log_info['logs']:
@@ -539,8 +544,19 @@ def main():
     # Make list of printable log entries
     formatted_logs = format_log_messages(log_info, raw, args.verbose)
 
+    if end == 'HEAD':
+        print_bool = True
+    else:
+        print_bool = False
+
+    release_marker = "(RELEASE: {})"
     for log in formatted_logs:
-        print(log)
+        if log.endswith(release_marker.format(end)):
+            print_bool = True
+        if print_bool:
+            print(log)
+        if log.endswith(release_marker.format(start)):
+            break
 
     shutil.rmtree(repo.working_tree_dir)
 

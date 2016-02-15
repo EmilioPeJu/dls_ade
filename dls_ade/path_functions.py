@@ -1,12 +1,12 @@
 import os
-from exceptions import ParsingError
+from dls_ade.exceptions import ParsingError
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
 
 def remove_end_slash(path_string):
 
-    if path_string and isinstance(path_string, str) and path_string.endswith('/'):
+    if path_string and path_string.endswith('/'):
         path_string = path_string[:-1]
 
     return path_string

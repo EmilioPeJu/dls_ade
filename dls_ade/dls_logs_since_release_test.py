@@ -2,11 +2,9 @@
 
 import unittest
 from dls_ade import dls_logs_since_release
-
 from pkg_resources import require
 require("mock")
 from mock import patch, MagicMock, ANY
-from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
 
@@ -227,7 +225,7 @@ class SetLogRangeTest(unittest.TestCase):
 
         start, end = dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
 
-        self.assertEqual(start, '1-0')
+        self.assertEqual(start, '')
         self.assertEqual(end, '4-4')
 
     def test_given_none_then_use_defaults(self):
@@ -237,7 +235,7 @@ class SetLogRangeTest(unittest.TestCase):
 
         start, end = dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
 
-        self.assertEqual(start, '1-0')
+        self.assertEqual(start, '')
         self.assertEqual(end, 'HEAD')
 
     def test_given_invalid_start_then_error(self):
@@ -249,7 +247,7 @@ class SetLogRangeTest(unittest.TestCase):
         try:
             dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
     def test_given_invalid_end_then_error(self):
         releases = ['1-0', '4-5']
@@ -260,15 +258,13 @@ class SetLogRangeTest(unittest.TestCase):
         try:
             dls_logs_since_release.set_log_range(self.module, releases, earlier, later, self.releases_list)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class GetLogMessagesTest(unittest.TestCase):
 
     @patch('dls_ade.dls_logs_since_release.time.localtime', return_value=[2014, 8, 12, 13, 50, 10, 1, 224, 1])
     def test_extracts_commit_information(self, _1):
-        start = '4-1'
-        end = '4-4'
 
         repo_inst = MagicMock()
         commit = MagicMock()
@@ -281,7 +277,7 @@ class GetLogMessagesTest(unittest.TestCase):
         commit_list = [commit]
         repo_inst.iter_commits.return_value = commit_list
 
-        log_info = dls_logs_since_release.get_log_messages(repo_inst, start, end)
+        log_info = dls_logs_since_release.get_log_messages(repo_inst)
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
@@ -312,6 +308,28 @@ class GetTagsListTest(unittest.TestCase):
 
         self.assertEqual(tags_range, [tag_2, tag_3])
 
+    def test_given_range_with_HEAD_then_extract(self):
+        start = '4-1'
+        end = 'HEAD'
+        last_release = '4-4'
+        tag_1 = MagicMock()
+        tag_1.name = '3-3'
+        tag_2 = MagicMock()
+        tag_2.name = '4-1'
+        tag_3 = MagicMock()
+        tag_3.name = '4-2'
+        tag_4 = MagicMock()
+        tag_4.name = '4-3'
+        tag_5 = MagicMock()
+        tag_5.name = '4-4'
+
+        repo_inst = MagicMock()
+        repo_inst.tags = [tag_1, tag_2, tag_3, tag_4, tag_5]
+
+        tags_range = dls_logs_since_release.get_tags_list(repo_inst, start, end, last_release)
+
+        self.assertEqual(tags_range, [tag_2, tag_3, tag_4, tag_5])
+
 
 class GetTagMessagesTest(unittest.TestCase):
 
@@ -335,7 +353,7 @@ class GetTagMessagesTest(unittest.TestCase):
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (RELEASE: 4-1)',
                                                u'12/08/2014 13:50:10',
                                                u' make "sdos" public to allow checks on the sdo_observers list']]})
 
@@ -361,7 +379,7 @@ class GetTagMessagesTest(unittest.TestCase):
 
         self.assertEqual(log_info, {u'commit_objects': {'e327e92': commit}, u'max_author_length': 15,
                                     u'logs': [[1407847810, 'e327e92', 'Ronaldo Mercado',
-                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (4-1)',
+                                               u'add on_sdo_message to process ' u'scanner MSG_SDO_READ messages (RELEASE: 4-1)',
                                                u'12/08/2014 13:50:10',
                                                u' make "sdos" public to allow checks on the sdo_observers list']]})
 
@@ -374,13 +392,13 @@ class GetTagMessagesTest(unittest.TestCase):
         del tag.object.author  # Make sure hasattr(mock, author) fails
         del tag.object.object.author
 
-        tag_list = []
+        tag_list = [tag]
         log_info = {u'commit_objects': {}, u'max_author_length': 0, u'logs': []}
 
         try:
             dls_logs_since_release.get_tag_messages(tag_list, log_info)
         except ValueError as error:
-            self.assertEqual(error.message, expected_error_message)
+            self.assertEqual(str(error), expected_error_message)
 
 
 class ConvertTimeStamp(unittest.TestCase):

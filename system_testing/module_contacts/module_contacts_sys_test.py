@@ -3,9 +3,9 @@ import os
 
 sys_test_dir_path = os.path.realpath(os.path.dirname(__file__))
 
-csv_output = 'Module,Contact,Contact Name,CC,CC Name\n' \
-             'Performing search for lkz95212...\n' \
+csv_output = 'Performing search for lkz95212...\n' \
              'Performing search for mef65357...\n' \
+             'Module,Contact,Contact Name,CC,CC Name\n' \
              'dls_testpythonmod,lkz95212,Martin Gaughran,mef65357,Gary Yendell\n'
 
 default_contact = 'lkz95212'
