@@ -21,6 +21,7 @@ import shlex
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../system_testing'))
 
 # -- General configuration ------------------------------------------------
 
@@ -34,6 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -133,12 +135,12 @@ html_short_title = 'dls_ade'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'diamond-logo.gif'
+html_logo = '_static/diamond-logo.gif'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'dls-favicon.ico'
+html_favicon = '_static/dls-favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -291,4 +293,9 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'https://docs.python.org/': None, 'https://gitpython.readthedocs.org/en/stable/': None}
+
+
+# -- Additional options ---------------------------------------------------
+
+autoclass_content = 'both'

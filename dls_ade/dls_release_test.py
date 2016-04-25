@@ -1,12 +1,24 @@
 #!/bin/env dls-python
 
 import unittest
-import dls_release
+import logging
+from dls_ade import dls_release
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock
-from dls_ade import vcs_git
-from dls_ade import vcs_svn
+from argparse import _StoreAction
+from argparse import _StoreTrueAction
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+def set_up_mock(self, path):
+
+    patch_obj = patch(path)
+    self.addCleanup(patch_obj.stop)
+    mock_obj = patch_obj.start()
+
+    return mock_obj
 
 
 class ParserTest(unittest.TestCase):
@@ -14,86 +26,101 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_release.make_parser()
 
-    def test_branch_option_has_correct_attributes(self):
-        option = self.parser.get_option('-b')
-        self.assertEqual(option.action,"store")
-        self.assertEqual(option.type,"string")
-        self.assertEqual(option.dest,"branch")
-        self.assertEqual(option._long_opts[0],"--branch")
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_module_name_arg')
+    def test_module_name_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_release_arg')
+    def test_release_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with()
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
+    def test_branch_flag_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with(help_msg="Release from a branch")
+
+    @patch('dls_ade.dls_changes_since_release.ArgParser.add_epics_version_flag')
+    def test_epics_version_flag_set(self, parser_mock):
+
+        dls_release.make_parser()
+
+        parser_mock.assert_called_once_with(
+            help_msg="Change the epics version. "
+                     "This will determine which build server your job is built on for epics modules. "
+                     "Default is from your environment")
 
     def test_force_option_has_correct_attributes(self):
-        option = self.parser.get_option('-f')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"force")
-        self.assertEqual(option._long_opts[0],"--force")
+        option = self.parser._option_string_actions['-f']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "force")
+        self.assertIn("--force", option.option_strings)
 
     def test_no_test_build_option_has_correct_attributes(self):
-        option = self.parser.get_option('-t')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"skip_test")
-        self.assertEqual(option._long_opts[0],"--no-test-build")
+        option = self.parser._option_string_actions['-t']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "skip_test")
+        self.assertIn("--no-test-build", option.option_strings)
 
     def test_local_build_option_has_correct_attributes(self):
-        option = self.parser.get_option('-l')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"local_build")
-        self.assertEqual(option._long_opts[0],"--local-build-only")
+        option = self.parser._option_string_actions['-l']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "local_build")
+        self.assertIn("--local-build-only", option.option_strings)
 
     def test_test_build_only_option_has_correct_attributes(self):
-        option = self.parser.get_option('-T')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"test_only")
-        self.assertEqual(option._long_opts[0],"--test_build-only")
-
-    def test_epics_version_option_has_correct_attributes(self):
-        option = self.parser.get_option('-e')
-        self.assertEqual(option.action,"store")
-        self.assertEqual(option.type,"string")
-        self.assertEqual(option.dest,"epics_version")
-        self.assertEqual(option._long_opts[0],'--epics_version')
+        option = self.parser._option_string_actions['-T']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "test_only")
+        self.assertIn("--test_build-only", option.option_strings)
 
     def test_message_option_has_correct_attributes(self):
-        option = self.parser.get_option('-m')
-        self.assertEqual(option.action,"store")
-        self.assertEqual(option.type,"string")
-        self.assertEqual(option.default,"")
-        self.assertEqual(option.dest,"message")
-        self.assertEqual(option._long_opts[0],'--message')
+        option = self.parser._option_string_actions['-m']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.default, "")
+        self.assertEqual(option.dest, "message")
+        self.assertIn("--message", option.option_strings)
 
     def test_next_version_option_has_correct_attributes(self):
-        option = self.parser.get_option('-n')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"next_version")
-        self.assertEqual(option._long_opts[0],'--next_version')
-
-    def test_git_option_has_correct_attributes(self):
-        option = self.parser.get_option('-g')
-        self.assertEqual(option.action,"store_true")
-        self.assertEqual(option.dest,"git")
-        self.assertEqual(option._long_opts[0],'--git')
+        option = self.parser._option_string_actions['-n']
+        self.assertIsInstance(option, _StoreTrueAction)
+        self.assertEqual(option.dest, "next_version")
+        self.assertIn("--next_version", option.option_strings)
 
     def test_rhel_version_option_has_correct_attributes(self):
-        option = self.parser.get_option('-r')
-        self.assertEqual(option.action,"store")
-        self.assertEqual(option.type,"string")
-        self.assertEqual(option.dest,"rhel_version")
-        self.assertEqual(option._long_opts[0],'--rhel_version')
+        option = self.parser._option_string_actions['-r']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.dest, "rhel_version")
+        self.assertIn("--rhel_version", option.option_strings)
 
     def test_windows_option_has_correct_attributes(self):
-        option = self.parser.get_option('-w')
-        self.assertEqual(option.action,"store")
-        self.assertEqual(option.type,"string")
-        self.assertEqual(option.dest,"windows")
+        option = self.parser._option_string_actions['-w']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.dest, "windows")
         
     def test_has_windows_option_with_short_name_w_long_name_windows(self):
-        option = self.parser.get_option('-w')
+        option = self.parser._option_string_actions['-w']
         self.assertIsNotNone(option)
-        self.assertEqual(option._long_opts[0],'--windows')
+        self.assertIn("--windows", option.option_strings)
 
 
 class TestCreateBuildObject(unittest.TestCase):
 
-    @patch('dls_release.dlsbuild.default_build')
+    def setUp(self):
+
+        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+
+    @patch('dls_ade.dls_release.dlsbuild.default_build')
     def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
 
         options = FakeOptions()
@@ -102,8 +129,8 @@ class TestCreateBuildObject(unittest.TestCase):
         self.assertTrue(mock_default.called)
         mock_default.assert_called_once_with(None)
 
-    @patch('dls_release.dlsbuild.default_build')
-    def test_given_epicsversion_then_default_build_called_with_epics_version(self, mock_default):
+    @patch('dls_ade.dls_release.dlsbuild.default_build')
+    def test_given_epics_version_then_default_build_called_with_epics_version(self, mock_default):
         version = "R3.14.12.3"
 
         options = FakeOptions(epics_version=version)
@@ -112,7 +139,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_default.assert_called_once_with(version)
 
-    @patch('dls_release.dlsbuild.RedhatBuild')
+    @patch('dls_ade.dls_release.dlsbuild.RedhatBuild')
     def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_default):
         rhel_version = "25"
 
@@ -120,9 +147,9 @@ class TestCreateBuildObject(unittest.TestCase):
 
         dls_release.create_build_object(options)
 
-        mock_default.assert_called_once_with(rhel_version,None)
+        mock_default.assert_called_once_with(rhel_version, None)
 
-    @patch('dls_release.dlsbuild.RedhatBuild')
+    @patch('dls_ade.dls_release.dlsbuild.RedhatBuild')
     def test_given_rhel_version_then_RedhatBuild_called_with_rhel_and_epics_version(self, mock_build):
         rhel_version = "25"
         epics_version = "R3.14.12.3"
@@ -135,7 +162,7 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_build.assert_called_once_with(rhel_version,epics_version)
 
-    @patch('dls_release.dlsbuild.WindowsBuild')
+    @patch('dls_ade.dls_release.dlsbuild.WindowsBuild')
     def test_given_windows_option_without_rhel_then_WindowsBuild_called_with_windows_and_epics_version(self, mock_build):
         windows = 'xp'
 
@@ -143,19 +170,21 @@ class TestCreateBuildObject(unittest.TestCase):
 
         dls_release.create_build_object(options)
 
-        mock_build.assert_called_once_with(windows,None)
+        mock_build.assert_called_once_with(windows, None)
 
-    @patch('dls_release.dlsbuild.Builder.set_area')
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
     def test_given_any_option_then_set_area_called_with_default_area_option(
-        self, mock_set):
+        self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(options.area)
 
-    @patch('dls_release.dlsbuild.Builder.set_area')
-    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_area')
+    def test_given_area_option_then_set_area_called_with_given_area_option(self, mock_set, _1):
         area = 'python'
 
         options = FakeOptions(area=area)
@@ -164,17 +193,19 @@ class TestCreateBuildObject(unittest.TestCase):
 
         mock_set.assert_called_once_with(options.area)
 
-    @patch('dls_release.dlsbuild.Builder.set_force')
-    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
+    def test_given_any_option_then_set_force_called_with_default_force_option(self, mock_set, _1):
         options = FakeOptions()
 
         dls_release.create_build_object(options)
 
         mock_set.assert_called_once_with(None)
 
-    @patch('dls_release.dlsbuild.Builder.set_force')
-    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set):
-        force = True    
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    @patch('dls_ade.dls_release.dlsbuild.Builder.set_force')
+    def test_given_force_option_then_set_force_called_with_given_force_option(self, mock_set, _1):
+        force = True
         options = FakeOptions(force=force)
 
         dls_release.create_build_object(options)
@@ -186,163 +217,134 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
     def setUp(self):
         self.parser = dls_release.make_parser()
-        parse_error_patch = patch('dls_release.OptionParser.error')
+        parse_error_patch = patch('dls_ade.dls_release.ArgParser.error')
         self.addCleanup(parse_error_patch.stop)
         self.mock_error = parse_error_patch.start()
+        self.args = MagicMock()
+        self.args.module_name = ""
+        self.args.release = ""
+        self.args.next_version = False
 
-    def test_given_args_list_less_than_1_then_parser_error_specifying_no_module_name(self):
-
-        args = []
-        options = FakeOptions()
+    def test_given_no_module_name_then_parser_error_specifying_no_module_name(self):
         expected_error_msg = 'Module name not specified'
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_args_list_with_length_1_then_parser_error_called_specifying_no_module_version(self):
-
-        args = ['module_name']
-        options = FakeOptions()
+    def test_given_no_release_then_parser_error_called_specifying_no_module_version(self):
+        self.args.module_name = "build"
         expected_error_msg = 'Module version not specified'
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
-        
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
 
-        args = ['build','12']
-        options = FakeOptions(area='etc')
+        self.args.module_name = "build"
+        self.args.release = "12"
+        self.args.area = "etc"
+
         expected_error_msg = 'Cannot release etc/build or etc/redirector as'
         expected_error_msg += ' modules - use configure system instead'
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
     def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self):
+        self.args.module_name = "redirector"
+        self.args.release = "12"
+        self.args.area = "etc"
 
-        args = ['redirector','12']
-        options = FakeOptions(area='etc')
         expected_error_msg = 'Cannot release etc/build or etc/redirector as'
         expected_error_msg += ' modules - use configure system instead'
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_area_option_of_etc_and_module_not_build_then_parser_error_not_called(self):
-
-        args = ['not_build','12']
-        options = FakeOptions(area='etc')
-        
-        dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = self.mock_error.call_count
-
-        self.assertFalse(n_calls)
-
     def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self):
 
-        args = ['redirector',12]
-        options = FakeOptions()
+        self.args.module_name = "redirector"
+        self.args.release = "12"
+        self.args.area = "support"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = self.mock_error.call_count
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        self.assertEqual(0, n_calls)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_next_version_and_git_flag_then_parser_error_called(self):
 
-        args = ['module_name',12]
-        options = FakeOptions(git=True, next_version=True)
+        self.args.module_name = "module_name"
+        self.args.release = "12"
+        self.args.area = "support"
+        self.args.next_version = True
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        expected_error_message = "When git is specified, version number must be provided"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-    def test_given_args_list_length_1_and_next_version_flag_then_parser_error_not_called(self):
-        
-        args = ['redirector']
-        options = FakeOptions(next_version=True)
-
-        dls_release.check_parsed_options_valid(args, options, self.parser)
-        n_calls = self.mock_error.call_count
-
-        self.assertEqual(0, n_calls)
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
 
-        args = ['module','version']
-        options = FakeOptions(git=True, area='archive')
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "archive"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_epics_area_else_good_options_then_raise_error(self):
 
-        args = ['module','version']
-        options = FakeOptions(git=True, area='epics')
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "epics"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_matlab_area_else_good_options_then_raise_error(self):
 
-        args = ['module','version']
-        options = FakeOptions(git=True, area='matlab')
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "matlab"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_etc_area_else_good_options_then_raise_error(self):
 
-        args = ['module','version']
-        options = FakeOptions(git=True, area='etc')
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "etc"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        expected_error_message = self.args.area + " area not supported by git"
 
-        self.mock_error.assert_called_once_with(ANY)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_tools_area_else_good_options_then_error_not_raised(self):
 
-        args = ['module','version']
-        options = FakeOptions(git=True, area='tools')
+        self.args.module_name = "module"
+        self.args.release = "version"
+        self.args.area = "tools"
 
-        dls_release.check_parsed_options_valid(args, options, self.parser)
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        n_calls = self.mock_error.call_count
-
-        self.assertEqual(0, n_calls)
-
-
-class TestCreateVCSObject(unittest.TestCase):
-
-    @patch('dls_release.vcs_git.tempfile.mkdtemp', return_value='/tmp/tmp_dummy')
-    @patch('dls_release.vcs_git.git.Repo.clone_from')
-    def test_given_git_option_then_git_vcs_object_created(self, mock_clone, mock_mkdtemp):
-
-        module = 'dummy'
-        options = FakeOptions(git=True)
-
-        vcs = dls_release.create_vcs_object(module, options)
-
-        self.assertTrue(isinstance(vcs, vcs_git.Git))
-        self.assertFalse(isinstance(vcs, vcs_svn.Svn))
-
-    @patch('dls_release.vcs_svn.svnClient.pathcheck', return_value=True)
-    def test_given_default_option_without_git_flag_then_svn_vcs_object(self, mock_check):
-
-        module = 'dummy'
-        options = FakeOptions()
-
-        vcs = dls_release.create_vcs_object(module, options)
-
-        self.assertTrue(isinstance(vcs, vcs_svn.Svn))
-        self.assertFalse(isinstance(vcs, vcs_git.Git))
+        self.assertFalse(self.mock_error.call_count)
 
 
 class TestNextVersionNumber(unittest.TestCase):
@@ -354,7 +356,7 @@ class TestNextVersionNumber(unittest.TestCase):
 
         version = dls_release.next_version_number(releases)
 
-        self.assertEqual(version,expected_version)
+        self.assertEqual(version, expected_version)
 
     def test_given_list_of_one_release_then_return_incremented_latest_version_number(self):
         
@@ -372,7 +374,7 @@ class TestNextVersionNumber(unittest.TestCase):
 
         version = dls_release.next_version_number(releases)
 
-        self.assertEqual(version,expected_version)
+        self.assertEqual(version, expected_version)
 
 
 class TestGetLastRelease(unittest.TestCase):
@@ -384,25 +386,25 @@ class TestGetLastRelease(unittest.TestCase):
 
         version = dls_release.get_last_release(releases)
 
-        self.assertEqual(version,expected_version)
+        self.assertEqual(version, expected_version)
 
     def test_given_list_of_releases_with_diff_major_number_then_return_latest_version(self):
 
-        releases = ['1-0','3-0','2-0']
+        releases = ['1-0', '3-0', '2-0']
         expected_version = releases[1]
 
         version = dls_release.get_last_release(releases)
 
-        self.assertEqual(version,expected_version)
+        self.assertEqual(version, expected_version)
 
     def test_given_list_of_complex_releases_then_return_latest_version(self):
 
-        releases = ['1-3-5dls7','2-3-5dls7','2-3-4dls8','2-3-5dls8']
+        releases = ['1-3-5dls7', '2-3-5dls7', '2-3-4dls8', '2-3-5dls8']
         expected_version = releases[-1]
 
         version = dls_release.get_last_release(releases)
 
-        self.assertEqual(version,expected_version)
+        self.assertEqual(version, expected_version)
 
 
 class TestFormatArgumentVersion(unittest.TestCase):
@@ -415,7 +417,7 @@ class TestFormatArgumentVersion(unittest.TestCase):
 
         self.assertEqual(len(version), len(arg_version))
         self.assertFalse('.' in version)
-        self.assertEqual(arg_version.split('.'),version.split('-'))
+        self.assertEqual(arg_version.split('.'), version.split('-'))
 
     def test_given_empty_string_arg_then_return_empty_string(self):
 
@@ -462,64 +464,80 @@ class TestIncrementVersionNumber(unittest.TestCase):
 
 class TestConstructInfoMessage(unittest.TestCase):
 
-    def test_given_default_args_then_constrcut_specific_string(self):
+    def setUp(self):
+
+        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_then_construct_specific_string(self, _1):
         
         module = 'dummy'
         version = '1-0'
+        branch = None
+        area = "support"
         options = FakeOptions()
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from trunk,' % (module, version)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_branch_then_constrcut_specific_string_referencing_branch(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_branch_then_construct_specific_string_referencing_branch(self, _1):
 
         module = 'dummy'
         version = '3-5'
+        branch = 'new_feature'
+        area = 'support'
         options = FakeOptions(branch='new_feature')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from branch %s,' % (
-            module, version, options.branch)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = \
+            'Releasing {module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_given_default_args_and_ioc_area_then_constrcut_specific_string(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_given_default_args_and_ioc_area_then_construct_specific_string(self, _1):
 
         module = 'dummy'
         version = '1-0'
+        area = 'ioc'
+        branch = None
         options = FakeOptions(area='ioc')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing %s %s from trunk,' % (module, version)
-        expected_message += ' using %s build server' % build.get_server()
-        expected_message += ' and epics %s' % build.epics()
+        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message += 'using {} build server'.format(build.get_server())
+        expected_message += ' and epics {}'.format(build.epics())
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertEqual(expected_message, returned_message)
 
-    def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self):
+    @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
+    def test_if_area_not_support_or_ioc_then_return_string_without_epics_specified(self, _1):
 
         module = 'dummy'
         version = '1-0'
+        branch = None
+        area = 'python'
         options = FakeOptions(area='python')
         build = dls_release.create_build_object(options)
 
         returned_message = dls_release.construct_info_message(
-            module, options, version, build)
+            module, branch, area, version, build)
 
         self.assertFalse('epics' in returned_message)
         self.assertFalse(build.epics() in returned_message)
@@ -528,7 +546,7 @@ class TestConstructInfoMessage(unittest.TestCase):
 class TestCheckEpicsVersion(unittest.TestCase):
 
     def test_given_epics_option_then_return_true(self):
-        
+
         e_module = 'some_epics_version'
         e_option = 'specified_epics_version'
         e_build = 'some_other_epics_version'
@@ -538,7 +556,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
 
         self.assertTrue(sure)
 
-    @patch('dls_release.ask_user_input', return_value='n')
+    @patch('dls_ade.dls_release.ask_user_input', return_value='n')
     def test_given_no_epics_option_and_mismatched_module_and_build_epics_then_ask_user_for_input(self, mock_ask):
 
         e_option = None
@@ -561,8 +579,8 @@ class TestCheckEpicsVersion(unittest.TestCase):
 
         self.assertTrue(sure)
 
-    @patch('dls_release.ask_user_input', return_value='n')
-    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_spcificies_64bit_then_return_true(self, mock_ask):
+    @patch('dls_ade.dls_release.ask_user_input', return_value='n')
+    def test_given_no_epics_option_and_matching_module_and_build_epics_except_build_specifies_64bit_then_return_true(self, mock_ask):
 
         e_option = None
         e_module = 'R3.14.11'
@@ -602,31 +620,32 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_any_option_when_called_then_return_string_and_test_failure_bool(self):
 
+        local_build = False
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertIsInstance(test_message, str)
         self.assertIsInstance(test_fail, bool)
 
     def test_given_local_test_build_not_possible_when_Called_then_return_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.local_test_possible = MagicMock(return_value=False)
         expected_message = "Local test build not possible since local system "
         expected_message += "not the same OS as build server"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
     def test_given_local_test_build_possible_then_returned_string_begins_with_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         expected_message = "Performing test build on local system"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertTrue(
             test_message.startswith(expected_message),
@@ -634,35 +653,34 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_local_test_possible_and_build_fails_then_return_test_failed(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.test.return_value = 1
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertTrue(test_fail)
 
     def test_given_local_test_possible_then_test_build_performed_once_with_vcs_and_version_as_args(self):
 
-        options = FakeOptions()
+        local_build = False
         version = '0-1'
         vcs = FakeVcs(version=version)
         self.fake_build.test.return_value = 1
 
-        test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), vcs)
+        dls_release.perform_test_build(self.fake_build, local_build, vcs)
 
         self.fake_build.test.assert_called_once_with(vcs)
 
     def test_given_test_possible_and_build_works_then_return_test_not_failed_and_message_ends_with_specific_string(self):
 
-        options = FakeOptions()
+        local_build = False
         self.fake_build.test.return_value = 0
         expected_message_end = "Test build successful. Continuing with build"
         expected_message_end += " server submission"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, FakeOptions(), FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertFalse(test_fail)
         self.assertTrue(
@@ -671,54 +689,15 @@ class TestPerformTestBuild(unittest.TestCase):
 
     def test_given_test_possible_and_build_works_and_local_build_option_then_message_ends_without_continuation_info(self):
 
-        options = FakeOptions(local_build=True)
+        local_build = True
         self.fake_build.test.return_value = 0
         expected_message = "Performing test build on local system"
         expected_message += '\nTest build successful.'
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, options, FakeVcs())
+            self.fake_build, local_build, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
-
-
-class TestMain(unittest.TestCase):
-
-    def setUp(self):
-
-        methods_to_patch = [
-            'create_build_object',
-            'create_vcs_object',
-            'check_parsed_options_valid',
-            'format_argument_version',
-            'next_version_number',
-            'get_last_release',
-            'increment_version_number',
-            'construct_info_message',
-            'check_epics_version_consistent',
-            'ask_user_input',
-            'perform_test_build',
-            'OptionParser.parse_args',
-        ]
-
-        self.patch = {}
-        self.mocks = {}
-        for method in methods_to_patch:
-            self.patch[method] = patch('dls_release.' + method)
-            self.addCleanup(self.patch[method].stop)
-            self.mocks[method] = self.patch[method].start()
-
-        self.mocks['OptionParser.parse_args'].return_value = ['','']
-
-        self.manager = MagicMock()
-
-    def test_nothing(self):
-
-        self.assertEqual(0, self.mocks['create_build_object'].call_count)
-
-    def test_god_function_does_things_in_the_right_order(self):
-
-        pass
 
 
 class FakeOptions(object):

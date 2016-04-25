@@ -3,13 +3,13 @@ language: python
 python:
   - 2.7
 env:
-  - SVN_ROOT=https://dummy GIT_SSH_ROOT=ssh://git@dummy
+  - SVN_ROOT=https://dummy GIT_SSH_ROOT=ssh://git@dummy GIT_ROOT_DIR=controlstest
 
 install:
   - pip install coveralls coverage
   - pip install -r requirements.txt
   - python setup.py bdist_egg
 
-script: nosetests --exclude=vcs_svn_test --exclude=dls_release_test
+script: nosetests
 
 after_script: coveralls

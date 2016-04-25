@@ -17,8 +17,11 @@ Contents:
    :maxdepth: 2
 
    dls_ade
-   dls_environment
-
+   system_testing
+   System Testing Framework <system_testing_info>
+   Start New Module System Testing <snm_system_testing>
+   Start New Module Info <start_new_module_info>
+   All Other System Testing <all_other_system_testing>
 
 Indices and tables
 ------------------

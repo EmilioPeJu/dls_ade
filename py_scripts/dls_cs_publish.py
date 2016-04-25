@@ -1,9 +1,15 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
 
-usage = """%prog [options] <module> <release>
+import os
+import sys
+import shutil
+import glob
+import platform
+from dls_ade.argument_parser import ArgParser
+from dls_environment import environment
 
-Default <area> is 'support'.
+usage = """%Default <area> is 'support'.
 Publish a module <module> in the <area> area of the repository to the downloads
 page. The script takes the following steps:
 * svn export of the release
@@ -21,153 +27,167 @@ Note: if you are publishing a new module and not just a new release of an
 existing one, then you need to edit /dls_sw/cs-publish/<area>/header.html, 
 placing a new link and description in the table of modules."""
 
-import os, sys, shutil, glob, platform
 
 def get_rhel_version():
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
-        dist , release_str , name = platform.dist()
+        dist, release_str, name = platform.dist()
         release = release_str.split(".")[0]
         return release
     else:
         return default_rhel_version
 
-def cs_publish():
-    from dls_environment.options import OptionParser
-    parser = OptionParser(usage)
+
+def make_parser():
+
+    e = environment()
+
+    parser = ArgParser(usage)
+
+    parser.add_argument(
+        "module_name", type=str,
+        help="name of module to publish")
+    parser.add_argument(
+        "release", type=str,
+        help="release of module to publish")
+    parser.add_argument(
+        "-f", "--force", action="store_true", dest="force",
+        help="force the publish, disable warnings")
+    parser.add_argument(
+        "-e", "--epics_version", action="store", type=str, dest="epics_version",
+        help="Change the epics version. This will determine where "
+             "the built documentation is copied from. Default is %s "
+             "(from your environment)" % e.epicsVer())
+    parser.add_argument(
+        "-r", "--rhel_version", action="store", type=int,
+        dest="rhel_version", default=get_rhel_version(),
+        help="change the rhel version of the " +
+             "environment, default is " + get_rhel_version() +
+             " (from your system)")
+    return parser
+
+
+def main():
+
     # setup the environment
-    from dls_environment import environment    
-    e = environment()    
-    epics_version = e.epicsVer()    
-    parser.add_option("-f", "--force",
-        action="store_true", dest="force",
-        help="force the publish, disable warnings")    
-    parser.add_option("-e", "--epics_version", action="store", type="string", 
-        dest="epics_version", 
-        help="Change the epics version. This will determine where the built " \
-            "documentation is copied from. Default is %s " \
-            "(from your environment)" % e.epicsVer())   
-    parser.add_option("-r", "--rhel_version", 
-                      action="store", type="int", 
-                      dest="rhel_version", 
-                      help="change the rhel version of the " + \
-                           "environment, default is " + \
-                            get_rhel_version() + \
-                           " (from your system)",
-                      default=get_rhel_version())                 
-    (options, args) = parser.parse_args()
+    e = environment()
+    epics_version = e.epicsVer()
+
+    parser = make_parser()
+    args = parser.parse_args()
     
-    if len(args)!=2:
-        parser.error("Incorrect number of arguments.")
-    module = args[0]
-    release = args[1]
-    area = options.area
+#    if len(args) != 2:
+#        parser.error("Incorrect number of arguments.")
+
+    module = args.module_name
+    release = args.release
+    area = args.area
     # set epics version, and extension
-    if options.epics_version:
-        if not options.epics_version.startswith("R"):
-            options.epics_version = "R%s" % options.epics_version    
-        if e.epics_ver_re.match(options.epics_version):
-            e.setEpics(options.epics_version)
+    if args.epics_version:
+        if not args.epics_version.startswith("R"):
+            args.epics_version = "R%s" % args.epics_version
+        if e.epics_ver_re.match(args.epics_version):
+            e.setEpics(args.epics_version)
         else:
-            parser.error("Expected epics version like R3.14.8.2, got '%s'" % \
-                options.epics_version)
+            parser.error(
+                "Expected epics version like R3.14.8.2, got '%s'" % args.epics_version)
     path = "/tmp"
-    docdirs = ["documentation","docs"]    
-    
-    # import svn client
-    from dls_environment.svn import svnClient    
-    svn = svnClient()
-    
-    if options.area == "ioc" and a.upper()!="Y":
-        assert len(module.split('/'))>1, \
-            'Missing Technical Area under Beamline'
-    source = svn.prodModule(module,options.area)
+    docdirs = ["documentation", "docs"]
+# >>> I assume a is user input, but I don't know what the question was supposed to be
+    if args.area == "ioc" and a.upper() != "Y":
+        assert len(module.split('/')) > 1, "Missing Technical Area under Beamline"
+    source = svn.prodModule(module, args.area)
 
     # Check for existence of this module in various places in the repository
     assert svn.pathcheck(source), \
-        'Repository does not contain the "'+source+'" module'
+        'Repository does not contain the "' + source + '" module'
 
     # Locate built version of module
-    prodArea = e.prodArea(options.area)
-    if options.area == 'python' and options.rhel_version >= 6:
+    prodArea = e.prodArea(args.area)
+    if args.area == 'python' and args.rhel_version >= 6:
         prodArea = os.path.join(prodArea, "RHEL%s-%s" % (
-                options.rhel_version, platform.machine()))    
+                args.rhel_version, platform.machine()))
     prodPath = prodArea + "/" + module + "/" + release
-    assert os.path.isdir(prodPath), "Module %s doesn't exist in prod" % prodPath
+    assert os.path.isdir(prodPath), "Module " + prodPath + " doesn't exist in prod"
     
     # Check the release isn't on the webserver
-    webPath = "/dls_sw/cs-publish/downloads/%(area)s/%(module)s"%locals() 
+    webPath = "/dls_sw/cs-publish/downloads/%(area)s/%(module)s" % locals()
     if os.path.isdir(webPath+"/"+release):
         msg = "%(module)s release %(release)s already exists on webserver" % locals()
-        if options.force:
-            print "Warning: "+msg+". Overwriting"
-            shutil.rmtree("%(webPath)s/%(release)s"%locals())
+        if args.force:
+            print("Warning: " + msg + ". Overwriting")
+            shutil.rmtree("%(webPath)s/%(release)s" % locals())
         else:
-            raise AssertionError, msg
-    os.makedirs(webPath+"/"+release)    
+            raise AssertionError(msg)
+    os.makedirs(webPath + "/" + release)
     
     # Export to filesystem
-    export = path+"/"+module+"-"+release    
-    print 'Exporting to '+export+'...'
+    export = path + "/" + module + "-" + release
+    print("Exporting to " + export + "...")
     if os.path.exists(export):
-        shutil.rmtree("%(export)s"%locals())
-    svn.export(source+"/"+release, export)
+        shutil.rmtree("%(export)s" % locals())
+    svn.export(source + "/" + release, export)
 
     # Remove the etc dir
-    if os.path.isdir("%(export)s/etc"%locals()):
+    if os.path.isdir("%(export)s/etc" % locals()):
         shutil.rmtree("%(export)s/etc" % locals())
     
     # replace documentation with built version
     for docdir in docdirs:
-        if os.path.exists(export+"/"+docdir):
-            shutil.rmtree("%(export)s/%(docdir)s"%locals())
-            shutil.copytree("%(prodPath)s/%(docdir)s"%locals(),"%(export)s/%(docdir)s"%locals())
-            assert not os.system(r"find %(export)s/%(docdir)s -name '.svn' -prune -exec rm -rf {} \;"%locals()), \
-                "Can't remove all .svn directories in documentation dir"
-            if os.path.isdir("%(export)s/%(docdir)s/private"%locals()):                
-                shutil.rmtree("%(export)s/%(docdir)s/private"%locals())
-            assert not os.system("chmod -R ug+rwX,o+rX,o-w %(export)s"%locals()), \
+        if os.path.exists(export + "/" + docdir):
+            shutil.rmtree("%(export)s/%(docdir)s" % locals())
+            shutil.copytree("%(prodPath)s/%(docdir)s" % locals(),
+                            "%(export)s/%(docdir)s" % locals())
+            assert not os.system(
+                r"find %(export)s/%(docdir)s -name '.svn' -prune -exec rm -rf {} \;" %
+                locals()), "Can't remove all .svn directories in documentation dir"
+            if os.path.isdir("%(export)s/%(docdir)s/private" % locals()):
+                shutil.rmtree("%(export)s/%(docdir)s/private" % locals())
+            assert not os.system("chmod -R ug+rwX,o+rX,o-w %(export)s" % locals()), \
                 "Can't chmod the directory"    
-            assert not os.system("chgrp -R dcs %(export)s"%locals()), \
+            assert not os.system("chgrp -R dcs %(export)s" % locals()), \
                 "Can't chgrp the directory"                  
-            shutil.copytree("%(export)s/%(docdir)s"%locals(),"%(webPath)s/%(release)s/%(docdir)s"%locals())                    
+            shutil.copytree("%(export)s/%(docdir)s" % locals(),
+                            "%(webPath)s/%(release)s/%(docdir)s" % locals())
 
     # add in iocs
     if os.path.exists(prodPath + "/iocs"):
         for ioc in os.listdir(prodPath + "/iocs"):
             if os.path.isdir(prodPath + "/iocs/" + ioc) and ioc not in os.listdir(export + "/iocs") and ioc != ".svn":
-                shutil.copytree("%s/iocs/%s"%(prodPath,ioc),"%s/iocs/%s" % (export,ioc))
-                assert not os.system(r"find %(export)s/iocs/%(ioc)s -name '.svn' -prune -exec rm -rf {} \;"%locals()), \
-                    "Can't remove all .svn directories in iocs dir"                    
-                assert not os.system("make -C %(export)s/iocs/%(ioc)s clean uninstall > /dev/null" %locals()), \
-                    "Can't do a make clean uninstall on the ioc"
+                shutil.copytree("%s/iocs/%s" % (prodPath, ioc), "%s/iocs/%s" % (export, ioc))
+                assert not os.system(
+                    r"find %(export)s/iocs/%(ioc)s -name '.svn' -prune -exec rm -rf {} \;" %
+                    locals()), "Can't remove all .svn directories in iocs dir"
+                assert not os.system(
+                    "make -C %(export)s/iocs/%(ioc)s clean uninstall > /dev/null" %
+                    locals()), "Can't do a make clean uninstall on the ioc"
 
     # do any other steps
-    if os.path.isfile("%(export)s/preparePublish.sh"%locals()):
+    if os.path.isfile("%(export)s/preparePublish.sh" % locals()):
         assert not os.system("cd %(export)s; ./preparePublish.sh" % locals()), \
             "Can't run the preparePublish.sh script in this module"
         os.remove("%(export)s/preparePublish.sh" % locals())
             
     # python files need the correct versioned setup.py
-    if options.area == "python":
-        shutil.copy("%(prodPath)s/setup.py"%locals(), "%(export)s/setup.py"%locals())
+    if args.area == "python":
+        shutil.copy("%(prodPath)s/setup.py" % locals(), "%(export)s/setup.py" % locals())
           
     # Zip up
-    tgz = "%(path)s/%(module)s-%(release)s.tgz"%locals()
-    print 'Zipping up...'
-    assert not os.system("tar -czf %(tgz)s -C %(path)s %(module)s-%(release)s"%locals()), \
+    tgz = "%(path)s/%(module)s-%(release)s.tgz" % locals()
+    print("Zipping up...")
+    assert not os.system("tar -czf %(tgz)s -C %(path)s %(module)s-%(release)s" % locals()), \
         "Can't zip the release"
     
     # put it on the webserver
-    print 'Copying to '+webPath +'...'
-    shutil.copy(tgz, "%(webPath)s/%(release)s"%locals())
+    print("Copying to " + webPath + "...")
+    shutil.copy(tgz, "%(webPath)s/%(release)s" % locals())
 
     # regenerate the webpage
-    print 'Generating releases page...'
-    releases = e.sortReleases([x
-        for x in os.listdir(webPath)
-        if os.path.isdir(webPath+"/"+x) and x != ".svn"
-        and glob.glob(webPath+"/"+x+"/*.tgz")])
+    print("Generating releases page...")
+    releases = e.sortReleases([x for x in os.listdir(webPath)
+                               if os.path.isdir(webPath + "/" + x) and
+                               x != ".svn" and
+                               glob.glob(webPath+"/" + x + "/*.tgz")])
     releases.reverse()
     text = """<h2>Releases</h2>
 
@@ -177,37 +197,42 @@ def cs_publish():
     <th scope="col"><img src="../../img/archive.png" alt="icon"/>Source Code</th>
     <th scope="col"><img src="../../img/html.png" alt="icon"/>Documentation</th>
   </tr>
-"""%locals()
+""" % locals()
     cls = ""
     for r in releases:
         text += '  <tr>\n'
-        text += '    <td%(cls)s><strong>%(r)s</strong></td>\n'%locals()
-        filename = "%(module)s-%(r)s.tgz"%locals()
-        text += '    <td%(cls)s><a href="%(r)s/%(filename)s"><img src="../../img/archive.png" alt="icon"/>%(filename)s</a></td>\n'%locals()  
-        text += '    <td%(cls)s>'%locals()
+        text += '    <td%(cls)s><strong>%(r)s</strong></td>\n' % locals()
+        filename = "%(module)s-%(r)s.tgz" % locals()
+        text += '    <td%(cls)s><a href="%(r)s/%(filename)s"><img src="../../img/archive.png"' \
+                ' alt="icon"/>%(filename)s</a></td>\n' % locals()
+        text += '    <td%(cls)s>' % locals()
         htmls = []
         pdfs = []
         for docdir in docdirs:
-            if os.path.isdir("%(webPath)s/%(r)s/%(docdir)s/html"%locals()):
+            if os.path.isdir("%(webPath)s/%(r)s/%(docdir)s/html" % locals()):
                 docpath = docdir + "/html"
-            elif os.path.isdir("%(webPath)s/%(r)s/%(docdir)s"%locals()):
+            elif os.path.isdir("%(webPath)s/%(r)s/%(docdir)s" % locals()):
                 docpath = docdir
             else:
                 continue
-            htmls = [ x.replace(".html","") for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s"%locals()) if x.endswith(".html") ]            
-            pdfs = [ x for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s"%locals()) if x.endswith(".pdf") ]                        
+            htmls = [x.replace(".html", "") for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s" %
+                                                                locals()) if x.endswith(".html")]
+            pdfs = [x for x in os.listdir("%(webPath)s/%(r)s/%(docpath)s" %
+                                          locals()) if x.endswith(".pdf")]
         if htmls:
             # if an index exists, only include that
             if "index" in htmls:
                 htmls = ["index"]
             for html in htmls:
-                text += '<a href="%(r)s/%(docpath)s/%(html)s.html"><img src="../../img/html.png" alt="icon"/>%(html)s</a>'%locals() 
-                if len(htmls)>1:
+                text += '<a href="%(r)s/%(docpath)s/%(html)s.html"><img src="../../img/html.png"' \
+                        'alt="icon"/>%(html)s</a>' % locals()
+                if len(htmls) > 1:
                     text += '<br/>'
         elif pdfs:
             for pdf in pdfs:
-                text += '<a href="%(r)s/%(docpath)s/%(pdf)s"><img src="../../img/pdficon_small.gif" alt="icon"/>%(pdf)s</a>'%locals()             
-                if len(pdfs)>1:
+                text += '<a href="%(r)s/%(docpath)s/%(pdf)s"><img src="../../img/pdficon_small.gif"' \
+                        ' alt="icon"/>%(pdf)s</a>' % locals()
+                if len(pdfs) > 1:
                     text += '<br/>'
                 
         else:
@@ -220,10 +245,10 @@ def cs_publish():
             cls = ' class="alt"'
         
     text += "</table>\n"
-    open(webPath+"/releases.html","w").write(text)   
+    open(webPath+"/releases.html", "w").write(text)
 
     # generate an index page if one doesn't exist
-    if not os.path.exists(webPath+"/index.php"):
+    if not os.path.exists(webPath + "/index.php"):
         open(webPath+"/index.php", "w").write("""<?php 
 $top = "../../..";
 $module = "%(module)s";
@@ -251,18 +276,19 @@ include("../header.html");
     else:
         indexwritten = False        
     # clean up
-    print "Cleaning up..."
+    print("Cleaning up...")
     os.remove(tgz)
-    shutil.rmtree("%(path)s/%(module)s-%(release)s"%locals())
+    shutil.rmtree("%(path)s/%(module)s-%(release)s" % locals())
     if indexwritten:
-        print "Now edit %(webPath)s/index.php to describe your module, " \
-            "and add it to the navigation bar in %(webPath)s/../header.html" % locals()
-        print "You can create an email image by running:"
-        print "  /dls_sw/work/common/scripts/email_obfusticate.sh firstname.lastname"     
-    print "Please check http://controls.diamond.ac.uk then"
-    print "  svn add %s"  % webPath   
-    print "  svn commit %s/.." % webPath
-    print "with a suitable comment when you are happy"
-    
+        print("Now edit %(webPath)s/index.php to describe your module, " \
+            "and add it to the navigation bar in %(webPath)s/../header.html" % locals())
+        print("You can create an email image by running:")
+        print("  /dls_sw/work/common/scripts/email_obfusticate.sh firstname.lastname")
+    print("Please check http://controls.diamond.ac.uk then")
+    print("  svn add %s" % webPath)
+    print("  svn commit %s/.." % webPath)
+    print("with a suitable comment when you are happy")
+
+
 if __name__ == "__main__":
-    sys.exit(cs_publish())
+    sys.exit(main())
