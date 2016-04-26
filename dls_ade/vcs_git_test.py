@@ -1414,7 +1414,7 @@ class GitSettersTest(unittest.TestCase):
             self.vcs.version
 
     @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
-    def test_given_mock_repo_then_set_return_version(self, mcheck):
+    def test_given_mock_repo_then_set_version(self, mcheck):
 
         version = '0-1'
         self.vcs.mock_repo = "/path/to/module/release"
@@ -1423,7 +1423,7 @@ class GitSettersTest(unittest.TestCase):
         self.assertEqual(self.vcs.version, version)
 
     @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
-    def test_given_vcs_when_version_set_version(self, mcheck):
+    def test_given_vcs_when_version_set_return_version(self, mcheck):
 
         version = '0-1'
 
