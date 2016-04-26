@@ -552,21 +552,27 @@ class Git(BaseVCS):
 
     """
 
-    def __init__(self, module, options):
+    def __init__(self, module, options, mock_repo=""):
 
         self._module = module
         self.area = options.area
-
-        server_repo_path = pathf.dev_module_path(self._module, self.area)
-
-        if not is_server_repo(server_repo_path):
-            raise VCSGitError('repo not found on gitolite server')
-
-        repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
-        self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
-
-        self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
         self._version = None
+        self.mock_repo = mock_repo
+
+        if not self.mock_repo:
+
+            server_repo_path = pathf.dev_module_path(self._module, self.area)
+            if not is_server_repo(server_repo_path):
+                raise VCSGitError('repo not found on gitolite server')
+
+            repo_dir = tempfile.mkdtemp(suffix="_" + self._module.replace("/", "_"))
+            self._remote_repo = os.path.join(GIT_SSH_ROOT, server_repo_path)
+
+            self.client = git.Repo.clone_from(self._remote_repo, repo_dir)
+        else:
+            self._remote_repo = mock_repo
+
+
 
     @property
     def vcs_type(self):
@@ -660,7 +666,7 @@ class Git(BaseVCS):
             version(str): Version release tag
 
         """
-        if not self.check_version_exists(version):
+        if not self.mock_repo and not self.check_version_exists(version):
             raise VCSGitError('version does not exist')
         self._version = version
 

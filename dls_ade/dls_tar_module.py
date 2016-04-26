@@ -122,7 +122,7 @@ def main():
     
     build.set_area(args.area)
 
-    git = vcs_git.Git(args.module_name, args)
+    git = vcs_git.Git(args.module_name, args, mock_repo=release_dir)
     git.set_version(args.release)
 
     build.submit(git)

@@ -1084,6 +1084,12 @@ class GitClassInitTest(unittest.TestCase):
         with self.assertRaises(Exception):
             vcs_git.Git(1, 2)
 
+    @patch('dls_ade.vcs_git.tempfile.mkdtemp')
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    def test_given_mock_repo_then_set_mock_remote(self, _1, _2):
+
+        git = vcs_git.Git('dummy', FakeOptions(), mock_repo='dummy/2-1')
+        self.assertEqual('dummy/2-1', git._remote_repo)
 
     @patch('dls_ade.vcs_git.tempfile.mkdtemp')
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
@@ -1406,6 +1412,15 @@ class GitSettersTest(unittest.TestCase):
 
         with self.assertRaises(vcs_git.VCSGitError):
             self.vcs.version
+
+    @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
+    def test_given_mock_repo_then_set_version(self, mcheck):
+
+        version = '0-1'
+        self.vcs.mock_repo = "/path/to/module/release"
+        self.vcs.set_version(version)
+
+        self.assertEqual(self.vcs.version, version)
 
     @patch('dls_ade.vcs_git.Git.check_version_exists', return_value=True)
     def test_given_vcs_when_version_set_return_version(self, mcheck):
