@@ -4,11 +4,12 @@ from getpass import getuser
 from dls_ade import path_functions as pathf
 import shutil
 import logging
-from dls_ade import vcs_git
+from dls_ade.vcs_git import git
+from dls_ade import vcs_git, Server
 from dls_ade.exceptions import (RemoteRepoError, VerificationError,
                                 ArgumentError)
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 class ModuleCreator(object):
@@ -33,7 +34,6 @@ class ModuleCreator(object):
     Raises:
         :class:`~dls_ade.exceptions.ModuleCreatorError`: Base class for this \
             module's exceptions
-
     """
 
     def __init__(self, module_path, area, module_template_cls,
@@ -49,8 +49,8 @@ class ModuleCreator(object):
             module_template_cls: Class for module_template object.
                 Must be a non-abstract subclass of ModuleTemplate.
             kwargs: Additional arguments for module creation.
-
         """
+
         self._area = area
         self._cwd = os.getcwd()
 
@@ -61,6 +61,11 @@ class ModuleCreator(object):
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
         self._server_repo_path = pathf.dev_module_path(self._module_path,
                                                        self._area)
+
+        base_repo = git.Repo(self.abs_module_path)
+        server = Server()
+        self.repo = server.create_new_local_repo(
+            self._module_name, self._area, base_repo)
 
         template_args = {'module_name': self._module_name,
                          'module_path': self._module_path,
@@ -90,12 +95,12 @@ class ModuleCreator(object):
         Raises:
             :class:`~dls_ade.exceptions.VerificationError`: If there is a \
                 name conflict with the server.
-
         """
+
         if self._remote_repo_valid:
             return
 
-        if vcs_git.is_server_repo(self._server_repo_path):
+        if self.repo.parent.is_server_repo(self._server_repo_path):
             err_message = ("The path {dir:s} already exists on gitolite,"
                            " cannot continue")
             raise VerificationError(
@@ -121,8 +126,8 @@ class ModuleCreator(object):
         Raises:
             :class:`~dls_ade.exceptions.VerificationError`: Local module \
                 cannot be created.
-
         """
+
         if self._can_create_local_module:
             return
 
@@ -162,8 +167,8 @@ class ModuleCreator(object):
         Raises:
             :class:`~dls_ade.exceptions.VerificationError`: Local repository \
                 cannot be pushed to remote.
-
         """
+
         if self._can_push_repo_to_remote:
             return
 
@@ -209,8 +214,8 @@ class ModuleCreator(object):
             :class:`~dls_ade.exceptions.VerificationError`: Local module \
                 cannot be created.
             OSError: The abs_module_path already exists (outside interference).
-
         """
+
         self.verify_can_create_local_module()
 
         self._can_create_local_module = False
@@ -228,8 +233,8 @@ class ModuleCreator(object):
 
         os.chdir(self._cwd)
 
-        vcs_git.init_repo(self.abs_module_path)
-        vcs_git.stage_all_files_and_commit(self.abs_module_path)
+        repo = vcs_git.init_repo(self.abs_module_path)
+        vcs_git.stage_all_files_and_commit(repo)
 
     def print_message(self):
         """Prints a message to detail the user's next steps."""
@@ -248,15 +253,15 @@ class ModuleCreator(object):
                 cannot be pushed to remote.
             :class:`~dls_ade.exceptions.VCSGitError`: If issue with adding a \
                 new remote and pushing.
-
         """
+
         self.verify_can_push_repo_to_remote()
 
         self._can_push_repo_to_remote = False
         self._remote_repo_valid = False
 
-        vcs_git.add_new_remote_and_push(self._server_repo_path,
-                                        self.abs_module_path)
+        self.repo.add_new_remote_and_push(self._server_repo_path,
+                                          self.abs_module_path)
 
 
 class ModuleCreatorWithApps(ModuleCreator):
@@ -270,7 +275,6 @@ class ModuleCreatorWithApps(ModuleCreator):
     Raises:
         :class:`~dls_ade.exceptions.ArgumentError`: If 'app_name' not given \
             as a keyword argument
-
     """
 
     def __init__(self, module_path, area, module_template, **kwargs):
@@ -314,7 +318,6 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         From the point of view of the user, however, the 'app_nameApp' folder
         itself was considered the 'module', hence the confusing use of eg.
         dls_start_new_module for the main script's name.
-
     """
 
     def verify_remote_repo(self):
@@ -338,13 +341,12 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             :class:`~dls_ade.exceptions.RemoteRepoError`: If the given server \
                 path does not exist.
                 This should never be raised. There is a bug if it is!
-
         """
 
         if self._remote_repo_valid:
             return
 
-        if not vcs_git.is_server_repo(self._server_repo_path):
+        if not self.repo.parent.is_server_repo(self._server_repo_path):
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
             err_message = err_message.format(path=self._server_repo_path)
@@ -384,9 +386,9 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
                 This should never be raised. There is a bug if it is!
             :class:`~dls_ade.exceptions.VCSGitError`: Issue with the vcs_git \
                 function calls.
-
         """
-        if not vcs_git.is_server_repo(remote_repo_path):
+
+        if not self.repo.parent.is_server_repo(remote_repo_path):
             # This should never get raised!
             err_message = ("Remote repo {repo:s} does not exist. Cannot "
                            "clone to determine if there is an app_name "
@@ -398,7 +400,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         temp_dir = ""
         exists = False
         try:
-            repo = vcs_git.temp_clone(remote_repo_path)
+            repo = self.repo.parent.temp_clone(remote_repo_path)
             temp_dir = repo.working_tree_dir
 
             if os.path.exists(os.path.join(temp_dir, self._app_name + "App")):
@@ -426,16 +428,15 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
                 :meth:`~dls_ade.module_template.ModuleTemplate.create_files`
             :class:`~dls_ade.exceptions.VCSGitError`: From \
                 :func:`~dls_ade.vcs_git.stage_all_files_and_commit`
-
-
         """
+
         self.verify_can_create_local_module()
 
         self._can_create_local_module = False
 
         print("Cloning module to " + self._module_path)
 
-        vcs_git.clone(self._server_repo_path, self.abs_module_path)
+        new_git = self.repo.parent.clone(self._server_repo_path, self.abs_module_path)
 
         os.chdir(self.abs_module_path)
         self._module_template.create_files()
@@ -445,7 +446,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             app_name=self._app_name
         ))
 
-        vcs_git.stage_all_files_and_commit(self.abs_module_path,
+        vcs_git.stage_all_files_and_commit(new_git.client,
                                            commit_message)
 
     def push_repo_to_remote(self):
@@ -465,4 +466,4 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         self._can_push_repo_to_remote = False
 
-        vcs_git.push_to_remote(self.abs_module_path)
+        self.repo.push_to_remote(self.abs_module_path)

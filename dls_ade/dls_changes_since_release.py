@@ -4,15 +4,18 @@
 import sys
 import shutil
 import logging
+
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import vcs_git
+from dls_ade import Server
 
 logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
-Check if a module in the <area> area of the repository has had changes committed since its last release.
+Check if a module in the <area> area of the repository has had changes
+committed since its last release.
 """
 
 
@@ -40,8 +43,10 @@ def main():
     source = pathf.dev_module_path(module, args.area)
     logging.debug(source)
 
-    if vcs_git.is_server_repo(source):
-        repo = vcs_git.temp_clone(source)
+    server = Server()
+
+    if server.is_server_repo(source):
+        repo = server.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
 
         if releases:
@@ -51,15 +56,17 @@ def main():
             # return so last_release_num can't be referenced before assignment
             return 1
     else:
-        raise Exception(source + " does not exist on the repository.")
+        raise IOError(source + " does not exist on the repository.")
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made
     logs = list(repo.iter_commits(last_release_num + "..HEAD", max_count=1))
     if logs:
-        print("Changes have been made to " + module + " since release " + last_release_num)
+        print("Changes have been made to " + module +
+              " since release " + last_release_num)
     else:
-        print("No changes have been made to " + module + " since most recent release " + last_release_num)
+        print("No changes have been made to " + module +
+              " since most recent release " + last_release_num)
 
     shutil.rmtree(repo.working_tree_dir)
 

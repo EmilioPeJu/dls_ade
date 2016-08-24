@@ -1,13 +1,17 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+
 """
-This script removes all O.* directories from a release of a module and tars it up before deleting the release directory.
-<module_name>/<module_release> will be stored as <module_name>/<module_release>.tar.gz.
-Running the script with the -u flag will untar the module and remove the archive (reversing the original process)
+This script removes all O.* directories from a release of a module and tars it
+up before deleting the release directory.
+<module_name>/<module_release> will be stored as
+<module_name>/<module_release>.tar.gz. Running the script with the -u flag will
+untar the module and remove the archive (reversing the original process)
 """
 
 import os
 import sys
+
 from dls_ade import vcs_git
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
@@ -62,7 +66,8 @@ def check_area_archivable(area):
         area(str): Area to check
 
     Raises:
-        :class:`exceptions.ValueError`: Modules in area <args.area> cannot be archived
+        :class:`exceptions.ValueError`: Modules in area <args.area> cannot be
+            archived
 
     """
     if area not in ["support", "ioc", "python", "matlab"]:
@@ -71,8 +76,9 @@ def check_area_archivable(area):
 
 def check_file_paths(release_dir, archive, untar):
     """
-    Checks if the file to untar exists and the directory to build it a does not (if `untar` is True), or
-    checks if the opposite is true (if `untar` is False)
+    Checks if the file to untar exists and the directory to build it a does not
+    (if `untar` is True), or checks if the opposite is true
+    (if `untar` is False)
 
     Args:
         release_dir(str): Directory to build to or to tar from
@@ -81,10 +87,14 @@ def check_file_paths(release_dir, archive, untar):
 
     Raises:
         IOError:
-            * `untar` true and archive doesn't exist: Archive <archive> doesn't exist
-            * `untar` true and path already exists: Path <release_dir> already exists
-            * `untar` false and archive already exists: Archive <archive> doesn't exist
-            * `untar` false and path doesn't exist: Path <release_dir> already exists
+            * `untar` true and archive doesn't exist:
+                Archive <archive> doesn't exist
+            * `untar` true and path already exists:
+                Path <release_dir> already exists
+            * `untar` false and archive already exists:
+                Archive <archive> doesn't exist
+            * `untar` false and path doesn't exist:
+                Path <release_dir> already exists
 
     """
     if untar:
@@ -122,7 +132,7 @@ def main():
     
     build.set_area(args.area)
 
-    git = vcs_git.Git(args.module_name, args, mock_repo=release_dir)
+    git = vcs_git.Git(args.module_name, args.area)
     git.set_version(args.release)
 
     build.submit(git)

@@ -12,10 +12,11 @@ import sys
 import shutil
 import platform
 import logging
+
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
-from dls_ade import vcs_git
+from dls_ade import vcs_git, Server
 
 env = environment()
 logging.basicConfig(level=logging.DEBUG)
@@ -32,13 +33,13 @@ look for the module, this can be overridden with the -e flag.
 
 def get_rhel_version():
     """
-    Checks if platform is Linux redhat, if so returns base version number from environment (e.g. returns 6 if 6.7),
-    if not returns default of 6.
+    Checks if platform is Linux redhat, if so returns base version number from
+    environment (e.g. returns 6 if 6.7), if not returns default of 6.
     
     Returns:
         str: Rhel version number
-
     """
+
     default_rhel_version = "6"
     if platform.system() == 'Linux' and platform.dist()[0] == 'redhat':
         dist, release_str, name = platform.dist()
@@ -64,8 +65,8 @@ def make_parser():
 
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
-
     """
+
     parser = ArgParser(usage)
     parser.add_module_name_arg()
     parser.add_epics_version_flag()
@@ -92,7 +93,8 @@ def main():
     env.check_epics_version(args.epics_version)
     pathf.check_technical_area(args.area, args.module_name)
 
-    # Force check of repo, not file system, for tools, etc and epics (previous releases are only stored on repo)
+    # Force check of repo, not file system, for tools, etc and epics
+    # (previous releases are only stored on repo)
     if args.area in ["etc", "tools", "epics"]:
         args.git = True
 
@@ -103,7 +105,9 @@ def main():
         target = "the repository"
         source = pathf.dev_module_path(args.module_name, args.area)
 
-        repo = vcs_git.temp_clone(source)
+        server = Server()
+
+        repo = server.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)
         shutil.rmtree(repo.working_tree_dir)
 
@@ -112,8 +116,9 @@ def main():
         target = "prod"
         source = env.prodArea(args.area)
         if args.area == 'python' and args.rhel_version >= 6:
-            source = os.path.join(source, "RHEL{0}-{1}".format(args.rhel_version,
-                                                               platform.machine()))
+            source = os.path.join(source,
+                                  "RHEL{0}-{1}".format(args.rhel_version,
+                                                       platform.machine()))
             logging.debug(source)
         release_dir = os.path.join(source, args.module_name)
 
@@ -127,7 +132,8 @@ def main():
         if args.git:
             print(args.module_name + ": No releases made in git")
         else:
-            print(args.module_name + ": No releases made for " + args.epics_version)
+            print(args.module_name + ": No releases made for " +
+                  args.epics_version)
         return 1
 
     releases = env.sortReleases(releases)
@@ -136,7 +142,8 @@ def main():
         print("The latest release for " + args.module_name + " in " + target +
               " is: " + releases[-1])
     else:
-        print("Previous releases for " + args.module_name + " in " + target + ":")
+        print("Previous releases for " + args.module_name + " in " +
+              target + ":")
         for release in releases:
             print(release)
 

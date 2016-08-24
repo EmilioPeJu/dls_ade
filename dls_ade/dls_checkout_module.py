@@ -2,18 +2,22 @@
 # This script comes from the dls_scripts python module
 """
 Clone a module, an ioc domain or an entire area of the repository.
-When cloning a single module, the branch argument will automatically checkout the given branch.
+When cloning a single module, the branch argument will automatically checkout
+the given branch.
 """
 
 import sys
+
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
+from dls_ade import Server
 
 usage = """
 Default <area> is 'support'.
-Checkout a module from the <area> area of the repository to the current directory.
-If you enter no <module_name>, the whole <area> area will be checked out.
+Checkout a module from the <area> area of the repository to the current
+directory. If you enter no <module_name>, the whole <area> area will be
+checked out.
 """
 
 
@@ -30,9 +34,11 @@ def make_parser():
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
     """
+
     parser = ArgParser(usage)
     parser.add_branch_flag(
-        help_msg="Checkout a specific named branch rather than the default (master)")
+        help_msg="Checkout a specific named branch rather than the default"
+                 " (master)")
 
     parser.add_argument("module_name", nargs="?", type=str, default="",
                         help="Name of module")
@@ -51,8 +57,8 @@ def check_technical_area(area, module):
 
     Raises:
         :class:`exception.Exception`: Missing technical area under beamline
-
     """
+
     if area == "ioc" and module != "" and len(module.split('/')) < 2:
         raise Exception("Missing Technical Area under Beamline")
 
@@ -64,7 +70,8 @@ def main():
 
     if args.module_name == "":
         answer = raw_input("Would you like to checkout the whole " +
-                           args.area + " area? This may take some time. Enter Y or N: ")
+                           args.area +
+                           " area? This may take some time. Enter Y or N: ")
         if answer.upper() != "Y":
             return
 
@@ -79,15 +86,18 @@ def main():
         # Set source to module in area folder
         source = pathf.dev_module_path(module, args.area)
 
+    server = Server()
+
     if module == "":
         print("Checking out entire " + args.area + " area...\n")
-        vcs_git.clone_multi(source)
+        server.clone_multi(source)
     elif module.endswith('/') and args.area == 'ioc':
         print("Checking out " + module + " technical area...")
-        vcs_git.clone_multi(source)
+        server.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        repo = vcs_git.clone(source, module)
+        git_inst = server.clone(source, module)
+        repo = git_inst.client
 
         if args.branch:
             # Get branches list
@@ -96,8 +106,8 @@ def main():
                 vcs_git.checkout_remote_branch(args.branch, repo)
             else:
                 # Invalid branch name, print branches list and exit
-                print("Branch '" + args.branch + "' does not exist in " + source +
-                      "\nBranch List:\n")
+                print("Branch '" + args.branch + "' does not exist in " +
+                      source + "\nBranch List:\n")
                 for entry in branches:
                     print(entry)
 

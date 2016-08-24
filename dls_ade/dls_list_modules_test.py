@@ -9,9 +9,15 @@ else:
 
 import unittest
 from pkg_resources import require
-from dls_ade import dls_list_modules
 require("mock")
 from mock import patch, ANY, MagicMock
+
+p = patch('dls_ade.Server')
+server_mock = MagicMock()
+m = p.start()
+m.return_value = server_mock
+from dls_ade import dls_list_modules
+p.stop()
 
 
 class ParserTest(unittest.TestCase):
@@ -27,17 +33,23 @@ class ParserTest(unittest.TestCase):
 
 class PrintModuleListTest(unittest.TestCase):
 
-    @patch('dls_ade.vcs_git.subprocess.check_output')
-    def test_subprocess_called_with_correct_list(self, mock_sub):
+    def setUp(self):
+        self.server_mock = server_mock
+
+    def tearDown(self):
+        self.server_mock.reset_mock()
+
+    def test_server_repo_list_called(self):
         source = "test/source"
-        list_cmd = "ssh " + dls_list_modules.vcs_git.GIT_ROOT + " expand controls"
 
         dls_list_modules.print_module_list(source)
 
-        mock_sub.assert_called_once_with(list_cmd.split())
+        self.server_mock.get_server_repo_list.assert_called_once_with()
 
-    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module", "test/source2/module2"])
-    def test_given_valid_source_then_print_called(self, _1):
+    def test_given_valid_source_then_print_called(self):
+        self.server_mock.get_server_repo_list.return_value =\
+            ["test/source/module", "test/source2/module2"]
+
         source = "test/source"
 
         with patch.object(builtins, 'print') as mock_print:
@@ -48,12 +60,13 @@ class PrintModuleListTest(unittest.TestCase):
         # Check that module2 from source2 is not printed
         self.assertEqual(len(call_args), 1)
 
-    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=["test/source/module"])
-    def test_given_invalid_source_then_print_not_called(self, _1):
-        source = "test/not_source"
+    def test_given_invalid_source_then_print_not_called(self):
+        self.server_mock.get_server_repo_list.return_value = \
+            ["test/not_source/module"]
+
+        source = "test/source"
 
         with patch.object(builtins, 'print') as mock_print:
             dls_list_modules.print_module_list(source)
 
-        # Check that only called once (twice if source valid)
         self.assertFalse(mock_print.call_count)

@@ -163,72 +163,15 @@ class CheckParsedArgsCompatibleTest(unittest.TestCase):
         self.assertFalse(self.mock_error.call_count)
 
 
-class GetAreaModuleListTest(unittest.TestCase):
-
-    @patch('dls_ade.vcs_git.get_server_repo_list', return_value=['controls/support/ADCore', 'controls/support/ethercat', 'controls/support/vacuum'])
-    def test_given_area_then_return_final_element_of_list(self, _1):
-        area = "support"
-
-        module_list = dls_module_contacts.get_area_module_list(area)
-
-        self.assertEqual(module_list, ['ADCore', 'ethercat', 'vacuum'])
-
-
-class LookupContactNameTest(unittest.TestCase):
-
-    @patch('dls_ade.dls_module_contacts.ldap')
-    def test_search_parameters_correct(self, mock_ldap):
-        fed_id = "fed123"
-        basedn = "dc=fed,dc=cclrc,dc=ac,dc=uk"
-        search_filter = "(&(cn={}))".format(fed_id)
-        search_attribute = ["givenName", "sn"]
-        mock_ldap.SCOPE_SUBTREE.return_value = "test_scope_subtree"
-        search_scope = mock_ldap.SCOPE_SUBTREE
-
-        ldap_inst = MagicMock()
-        mock_ldap.initialize.return_value = ldap_inst
-
-        dls_module_contacts.lookup_contact_name(fed_id)
-
-        mock_ldap.initialize.assert_called_once_with("ldap://altfed.cclrc.ac.uk")
-        ldap_inst.search.assert_called_once_with(basedn, search_scope, search_filter, search_attribute)
-
-    @patch('dls_ade.dls_module_contacts.ldap')
-    def test_given_unsuccessful_fed_id_search_then_error_raised(self, mock_ldap):
-        fed_id = "not_a_fed123"
-
-        ldap_inst = MagicMock()
-        mock_ldap.initialize.return_value = ldap_inst
-        ldap_inst.result.return_value = \
-            (115, [(None, ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
-
-        with self.assertRaises(Exception):
-            dls_module_contacts.lookup_contact_name(fed_id)
-
-    @patch('dls_ade.dls_module_contacts.ldap')
-    def test_given_successful_fed_id_search_then_no_error_raised(self, mock_ldap):
-        fed_id = "fed123"
-
-        ldap_inst = MagicMock()
-        mock_ldap.initialize.return_value = ldap_inst
-        ldap_inst.result.return_value = \
-            (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
-                    {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
-
-        contact_name = dls_module_contacts.lookup_contact_name(fed_id)
-
-        self.assertEqual(contact_name, "<FirstName> <Surname>")
-
-
 class OutputContactInfoTest(unittest.TestCase):
 
     def setUp(self):
         self.args = MagicMock()
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name', side_effect=["test_contact_name", "test_cc_name"])
+    @patch('dls_ade.dls_module_contacts.lookup_contact_name',
+           side_effect=["test_contact_name", "test_cc_name"])
     @patch('dls_ade.vcs_git.git')
-    @patch('dls_ade.vcs_git.clone')
-    def test_given_contacts_then_output_csv_format(self, mock_clone, mock_git, _2):
+    def test_given_contacts_then_output_csv_format(self, _, _2):
         self.args.csv = True
         module = "test_module"
         contact = "test_contact"
@@ -239,8 +182,7 @@ class OutputContactInfoTest(unittest.TestCase):
         self.assertEqual(output, "test_module,test_contact,test_contact_name,test_cc,test_cc_name")
 
     @patch('dls_ade.vcs_git.git')
-    @patch('dls_ade.vcs_git.clone')
-    def test_given_unspecified_contacts_then_output_csv_format(self, mock_clone, mock_git):
+    def test_given_unspecified_contacts_then_output_csv_format(self, _):
         self.args.csv = True
         module = "test_module"
         contact = "unspecified"

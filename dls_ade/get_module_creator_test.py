@@ -27,7 +27,7 @@ class GetModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.git_root_dir = get_mc.vcs_git.GIT_ROOT_DIR
+        self.git_root_dir = get_mc.Server.GIT_ROOT_DIR
 
         self.mock_nmc_base = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator')
         self.mock_nmc_base.return_value = "ModuleCreatorBase"
@@ -50,7 +50,7 @@ class GetModuleCreatorTest(unittest.TestCase):
         for cls in mt_classes_to_patch:
             self.mt_mocks[cls] = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate' + cls)
 
-        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.vcs_git.is_server_repo')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.Server.is_server_repo')
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
