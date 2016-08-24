@@ -15,8 +15,10 @@ ENVIRONMENT_CORRECT = False
 
 try:
     from dls_ade import vcs_git
+    from dls_ade import Server
 except ImportError:
     vcs_git = None
+    Server = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
 
 
@@ -77,7 +79,9 @@ def get_local_temp_clone(server_repo_path):
     """
     logging.debug("Cloning server repo path: " + server_repo_path)
 
-    repo = vcs_git.temp_clone(server_repo_path)
+    server = Server()
+
+    repo = server.temp_clone(server_repo_path)
 
     tempdir = repo.working_tree_dir
 
@@ -222,6 +226,8 @@ class SystemTest(object):
     def __init__(self, script, description):
         check_environment()
 
+        self.server = Server()
+
         self._script = script
         self.description = description
 
@@ -358,19 +364,18 @@ class SystemTest(object):
         logging.debug("'Default' server repo path: " +
                       self._default_server_repo_path)
 
-        temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
+        temp_repo = self.server.temp_clone(self._default_server_repo_path)
         vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
 
-        if vcs_git.is_server_repo(self._server_repo_path):
+        if self.server.is_server_repo(self._server_repo_path):
             temp_repo.create_remote(
                     "origin",
-                    os.path.join(vcs_git.GIT_SSH_ROOT, self._server_repo_path)
+                    os.path.join(self.server.url, self._server_repo_path)
             )
             temp_repo.git.push("origin", temp_repo.active_branch, "-f")
 
         else:
-            vcs_git.add_new_remote_and_push(self._server_repo_path,
-                                            temp_repo.working_tree_dir)
+            temp_repo.add_new_remote_and_push(self._server_repo_path)
 
     def call_script(self):
         """Call the script and store output, error and return code.
@@ -534,7 +539,7 @@ class SystemTest(object):
 
         """
         logging.debug("Checking server repo path given exists.")
-        assert_true(vcs_git.is_server_repo(self._server_repo_path))
+        assert_true(self.server.is_server_repo(self._server_repo_path))
 
     def clone_server_repo(self):
         """Clone the server_repo_path to a temp dir and return the path.
@@ -545,7 +550,7 @@ class SystemTest(object):
             VCSGitError: From vcs_git.temp_clone()
         """
         logging.debug("Cloning the server repository to temporary directory.")
-        repo = vcs_git.temp_clone(self._server_repo_path)
+        repo = self.server.temp_clone(self._server_repo_path)
 
         if self._branch_name:
             vcs_git.checkout_remote_branch(self._branch_name, repo)

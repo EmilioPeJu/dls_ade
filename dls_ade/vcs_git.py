@@ -245,7 +245,7 @@ def delete_remote(repo, remote_name):
     """
 
     check_remote_exists(repo, remote_name)
-    repo.git.remote("rm", remote_name)
+    repo.git.remote("rm", remote_name)  # Could use Repo.delete_remote(remote inst)
 
 
 class Git(BaseVCS):
