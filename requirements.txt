@@ -2,3 +2,4 @@ GitPython>=0.3.2
 mock>=1.0.1
 python-ldap>=2.3.12
 six>=1.6.1
+requests>=1.1.0
