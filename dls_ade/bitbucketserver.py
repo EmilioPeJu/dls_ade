@@ -12,16 +12,17 @@ BITBUCKET_CLONE_URL = "ssh://git@localhost:7999"
 
 class BitbucketServer(GitServer):
 
-    def __init__(self, user="GDYendell", pw="password"):
+    def __init__(self, user=None, pw=None):
         super(BitbucketServer, self).__init__(BITBUCKET_SERVER_URL,
                                               BITBUCKET_CLONE_URL)
 
-        self.user = user
-        self.pw = pw
+        if user is None or pw is None:
+            self.user = "TestUser"
+            self.pw = "CrypticPassword123"
 
-        # Get read only Bitbucket account by default TODO: Make account
-        # self.user = os.environ.get("BB_USER")
-        # self.pw = os.environ.get("BB_PASS")
+            # Get read only Bitbucket account by default TODO: Make account
+            # self.user = os.environ.get("BB_USER")
+            # self.pw = os.environ.get("BB_PASS")
 
     def _get_server_project_list(self):
         """

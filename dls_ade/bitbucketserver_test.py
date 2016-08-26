@@ -9,7 +9,7 @@ from dls_ade.bitbucketserver import BitbucketServer, BITBUCKET_SERVER_URL
 class InitTest(unittest.TestCase):
 
     def test_init(self):
-        server = BitbucketServer("TestUser", "CrypticPassword123")
+        server = BitbucketServer()
 
         self.assertEqual(BITBUCKET_SERVER_URL, server.url)
         self.assertEqual("TestUser", server.user)
@@ -26,7 +26,7 @@ class GetServerRepoListTest(unittest.TestCase):
 
         get_mock.return_value.json.return_value = content_dict
 
-        server = BitbucketServer("TestUser", "CrypticPassword123")
+        server = BitbucketServer()
 
         project_list = server._get_server_project_list()
 
@@ -61,7 +61,7 @@ class GetServerRepoListTest(unittest.TestCase):
 
         get_mock.side_effect = [get_mock1, get_mock2]
 
-        server = BitbucketServer("TestUser", "CrypticPassword123")
+        server = BitbucketServer()
 
         repo_list = server.get_server_repo_list()
 
@@ -79,7 +79,7 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
     def test_create_repo(self, post_mock):
 
-        server = BitbucketServer("TestUser", "CrypticPassword123")
+        server = BitbucketServer()
 
         response = server.create_remote_repo("Support/test_module")
 
@@ -117,7 +117,7 @@ class CheckResponseOKTest(unittest.TestCase):
         response_mock.json.return_value = \
             {'errors': [{'message': example_error_message}]}
 
-        server = BitbucketServer("TestUser", "CrypticPassword123")
+        server = BitbucketServer()
 
         with self.assertRaises(IOError) as e:
             server._check_response_ok(response_mock)
