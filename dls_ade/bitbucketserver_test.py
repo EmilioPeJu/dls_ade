@@ -21,8 +21,8 @@ class GetServerRepoListTest(unittest.TestCase):
 
     def test_get_project_list(self, get_mock):
 
-        content_dict = {'values': [{'key': "S", 'name': "Support"},
-                                   {'key': "I", 'name': "IOC"}]}
+        content_dict = {'values': [{'key': "SUPPORT", 'name': "Support"},
+                                   {'key': "IOC", 'name': "IOC"}]}
 
         get_mock.return_value.json.return_value = content_dict
 
@@ -34,15 +34,18 @@ class GetServerRepoListTest(unittest.TestCase):
             BITBUCKET_SERVER_URL + '/rest/api/1.0/projects',
             auth=('TestUser', 'CrypticPassword123'))
 
-        self.assertEqual([('S', 'Support'), ('I', 'IOC')], project_list)
+        self.assertEqual([('SUPPORT', 'Support'), ('IOC', 'IOC')], project_list)
 
     @patch('dls_ade.bitbucketserver.BitbucketServer._get_server_project_list',
-           return_value=[('S', 'Support'), ('I', 'IOC')])
+           return_value=[('SUPPORT', 'Support'), ('IOC', 'IOC')])
     def test_get_server_repo_list(self, _, get_mock):
 
-        expected_list = ['Support/ADCore', 'Support/ethercat',
-                         'Support/pmacUtil', 'IOC/BR01C_VA',
-                         'IOC/FE02I_CS', 'IOC/SR01C_VA']
+        expected_list = ['projects/SUPPORT/repos/ADCore',
+                         'projects/SUPPORT/repos/ethercat',
+                         'projects/SUPPORT/repos/pmacUtil',
+                         'projects/IOC/repos/BR01C_VA',
+                         'projects/IOC/repos/FE02I_CS',
+                         'projects/IOC/repos/SR01C_VA']
 
         content_dict1 = {'values': [{'name': "ADCore"},
                                     {'name': "ethercat"},
@@ -64,9 +67,9 @@ class GetServerRepoListTest(unittest.TestCase):
 
         calls = [call[0][0] for call in get_mock.call_args_list]
         self.assertIn(
-            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/S/repos', calls)
+            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/SUPPORT/repos', calls)
         self.assertIn(
-            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/I/repos', calls)
+            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/IOC/repos', calls)
 
         self.assertEqual(expected_list, repo_list)
 
@@ -78,10 +81,10 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
         server = BitbucketServer("TestUser", "CrypticPassword123")
 
-        response = server.create_remote_repo("S/test_module")
+        response = server.create_remote_repo("Support/test_module")
 
         post_mock.assert_called_once_with(
-            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/S/repos',
+            BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/SUPPORT/repos',
             auth=('TestUser', 'CrypticPassword123'),
             data='{"scmId": "git", "forkable": true, "name": "test_module"}',
             headers={'Content-type': 'application/json',
@@ -90,20 +93,33 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
         self.assertEqual(post_mock.return_value, response)
 
-    def test_request_failure_then_extract_message_for_error(self, post_mock):
 
-        expected_error_message = \
+class CheckResponseOKTest(unittest.TestCase):
+
+    def test_response_OK_then_return(self):
+
+        response_mock = MagicMock()
+        response_mock.ok = True
+
+        server = BitbucketServer("TestUser", "CrypticPassword123")
+
+        response = server._check_response_ok(response_mock)
+
+        self.assertEqual(response_mock, response)
+
+    def test_response_not_OK_then_error(self):
+
+        example_error_message = \
             "This repository URL is already taken by 'test_mod' in 'Support'"
 
         response_mock = MagicMock()
         response_mock.ok = False
         response_mock.json.return_value = \
-            {'errors': [{'message': expected_error_message}]}
-        post_mock.return_value = response_mock
+            {'errors': [{'message': example_error_message}]}
 
         server = BitbucketServer("TestUser", "CrypticPassword123")
 
         with self.assertRaises(IOError) as e:
-            server.create_remote_repo("S/test_mod")
+            server._check_response_ok(response_mock)
 
-        self.assertEqual(expected_error_message + '\n', e.exception.message)
+        self.assertEqual(example_error_message + '\n', e.exception.message)

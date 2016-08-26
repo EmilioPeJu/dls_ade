@@ -4,7 +4,6 @@ from pkg_resources import require
 require('GitPython')
 import git
 
-from dls_ade import path_functions as pathf
 from dls_ade.vcs import BaseVCS
 from dls_ade.exceptions import VCSGitError
 
@@ -264,7 +263,8 @@ class Git(BaseVCS):
         if self.parent is None:
             self._remote_repo = None
         else:
-            server_repo_path = pathf.dev_module_path(self._module, self.area)
+            server_repo_path = self.parent.dev_module_path(self._module,
+                                                           self.area)
             self._remote_repo = os.path.join(self.parent.url, server_repo_path)
 
     @property

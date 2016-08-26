@@ -398,7 +398,7 @@ def main():
     build = create_build_object(args)
 
     server = Server()
-    source = pathf.dev_module_path(module, args.area)
+    source = server.dev_module_path(module, args.area)
     vcs = server.temp_clone(source)
 
     if args.branch:

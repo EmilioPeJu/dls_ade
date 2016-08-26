@@ -79,14 +79,14 @@ def main():
 
     module = args.module_name
 
+    server = Server()
+
     if module == "":
         # Set source to area folder
-        source = pathf.dev_area_path(args.area)
+        source = server.dev_area_path(args.area)
     else:
         # Set source to module in area folder
-        source = pathf.dev_module_path(module, args.area)
-
-    server = Server()
+        source = server.dev_module_path(module, args.area)
 
     if module == "":
         print("Checking out entire " + args.area + " area...\n")

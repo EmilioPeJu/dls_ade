@@ -332,7 +332,7 @@ def main():
 
         print_out = []
         for module in modules:
-            source = pathf.dev_module_path(module, args.area)
+            source = server.dev_module_path(module, args.area)
             repo = server.temp_clone(source)
 
             # Retrieve contact info
@@ -369,7 +369,7 @@ def main():
     for module, contact, cc in contacts:
 
         print("Cloning " + module + " from " + args.area + " area...")
-        source = pathf.dev_module_path(module, args.area)
+        source = server.dev_module_path(module, args.area)
         repo = server.temp_clone(source)
 
         edit_summary = edit_contact_info(repo, contact, cc,)

@@ -57,13 +57,13 @@ class ModuleCreator(object):
         self._module_path = module_path
         self._module_name = os.path.basename(os.path.normpath(
                                              self._module_path))
+        server = Server()
 
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
-        self._server_repo_path = pathf.dev_module_path(self._module_path,
-                                                       self._area)
+        self._server_repo_path = server.dev_module_path(self._module_path,
+                                                        self._area)
 
         base_repo = git.Repo(self.abs_module_path)
-        server = Server()
         self.repo = server.create_new_local_repo(
             self._module_name, self._area, base_repo)
 

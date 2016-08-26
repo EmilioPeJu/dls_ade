@@ -765,6 +765,9 @@ class DeleteRemoteTest(unittest.TestCase):
         def remotes(self):
             return self.remotes_list
 
+        def delete_remote(self):
+            return 0
+
     def test_given_remote_does_not_exist_then_exception_raised_with_correct_message(self):
 
         remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
@@ -778,12 +781,12 @@ class DeleteRemoteTest(unittest.TestCase):
     def test_given_remote_does_exist_then_remote_properly_deleted(self):
 
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo_git = MagicMock()
-        mock_repo = DeleteRemoteTest.StubGitRepo(remotes_list, mock_repo_git)
+        mock_repo = MagicMock()
+        mock_repo.remotes = remotes_list
 
         vcs_git.delete_remote(mock_repo, "test_remote")
 
-        mock_repo_git.remote.assert_called_once_with("rm", "test_remote")
+        mock_repo.delete_remote.assert_called_once_with("test_remote")
 
 
 class PushAllBranchesAndTagsTest(unittest.TestCase):
@@ -838,6 +841,7 @@ class GitClassInitTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "test@server.ac.uk"
+        server_mock.dev_module_path.return_value = "controlstest/support/dummy"
         repo_mock = MagicMock()
 
         git = vcs_git.Git("dummy", "support", server_mock, repo_mock)
@@ -1050,6 +1054,7 @@ class ApiInterrogateTest(unittest.TestCase):
         self.area = "support"
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = "controlstest/support/dummy"
         self.vcs = vcs_git.Git(self.module, self.area, server_mock)
 
     def test_when_asking_object_for_vcs_type_then_return_git_in_string(self):

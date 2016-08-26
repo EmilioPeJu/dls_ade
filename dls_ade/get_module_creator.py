@@ -160,9 +160,9 @@ def get_module_creator_ioc(module_name, fullname=False):
         # 'module' to refer to the repo, but be aware that start_new_module and
         # module_creator don't have to actually create new modules (repos)
         # on the server in this instance.
-        module_path = domain + "/" + technical_area
-        server_repo_path = pathf.dev_module_path(module_path, area)
         server = Server()
+        module_path = domain + "/" + technical_area
+        server_repo_path = server.dev_module_path(module_path, area)
         if server.is_server_repo(server_repo_path):
             # Adding new App to old style "domain/tech_area" module that
             # already exists on the remote server.

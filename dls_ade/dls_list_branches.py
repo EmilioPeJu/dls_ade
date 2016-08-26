@@ -40,11 +40,11 @@ def main():
 
     pathf.check_technical_area(args.area, args.module_name)
 
-    source = pathf.dev_module_path(args.module_name, args.area)
+    server = Server()
+
+    source = server.dev_module_path(args.module_name, args.area)
 
     print("Branches of " + args.module_name + ":\n")
-
-    server = Server()
 
     repo = server.temp_clone(source)
 

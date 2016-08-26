@@ -2,8 +2,6 @@ from dls_ade import path_functions
 import unittest
 from dls_ade.exceptions import ParsingError
 
-GIT_SSH_ROOT = "ssh://dascgitolite@dasc-git.diamond.ac.uk/"
-
 
 class RemoveEndSlash(unittest.TestCase):
 
@@ -29,10 +27,6 @@ class RemoveEndSlash(unittest.TestCase):
         self.assertEqual(new_path, path)
 
 
-def setUpModule():
-    path_functions.GIT_ROOT_DIR = "controlstest"
-
-
 class CheckTechnicalAreaValidTest(unittest.TestCase):
 
     def test_given_area_not_ioc_then_no_error_raised(self):
@@ -56,15 +50,3 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
             path_functions.check_technical_area(area, module)
         except ParsingError as error:
             self.assertEqual(str(error), expected_error_msg)
-
-
-class ModuleAreaTests(unittest.TestCase):
-
-    def test_dev_module(self):
-
-        area = "etc"
-        module = "test_module"
-
-        path = path_functions.dev_module_path(module, area)
-
-        self.assertEqual(path, "controlstest/" + area + "/" + module)

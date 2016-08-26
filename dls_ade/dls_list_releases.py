@@ -101,11 +101,12 @@ def main():
     # Check for the existence of releases of this module/IOC    
     releases = []
     if args.git:
-        # List branches of repository
-        target = "the repository"
-        source = pathf.dev_module_path(args.module_name, args.area)
 
         server = Server()
+
+        # List branches of repository
+        target = "the repository"
+        source = server.dev_module_path(args.module_name, args.area)
 
         repo = server.temp_clone(source)
         releases = vcs_git.list_module_releases(repo)

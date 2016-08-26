@@ -6,6 +6,7 @@ import subprocess
 from dls_ade.gitserver import GitServer
 from dls_ade.vcs_git import git
 
+GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 
@@ -13,7 +14,7 @@ GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 class GitoliteServer(GitServer):
 
     def __init__(self):
-        super(GitoliteServer, self).__init__(GIT_SSH_ROOT)
+        super(GitoliteServer, self).__init__(GIT_SSH_ROOT, GIT_SSH_ROOT)
 
     def get_server_repo_list(self):
         """
@@ -63,3 +64,31 @@ class GitoliteServer(GitServer):
             git.Repo.clone_from(git_dest, temp_dir)
         finally:
             shutil.rmtree(temp_dir)
+
+    @staticmethod
+    def dev_area_path(area="support"):
+        """
+        Return the full server path for the given area.
+
+        Args:
+            area(str): The area of the module.
+
+        Returns:
+            str: The full server path for the given area.
+
+        """
+        return os.path.join(GIT_ROOT_DIR, area)
+
+    @staticmethod
+    def get_clone_path(path):
+        """
+        Return path; no changes are required for gitolite server
+
+        Args:
+            path(str): Full path to repo
+
+        Returns:
+            str: Path that can be use to clone repo
+        """
+
+        return path

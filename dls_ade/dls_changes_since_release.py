@@ -39,11 +39,11 @@ def main():
 
     pathf.check_technical_area(args.area, args.module_name)
 
-    module = args.module_name
-    source = pathf.dev_module_path(module, args.area)
-    logging.debug(source)
-
     server = Server()
+
+    module = args.module_name
+    source = server.dev_module_path(module, args.area)
+    logging.debug(source)
 
     if server.is_server_repo(source):
         repo = server.temp_clone(source)

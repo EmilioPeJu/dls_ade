@@ -9,8 +9,9 @@ class GitServer(object):
 
     GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
 
-    def __init__(self, url):
+    def __init__(self, url, clone_url):
         self.url = url
+        self.clone_url = clone_url
 
     def is_server_repo(self, server_repo_path):
         """
@@ -79,8 +80,10 @@ class GitServer(object):
         # Area is second section of path
         area = server_repo_path.split('/')[1]
 
-        repo = git.Repo.clone_from(os.path.join(self.url, server_repo_path),
-                                   os.path.join("./", local_repo_path))
+        repo = git.Repo.clone_from(
+            os.path.join(self.clone_url,
+                         self.get_clone_path(server_repo_path)),
+            os.path.join("./", local_repo_path))
 
         git_inst = Git(module, area, self, repo)
 
@@ -108,7 +111,9 @@ class GitServer(object):
         module = source.split('/', 2)[-1]
 
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
-        repo = git.Repo.clone_from(os.path.join(self.url, source), repo_dir)
+        repo = git.Repo.clone_from(os.path.join(self.clone_url,
+                                                self.get_clone_path(source)),
+                                   repo_dir)
 
         git_inst = Git(module, area, self, repo)
 
@@ -136,8 +141,10 @@ class GitServer(object):
 
                 if module not in os.listdir("./"):
                     print("Cloning: " + path + "...")
-                    git.Repo.clone_from(os.path.join(self.url, path),
-                                        os.path.join("./", module))
+                    git.Repo.clone_from(
+                        os.path.join(self.clone_url,
+                                     self.get_clone_path(path)),
+                        os.path.join("./", module))
                 else:
                     print(module + " already exists in current directory")
 
@@ -151,6 +158,48 @@ class GitServer(object):
         Raises:
             :class:`~dls_ade.exceptions.VCSGitError`: If a git repository
             already exists on the destination path.
+        """
+
+        raise NotImplementedError("Must be implemented in child classes")
+
+    @staticmethod
+    def dev_area_path(area="support"):
+        """
+        Return the full server path for the given area.
+
+        Args:
+            area(str): The area of the module.
+
+        Returns:
+            str: The full server path for the given area.
+        """
+
+        raise NotImplementedError("Must be implemented in child classes")
+
+    def dev_module_path(self, module, area="support"):
+        """
+        Return the full server path for the given module and area.
+
+        Args:
+            area(str): The area of the module.
+            module(str): The module name.
+
+        Returns:
+            str: The full server path for the given module.
+
+        """
+        return os.path.join(self.dev_area_path(area), module)
+
+    @staticmethod
+    def get_clone_path(path):
+        """
+        Generate path that can be used to clone repo
+
+        Args:
+            path(str): Full path to repo
+
+        Returns:
+            str: Path that can be use to clone repo
         """
 
         raise NotImplementedError("Must be implemented in child classes")

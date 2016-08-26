@@ -6,13 +6,15 @@ import requests
 
 from dls_ade.gitserver import GitServer
 
-BITBUCKET_SERVER_URL = "test@url.ac.uk"
+BITBUCKET_SERVER_URL = "http://localhost:7990"
+BITBUCKET_CLONE_URL = "ssh://git@localhost:7999"
 
 
 class BitbucketServer(GitServer):
 
-    def __init__(self, user, pw):
-        super(BitbucketServer, self).__init__(BITBUCKET_SERVER_URL)
+    def __init__(self, user="GDYendell", pw="password"):
+        super(BitbucketServer, self).__init__(BITBUCKET_SERVER_URL,
+                                              BITBUCKET_CLONE_URL)
 
         self.user = user
         self.pw = pw
@@ -34,6 +36,8 @@ class BitbucketServer(GitServer):
 
         content = r.json()
 
+        self._check_response_ok(r)
+
         return [(project['key'], project['name'])
                 for project in content['values']]
 
@@ -53,10 +57,13 @@ class BitbucketServer(GitServer):
                              "rest/api/1.0/projects", key, "repos"),
                 auth=(self.user, self.pw))
 
+            self._check_response_ok(r)
+
             content = r.json()
 
-            repos.extend([project + '/' + repo['name']
-                          for repo in content['values']])
+            for repo in content['values']:
+                path = os.path.join("projects", key, "repos", repo['name'])
+                repos.append(path)
 
         return repos
 
@@ -79,7 +86,8 @@ class BitbucketServer(GitServer):
         project, repo_name = dest.rsplit('/', 1)
 
         response = requests.post(
-            os.path.join(self.url, "rest/api/1.0/projects", project, "repos"),
+            os.path.join(self.url, "rest/api/1.0/projects",
+                         project.replace('/', '_').upper(), "repos"),
             auth=(self.user, self.pw),
             data=json.dumps({'name': repo_name,
                              'scmId': "git",
@@ -87,6 +95,21 @@ class BitbucketServer(GitServer):
             headers={'Content-type': 'application/json',
                      'Accept': 'application/json'},
             verify=True)
+
+        return self._check_response_ok(response)
+
+    @staticmethod
+    def _check_response_ok(response):
+        """
+        Check response to see if request was successful. If not OK, raise an
+        error with the returned message.
+
+        Args:
+            response: Response from server
+
+        Raises:
+            IOError: Message from response
+        """
 
         if response.ok:
             return response
@@ -98,3 +121,32 @@ class BitbucketServer(GitServer):
                 message += error['message'] + "\n"
 
             raise IOError(message)
+
+    @staticmethod
+    def dev_area_path(area="support"):
+        """
+        Return the full server path for the given area.
+
+        Args:
+            area(str): The area of the module.
+
+        Returns:
+            str: The full server path for the given area.
+
+        """
+
+        return os.path.join("projects", area.upper(), "repos")
+
+    @staticmethod
+    def get_clone_path(path):
+        """
+        Generate clone path with projects/ and repos/ removed
+
+        Args:
+            path(str): Full path to repo
+
+        Returns:
+            str: Path that can be use to clone repo
+        """
+
+        return path.replace("projects/", "").replace("repos/", "")

@@ -55,13 +55,15 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
+
+    server = Server()
     
     if args.area == "ioc" and args.domain_name:
         print("Modules in " + args.domain_name + ":\n")
-        source = pathf.dev_module_path(args.domain_name, args.area)
+        source = server.dev_module_path(args.domain_name, args.area)
     else:
         print("Modules in " + args.area + ":\n")
-        source = pathf.dev_area_path(args.area)
+        source = server.dev_area_path(args.area)
 
     print_module_list(source)
 

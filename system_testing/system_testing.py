@@ -365,7 +365,7 @@ class SystemTest(object):
                       self._default_server_repo_path)
 
         temp_repo = self.server.temp_clone(self._default_server_repo_path)
-        vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
+        vcs_git.delete_remote(temp_repo, "origin")
 
         if self.server.is_server_repo(self._server_repo_path):
             temp_repo.create_remote(
@@ -587,7 +587,7 @@ class SystemTest(object):
                       "correct.")
 
         current_active_branch = vcs_git.get_active_branch(
-                self._local_repo_path)
+            vcs_git.init_repo(self._local_repo_path))
 
         logging.debug("Actual branch: " + current_active_branch)
         assert_equal(self._branch_name, current_active_branch)
@@ -612,7 +612,7 @@ class SystemTest(object):
         if self._server_repo_clone_path:
             logging.debug("Testing server clone's attributes.")
             return_value = vcs_git.check_git_attributes(
-                    self._server_repo_clone_path,
+                    vcs_git.init_repo(self._server_repo_clone_path),
                     self._attributes_dict
             )
             assert_true(return_value)
@@ -620,8 +620,9 @@ class SystemTest(object):
         if self._local_repo_path:
             logging.debug("Testing local repo's attributes.")
 
-            return_value = vcs_git.check_git_attributes(self._local_repo_path,
-                                                        self._attributes_dict)
+            return_value = vcs_git.check_git_attributes(
+                vcs_git.init_repo(self._local_repo_path),
+                self._attributes_dict)
             assert_true(return_value)
 
     def run_comparison_tests(self):

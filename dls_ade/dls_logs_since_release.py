@@ -557,9 +557,9 @@ def main():
                                  args.later_release, parser)
     check_releases_valid(args.releases, parser)
 
-    source = pathf.dev_module_path(args.module_name, args.area)
-
     server = Server()
+
+    source = server.dev_module_path(args.module_name, args.area)
 
     if server.is_server_repo(source):
         repo = server.temp_clone(source)
