@@ -220,7 +220,8 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         self.mock_is_dir.return_value = True
         self.mock_is_local_repo_root.return_value = True
-        self.mock_repo.git.commit.side_effect = vcs_git.git.exc.GitCommandError(["git", "checkout", "master"], 1)
+        self.mock_repo.git.commit.side_effect = \
+            vcs_git.git.exc.GitCommandError(["git", "checkout", "master"], 1)
 
         vcs_git.stage_all_files_and_commit(self.mock_repo, "test_message")
 
@@ -1062,6 +1063,10 @@ class ApiInterrogateTest(unittest.TestCase):
         vcs_type = self.vcs.vcs_type
 
         self.assertEqual(vcs_type, 'git')
+
+    def test_module_returns(self):
+
+        self.assertEqual(self.vcs.module, self.vcs._module)
 
     def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self):
 

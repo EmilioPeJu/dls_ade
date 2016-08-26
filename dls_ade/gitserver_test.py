@@ -25,6 +25,46 @@ class IsServerRepoTest(unittest.TestCase):
         self.assertFalse(server.is_server_repo("controls/test/not_a_path"))
 
 
+class NotImplementedTest(unittest.TestCase):
+
+    def test_area_path_raises(self):
+
+        with self.assertRaises(NotImplementedError):
+            GitServer.dev_area_path()
+
+    def test_get_clone_path_raises(self):
+
+        with self.assertRaises(NotImplementedError):
+            GitServer.get_clone_path("")
+
+    def test_create_remote_repo_raises(self):
+
+        server = GitServer("test@url.ac.uk", "test@url.ac.uk")
+
+        with self.assertRaises(NotImplementedError):
+            server.create_remote_repo("")
+
+    def test_get_server_repo_list_raises(self):
+
+        server = GitServer("test@url.ac.uk", "test@url.ac.uk")
+
+        with self.assertRaises(NotImplementedError):
+            server.get_server_repo_list()
+
+
+class DevPathTest(unittest.TestCase):
+
+    @patch('os.path.join')
+    @patch('dls_ade.gitserver.GitServer.dev_area_path')
+    def test_module_path_calls_dev_area(self, area_path_mock, join_mock):
+
+        server = GitServer("test@url.ac.uk", "test@url.ac.uk")
+
+        server.dev_module_path("test_module")
+        join_mock.assert_called_once_with(area_path_mock.return_value,
+                                          "test_module")
+
+
 class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.gitserver.GitServer.is_server_repo', return_value=False)

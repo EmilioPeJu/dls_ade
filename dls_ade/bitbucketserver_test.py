@@ -16,6 +16,24 @@ class InitTest(unittest.TestCase):
         self.assertEqual("CrypticPassword123", server.pw)
 
 
+class DevAreaPathTest(unittest.TestCase):
+
+    def test_returns_correct_paths(self):
+
+        path = BitbucketServer.dev_area_path()
+        self.assertEqual("projects/SUPPORT/repos", path)
+        path = BitbucketServer.dev_area_path("ioc")
+        self.assertEqual("projects/IOC/repos", path)
+
+
+class GetClonePathTest(unittest.TestCase):
+
+    def test_returns_correct_path(self):
+
+        path = BitbucketServer.get_clone_path("projects/SUPPORT/repos/ADCore")
+        self.assertEqual("SUPPORT/ADCore", path)
+
+
 @patch('dls_ade.bitbucketserver.requests.get')
 class GetServerRepoListTest(unittest.TestCase):
 

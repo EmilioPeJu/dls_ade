@@ -57,3 +57,11 @@ class CreateRemoteRepoTest(unittest.TestCase):
         self.assertFalse(mock_rmtree.call_count)
 
         self.assertEqual(str(e.exception), comp_message)
+
+
+class GetClonePathTest(unittest.TestCase):
+
+    def test_returns_same_path(self):
+
+        path = GitoliteServer.get_clone_path("controls/support/ADCore")
+        self.assertEqual("controls/support/ADCore", path)
