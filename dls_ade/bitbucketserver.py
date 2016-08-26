@@ -1,19 +1,25 @@
 import os
+import json
 from pkg_resources import require
 require('requests')
 import requests
-import json
 
 from dls_ade.gitserver import GitServer
+
+BITBUCKET_SERVER_URL = "test@url.ac.uk"
 
 
 class BitbucketServer(GitServer):
 
-    def __init__(self, url, user, pw):
-        super(BitbucketServer, self).__init__(url)
+    def __init__(self, user, pw):
+        super(BitbucketServer, self).__init__(BITBUCKET_SERVER_URL)
 
         self.user = user
         self.pw = pw
+
+        # Get read only Bitbucket account by default TODO: Make account
+        # self.user = os.environ.get("BB_USER")
+        # self.pw = os.environ.get("BB_PASS")
 
     def _get_server_project_list(self):
         """
@@ -65,6 +71,10 @@ class BitbucketServer(GitServer):
             :class:`~dls_ade.exceptions.VCSGitError`: If a git repository
             already exists on the destination path.
         """
+
+        # Need a writable account to create a repository
+        # self.user = os.environ.get("USER")
+        # self.pw = raw_input("Enter Bitbucket password: ")
 
         project, repo_name = dest.rsplit('/', 1)
 
