@@ -91,6 +91,14 @@ SUPPORT=/dls_sw/prod/$(echo $_epics | cut -d_ -f1)/support
 EOF
 cp configure/RELEASE.${EPICS_HOST_ARCH} configure/RELEASE.${EPICS_HOST_ARCH}.Common
 
+if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
+    git ls-files configure/VERSION --error-unmatch 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
+else
+    svn ls configure/VERSION 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
+fi
+mkdir -p configure
+echo $_version > configure/VERSION
+
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log
