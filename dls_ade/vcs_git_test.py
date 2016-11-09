@@ -280,7 +280,7 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         self.mock_is_dir.return_value = True
         self.mock_is_local_repo_root.return_value = True
-        self.mock_repo.git.commit.side_effect = vcs_git.git.exc.GitCommandError("", 1)
+        self.mock_repo.git.commit.side_effect = vcs_git.git.exc.GitCommandError(["git", "checkout", "master"], 1)
 
         vcs_git.stage_all_files_and_commit("test_path", "test_message")
 

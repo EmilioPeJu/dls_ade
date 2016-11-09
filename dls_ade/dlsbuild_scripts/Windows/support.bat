@@ -141,6 +141,19 @@ echo SUPPORT=W:/prod/%_epics:_64=%/support>> configure\RELEASE.%EPICS_HOST_ARCH%
 
 copy configure\RELEASE.%EPICS_HOST_ARCH% configure\RELEASE.%EPICS_HOST_ARCH%.Common
 
+if not defined _svn_dir (
+    git ls-files configure/VERSION --error-unmatch >NUL 2>&1
+    if not errorlevel 1 (
+        call :ReportFailure 1 configure\VERSION must not be in version control
+    )
+) else (
+    svn ls configure/VERSION >NUL 2>&1
+    if not errorlevel 1 (
+        call :ReportFailure 1 configure\VERSION must not be in version control
+    )
+)
+echo %_version% > configure\VERSION
+
 :: Build
 set error_log=%_build_name%.err
 set build_log=%_build_name%.log
