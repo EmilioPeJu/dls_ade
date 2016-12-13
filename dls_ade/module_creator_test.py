@@ -28,8 +28,8 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
     def setUp(self):
 
         self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
-        self.mock_getlogin = set_up_mock(self, 'os.getlogin')
-        self.mock_getlogin.return_value = 'test_login'
+        self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
+        self.mock_getuser.return_value = 'test_login'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
@@ -364,8 +364,8 @@ class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
     def setUp(self):
 
         self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
-        self.mock_getlogin = set_up_mock(self, 'os.getlogin')
-        self.mock_getlogin.return_value = 'test_login'
+        self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
+        self.mock_getuser.return_value = 'test_login'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
