@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from getpass import getuser
 from dls_ade import path_functions as pathf
 import shutil
 import logging
@@ -63,7 +64,7 @@ class ModuleCreator(object):
 
         template_args = {'module_name': self._module_name,
                          'module_path': self._module_path,
-                         'user_login': os.getlogin()}
+                         'user_login': getuser()}
 
         if kwargs:
             template_args.update(kwargs)
