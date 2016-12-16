@@ -236,8 +236,14 @@ class Builder:
 
         print("Created build file " + filename + " to build module in " + build_dir)
         print("Performing local test build...")
-        status = subprocess.call(
-            "/bin/env -i \"$(/bin/env | grep SSH)\" " + filename, shell=True)
+
+        command = "/bin/env -i "
+        keys = [k for k in os.environ.keys() if k.startswith("SSH")]
+        for k in keys:  # Ensure SSH environment variables are passed to call
+            command += "%s=%s " % (k, os.environ[k])
+        command += filename
+        status = subprocess.call(command, shell=True)
+
         if status != 0:
             print("Local test build failed. Results are in " + build_dir)
         else:
