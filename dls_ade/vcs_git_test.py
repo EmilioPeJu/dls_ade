@@ -272,11 +272,11 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
 
-        repo = vcs_git.Git("test_module", "area")
-        repo.client = mock_repo
+        git_inst = vcs_git.Git("test_module", "area")
+        git_inst.repo = mock_repo
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.add_new_remote_and_push("test_destination", branch_name="test_branch")
+            git_inst.add_new_remote_and_push("test_destination", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -290,11 +290,11 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
         comp_message = "Cannot push local repository to destination as remote {remote:s} is already defined"
         comp_message = comp_message.format(remote="test_remote")
 
-        repo = vcs_git.Git("test_module", "area")
-        repo.client = mock_repo
+        git_inst = vcs_git.Git("test_module", "area")
+        git_inst.repo = mock_repo
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
+            git_inst.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -310,10 +310,10 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "test@url.ac.uk"
-        repo = vcs_git.Git("test_module", "area", server_mock)
-        repo.client = mock_repo
+        git_inst = vcs_git.Git("test_module", "area", server_mock)
+        git_inst.repo = mock_repo
 
-        repo.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
+        git_inst.add_new_remote_and_push("test_destination", remote_name="test_remote", branch_name="test_branch")
 
         server_mock.create_remote_repo.assert_called_once_with("test_destination")
         mock_create_remote.assert_called_once_with(
@@ -331,10 +331,10 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "test@url.ac.uk"
-        repo = vcs_git.Git("test_module", "area", server_mock)
-        repo.client = mock_repo
+        git_inst = vcs_git.Git("test_module", "area", server_mock)
+        git_inst.repo = mock_repo
 
-        repo.add_new_remote_and_push("test_destination")
+        git_inst.add_new_remote_and_push("test_destination")
 
         server_mock.create_remote_repo.assert_called_once_with("test_destination")
         mock_create_remote.assert_called_once_with(
@@ -845,16 +845,16 @@ class GitClassInitTest(unittest.TestCase):
         server_mock.dev_module_path.return_value = "controlstest/support/dummy"
         repo_mock = MagicMock()
 
-        git = vcs_git.Git("dummy", "support", server_mock, repo_mock)
+        git_inst = vcs_git.Git("dummy", "support", server_mock, repo_mock)
 
-        self.assertEqual("dummy", git._module)
-        self.assertEqual("support", git.area)
-        self.assertEqual(repo_mock, git.client)
-        self.assertIsNone(git._version)
+        self.assertEqual("dummy", git_inst._module)
+        self.assertEqual("support", git_inst.area)
+        self.assertEqual(repo_mock, git_inst.repo)
+        self.assertIsNone(git_inst._version)
 
-        self.assertEqual(server_mock, git.parent)
+        self.assertEqual(server_mock, git_inst.parent)
         self.assertEqual("test@server.ac.uk/controlstest/support/dummy",
-                         git._remote_repo)
+                         git_inst._remote_repo)
 
     def test_given_no_parent_then_set_as_None(self):
         repo_mock = MagicMock()
@@ -863,7 +863,7 @@ class GitClassInitTest(unittest.TestCase):
 
         self.assertEqual("dummy", git._module)
         self.assertEqual("support", git.area)
-        self.assertEqual(repo_mock, git.client)
+        self.assertEqual(repo_mock, git.repo)
         self.assertIsNone(git._version)
 
         self.assertIsNone(git.parent)
@@ -962,11 +962,11 @@ class GitListReleasesTest(unittest.TestCase):
         server_mock.url = "ssh://GIT_SSH_ROOT/"
         repo_mock = MagicMock()
         self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
-        self.vcs.client.tags = [FakeTag("1-0"), FakeTag("1-0-1"), FakeTag("2-0")]
+        self.vcs.repo.tags = [FakeTag("1-0"), FakeTag("1-0-1"), FakeTag("2-0")]
 
     def test_given_repo_with_no_tags_then_return_empty_list(self):
 
-        self.vcs.client.tags = []
+        self.vcs.repo.tags = []
         releases = self.vcs.list_releases()
 
         self.assertListEqual([], releases)
@@ -1134,14 +1134,14 @@ class GitSettersTest(unittest.TestCase):
 
         self.vcs.set_branch(branch)
 
-        self.vcs.client.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b=branch)
+        self.vcs.repo.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b=branch)
 
     def test_given_version_then_create_tag_and_push(self):
 
         self.vcs.release_version('1-0', message='Release 1-0')
 
-        self.vcs.client.create_tag.assert_called_once_with('1-0', message='Release 1-0')
-        self.vcs.client.remotes.origin.push.assert_called_once_with('1-0')
+        self.vcs.repo.create_tag.assert_called_once_with('1-0', message='Release 1-0')
+        self.vcs.repo.remotes.origin.push.assert_called_once_with('1-0')
 
 
 class FakeTag(object):

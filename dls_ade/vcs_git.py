@@ -257,7 +257,7 @@ class Git(BaseVCS):
         self._module = module
         self.area = area
         self.parent = parent
-        self.client = repo
+        self.repo = repo
         self._version = None
 
         if self.parent is None:
@@ -302,7 +302,7 @@ class Git(BaseVCS):
             if self.check_version_exists(self._version):
                 tag = self._version
         try:
-            return self.client.git.cat_file('-p', tag+':'+filename)
+            return self.repo.git.cat_file('-p', tag + ':' + filename)
         except git.GitCommandError:
             return str('')
 
@@ -315,7 +315,7 @@ class Git(BaseVCS):
         """
 
         releases = []
-        for tag in self.client.tags:
+        for tag in self.repo.tags:
             releases.append(tag.name)
 
         return releases
@@ -347,7 +347,7 @@ class Git(BaseVCS):
         return version in self.list_releases()
 
     def set_branch(self, branch):
-        origin = self.client.remotes.origin
+        origin = self.repo.remotes.origin
         remote = origin.refs[branch]
         remote.checkout(b=branch)
 
@@ -366,9 +366,9 @@ class Git(BaseVCS):
 
     def release_version(self, version, message=""):
 
-        self.client.create_tag(version, message=message)
+        self.repo.create_tag(version, message=message)
 
-        origin = self.client.remotes.origin
+        origin = self.repo.remotes.origin
         # This is equivalent to 'git push origin <tag_name>'
         origin.push(version)
 
@@ -396,20 +396,18 @@ class Git(BaseVCS):
         Raises:
             :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with
                 the operation.
+
         """
-
-        repo = self.client
-
-        if branch_name not in [x.name for x in repo.branches]:
+        if branch_name not in [x.name for x in self.repo.branches]:
             err_message = ("Local repository branch {branch:s} does not "
                            "currently exist.")
             raise VCSGitError(err_message.format(branch=branch_name))
 
-        check_remote_exists(repo, remote_name)
+        check_remote_exists(self.repo, remote_name)
 
         # They have overloaded the dictionary lookup to compare string
         # with .name
-        remote = repo.remotes[remote_name]
+        remote = self.repo.remotes[remote_name]
 
         if not remote.url.startswith(self.parent.url):
             err_message = ("Remote repository URL {remoteURL:s} does not "
@@ -454,7 +452,7 @@ class Git(BaseVCS):
                 the operation.
         """
 
-        repo = self.client
+        repo = self.repo
 
         if branch_name not in [x.name for x in repo.branches]:
             err_message = ("Local repository branch {branch:s} does not "
@@ -488,10 +486,10 @@ class Git(BaseVCS):
                 :func:`.check_remote_exists`.
         """
 
-        repo = self.client
+        repo = self.repo
 
         if has_remote(repo, remote_name):
-            delete_remote(self.client, remote_name)
+            delete_remote(self.repo, remote_name)
 
         repo.create_remote(remote_name, os.path.join(self.parent.url,
                                                      server_repo_path))

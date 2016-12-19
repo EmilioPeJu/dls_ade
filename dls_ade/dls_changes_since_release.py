@@ -46,7 +46,8 @@ def main():
     logging.debug(source)
 
     if server.is_server_repo(source):
-        repo = server.temp_clone(source)
+        vcs = server.temp_clone(source)
+        repo = vcs.repo
         releases = vcs_git.list_module_releases(repo)
 
         if releases:

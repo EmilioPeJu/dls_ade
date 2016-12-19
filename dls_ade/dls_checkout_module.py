@@ -96,8 +96,8 @@ def main():
         server.clone_multi(source)
     else:
         print("Checking out " + module + " from " + args.area + " area...")
-        git_inst = server.clone(source, module)
-        repo = git_inst.client
+        vcs = server.clone(source, module)
+        repo = vcs.repo
 
         if args.branch:
             # Get branches list

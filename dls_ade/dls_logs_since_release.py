@@ -562,7 +562,8 @@ def main():
     source = server.dev_module_path(args.module_name, args.area)
 
     if server.is_server_repo(source):
-        repo = server.temp_clone(source)
+        vcs = server.temp_clone(source)
+        repo = vcs.repo
         releases = vcs_git.list_module_releases(repo)
         logging.debug(releases)
     else:

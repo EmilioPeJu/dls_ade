@@ -46,7 +46,8 @@ def main():
 
     print("Branches of " + args.module_name + ":\n")
 
-    repo = server.temp_clone(source)
+    vcs = server.temp_clone(source)
+    repo = vcs.repo
 
     branches = vcs_git.list_remote_branches(repo)
     for branch in branches:

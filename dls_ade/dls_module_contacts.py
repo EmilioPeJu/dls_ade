@@ -333,7 +333,8 @@ def main():
         print_out = []
         for module in modules:
             source = server.dev_module_path(module, args.area)
-            repo = server.temp_clone(source)
+            vcs = server.temp_clone(source)
+            repo = vcs.repo
 
             # Retrieve contact info
             contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
