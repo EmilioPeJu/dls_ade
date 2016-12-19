@@ -28,9 +28,10 @@ class IsServerRepoTest(unittest.TestCase):
 class NotImplementedTest(unittest.TestCase):
 
     def test_area_path_raises(self):
+        server = GitServer("test@url.ac.uk", "test@url.ac.uk")
 
         with self.assertRaises(NotImplementedError):
-            GitServer.dev_area_path()
+            server.dev_area_path()
 
     def test_get_clone_path_raises(self):
 

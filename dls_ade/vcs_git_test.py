@@ -145,18 +145,15 @@ class InitRepoTest(unittest.TestCase):
         self.mock_is_dir.assert_called_once_with("fake_path")
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_is_dir_true_but_is_local_repo_root_also_true_then_exception_raised_with_correct_message(self):
+    @patch('git.Repo')
+    def test_given_repo_exists_then_return_it(self, repo_mock):
 
         self.mock_is_dir.return_value = True
         self.mock_is_local_repo_root.return_value = True
 
-        comp_message = "Path {path:s} is already a git repository".format(path="non_repo_path")
+        vcs_git.init_repo("existing_path")
 
-        with self.assertRaises(vcs_git.VCSGitError) as e:
-            vcs_git.init_repo("non_repo_path")
-
-        self.mock_is_dir.assert_called_once_with("non_repo_path")
-        self.assertEqual(str(e.exception), comp_message)
+        repo_mock.assert_called_once_with("existing_path")
 
     def test_given_both_tests_pass_then_repo_initialised_correctly(self):
 

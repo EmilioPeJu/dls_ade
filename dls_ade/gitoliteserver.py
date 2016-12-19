@@ -4,9 +4,9 @@ import tempfile
 import subprocess
 
 from dls_ade.gitserver import GitServer
+from dls_ade import path_functions as pathf
 from dls_ade.vcs_git import git
 
-GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 
@@ -65,8 +65,7 @@ class GitoliteServer(GitServer):
         finally:
             shutil.rmtree(temp_dir)
 
-    @staticmethod
-    def dev_area_path(area="support"):
+    def dev_area_path(self, area="support"):
         """
         Return the full server path for the given area.
 
@@ -77,7 +76,7 @@ class GitoliteServer(GitServer):
             str: The full server path for the given area.
 
         """
-        return os.path.join(GIT_ROOT_DIR, area)
+        return os.path.join(self.GIT_ROOT_DIR, area)
 
     @staticmethod
     def get_clone_path(path):

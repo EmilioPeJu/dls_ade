@@ -37,19 +37,20 @@ class GitServer(object):
 
         raise NotImplementedError("Must be implemented in child classes")
 
-    def create_new_local_repo(self, module, area, base_repo):
+    def create_new_local_repo(self, module, area, path):
         """
         Create a new Git instance from a git.Repo instance
 
         Args:
             module(str): Name of module
             area(str): Area of module
-            base_repo(git.Repo): Repo instance
+            path(str): Path to repo
 
         Returns:
             Git repo instance
-        """
 
+        """
+        base_repo = git.Repo(path)
         return Git(module, area, self, base_repo)
 
     def clone(self, server_repo_path, local_repo_path):
@@ -162,8 +163,7 @@ class GitServer(object):
 
         raise NotImplementedError("Must be implemented in child classes")
 
-    @staticmethod
-    def dev_area_path(area="support"):
+    def dev_area_path(self, area="support"):
         """
         Return the full server path for the given area.
 

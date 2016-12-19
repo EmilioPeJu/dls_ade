@@ -371,7 +371,8 @@ def main():
 
         print("Cloning " + module + " from " + args.area + " area...")
         source = server.dev_module_path(module, args.area)
-        repo = server.temp_clone(source)
+        vcs = server.temp_clone(source)
+        repo = vcs.repo
 
         edit_summary = edit_contact_info(repo, contact, cc,)
 

@@ -57,15 +57,11 @@ class ModuleCreator(object):
         self._module_path = module_path
         self._module_name = os.path.basename(os.path.normpath(
                                              self._module_path))
-        server = Server()
+        self.server = Server()
 
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
-        self._server_repo_path = server.dev_module_path(self._module_path,
-                                                        self._area)
-
-        base_repo = git.Repo(self.abs_module_path)
-        self.repo = server.create_new_local_repo(
-            self._module_name, self._area, base_repo)
+        self._server_repo_path = self.server.dev_module_path(self._module_path,
+                                                             self._area)
 
         template_args = {'module_name': self._module_name,
                          'module_path': self._module_path,
@@ -100,7 +96,7 @@ class ModuleCreator(object):
         if self._remote_repo_valid:
             return
 
-        if self.repo.parent.is_server_repo(self._server_repo_path):
+        if self.server.is_server_repo(self._server_repo_path):
             err_message = ("The path {dir:s} already exists on gitolite,"
                            " cannot continue")
             raise VerificationError(
@@ -260,8 +256,9 @@ class ModuleCreator(object):
         self._can_push_repo_to_remote = False
         self._remote_repo_valid = False
 
-        self.repo.add_new_remote_and_push(self._server_repo_path,
-                                          self.abs_module_path)
+        vcs = self.server.create_new_local_repo(self._module_name, self._area,
+                                                self.abs_module_path)
+        vcs.add_new_remote_and_push(self._server_repo_path)
 
 
 class ModuleCreatorWithApps(ModuleCreator):
@@ -346,7 +343,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         if self._remote_repo_valid:
             return
 
-        if not self.repo.parent.is_server_repo(self._server_repo_path):
+        if not self.server.is_server_repo(self._server_repo_path):
             err_message = ("The path {path:s} does not exist on gitolite, so "
                            "cannot clone from it")
             err_message = err_message.format(path=self._server_repo_path)
@@ -388,7 +385,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
                 function calls.
         """
 
-        if not self.repo.parent.is_server_repo(remote_repo_path):
+        if not self.server.is_server_repo(remote_repo_path):
             # This should never get raised!
             err_message = ("Remote repo {repo:s} does not exist. Cannot "
                            "clone to determine if there is an app_name "
@@ -400,7 +397,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         temp_dir = ""
         exists = False
         try:
-            repo = self.repo.parent.temp_clone(remote_repo_path)
+            repo = self.server.temp_clone(remote_repo_path).repo
             temp_dir = repo.working_tree_dir
 
             if os.path.exists(os.path.join(temp_dir, self._app_name + "App")):
@@ -436,7 +433,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         print("Cloning module to " + self._module_path)
 
-        new_git = self.repo.parent.clone(self._server_repo_path, self.abs_module_path)
+        vcs = self.server.clone(self._server_repo_path, self.abs_module_path)
 
         os.chdir(self.abs_module_path)
         self._module_template.create_files()
@@ -446,8 +443,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             app_name=self._app_name
         ))
 
-        vcs_git.stage_all_files_and_commit(new_git.client,
-                                           commit_message)
+        vcs_git.stage_all_files_and_commit(vcs.repo, commit_message)
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server using remote 'origin'.
@@ -466,4 +462,6 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         self._can_push_repo_to_remote = False
 
-        self.repo.push_to_remote(self.abs_module_path)
+        vcs = self.server.create_new_local_repo(self._module_name, self._area,
+                                                self.abs_module_path)
+        vcs.push_to_remote()

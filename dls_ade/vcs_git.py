@@ -79,8 +79,7 @@ def init_repo(path="./"):
         raise VCSGitError("Path {path:s} is not a directory".format(path=path))
 
     if is_local_repo_root(path):
-        err_message = "Path {path:s} is already a git repository"
-        raise VCSGitError(err_message.format(path=path))
+        return git.Repo(path)
 
     print("Initialising repo...")
     repo = git.Repo.init(path)

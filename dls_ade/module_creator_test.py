@@ -349,6 +349,10 @@ class ModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         self.mock_add_new_remote_and_push = set_up_mock(self, 'dls_ade.module_creator.vcs_git.Git.add_new_remote_and_push')
 
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", MagicMock())
+        self.server_mock = MagicMock()
+        self.vcs_mock = MagicMock()
+        self.server_mock.create_new_local_repo.return_value = self.vcs_mock
+        self.nmc_obj.server = self.server_mock
 
     def test_given_verify_can_push_repo_to_remote_passes_then_flag_set_false_and_add_new_remote_and_push_called(self):
 
@@ -356,7 +360,10 @@ class ModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-        self.mock_add_new_remote_and_push.assert_called_with(self.nmc_obj._server_repo_path, self.nmc_obj.abs_module_path)
+        self.server_mock.create_new_local_repo.assert_called_once_with(
+            "test_module", "test_area", self.nmc_obj.abs_module_path)
+        self.vcs_mock.add_new_remote_and_push.assert_called_with(
+            self.nmc_obj._server_repo_path)
 
     def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
@@ -468,13 +475,14 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
         self.mock_repo = MagicMock()
         self.mock_repo2 = MagicMock()
-        self.mock_repo2.working_tree_dir = "tempdir"
+        self.mock_repo2.repo.working_tree_dir = "tempdir"
         self.mock_repo.parent = self.mock_server
         self.mock_server.return_value.create_new_local_repo.return_value = self.mock_repo
         self.mock_server.temp_clone.return_value = self.mock_repo2
 
         self.nmc_obj = mc.ModuleCreatorAddAppToModule(
             "test_module", "test_area", MagicMock(), app_name="test_app")
+        self.nmc_obj.server = self.mock_server
 
     def tearDown(self):
         self.mock_server.reset_mock()
@@ -516,7 +524,7 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
 
     def test_given_app_does_not_exist_then_return_value_is_false(self):
 
-        self.mock_repo.parent.is_server_repo.return_value = True
+        self.mock_server.is_server_repo.return_value = True
         self.mock_exists.return_value = False
 
         exists = self.nmc_obj._check_if_remote_repo_has_app("test_repo_path")
@@ -580,7 +588,7 @@ class ModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-        self.mock_push_to_remote.assert_called_with(self.nmc_obj.abs_module_path)
+        self.mock_push_to_remote.assert_called_with()
 
     def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
@@ -606,7 +614,9 @@ class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
             self.mock_repo = MagicMock()
             self.mock_server_inst = MagicMock()
-            self.mock_server.return_value.create_new_local_repo.return_value = self.mock_repo
+            self.mock_server_inst.create_new_local_repo.return_value = \
+                self.mock_repo
+            self.mock_server.return_value = self.mock_server_inst
             self.mock_module_template_cls = MagicMock()
             self.mock_module_template = MagicMock()
             self.mock_module_template_cls.return_value = self.mock_module_template
@@ -625,12 +635,13 @@ class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
 
         call_list = [call(self.nmc_obj.abs_module_path), call(self.nmc_obj._cwd)]
 
-        self.mock_repo.parent.clone.assert_called_once_with(
+        self.mock_server_inst.clone.assert_called_once_with(
             self.nmc_obj._server_repo_path, self.nmc_obj.abs_module_path)
         self.mock_chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(
-            self.mock_repo.parent.clone.return_value.client, expected_commit_message)
+            self.mock_server_inst.clone.return_value.repo,
+            expected_commit_message)
 
     def test_given_verify_can_create_local_module_fails_then_exception_raised_with_correct_message(self):
 

@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import logging
 from dls_ade import vcs_git
+from dls_ade import Server
 from nose.tools import assert_equal, assert_true, assert_false
 import unittest
 
@@ -14,7 +15,7 @@ NEW_GIT_ROOT_DIR = "controlstest/targetOS/mock_repo"
 settings_list = [
 
     {
-        'description': "checkout_a_single_module",
+        'description': "test_checkout_a_single_module",
 
         'arguments': "-p dls_testpythonmod",
 
@@ -27,7 +28,7 @@ settings_list = [
     },
 
     {
-        'description': "checkout_a_single_module_and_change_branch",
+        'description': "test_checkout_a_single_module_and_change_branch",
 
         'arguments': "-p dls_testpythonmod -b bug-fix",
 
@@ -71,16 +72,14 @@ class MultiCheckoutTest(unittest.TestCase):
         os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
 
         # Set so SystemTest object can use the new variable.
-        st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
+        st.Server.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
     def tearDown(self):
         """Change environment variable and module variables to the original values.
 
         """
         os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
-        st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
+        st.Server.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
 
     def test_checkout_entire_area(self):
 
@@ -114,7 +113,7 @@ class MultiCheckoutTest(unittest.TestCase):
         # Check modules have been cloned correctly
         for path in modules:
             repo = path.split('/', 2)[-1]
-            clone = vcs_git.temp_clone(path)
+            clone = Server().temp_clone(path).repo
             comp_repo = clone.working_tree_dir
 
             assert_true(st.check_if_repos_equal(repo, comp_repo))
@@ -154,7 +153,7 @@ class MultiCheckoutTest(unittest.TestCase):
         # Check modules have been cloned correctly
         for path in modules:
             repo = path.split('/', 2)[-1]
-            clone = vcs_git.temp_clone(path)
+            clone = Server().temp_clone(path).repo
             comp_repo = clone.working_tree_dir
 
             assert_true(st.check_if_repos_equal(repo, comp_repo))

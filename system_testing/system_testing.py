@@ -81,7 +81,7 @@ def get_local_temp_clone(server_repo_path):
 
     server = Server()
 
-    repo = server.temp_clone(server_repo_path)
+    repo = server.temp_clone(server_repo_path).repo
 
     tempdir = repo.working_tree_dir
 
@@ -364,7 +364,8 @@ class SystemTest(object):
         logging.debug("'Default' server repo path: " +
                       self._default_server_repo_path)
 
-        temp_repo = self.server.temp_clone(self._default_server_repo_path)
+        vcs = self.server.temp_clone(self._default_server_repo_path)
+        temp_repo = vcs.repo
         vcs_git.delete_remote(temp_repo, "origin")
 
         if self.server.is_server_repo(self._server_repo_path):
@@ -375,7 +376,7 @@ class SystemTest(object):
             temp_repo.git.push("origin", temp_repo.active_branch, "-f")
 
         else:
-            temp_repo.add_new_remote_and_push(self._server_repo_path)
+            vcs.add_new_remote_and_push(self._server_repo_path)
 
     def call_script(self):
         """Call the script and store output, error and return code.
@@ -550,7 +551,7 @@ class SystemTest(object):
             VCSGitError: From vcs_git.temp_clone()
         """
         logging.debug("Cloning the server repository to temporary directory.")
-        repo = self.server.temp_clone(self._server_repo_path)
+        repo = self.server.temp_clone(self._server_repo_path).repo
 
         if self._branch_name:
             vcs_git.checkout_remote_branch(self._branch_name, repo)
