@@ -7,15 +7,7 @@ from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, call
 
-
-# p = patch('dls_ade.Server')
-# server_mock = MagicMock()
-# m = p.start()
-# m.return_value = server_mock
 import dls_ade.module_creator as mc
-# p.stop()
-
-mc.git.Repo = MagicMock()
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -582,13 +574,16 @@ class ModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
 
         self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
-    def test_given_verify_can_push_repo_to_remote_passes_then_flag_set_false_and_add_new_remote_and_push_called(self):
+    @patch('dls_ade.module_creator.Server.create_new_local_repo')
+    def test_given_verify_can_push_repo_to_remote_passes_then_flag_set_false_and_add_new_remote_and_push_called(self, create_mock):
 
         self.nmc_obj.push_repo_to_remote()
 
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
-        self.mock_push_to_remote.assert_called_with()
+        create_mock.assert_called_once_with("test_module", "test_area",
+                                            self.nmc_obj.abs_module_path)
+        create_mock.return_value.push_to_remote.assert_called_with()
 
     def test_given_verify_can_push_repo_to_remote_fails_then_exception_raised_with_correct_message(self):
 
