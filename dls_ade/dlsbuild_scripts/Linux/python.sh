@@ -127,9 +127,12 @@ build_log=${_build_name}.log
                 $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
             fi
         fi
-    } 4>&1 1>&3 2>&4 |
-    tee $error_log
-} >$build_log 3>&1
+        # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
+        # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
+    } 2>&1 1>&3 | tee $error_log  # copy STDERR to error log
+    # Redirect '1' (STDOUT) of tee (STDERR from above) to build log
+    # Redirect '3' (saved STDOUT from above) to build log
+} 1>$build_log 3>&1  # redirect STDOUT and STDERR to build log
 
 if (( $(cat ${_build_name}.sta) != 0 )) ; then
     ReportFailure $error_log
