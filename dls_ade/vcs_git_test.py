@@ -372,8 +372,8 @@ class PushToRemoteTest(unittest.TestCase):
     def setUp(self):
 
         self.patch_is_local_repo_root = patch('dls_ade.vcs_git.is_local_repo_root')
-        self.patch_create_remote_repo = patch('dls_ade.gitoliteserver.GitoliteServer.create_remote_repo')
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_create_remote_repo = patch('dls_ade.Server.create_remote_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.patch_git = patch('dls_ade.vcs_git.git')
 
         self.addCleanup(self.patch_is_local_repo_root.stop)
@@ -872,7 +872,7 @@ class GitCatTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from', return_value=vcs_git.git.Repo)  # @UndefinedVariable
     def setUp(self, mclone):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
@@ -946,7 +946,7 @@ class GitListReleasesTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def setUp(self, mclone):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
@@ -986,7 +986,7 @@ class GitSetLogMessageTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def setUp(self, mclone):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
@@ -1009,7 +1009,7 @@ class GitCheckVersionTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def setUp(self, mclone):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
@@ -1042,7 +1042,7 @@ class ApiInterrogateTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def setUp(self, _2):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
@@ -1080,7 +1080,7 @@ class GitSettersTest(unittest.TestCase):
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
     def setUp(self, mclone):
 
-        self.patch_is_server_repo = patch('dls_ade.gitserver.GitServer.is_server_repo')
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
         self.addCleanup(self.patch_is_server_repo.stop)
         self.mock_is_server_repo = self.patch_is_server_repo.start()
 
