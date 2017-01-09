@@ -34,6 +34,8 @@ ReportFailure()
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 OS_VERSION=$(lsb_release -sr | cut -d. -f1)
+# Ensure CA Repeater is running (will close itself if already running)
+caRepeater &
 
 case "$OS_VERSION" in
     [45])
