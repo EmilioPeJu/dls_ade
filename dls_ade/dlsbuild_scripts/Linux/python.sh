@@ -111,18 +111,19 @@ esac
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log
+status_log=${_build_name}.sta
 {
     {
         make clean && make
-        echo $? >${_build_name}.sta
+        echo $? >$status_log
 
         # This is a bit of a hack to only install in production builds
-        if  [[ "$build_dir" =~ "/prod/" && "$(cat ${_build_name}.sta)" == "0" ]] ; then
+        if  [[ "$build_dir" =~ "/prod/" && "$(cat $status_log)" == "0" ]] ; then
             make install
-            echo $? >${_build_name}.sta
+            echo $? >$status_log
 
             # If successful, run make-defaults
-            if (( ! $(cat ${_build_name}.sta) )) ; then
+            if (( ! $(cat $status_log) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
                 $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
             fi
@@ -134,7 +135,7 @@ build_log=${_build_name}.log
     # Redirect '3' (saved STDOUT from above) to build log
 } 1>$build_log 3>&1  # redirect STDOUT and STDERR to build log
 
-if (( $(cat ${_build_name}.sta) != 0 )) ; then
+if (( $(cat $status_log) != 0 )) ; then
     ReportFailure $error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
     cat $error_log | mail -s "Build Errors: $_area $_module $_version"         $_email
