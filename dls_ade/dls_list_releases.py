@@ -109,9 +109,8 @@ def main():
         source = server.dev_module_path(args.module_name, args.area)
 
         vcs = server.temp_clone(source)
-        repo = vcs.repo
-        releases = vcs_git.list_module_releases(repo)
-        shutil.rmtree(repo.working_tree_dir)
+        releases = vcs_git.list_module_releases(vcs.repo)
+        shutil.rmtree(vcs.repo.working_tree_dir)
 
     else:
         # List branches from prod

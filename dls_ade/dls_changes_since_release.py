@@ -47,8 +47,7 @@ def main():
 
     if server.is_server_repo(source):
         vcs = server.temp_clone(source)
-        repo = vcs.repo
-        releases = vcs_git.list_module_releases(repo)
+        releases = vcs_git.list_module_releases(vcs.repo)
 
         if releases:
             last_release_num = releases[-1]
@@ -61,7 +60,8 @@ def main():
 
     # Get a single log between last release and HEAD
     # If there is one, then changes have been made
-    logs = list(repo.iter_commits(last_release_num + "..HEAD", max_count=1))
+    logs = list(vcs.repo.iter_commits(last_release_num + "..HEAD",
+                                      max_count=1))
     if logs:
         print("Changes have been made to " + module +
               " since release " + last_release_num)
@@ -69,7 +69,7 @@ def main():
         print("No changes have been made to " + module +
               " since most recent release " + last_release_num)
 
-    shutil.rmtree(repo.working_tree_dir)
+    shutil.rmtree(vcs.repo.working_tree_dir)
 
 
 if __name__ == "__main__":

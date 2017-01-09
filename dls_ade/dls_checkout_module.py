@@ -97,13 +97,12 @@ def main():
     else:
         print("Checking out " + module + " from " + args.area + " area...")
         vcs = server.clone(source, module)
-        repo = vcs.repo
 
         if args.branch:
             # Get branches list
-            branches = vcs_git.list_remote_branches(repo)
+            branches = vcs_git.list_remote_branches(vcs.repo)
             if args.branch in branches:
-                vcs_git.checkout_remote_branch(args.branch, repo)
+                vcs_git.checkout_remote_branch(args.branch, vcs.repo)
             else:
                 # Invalid branch name, print branches list and exit
                 print("Branch '" + args.branch + "' does not exist in " +

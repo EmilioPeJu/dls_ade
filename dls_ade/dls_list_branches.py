@@ -47,14 +47,13 @@ def main():
     print("Branches of " + args.module_name + ":\n")
 
     vcs = server.temp_clone(source)
-    repo = vcs.repo
 
-    branches = vcs_git.list_remote_branches(repo)
+    branches = vcs_git.list_remote_branches(vcs.repo)
     for branch in branches:
         print(branch)
     print("")
 
-    shutil.rmtree(repo.working_tree_dir)
+    shutil.rmtree(vcs.repo.working_tree_dir)
 
 
 if __name__ == "__main__":

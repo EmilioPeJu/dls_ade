@@ -333,11 +333,12 @@ def main():
         for module in modules:
             source = server.dev_module_path(module, args.area)
             vcs = server.temp_clone(source)
-            repo = vcs.repo
 
             # Retrieve contact info
-            contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-            cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+            contact = vcs.repo.git.check_attr(
+                "module-contact", ".").split(' ')[-1]
+            cc_contact = vcs.repo.git.check_attr(
+                "module-cc", ".").split(' ')[-1]
 
             if args.csv:
                 print_out.append(output_csv_format(
@@ -346,7 +347,7 @@ def main():
                 print_out.append("Contact: " + contact +
                                  " (CC: " + cc_contact + ")")
 
-            shutil.rmtree(repo.working_tree_dir)
+            shutil.rmtree(vcs.repo.working_tree_dir)
 
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")

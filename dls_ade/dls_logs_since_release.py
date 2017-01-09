@@ -563,8 +563,7 @@ def main():
 
     if server.is_server_repo(source):
         vcs = server.temp_clone(source)
-        repo = vcs.repo
-        releases = vcs_git.list_module_releases(repo)
+        releases = vcs_git.list_module_releases(vcs.repo)
         logging.debug(releases)
     else:
         raise Exception("Module " + args.module_name +
@@ -579,7 +578,7 @@ def main():
     # Create log info from log messages
     # log_info is a dictionary in the form {logs(list), commit_objects(dict),
     # max_author_length(int)}
-    log_info = get_log_messages(repo)
+    log_info = get_log_messages(vcs.repo)
 
     if len(releases) > 0:
 
@@ -589,7 +588,7 @@ def main():
             tag_start = start
 
         # Append tag info to log info from tag messages
-        tags = get_tags_list(repo, tag_start, end, releases[-1])
+        tags = get_tags_list(vcs.repo, tag_start, end, releases[-1])
         log_info = get_tag_messages(tags, log_info)
 
     # Check if there are any logs, exit if not
@@ -618,7 +617,7 @@ def main():
         if log.endswith(release_marker.format(start)):
             break
 
-    shutil.rmtree(repo.working_tree_dir)
+    shutil.rmtree(vcs.repo.working_tree_dir)
 
 
 if __name__ == "__main__":
