@@ -153,7 +153,8 @@ class GetModuleCreatorTestIOC(GetModuleCreatorTest):
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/01", fullname=False)
 
         self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
-        self.mock_is_server_repo.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_server_repo.assert_called_once_with(
+            "controlstest/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
     @patch('dls_ade.Server.dev_module_path', return_value="controlstest/ioc/test/module")
@@ -164,7 +165,8 @@ class GetModuleCreatorTestIOC(GetModuleCreatorTest):
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=False)
 
         self.assertEqual(new_ioc_creator, "ModuleCreatorAddApp")
-        self.mock_is_server_repo.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_server_repo.assert_called_once_with(
+            "controlstest/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
 
