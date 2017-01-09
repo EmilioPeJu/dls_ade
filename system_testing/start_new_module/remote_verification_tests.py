@@ -11,7 +11,7 @@ settings_list = [
 
         'exception_type': "dls_ade.exceptions.VerificationError",
 
-        'exception_string': "The path controlstest/support/testsupportmod already exists on gitolite, cannot continue",
+        'exception_string': "The path controlstest/support/testsupportmod already exists on server, cannot continue",
     },
 
     {

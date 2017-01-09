@@ -427,7 +427,7 @@ class PushToRemoteTest(unittest.TestCase):
         mock_repo = self.StubGitRepo(branches_list, remotes_list, MagicMock(), "test_remote", "ssh://GIT_FAKE_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
-        comp_message = "Remote repository URL {remoteURL:s} does not begin with the gitolite server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
+        comp_message = "Remote repository URL {remoteURL:s} does not begin with the parent server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
@@ -1065,7 +1065,7 @@ class ApiInterrogateTest(unittest.TestCase):
 
         self.assertEqual(self.vcs.module, self.vcs._module)
 
-    def test_when_calling_source_repo_then_return_url_of_gitolite_repo(self):
+    def test_when_calling_source_repo_then_return_url_of_repo(self):
 
         expected_source_repo = 'ssh://GIT_SSH_ROOT/'
         expected_source_repo += 'controlstest/'+self.area+'/'+self.module

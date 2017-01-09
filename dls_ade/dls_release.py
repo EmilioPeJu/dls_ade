@@ -11,7 +11,7 @@ anyway. The local build only flag will just run a test build and say whether it
 was successful or not. The message flag will add to the default commit message
 for the release. The next-version flag will set the version as the minimal
 increment of the previous release. The git flag will create the release from
-the gitolite server
+the server
 """
 
 import sys

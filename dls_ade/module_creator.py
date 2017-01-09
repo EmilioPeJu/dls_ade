@@ -97,7 +97,7 @@ class ModuleCreator(object):
             return
 
         if self.server.is_server_repo(self._server_repo_path):
-            err_message = ("The path {dir:s} already exists on gitolite,"
+            err_message = ("The path {dir:s} already exists on server,"
                            " cannot continue")
             raise VerificationError(
                 err_message.format(dir=self._server_repo_path)
@@ -344,7 +344,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
             return
 
         if not self.server.is_server_repo(self._server_repo_path):
-            err_message = ("The path {path:s} does not exist on gitolite, so "
+            err_message = ("The path {path:s} does not exist on server, so "
                            "cannot clone from it")
             err_message = err_message.format(path=self._server_repo_path)
             raise VerificationError(err_message)
@@ -368,7 +368,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
         """Checks if the remote repository contains an app_nameApp folder.
 
         This checks whether or not there is already a folder with the name
-        "app_nameApp" on the remote repository with the given gitolite
+        "app_nameApp" on the remote repository with the given server
         repository path.
 
         Sets the `_remote_repo_valid` boolean value to True if there are no
@@ -379,7 +379,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         Raises:
             :class:`~dls_ade.exceptions.RemoteRepoError`: If given repo path \
-                does not exist on gitolite.
+                does not exist on server.
                 This should never be raised. There is a bug if it is!
             :class:`~dls_ade.exceptions.VCSGitError`: Issue with the vcs_git \
                 function calls.

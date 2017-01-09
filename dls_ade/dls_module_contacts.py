@@ -312,8 +312,7 @@ def main():
 
     server = Server()
 
-    # Create the list of modules from args, or the gitolite server if none
-    # provided
+    # Create the list of modules from args, or the server if none provided
     modules = []
     if args.modules:
         for module in args.modules:

@@ -389,8 +389,8 @@ class Git(BaseVCS):
         Note:
             If the local repository does not have the given remote name
             defined,
-            use :func:`add_new_remote_and_push` and give the gitolite server
-            repository path.
+            use :func:`add_new_remote_and_push` and give the server repository
+            path.
 
         Raises:
             :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with
@@ -410,7 +410,7 @@ class Git(BaseVCS):
 
         if not remote.url.startswith(self.parent.url):
             err_message = ("Remote repository URL {remoteURL:s} does not "
-                           "begin with the gitolite server path")
+                           "begin with the parent server path")
             raise VCSGitError(err_message.format(remoteURL=remote.url))
 
         # Removes initial GIT_SSH_ROOT (with slash at end)
@@ -427,7 +427,7 @@ class Git(BaseVCS):
     def add_new_remote_and_push(self, dest, remote_name="origin",
                                 branch_name="master"):
         """
-        Adds a remote to a git repository, and pushes to the gitolite server.
+        Adds a remote to a git repository, and pushes to the server.
 
         This will fail if:
             - The path given is not a git repository.

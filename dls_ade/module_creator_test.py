@@ -80,7 +80,8 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
         server_repo_path = self.nmc_obj._server_repo_path
 
         self.mock_is_server_repo.return_value = True
-        comp_message = "The path {dir:s} already exists on gitolite, cannot continue".format(dir=server_repo_path)
+        comp_message = "The path {dir:s} already exists on server, cannot " \
+                       "continue".format(dir=server_repo_path)
 
         with self.assertRaises(mc.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
@@ -427,7 +428,8 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.mock_is_server_repo.return_value = False
         self.nmc_obj._server_repo_path = "notinrepo"
 
-        comp_message = "The path {path:s} does not exist on gitolite, so cannot clone from it".format(path="notinrepo")
+        comp_message = "The path {path:s} does not exist on server, so " \
+                       "cannot clone from it".format(path="notinrepo")
 
         with self.assertRaises(mc.VerificationError) as e:
             self.nmc_obj.verify_remote_repo()
