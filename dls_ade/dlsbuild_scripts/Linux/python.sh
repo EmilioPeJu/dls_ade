@@ -34,6 +34,9 @@ ReportFailure()
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 OS_VERSION=$(lsb_release -sr | cut -d. -f1)
+# Ensure CA Repeater is running (will close itself if already running)
+EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
+EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 case "$OS_VERSION" in
     [45])
@@ -111,27 +114,31 @@ esac
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log
+status_log=${_build_name}.sta
 {
     {
         make clean && make
-        echo $? >${_build_name}.sta
+        echo $? >$status_log
 
         # This is a bit of a hack to only install in production builds
-        if  [[ "$build_dir" =~ "/prod/" && "$(cat ${_build_name}.sta)" == "0" ]] ; then
+        if  [[ "$build_dir" =~ "/prod/" && "$(cat $status_log)" == "0" ]] ; then
             make install
-            echo $? >${_build_name}.sta
+            echo $? >$status_log
 
             # If successful, run make-defaults
-            if (( ! $(cat ${_build_name}.sta) )) ; then
+            if (( ! $(cat $status_log) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
                 $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
             fi
         fi
-    } 4>&1 1>&3 2>&4 |
-    tee $error_log
-} >$build_log 3>&1
+        # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
+        # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
+    } 2>&1 1>&3 | tee $error_log  # copy STDERR to error log
+    # Redirect '1' (STDOUT) of tee (STDERR from above) to build log
+    # Redirect '3' (saved STDOUT from above) to build log
+} 1>$build_log 3>&1  # redirect STDOUT and STDERR to build log
 
-if (( $(cat ${_build_name}.sta) != 0 )) ; then
+if (( $(cat $status_log) != 0 )) ; then
     ReportFailure $error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
     cat $error_log | mail -s "Build Errors: $_area $_module $_version"         $_email
