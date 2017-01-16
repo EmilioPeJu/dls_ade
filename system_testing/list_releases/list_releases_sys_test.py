@@ -5,9 +5,9 @@ latest_release = "The latest release for dls_testpythonmod2 in the repository is
 no_git_release = "testB06/TS: No releases made in git\n"
 module_does_not_exist = "Repository does not contain controlstest/python/testpythonmod"
 no_prod_release = "dummy2: No releases made for R3.14.12.3\n"
-prod_releases_list = "Previous releases for dummy in prod:\n0-3\n0-5\n0-6\n0-7\n0-8\n"
-python_prod_releases_list = "Previous releases for dls_pilatus in prod:\n1-0\n1-1\n"
-latest_prod_release = "The latest release for dummy in prod is: 0-8\n"
+prod_releases_list = "Previous releases for dummy in prod:\n0-3\n0-5\n0-6\n0-7\n0-8\n0-8-6\n"
+python_prod_releases_list = "Previous releases for dls_pilatus in prod:\n1-0\n1-1\n1-2\n"
+latest_prod_release = "The latest release for dummy in prod is: 0-8-6\n"
 e_release_list = "Previous releases for symbols in prod:\n1-9\n1-10\n"
 e_latest_release = "The latest release for symbols in prod is: 1-10\n"
 
@@ -45,7 +45,7 @@ settings_list = [
 
         'arguments': "-p testpythonmod -g",
 
-        'exception_type': "dls_ade.exceptions.VCSGitError",
+        'exception_type': "ValueError",
 
         'exception_string': module_does_not_exist,
 

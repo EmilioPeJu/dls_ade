@@ -1,29 +1,30 @@
 #!/bin/env dls-python
+
 """
 Release a module with a specified release version from the repository.
-This script will do a test build of the module, and if it succeeds, will create the release in git.
-It will then write a build request file to the build server,
-causing it to schedule a checkout and build of the git release in prod.
-The branch flag will create the release from a branch of the module instead of master.
-The no-test-build flag will skip the test build and release the module anyway.
-The local build only flag will just run a test build and say whether it was successful or not.
-The message flag will add to the default commit message for the release.
-The next-version flag will set the version as the minimal increment of the previous release.
-The git flag will create the release from the gitolite server
+This script will do a test build of the module, and if it succeeds, will create
+the release in git. It will then write a build request file to the build
+server, causing it to schedule a checkout and build of the git release in prod.
+The branch flag will create the release from a branch of the module instead of
+master. The no-test-build flag will skip the test build and release the module
+anyway. The local build only flag will just run a test build and say whether it
+was successful or not. The message flag will add to the default commit message
+for the release. The next-version flag will set the version as the minimal
+increment of the previous release. The git flag will create the release from
+the server
 """
-
-from pkg_resources import require
-require('python-ldap')
 
 import sys
 import re
 import logging
-from dls_ade import vcs_git
+
+from dls_ade import Server
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
+import dls_ade.path_functions as pathf
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
@@ -90,16 +91,19 @@ def make_parser():
         "-m", "--message", action="store", type=str, dest="message",
         default="",
         help="Add user message to the end of the default commit message. "
-        "The message will be <module_name>: Released version <release>. <message>")
+        "The message will be <module_name>: Released version <release>."
+        "<message>")
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
 
     title = "Build operating system arguments"
-    desc = "Note: The following arguments are mutually exclusive - only use one"
+    desc = "Note: The following arguments are mutually exclusive - only use" \
+           "one"
 
-    desc_group = parser.add_argument_group(title=title, description=desc)  # Can only add description to group, so have
-    group = desc_group.add_mutually_exclusive_group()                      # to nest inside ordinary group
+    # Can only add description to group, so have to nest inside ordinary group
+    desc_group = parser.add_argument_group(title=title, description=desc)
+    group = desc_group.add_mutually_exclusive_group()
 
     group.add_argument(
         "-r", "--rhel_version", action="store", type=str,
@@ -124,13 +128,15 @@ def make_parser():
 
 def create_build_object(args):
     """
-    Uses parsed arguments to select appropriate build architecture, default is local system os
+    Uses parsed arguments to select appropriate build architecture, default is
+    local system os
 
     Args:
         args(:class:`argparse.Namespace`): Parser arguments
 
     Returns:
-        :class:`~dls_ade.dlsbuild.Builder`: Either a Windows or RedHat build object
+        :class:`~dls_ade.dlsbuild.Builder`: Either a Windows or RedHat build
+            object
 
     """
     if args.rhel_version:
@@ -163,7 +169,8 @@ def check_parsed_arguments_valid(args,  parser):
         :class:`dls_ade.exceptions.VCSGitError`:
             * Module name not specified
             * Module version not specified
-            * Cannot release etc/build or etc/redirector as modules - use configure system instead
+            * Cannot release etc/build or etc/redirector as modules - use
+                configure system instead
             * When git is specified, version number must be provided
             * <args.area> area not supported by git
 
@@ -186,7 +193,8 @@ def check_parsed_arguments_valid(args,  parser):
 
 def format_argument_version(arg_version):
     """
-    Replaces '.' with '-' throughout arg_version to match formatting requirements for log message
+    Replaces '.' with '-' throughout arg_version to match formatting
+    requirements for log message
 
     Args:
         arg_version(str): Version tag to be formatted
@@ -216,7 +224,8 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            print("Last release for {module} was {last_release}".format(module=module, last_release=last_release))
+            print("Last release for {module} was {last_release}".format(
+                module=module, last_release=last_release))
     return version
 
 
@@ -265,7 +274,8 @@ def construct_info_message(module, branch, area, version, build_object):
         branch(str): Branch to be released
         area(str): Area of module
         version(str): Release version
-        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a Windows or RedHat build object
+        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a Windows or
+            RedHat build object
 
     Returns:
         str: Info message for user
@@ -276,7 +286,8 @@ def construct_info_message(module, branch, area, version, build_object):
         btext = "branch {}".format(branch)
     else:
         btext = "trunk"
-    info += ('Releasing {module} {version} from {btext}, '.format(module=module, version=version, btext=btext))
+    info += ('Releasing {module} {version} from {btext}, '.format(
+        module=module, version=version, btext=btext))
     info += ('using {} build server'.format(build_object.get_server()))
     if area in ("ioc", "support"):
         info += (' and epics {}'.format(build_object.epics()))
@@ -285,7 +296,8 @@ def construct_info_message(module, branch, area, version, build_object):
 
 def check_epics_version_consistent(module_epics, option_epics, build_epics):
     """
-    Checks if epics version is consistent between release and environment, allows user to force build if not consistent
+    Checks if epics version is consistent between release and environment,
+    allows user to force build if not consistent
 
     Args:
         module_epics(str): Epics version of previous release
@@ -347,12 +359,14 @@ def perform_test_build(build_object, local_build, vcs):
     Test build the module and return whether it was successful
 
     Args:
-        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a windows or RedHat builder instance
+        build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a windows or
+            RedHat builder instance
         local_build(bool): Specifier to perform test build only
         vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
 
     Returns:
-        str, bool: Message explaining how the test build went, True or False for whether it failed or not
+        str, bool: Message explaining how the test build went, True or False
+            for whether it failed or not
 
     """
     message = ''
@@ -382,7 +396,10 @@ def main():
     module = args.module_name
 
     build = create_build_object(args)
-    vcs = vcs_git.Git(module, args)
+
+    server = Server()
+    source = server.dev_module_path(module, args.area)
+    vcs = server.temp_clone(source)
 
     if args.branch:
         vcs.set_branch(args.branch)
@@ -393,14 +410,16 @@ def main():
     else:
         version = format_argument_version(args.release)
 
-    commit_msg = log_mess.format(module=module, version=version, message=args.message)
+    commit_msg = log_mess.format(module=module, version=version,
+                                 message=args.message)
 
     if not vcs.check_version_exists(version) and not args.test_only:
         vcs.release_version(version, commit_msg)
 
     vcs.set_version(version)
 
-    print(construct_info_message(module, args.branch, args.area, version, build))
+    print(construct_info_message(module, args.branch, args.area, version,
+                                 build))
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)

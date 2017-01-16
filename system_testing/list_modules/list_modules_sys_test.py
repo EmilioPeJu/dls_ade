@@ -57,8 +57,7 @@ def setup_module():
     os.environ['GIT_ROOT_DIR'] = NEW_GIT_ROOT_DIR
 
     # Set so SystemTest object can use the new variable.
-    st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
-    st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
+    st.Server.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
 def teardown_module():
@@ -66,8 +65,7 @@ def teardown_module():
 
     """
     os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
-    st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
-    st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
+    st.Server.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
 
 
 def test_generator():

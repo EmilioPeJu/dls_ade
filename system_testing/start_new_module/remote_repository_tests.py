@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import start_new_module_util as snm_util
+from dls_ade import Server
 
 COMPARISON_FILES = snm_util.COMPARISON_FILES
 
@@ -297,8 +298,7 @@ def setup_module():
         f.write(test_number)
 
     # Set so SystemTest object can use the new variable.
-    st.vcs_git.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
-    st.vcs_git.pathf.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
+    st.Server.GIT_ROOT_DIR = NEW_GIT_ROOT_DIR
 
 
 def test_generator_export_to_server():
@@ -418,7 +418,7 @@ def alter_settings_dictionaries(simplified_settings_list):
         )
 
         # Create the full server repo path from the given simplified version.
-        settings_dict['server_repo_path'] = st.vcs_git.pathf.dev_module_path(
+        settings_dict['server_repo_path'] = Server().dev_module_path(
             path,
             settings_dict['module_area'],
         )
@@ -429,5 +429,4 @@ def teardown_module():
 
     """
     os.environ['GIT_ROOT_DIR'] = ORIGINAL_GIT_ROOT_DIR
-    st.vcs_git.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
-    st.vcs_git.pathf.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR
+    st.Server.GIT_ROOT_DIR = ORIGINAL_GIT_ROOT_DIR

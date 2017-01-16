@@ -1,12 +1,12 @@
 from __future__ import print_function
 from dls_ade import path_functions as pathf
 import logging
-from dls_ade import vcs_git
+from dls_ade import Server
 from dls_ade import module_template as mt
 from dls_ade import module_creator as mc
 from dls_ade.exceptions import ParsingError
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def get_module_creator(module_name, area="support", fullname=False):
@@ -160,9 +160,10 @@ def get_module_creator_ioc(module_name, fullname=False):
         # 'module' to refer to the repo, but be aware that start_new_module and
         # module_creator don't have to actually create new modules (repos)
         # on the server in this instance.
+        server = Server()
         module_path = domain + "/" + technical_area
-        server_repo_path = pathf.dev_module_path(module_path, area)
-        if vcs_git.is_server_repo(server_repo_path):
+        server_repo_path = server.dev_module_path(module_path, area)
+        if server.is_server_repo(server_repo_path):
             # Adding new App to old style "domain/tech_area" module that
             # already exists on the remote server.
             return mc.ModuleCreatorAddAppToModule(module_path, area,

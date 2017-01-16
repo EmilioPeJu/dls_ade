@@ -6,9 +6,10 @@ List the branches of a module on the repository.
 
 import sys
 import shutil
+
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
-from dls_ade import vcs_git
+from dls_ade import vcs_git, Server
 
 usage = """
 Default <area> is 'support'.
@@ -39,18 +40,20 @@ def main():
 
     pathf.check_technical_area(args.area, args.module_name)
 
-    source = pathf.dev_module_path(args.module_name, args.area)
+    server = Server()
+
+    source = server.dev_module_path(args.module_name, args.area)
 
     print("Branches of " + args.module_name + ":\n")
 
-    repo = vcs_git.temp_clone(source)
+    vcs = server.temp_clone(source)
 
-    branches = vcs_git.list_remote_branches(repo)
+    branches = vcs_git.list_remote_branches(vcs.repo)
     for branch in branches:
         print(branch)
     print("")
 
-    shutil.rmtree(repo.working_tree_dir)
+    shutil.rmtree(vcs.repo.working_tree_dir)
 
 
 if __name__ == "__main__":

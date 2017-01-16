@@ -15,8 +15,10 @@ ENVIRONMENT_CORRECT = False
 
 try:
     from dls_ade import vcs_git
+    from dls_ade import Server
 except ImportError:
     vcs_git = None
+    Server = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
 
 
@@ -77,7 +79,9 @@ def get_local_temp_clone(server_repo_path):
     """
     logging.debug("Cloning server repo path: " + server_repo_path)
 
-    repo = vcs_git.temp_clone(server_repo_path)
+    server = Server()
+
+    repo = server.temp_clone(server_repo_path).repo
 
     tempdir = repo.working_tree_dir
 
@@ -222,6 +226,8 @@ class SystemTest(object):
     def __init__(self, script, description):
         check_environment()
 
+        self.server = Server()
+
         self._script = script
         self.description = description
 
@@ -358,19 +364,19 @@ class SystemTest(object):
         logging.debug("'Default' server repo path: " +
                       self._default_server_repo_path)
 
-        temp_repo = vcs_git.temp_clone(self._default_server_repo_path)
-        vcs_git.delete_remote(temp_repo.working_tree_dir, "origin")
+        vcs = self.server.temp_clone(self._default_server_repo_path)
+        temp_repo = vcs.repo
+        vcs_git.delete_remote(temp_repo, "origin")
 
-        if vcs_git.is_server_repo(self._server_repo_path):
+        if self.server.is_server_repo(self._server_repo_path):
             temp_repo.create_remote(
                     "origin",
-                    os.path.join(vcs_git.GIT_SSH_ROOT, self._server_repo_path)
+                    os.path.join(self.server.url, self._server_repo_path)
             )
             temp_repo.git.push("origin", temp_repo.active_branch, "-f")
 
         else:
-            vcs_git.add_new_remote_and_push(self._server_repo_path,
-                                            temp_repo.working_tree_dir)
+            vcs.add_new_remote_and_push(self._server_repo_path)
 
     def call_script(self):
         """Call the script and store output, error and return code.
@@ -534,7 +540,7 @@ class SystemTest(object):
 
         """
         logging.debug("Checking server repo path given exists.")
-        assert_true(vcs_git.is_server_repo(self._server_repo_path))
+        assert_true(self.server.is_server_repo(self._server_repo_path))
 
     def clone_server_repo(self):
         """Clone the server_repo_path to a temp dir and return the path.
@@ -545,7 +551,7 @@ class SystemTest(object):
             VCSGitError: From vcs_git.temp_clone()
         """
         logging.debug("Cloning the server repository to temporary directory.")
-        repo = vcs_git.temp_clone(self._server_repo_path)
+        repo = self.server.temp_clone(self._server_repo_path).repo
 
         if self._branch_name:
             vcs_git.checkout_remote_branch(self._branch_name, repo)
@@ -582,7 +588,7 @@ class SystemTest(object):
                       "correct.")
 
         current_active_branch = vcs_git.get_active_branch(
-                self._local_repo_path)
+            vcs_git.init_repo(self._local_repo_path))
 
         logging.debug("Actual branch: " + current_active_branch)
         assert_equal(self._branch_name, current_active_branch)
@@ -607,7 +613,7 @@ class SystemTest(object):
         if self._server_repo_clone_path:
             logging.debug("Testing server clone's attributes.")
             return_value = vcs_git.check_git_attributes(
-                    self._server_repo_clone_path,
+                    vcs_git.init_repo(self._server_repo_clone_path),
                     self._attributes_dict
             )
             assert_true(return_value)
@@ -615,8 +621,9 @@ class SystemTest(object):
         if self._local_repo_path:
             logging.debug("Testing local repo's attributes.")
 
-            return_value = vcs_git.check_git_attributes(self._local_repo_path,
-                                                        self._attributes_dict)
+            return_value = vcs_git.check_git_attributes(
+                vcs_git.init_repo(self._local_repo_path),
+                self._attributes_dict)
             assert_true(return_value)
 
     def run_comparison_tests(self):

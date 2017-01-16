@@ -27,7 +27,7 @@ class GetModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.git_root_dir = get_mc.vcs_git.GIT_ROOT_DIR
+        self.git_root_dir = get_mc.Server.GIT_ROOT_DIR
 
         self.mock_nmc_base = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator')
         self.mock_nmc_base.return_value = "ModuleCreatorBase"
@@ -50,7 +50,7 @@ class GetModuleCreatorTest(unittest.TestCase):
         for cls in mt_classes_to_patch:
             self.mt_mocks[cls] = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate' + cls)
 
-        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.vcs_git.is_server_repo')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.Server.is_server_repo')
 
         # self.mocks['CreatorTools'].return_value = "Example"
 
@@ -145,24 +145,28 @@ class GetModuleCreatorTestIOC(GetModuleCreatorTest):
         self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
-    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_module_creator_with_apps_returned_with_correct_args_used(self):
+    @patch('dls_ade.Server.dev_module_path', return_value="controlstest/ioc/test/module")
+    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_module_creator_with_apps_returned_with_correct_args_used(self, _):
 
         self.mock_is_server_repo.return_value = False
 
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/01", fullname=False)
 
         self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
-        self.mock_is_server_repo.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_server_repo.assert_called_once_with(
+            "controlstest/ioc/test/module")
         self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-01")
 
-    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_module_creator_add_to_module_returned_with_correct_args_used(self):
+    @patch('dls_ade.Server.dev_module_path', return_value="controlstest/ioc/test/module")
+    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_module_creator_add_to_module_returned_with_correct_args_used(self, _):
 
         self.mock_is_server_repo.return_value = True
 
         new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=False)
 
         self.assertEqual(new_ioc_creator, "ModuleCreatorAddApp")
-        self.mock_is_server_repo.assert_called_once_with(self.git_root_dir+"/ioc/test/module")
+        self.mock_is_server_repo.assert_called_once_with(
+            "controlstest/ioc/test/module")
         self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc", self.mt_mocks['IOC'], app_name="test-module-IOC-02")
 
 

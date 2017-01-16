@@ -1,9 +1,10 @@
-import system_testing as st
 import unittest
 import subprocess
 from pkg_resources import require
 require("mock")
 from mock import patch, ANY, MagicMock, PropertyMock  # @UnresolvedImport
+
+import system_testing as st
 
 
 def setup_module(self):
@@ -20,17 +21,17 @@ def set_up_mock(test_case_obj, mock_path):
 
 class GetLocalTempCloneTest(unittest.TestCase):
 
-    @patch('system_testing.vcs_git.temp_clone')
-    def test_given_server_repo_path_then_repo_cloned_correctly(self, mock_temp_clone):
-
+    @patch('system_testing.Server')
+    def test_given_server_repo_path_then_repo_cloned_correctly(self,
+                                                               server_mock):
         mock_repo = MagicMock(working_tree_dir="test_working_tree_dir")
-
-        mock_temp_clone.return_value = mock_repo
+        mock_vcs = MagicMock(repo=mock_repo)
+        server_mock.return_value.temp_clone.return_value = mock_vcs
 
         return_value = st.get_local_temp_clone("test_repo_path")
 
-        mock_temp_clone.assert_called_once_with("test_repo_path")
-
+        server_mock.return_value.temp_clone.assert_called_once_with(
+            "test_repo_path")
         self.assertEqual(return_value, "test_working_tree_dir")
 
 
@@ -159,6 +160,9 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
     def setUp(self):
 
         self.mock_vcs_git = set_up_mock(self, 'system_testing.vcs_git')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.Server.is_server_repo')
+        self.mock_clone = set_up_mock(self, 'dls_ade.Server.temp_clone')
+        st.Server.url = "ssh://GIT_SSH_ROOT"
 
         self.st_obj = st.SystemTest("test_script", "test_name")
 
@@ -168,7 +172,7 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
 
         self.st_obj.set_server_repo_to_default()
 
-        self.assertFalse(self.mock_vcs_git.temp_clone.called)
+        self.assertFalse(self.mock_clone.called)
 
     def test_given_default_server_repo_path_but_no_server_repo_path_then_function_raises_exception_with_correct_message(self):
 
@@ -181,13 +185,13 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
 
         self.assertTrue(all(x in str(e.exception) for x in ["default_server_repo_path"]))
 
-        self.assertFalse(self.mock_vcs_git.temp_clone.called)
+        self.assertFalse(self.mock_clone.called)
 
     def test_given_both_paths_and_server_repo_does_not_already_exist_then_vcs_git_functions_called_correctly(self):
 
         mock_temp_repo = MagicMock(working_tree_dir="tempdir")
-        self.mock_vcs_git.temp_clone.return_value = mock_temp_repo
-        self.mock_vcs_git.is_server_repo.return_value = False
+        self.mock_clone.return_value = mock_temp_repo
+        self.mock_is_server_repo.return_value = False
 
         self.st_obj.load_settings({
             'default_server_repo_path': "path/to/default",
@@ -196,29 +200,34 @@ class SystemTestSetServerRepoToDefaultTest(unittest.TestCase):
 
         self.st_obj.set_server_repo_to_default()
 
-        self.mock_vcs_git.temp_clone.assert_called_once_with("path/to/default")
-        self.mock_vcs_git.delete_remote.assert_called_once_with("tempdir", "origin")
-        self.mock_vcs_git.add_new_remote_and_push.assert_called_once_with("path/to/new", "tempdir")
+        self.mock_clone.assert_called_once_with("path/to/default")
+        self.mock_vcs_git.delete_remote.assert_called_once_with(
+            mock_temp_repo.repo, "origin")
+        mock_temp_repo.add_new_remote_and_push.assert_called_once_with("path/to/new")
 
     def test_given_both_paths_and_server_repo_already_exists_then_vcs_git_functions_called_correctly(self):
 
-        mock_temp_repo = MagicMock(working_tree_dir="tempdir", active_branch="test_branch")
-        self.mock_vcs_git.temp_clone.return_value = mock_temp_repo
-        self.mock_vcs_git.is_server_repo.return_value = True
-        self.mock_vcs_git.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT"
+        mock_temp_repo = MagicMock(working_tree_dir="tempdir",
+                                   active_branch="test_branch")
+        self.mock_clone.return_value.repo = mock_temp_repo
+        self.mock_is_server_repo.return_value = True
 
         self.st_obj.load_settings({
             'default_server_repo_path': "path/to/default",
             'server_repo_path': "path/to/altered",
         })
+        self.st_obj.server.url = "ssh://GIT_SSH_ROOT/"
 
         self.st_obj.set_server_repo_to_default()
 
-        self.mock_vcs_git.temp_clone.assert_called_once_with("path/to/default")
-        self.mock_vcs_git.delete_remote.assert_called_once_with("tempdir", "origin")
+        self.mock_clone.assert_called_once_with("path/to/default")
+        self.mock_vcs_git.delete_remote.assert_called_once_with(mock_temp_repo,
+                                                                "origin")
 
-        mock_temp_repo.create_remote.assert_called_once_with("origin", "ssh://GIT_SSH_ROOT/path/to/altered")
-        mock_temp_repo.git.push.assert_called_once_with("origin", "test_branch", "-f")
+        mock_temp_repo.create_remote.assert_called_once_with(
+            "origin", "ssh://GIT_SSH_ROOT/path/to/altered")
+        mock_temp_repo.git.push.assert_called_once_with("origin",
+                                                        "test_branch", "-f")
 
 
 class SystemTestCallScriptTest(unittest.TestCase):
@@ -526,7 +535,7 @@ class SystemTestCheckRemoteRepoExists(unittest.TestCase):
         self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
-    @patch('system_testing.vcs_git.is_server_repo', return_value=False)
+    @patch('dls_ade.Server.is_server_repo', return_value=False)
     def test_given_is_server_repo_false_then_assert_failed(self, mock_is_server_repo):
 
         with self.assertRaises(AssertionError):
@@ -534,7 +543,7 @@ class SystemTestCheckRemoteRepoExists(unittest.TestCase):
 
         mock_is_server_repo.assert_called_once_with("test_repo_path")
 
-    @patch('system_testing.vcs_git.is_server_repo', return_value=True)
+    @patch('dls_ade.Server.is_server_repo', return_value=True)
     def test_given_is_server_repo_true_then_no_assertion_failed(self, mock_is_server_repo):
 
         self.st_obj.check_remote_repo_exists()
@@ -546,45 +555,43 @@ class SystemTestCloneServerRepoTest(unittest.TestCase):
 
     def setUp(self):
         self.repo_mock = MagicMock(working_tree_dir='root/dir/of/repo')
+        self.server_mock = MagicMock()
+        self.server_mock.temp_clone.return_value.repo = self.repo_mock
 
-        self.mock_temp_clone = set_up_mock(self, 'system_testing.vcs_git.temp_clone')
-        self.mock_temp_clone.return_value = self.repo_mock
-
+        self.st_obj = st.SystemTest("test_script", "test_name")
+        self.st_obj.server = self.server_mock
         self.mock_checkout_remote_branch = set_up_mock(self, 'system_testing.vcs_git.checkout_remote_branch')
 
     def test_given_function_called_then_server_clone_path_set_to_working_tree_dir_of_repo(self):
 
-        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj.clone_server_repo()
 
-        self.mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.st_obj.server.temp_clone.assert_called_once_with("test_repo_path")
         self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
 
     def test_given_function_called_with_no_branch_set_then_checkout_remote_branch_not_called(self):
 
-        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj._branch_name = ""
 
         self.st_obj.clone_server_repo()
 
-        self.mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.st_obj.server.temp_clone.assert_called_once_with("test_repo_path")
         self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
         self.assertFalse(self.mock_checkout_remote_branch.called)
 
     def test_given_function_called_with_branch_set_then_checkout_remote_branch_called(self):
 
-        self.st_obj = st.SystemTest("test_script", "test_name")
         self.st_obj._server_repo_path = "test_repo_path"
 
         self.st_obj._branch_name = "test_branch_name"
 
         self.st_obj.clone_server_repo()
 
-        self.mock_temp_clone.assert_called_once_with("test_repo_path")
+        self.st_obj.server.temp_clone.assert_called_once_with("test_repo_path")
         self.assertEqual(self.st_obj._server_repo_clone_path, "root/dir/of/repo")
         self.mock_checkout_remote_branch.assert_called_once_with("test_branch_name", self.repo_mock)
 
@@ -614,7 +621,8 @@ class SystemTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 
         self.assertFalse(self.mock_get_active_branch.called)
 
-    def test_given_repository_branch_is_different_than_expected_then_assertion_error_raised(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_repository_branch_is_different_than_expected_then_assertion_error_raised(self, mock_init):
 
         self.st_obj._branch_name = "test_branch"
         self.mock_get_active_branch.return_value = "other_branch"
@@ -623,9 +631,11 @@ class SystemTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.st_obj.check_local_repo_active_branch()
 
-        self.mock_get_active_branch.assert_called_once_with("test_lrp")
+        self.mock_get_active_branch.assert_called_once_with(
+            mock_init.return_value)
 
-    def test_given_repository_branch_is_the_same_as_expected_then_test_passes(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_repository_branch_is_the_same_as_expected_then_test_passes(self, mock_init):
 
         self.st_obj._branch_name = "test_branch"
         self.mock_get_active_branch.return_value = "test_branch"
@@ -633,7 +643,8 @@ class SystemTestCheckLocalRepoActiveBranchTest(unittest.TestCase):
 
         self.st_obj.check_local_repo_active_branch()
 
-        self.mock_get_active_branch.assert_called_once_with("test_lrp")
+        self.mock_get_active_branch.assert_called_once_with(
+            mock_init.return_value)
 
 
 class SystemTestRunGitAttributesTest(unittest.TestCase):
@@ -653,6 +664,7 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
 
         self.assertFalse(self.mock_check_git_attributes.called)
 
+
     def test_given_neither_path_is_defined_but_attributes_dict_is_defined_then_exception_raised_with_correct_message(self):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
@@ -664,7 +676,8 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
 
         self.assertEqual(str(e.exception), comp_message)
 
-    def test_given_server_repo_clone_path_has_attributes_then_assertion_passed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_server_repo_clone_path_has_attributes_then_assertion_passed(self, mock_init):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._server_repo_clone_path = "test_srcp"
@@ -672,9 +685,11 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
 
         self.st_obj.run_git_attributes_tests()
 
-        self.mock_check_git_attributes.assert_called_once_with("test_srcp", {'test': "attribute"})
+        self.mock_check_git_attributes.assert_called_once_with(
+            mock_init.return_value, {'test': "attribute"})
 
-    def test_given_server_repo_clone_path_has_no_attributes_then_assertion_failed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_server_repo_clone_path_has_no_attributes_then_assertion_failed(self, mock_init):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._server_repo_clone_path = "test_srcp"
@@ -683,9 +698,11 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.st_obj.run_git_attributes_tests()
 
-        self.mock_check_git_attributes.assert_called_once_with("test_srcp", {'test': "attribute"})
+        self.mock_check_git_attributes.assert_called_once_with(
+            mock_init.return_value, {'test': "attribute"})
 
-    def test_given_local_repo_clone_path_has_attributes_then_assertion_passed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_local_repo_clone_path_has_attributes_then_assertion_passed(self, mock_init):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._local_repo_path = "test_lrp"
@@ -693,9 +710,11 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
 
         self.st_obj.run_git_attributes_tests()
 
-        self.mock_check_git_attributes.assert_called_once_with("test_lrp", {'test': "attribute"})
+        self.mock_check_git_attributes.assert_called_once_with(
+            mock_init.return_value, {'test': "attribute"})
 
-    def test_given_local_repo_clone_path_has_no_attributes_then_assertion_failed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_local_repo_clone_path_has_no_attributes_then_assertion_failed(self, mock_init):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._local_repo_path = "test_lrp"
@@ -704,9 +723,11 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.st_obj.run_git_attributes_tests()
 
-        self.mock_check_git_attributes.assert_called_once_with("test_lrp", {'test': "attribute"})
+        self.mock_check_git_attributes.assert_called_once_with(
+        mock_init.return_value, {'test': "attribute"})
 
-    def test_given_both_paths_have_attributes_then_assertion_passed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_both_paths_have_attributes_then_assertion_passed(self, _):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._local_repo_path = "test_lrp"
@@ -717,7 +738,8 @@ class SystemTestRunGitAttributesTest(unittest.TestCase):
 
         self.assertEqual(self.mock_check_git_attributes.call_count, 2)
 
-    def test_given_both_paths_do_not_have_attributes_then_assertion_failed(self):
+    @patch('dls_ade.vcs_git.init_repo')
+    def test_given_both_paths_do_not_have_attributes_then_assertion_failed(self, _):
 
         self.st_obj._attributes_dict = {'test': "attribute"}
         self.st_obj._local_repo_path = "test_lrp"

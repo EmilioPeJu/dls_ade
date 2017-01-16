@@ -1,27 +1,29 @@
 #!/bin/env dls-python
 # This script comes from the dls_scripts python module
+
 """
-Check or set the contact information for a module on the repository. By default the contacts of the module are printed
-in a basic format. The CSV flag will print the contacts in CSV format.
-To set a contact and/or cc, the contact and cc flags can be used.
-To set a contact/cc for one or many modules the import flag can be used with a valid CSV file.
-If one contact is changed the other will be left as it was.
+Check or set the contact information for a module on the repository. By default
+the contacts of the module are printed in a basic format. The CSV flag will
+print the contacts in CSV format. To set a contact and/or cc, the contact and
+cc flags can be used. To set a contact/cc for one or many modules the import
+flag can be used with a valid CSV file. If one contact is changed the other
+will be left as it was.
 """
 
-from __future__ import print_function
 import os
 import sys
 import shutil
 import logging
 import csv
-from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
-from dls_ade import vcs_git
 from pkg_resources import require
 require("python_ldap>=2.3.12")
 import ldap
 
-logging.basicConfig(level=logging.DEBUG)
+from dls_ade.argument_parser import ArgParser
+from dls_ade import path_functions as pathf
+from dls_ade import Server
+
+# logging.basicConfig(level=logging.DEBUG)
 
 usage = """
 Default <area> is 'support'.
@@ -65,21 +67,24 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
-    # nargs='*' makes <modules> an optional positional argument; a list of N entries
+    # nargs='*' makes <modules> an optional positional argument; a list of N
+    # entries
     parser.add_argument(
-        "modules", nargs='*', type=str, default=None, help="Name(s) of module(s) to list/set contacts for")
+        "modules", nargs='*', type=str, default=None,
+        help="Name(s) of module(s) to list/set contacts for")
     parser.add_argument(
-        "-c", "--contact", action="store", type=str, metavar="FED_ID", dest="contact",
-        help="Set the contact property to FED_ID")
+        "-c", "--contact", action="store", type=str, metavar="FED_ID",
+        dest="contact", help="Set the contact property to FED_ID")
     parser.add_argument(
         "-d", "--cc", action="store", type=str, metavar="FED_ID", dest="cc",
         help="Set the cc property to FED_ID")
     parser.add_argument(
-        "-s", "--csv", action="store_true", dest="csv", help="Print output as csv file")
+        "-s", "--csv", action="store_true", dest="csv",
+        help="Print output as csv file")
     parser.add_argument(
-        "-m", "--import", action="store", type=str, metavar="CSV_FILE", dest="imp",
-        help="Import a CSV_FILE with header and rows of format:" +
-             "\nModule, Contact, Contact Name, CC, CC Name")
+        "-m", "--import", action="store", type=str, metavar="CSV_FILE",
+        dest="imp", help="Import a CSV_FILE with header and rows of format:" +
+                         "\nModule, Contact, Contact Name, CC, CC Name")
 
     return parser
 
@@ -98,8 +103,8 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
     Raises:
         :class:`argparse.ArgumentParser` error:
             * --import cannot be used with --contact or --cc
-            * You cannot set all modules in an area to one contact/cc, enter a specific module.
-
+            * You cannot set all modules in an area to one contact/cc, enter a
+                specific module.
     """
 
     if imp and (contact or cc):
@@ -107,36 +112,16 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
 
     # Stop user from setting all modules in an area to one contact/cc
     if not modules and (contact or cc):
-        parser.error("You cannot set all modules in an area to one contact/cc, enter a specific module.")
+        parser.error("You cannot set all modules in an area to one contact/cc,"
+                     " enter a specific module.")
         # Just in case parser.error doesn't stop the script
         return 1
 
 
-def get_area_module_list(area):
-    """
-    Get list of modules in a specified area of the repository.
-
-    Args:
-        area(str): Area of repository
-
-    Returns:
-        list of str: List of modules
-
-    """
-
-    repo_list = vcs_git.get_server_repo_list()
-
-    modules = []
-    for path in repo_list:
-        if area in path and path.split('/')[-1] not in modules:
-            modules.append(path.split('/')[-1])
-
-    return modules
-
-
 def lookup_contact_name(fed_id):
     """
-    Perform an LDAP search to find the Name and Surname corresponding to a FED-ID.
+    Perform an LDAP search to find the Name and Surname corresponding to a
+    FED-ID.
 
     Args:
         fed_id(str): FED-ID to search for
@@ -157,21 +142,25 @@ def lookup_contact_name(fed_id):
     # The lookup can hang at l.result() if the FED-ID does not exist.
     print("Performing search for " + fed_id + "...")
     l.simple_bind_s()
-    ldap_result_id = l.search(basedn, search_scope, search_filter, search_attribute)
+    ldap_result_id = l.search(basedn, search_scope, search_filter,
+                              search_attribute)
     ldap_output = l.result(ldap_result_id, 0)
     logging.debug(ldap_output)
-    # ldap_output has the form: (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
-    #                                   {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
+    # ldap_output has the form:
+    # (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
+    # {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
 
     if ldap_output[0] == 115:
         # If the FED-ID does not exist, ldap_output will look like:
-        # (115, [(None, ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
+        # (115, [(None,
+        # ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
         raise Exception(fed_id + " is not an existing contact")
 
     # Extract contact name from output
     name_info_dict = ldap_output[1][0][1]
     # name_info_dict: {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
-    contact_name = name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
+    contact_name = \
+        name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
 
     return contact_name
 
@@ -187,9 +176,10 @@ def output_csv_format(contact, cc_contact, module):
 
     Returns:
         str: Formatted output
-
     """
-    # Check if <FED-ID>s are specified in repo, if not don't run lookup function
+
+    # Check if <FED-ID>s are specified in repo, if not don't run lookup
+    # function
     if contact != 'unspecified':
         contact_name = lookup_contact_name(contact)
     else:
@@ -239,7 +229,8 @@ def import_from_csv(modules, area, imp):
                 module = row[0].strip()
                 contact = row[1].strip()
             else:
-                raise Exception("Module {} has no corresponding contact in CSV file".format(row[0]))
+                raise Exception("Module {} has no corresponding contact in"
+                                " CSV file".format(row[0]))
 
             if len(row) > 3:
                 cc = row[3].strip()
@@ -247,9 +238,11 @@ def import_from_csv(modules, area, imp):
                 cc = ""
 
             if module not in modules:
-                raise Exception("Module {module} not in {area} area".format(module=module, area=area))
+                raise Exception("Module {module} not in {area} area".format(
+                    module=module, area=area))
             if module in [x[0] for x in contacts]:
-                raise Exception("Module {} defined twice in CSV file".format(module))
+                raise Exception("Module {} defined twice in"
+                                " CSV file".format(module))
 
             contacts.append((module, contact, cc))
 
@@ -293,7 +286,8 @@ def edit_contact_info(repo, contact='', cc=''):
 
     module = repo.working_tree_dir.split('/')[-1]
 
-    with open(os.path.join(repo.working_tree_dir, '.gitattributes'), 'w') as git_attr_file:
+    with open(os.path.join(
+            repo.working_tree_dir, '.gitattributes'), 'w') as git_attr_file:
 
         commit_message = ''
         if contact:
@@ -313,35 +307,47 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc, parser)
+    check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc,
+                                 parser)
 
-    # Create the list of modules from args, or the gitolite server if none provided
+    server = Server()
+
+    # Create the list of modules from args, or the server if none provided
     modules = []
     if args.modules:
         for module in args.modules:
             modules.append(module)
     else:
-        for module in get_area_module_list(args.area):
-            modules.append(module)
+        repo_list = server.get_server_repo_list()
 
-    # If no contacts or csv file provided to edit, default script operation: print contacts
+        modules = []
+        for path in repo_list:
+            if args.area in path and path.split('/')[-1] not in modules:
+                modules.append(path.split('/')[-1])
+
+    # If no contacts or csv file provided to edit, use default script
+    # operation: print contacts
     if not (args.contact or args.cc or args.imp):
 
         print_out = []
         for module in modules:
-            source = pathf.dev_module_path(module, args.area)
-            repo = vcs_git.temp_clone(source)
+            source = server.dev_module_path(module, args.area)
+            vcs = server.temp_clone(source)
 
             # Retrieve contact info
-            contact = repo.git.check_attr("module-contact", ".").split(' ')[-1]
-            cc_contact = repo.git.check_attr("module-cc", ".").split(' ')[-1]
+            contact = vcs.repo.git.check_attr(
+                "module-contact", ".").split(' ')[-1]
+            cc_contact = vcs.repo.git.check_attr(
+                "module-cc", ".").split(' ')[-1]
 
             if args.csv:
-                print_out.append(output_csv_format(contact, cc_contact, module))
+                print_out.append(output_csv_format(
+                    contact, cc_contact, module))
             else:
-                print_out.append("Contact: " + contact + " (CC: " + cc_contact + ")")
+                print_out.append("Contact: " + contact +
+                                 " (CC: " + cc_contact + ")")
 
-            shutil.rmtree(repo.working_tree_dir)
+            shutil.rmtree(vcs.repo.working_tree_dir)
 
         if args.csv:
             print("Module,Contact,Contact Name,CC,CC Name")
@@ -364,8 +370,9 @@ def main():
     for module, contact, cc in contacts:
 
         print("Cloning " + module + " from " + args.area + " area...")
-        source = pathf.dev_module_path(module, args.area)
-        repo = vcs_git.temp_clone(source)
+        source = server.dev_module_path(module, args.area)
+        vcs = server.temp_clone(source)
+        repo = vcs.repo
 
         edit_summary = edit_contact_info(repo, contact, cc,)
 

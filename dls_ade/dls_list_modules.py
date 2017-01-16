@@ -6,9 +6,10 @@ List the modules of an area or ioc domain on the repository
 
 from __future__ import print_function
 import sys
+
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
-from dls_ade import vcs_git
+from dls_ade import Server
 
 usage = """
 Default <area> is 'support'.
@@ -40,13 +41,13 @@ def print_module_list(source):
 
     Args:
         source(str): Suffix of URL to list from
-        area(str): Area of repository to list
-
     """
-    split_list = vcs_git.get_server_repo_list()
+    server = Server()
+    split_list = server.get_server_repo_list()
     for module_path in split_list:
         if module_path.startswith(source + '/'):
-            # Split module path by slashes twice and print what remains after that, i.e. after 'controls/<area>/'
+            # Split module path by slashes twice and print what remains
+            # after that, i.e. after 'controls/<area>/'
             print(module_path.split('/', 2)[-1])
 
 
@@ -54,13 +55,15 @@ def main():
 
     parser = make_parser()
     args = parser.parse_args()
+
+    server = Server()
     
     if args.area == "ioc" and args.domain_name:
         print("Modules in " + args.domain_name + ":\n")
-        source = pathf.dev_module_path(args.domain_name, args.area)
+        source = server.dev_module_path(args.domain_name, args.area)
     else:
         print("Modules in " + args.area + ":\n")
-        source = pathf.dev_area_path(args.area)
+        source = server.dev_area_path(args.area)
 
     print_module_list(source)
 

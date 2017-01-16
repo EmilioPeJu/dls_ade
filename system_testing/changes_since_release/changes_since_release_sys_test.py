@@ -29,7 +29,7 @@ settings_list = [
 
         'arguments': "-p testpythonmod",
 
-        'exception_type': "Exception",
+        'exception_type': "IOError",
 
         'exception_string': exception_msg,
 

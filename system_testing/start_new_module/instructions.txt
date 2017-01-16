@@ -6,5 +6,5 @@ file, which was obviously not originally present.
 The commands used to create the comparison folders using the new script can be seen in the
 local_repository_tests.py script, as here they are directly used for comparison.
 
-Note: The testB06/TS module requires the use of the gitolite server in order to create the full
+Note: The testB06/TS module requires the use of the server in order to create the full
 repository, as it tests the addition of an App to a previously existing module.
