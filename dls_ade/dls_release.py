@@ -110,7 +110,7 @@ def make_parser():
         dest="rhel_version",
         help="change the rhel version of the build. This will determine which "
         "build server your job is build on for non-epics modules. Default "
-        "is from /etc/redhat-release. Can be 6")
+        "is from /etc/redhat-release. Can be 6 or 7")
     group.add_argument(
         "-w", "--windows", action="store", dest="windows", type=str,
         help="Release the module or IOC only for the Windows version. "
