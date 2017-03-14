@@ -28,7 +28,8 @@ windows_root_dir = "W:/"
 # A list of build servers and the EPICS releases they support
 build_servers = {
     "Linux": {
-        "redhat6-x86_64" : ["R3.14.12.3"]
+        "redhat6-x86_64": ["R3.14.12.3"],
+        "redhat7-x86_64": ["R3.14.12.6"]
     },
     "Windows": {
         "windows6-x86"   : ["R3.14.12.3"],
@@ -45,6 +46,7 @@ def epics_servers(os, epics):
 
 server_shortcut = {
     "6": "redhat6-x86_64",
+    "7": "redhat7-x86_64",
     "32": "windows6-x86",
     "64": "windows6-AMD64"}
 
