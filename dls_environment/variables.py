@@ -1,1 +1,0 @@
-areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
