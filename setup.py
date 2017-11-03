@@ -35,7 +35,7 @@ setup(
     ],
     license='APACHE',
     install_requires=['GitPython==0.3.2.RC1', 'python-ldap>=2.3.12', 'six'],
-    packages=["dls_ade", "dls_environment"],
+    packages=["dls_ade"],
     package_data={"dls_ade": additional_files},
     # define console_scripts
     entry_points={'console_scripts':

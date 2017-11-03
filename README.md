@@ -25,8 +25,3 @@ Setup a virtualenv in the root of the project and install the dependencies:
   # Run the unittests with nose
   nosetests
 ```
-
-__Please note:__ currently the dls-release.py script depends on 
-["pysvn"](http://pysvn.tigris.org/project_source_code.html) which is not available as a pip install. Thus a lot of the 
-unittests will error due to missing pydev.
-
