@@ -76,6 +76,9 @@ def get_module_creator(module_name, area="support", fullname=False):
     elif area == "tools":
         return mc.ModuleCreator(module_name, area, mt.ModuleTemplateTools)
 
+    elif area == "matlab":
+        return mc.ModuleCreator(module_name, area, mt.ModuleTemplateMatlab)
+
     else:
         raise ParsingError("Don't know how to make a module of type: " + area)
 

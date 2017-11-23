@@ -452,3 +452,40 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
         message = message.format(**message_dict)
 
         print(message)
+
+
+class ModuleTemplateMatlab(ModuleTemplate):
+    """Class for the management of the creation of new Matlab modules.
+
+    For this class to work properly, the following template arguments must be\
+    specified upon initialisation:
+
+        - module_name
+        - module_path
+        - user_login
+
+    """
+
+    def __init__(self, template_args, additional_required_args=None):
+        """Initialise template args and default template files."""
+
+        required_args = ['module_name', 'module_path', 'user_login']
+
+        if additional_required_args is not None:
+            required_args += additional_required_args
+
+        super(ModuleTemplateMatlab, self).__init__(
+                template_args,
+                required_args
+        )
+
+        self._set_template_files_from_area("default")
+
+    def print_message(self):
+        message_dict = {'module_path': self._template_args['module_path']}
+
+        message = ("\nPlease add your matlab files to the {module_path:s}"
+                   "\ndirectory and commit them before releasing.")
+        message = message.format(**message_dict)
+
+        print(message)
