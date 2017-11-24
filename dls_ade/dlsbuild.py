@@ -242,7 +242,7 @@ class Builder:
         command = "/bin/env -i "
         keys = [k for k in os.environ.keys() if k.startswith("SSH")]
         for k in keys:  # Ensure SSH environment variables are passed to call
-            command += "%s=%s " % (k, os.environ[k])
+            command += "%s='%s' " % (k, os.environ[k])
         command += filename
         status = subprocess.call(command, shell=True)
 
