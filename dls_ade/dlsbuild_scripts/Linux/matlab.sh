@@ -62,9 +62,13 @@ fi
 
 cd $_version || ReportFailure "Can not cd to $_version"
 
-# Write some history (Kludging a definition of SVN_ROOT)
-SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
-   dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
+if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
+    git cat-file -p HEAD:configure/RELEASE > configure/RELEASE.vcs
+else
+    # Write some history (Kludging a definition of SVN_ROOT)
+    SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
+      dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
+fi
 
 # Build
 error_log=${_build_name}.err
