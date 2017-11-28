@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/dls-controls/dls_ade.svg)](https://travis-ci.org/dls-controls/dls_ade)
-[![Coverage Status](https://coveralls.io/repos/dls-controls/dls_ade/badge.svg?branch=new-git-scripts&service=github)](https://coveralls.io/github/dls-controls/dls_ade?branch=new-git-scripts)
-[![Code Health](https://landscape.io/github/dls-controls/dls_ade/new-git-scripts/landscape.svg?style=flat)](https://landscape.io/github/dls-controls/dls_ade/new-git-scripts)
+[![Coverage Status](https://coveralls.io/repos/github/dls-controls/dls_ade/badge.svg?branch=master)](https://coveralls.io/github/dls-controls/dls_ade?branch=master)
+[![Code Health](https://landscape.io/github/dls-controls/dls_ade/master/landscape.svg?style=flat)](https://landscape.io/github/dls-controls/dls_ade/master)
 
 # DLS Application Development Environment (ADE)
 
