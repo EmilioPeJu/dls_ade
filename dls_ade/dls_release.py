@@ -175,7 +175,7 @@ def check_parsed_arguments_valid(args,  parser):
             * <args.area> area not supported by git
 
     """
-    git_supported_areas = ['support', 'ioc', 'python', 'tools', 'targetOS']
+    git_supported_areas = ['support', 'ioc', 'python', 'matlab', 'tools', 'targetOS']
     if not args.module_name:
         parser.error("Module name not specified")
         logging.debug(args.module_name)
