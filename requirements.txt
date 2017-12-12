@@ -1,4 +1,4 @@
-GitPython>=2.1.5
+GitPython>=2.1.8
 mock>=1.0.1
 python-ldap>=2.3.12
 six>=1.6.1
