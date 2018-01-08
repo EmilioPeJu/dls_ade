@@ -6,6 +6,31 @@ from mock import patch, MagicMock  # @UnresolvedImport
 from dls_ade.gitoliteserver import GitoliteServer
 
 
+class IsServerRepoTest(unittest.TestCase):
+
+    @patch('dls_ade.gitoliteserver.subprocess.check_output',
+           return_value=
+           "hello user, this is gitolite running on git 1.7.1\n"
+           "you have access to the following repos on the server:\n"
+           "     R   W      (user)  controls/test/path")
+    def test_given_path_exists_then_return_true(self, _):
+
+        server = GitoliteServer()
+
+        self.assertTrue(server.is_server_repo("controls/test/path"))
+
+    @patch('dls_ade.gitoliteserver.subprocess.check_output',
+           return_value=
+           "hello user, this is gitolite running on git 1.7.1\n"
+           "you have access to the following repos on the server:\n"
+           "     R   W      (user)  controls/test/path")
+    def test_given_path_does_not_exist_then_return_false(self, _):
+
+        server = GitoliteServer()
+
+        self.assertFalse(server.is_server_repo("controls/test/not_a_path"))
+
+
 class GetServerRepoListTest(unittest.TestCase):
 
     @patch('subprocess.check_output')

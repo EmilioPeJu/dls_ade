@@ -139,7 +139,7 @@ class TempCloneTest(unittest.TestCase):
 
         mock_mkdtemp.assert_called_once_with(suffix="_test_module")
         mock_clone_from.assert_called_once_with(
-            "test@url.ac.uk/controls/area/test_module", "tempdir")
+            "test@url.ac.uk/controls/area/test_module", "tempdir", depth=1)
 
     @patch('dls_ade.gitserver.GitServer.get_clone_path',
            return_value="controls/ioc/domain/test_module")
@@ -156,7 +156,8 @@ class TempCloneTest(unittest.TestCase):
 
         mock_mkdtemp.assert_called_once_with(suffix="_domain_test_module")
         mock_clone_from.assert_called_once_with(
-            "test@url.ac.uk/controls/ioc/domain/test_module", "tempdir")
+            "test@url.ac.uk/controls/ioc/domain/test_module", "tempdir",
+            depth=1)
 
 
 class CloneMultiTest(unittest.TestCase):
