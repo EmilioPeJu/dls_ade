@@ -329,7 +329,12 @@ def main():
         print_out = []
         for module in modules:
             source = server.dev_module_path(module, args.area)
-            vcs = server.temp_clone(source)
+            try:
+                vcs = server.temp_clone(source)
+            except ValueError:
+                print("Module {} does not exist in {} [{}]".format(
+                    module, args.area, source))
+                continue
 
             # Retrieve contact info
             contact = vcs.repo.git.check_attr(
