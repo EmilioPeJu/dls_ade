@@ -16,15 +16,31 @@ class GitoliteServer(GitServer):
     def __init__(self):
         super(GitoliteServer, self).__init__(GIT_SSH_ROOT, GIT_SSH_ROOT)
 
-    def get_server_repo_list(self):
+    def is_server_repo(self, server_repo_path):
         """
-        Returns list of module repository paths from the git server.
+        Check if path exists on repository.
+
+        Args:
+            server_repo_path(str): Path to module to check for
 
         Returns:
-            List[str]: Repository paths on the server.
-        """
+            bool: True if path does exist False if not
 
+        """
+        check_repo_cmd = "ssh " + GIT_ROOT + " expand " + server_repo_path
+        cmd_output = subprocess.check_output(check_repo_cmd.split())
+        return server_repo_path in cmd_output
+
+    def get_server_repo_list(self, area=""):
+        """
+        Return list of module repository paths from the git server.
+
+        Returns:
+            list[str]: Repository paths on the server.
+        """
         list_cmd = "ssh " + GIT_ROOT + " expand controls"
+        if area:
+            list_cmd += "/" + area
         list_cmd_output = subprocess.check_output(list_cmd.split())
         # list_cmd_output is a heading followed by a module list in the form:
         # R   W 	(alan.greer)	controls/support/ADAndor

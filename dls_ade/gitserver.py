@@ -114,7 +114,7 @@ class GitServer(object):
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),
-                                   repo_dir)
+                                   repo_dir, depth=1)
 
         git_inst = Git(module, area, self, repo)
 

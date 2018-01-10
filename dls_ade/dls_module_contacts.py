@@ -318,12 +318,9 @@ def main():
         for module in args.modules:
             modules.append(module)
     else:
-        repo_list = server.get_server_repo_list()
-
-        modules = []
+        repo_list = server.get_server_repo_list(args.area)
         for path in repo_list:
-            if args.area in path and path.split('/')[-1] not in modules:
-                modules.append(path.split('/')[-1])
+            modules.append(path.split(args.area + "/")[-1])
 
     # If no contacts or csv file provided to edit, use default script
     # operation: print contacts
@@ -332,7 +329,12 @@ def main():
         print_out = []
         for module in modules:
             source = server.dev_module_path(module, args.area)
-            vcs = server.temp_clone(source)
+            try:
+                vcs = server.temp_clone(source)
+            except ValueError:
+                print("Module {} does not exist in {} [{}]".format(
+                    module, args.area, source))
+                continue
 
             # Retrieve contact info
             contact = vcs.repo.git.check_attr(
@@ -344,7 +346,8 @@ def main():
                 print_out.append(output_csv_format(
                     contact, cc_contact, module))
             else:
-                print_out.append("Contact: " + contact +
+                print_out.append(module +
+                                 " Contact: " + contact +
                                  " (CC: " + cc_contact + ")")
 
             shutil.rmtree(vcs.repo.working_tree_dir)
