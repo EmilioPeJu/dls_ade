@@ -84,10 +84,9 @@ fi
 # Build
 $TOOLS_BUILD/build_program -n $_build_name ${_version}
 
-if (( $(cat ${_build_name}.sta) != 0 )) ; then
-    ReportFailure $error_log
-elif (( $(stat -c%s ${_build_name}.err) != 0 )) ; then
-    cat ${_build_name}.err | mail -s "Build Errors: $_area $_module $_version" $_email
+if (( $(cat ${_version}/${_build_name}.sta) != 0 )) ; then
+    ReportFailure ${_version}/${_build_name}.log
 fi
 
 $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+
