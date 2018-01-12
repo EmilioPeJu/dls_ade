@@ -18,12 +18,13 @@ build_scripts = os.path.join(
 
 # Root directory to perform build operations.
 # For testing/development, this can be changed to redirect build scripts away
-# from the build server, e.g. a user's home directory. Just be sure that it
-# contains the expected directories (e.g. work/etc/build/queue).
-# Similarly defined for windows, as it replaces the root dir in the windows
-# builder method.
-root_dir = "/dls_sw"
-windows_root_dir = "W:/"
+# from the build server, e.g. a user's home directory. Set the environment
+# variables DLSBUILD_ROOT_DIR and/or DLSBUILD_WIN_ROOT_DIR to override the
+# default location.
+# Be sure that the root dir contains the expected directories (e.g. work/etc/build/queue).
+
+root_dir = os.getenv("DLSBUILD_ROOT_DIR", "/dls_sw")
+windows_root_dir = os.getenv("DLSBUILD_WIN_ROOT_DIR", "W:/")
 
 # A list of build servers and the EPICS releases they support
 build_servers = {
