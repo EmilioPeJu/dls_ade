@@ -3,3 +3,5 @@ mock>=1.0.1
 python-ldap==2.4.41
 six==1.10.0
 requests>=1.1.0
+nose
+requests
