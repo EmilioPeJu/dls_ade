@@ -6,8 +6,6 @@ import subprocess
 import tempfile
 import stat
 import shutil
-from pkg_resources import require
-require("python_ldap>=2.3.12")
 import ldap
 
 from dls_ade.dls_environment import environment
@@ -330,6 +328,9 @@ class ArchiveBuild(Builder):
 
 
 if __name__ == "__main__":
+    from pkg_resources import require
+    require("python_ldap>=2.3.12")
+
     # test
     bld = WindowsBuild("64")
     bld.set_area("support")
