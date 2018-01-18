@@ -84,12 +84,12 @@ set -o xtrace
 
         if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
             if [ ! -d $_version ]; then
-                git clone --depth=10 $_git_dir $_version
+                git clone --depth=100 $_git_dir $_version
                 ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )
             elif [ "$_force" == "true" ] ; then
                 rm -rf $_version
-                git clone $_git_dir $_version
-                ( cd $_version && git checkout $_version )
+                git clone --depth=100 $_git_dir $_version
+                ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )
             elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
                 ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
             fi

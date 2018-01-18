@@ -38,12 +38,12 @@ cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
-        git clone --depth=10 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
     elif [ "$_force" == "true" ] ; then
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
-        git clone $_git_dir $_version               || ReportFailure "Can not clone  $_git_dir"
-        ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
+        git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     elif (( $(git status -uno --porcelain | wc -l) != 0)) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
     fi
