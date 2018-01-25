@@ -45,12 +45,15 @@ case "$OS_VERSION" in
         PYTHON=${PREFIX}/bin/python2.6
         INSTALL_DIR=${PREFIX}/lib/python2.6/site-packages
         ;;
-    *)
+    [67])
         build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
         PREFIX=${build_dir}/${_version}/prefix
-        PYTHON=/dls_sw/prod/tools/RHEL6-x86_64/Python/2-7-3/prefix/bin/python2.7
+        PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
         INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
         TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
+        ;;
+       *)
+        ReportFailure "OS Version ${OS_VERSION} not handled"
 esac
 
 # Checkout module
