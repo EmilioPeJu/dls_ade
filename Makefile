@@ -17,6 +17,7 @@ clean:
 	-find -name '*.pyc' -exec rm {} \;
 
 install: dist
+	mkdir -p $(PREFIX)/lib/python2.7/site-packages
 	$(PYTHON) setup.py easy_install -m \
 		--record=installed.files \
 		--prefix $(PREFIX) dist/*.egg
