@@ -52,13 +52,15 @@ build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
 
+
+# If force, remove existing version directory (whether or not it exists)
+if [ "$_force" == "true" ]; then
+    rm -rf $_version || ReportFailure "Can not rm $_version"
+fi
+
 if [ ! -d $_version ]; then
     git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
     ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
-elif [ "$_force" == "true" ] ; then
-    rm -rf $_version                            || ReportFailure "Can not rm $_version"
-    git clone --depth=100 $_git_dir $_version               || ReportFailure "Can not clone  $_git_dir"
-    ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
 elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi
