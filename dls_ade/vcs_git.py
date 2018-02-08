@@ -363,14 +363,6 @@ class Git(BaseVCS):
             raise VCSGitError('version does not exist')
         self._version = version
 
-    def release_version(self, version, message=""):
-
-        self.repo.create_tag(version, message=message)
-
-        origin = self.repo.remotes.origin
-        # This is equivalent to 'git push origin <tag_name>'
-        origin.push(version)
-
     def push_to_remote(self, remote_name="origin", branch_name="master"):
         """
         Pushes to the server path given by its remote name, on the given
