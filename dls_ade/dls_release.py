@@ -17,14 +17,16 @@ the server
 import sys
 import re
 import logging
+import logconfig
 
 from dls_ade import Server
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-import dls_ade.path_functions as pathf
 
-# logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(name="dls_ade")
+logconfig.setup_logging()
+usermsg = logging.getLogger(name="usermessages")
 
 usage = """
 Default <area> is 'support'.
@@ -224,7 +226,7 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            print("Last release for {module} was {last_release}".format(
+            usermsg.info("Last release for {module} was {last_release}".format(
                 module=module, last_release=last_release))
     return version
 
@@ -388,7 +390,7 @@ def perform_test_build(build_object, local_build, vcs):
 
 
 def main():
-
+    usermsg = logging.getLogger(name="usermessages")
     parser = make_parser()
     args = parser.parse_args()
 
@@ -415,7 +417,7 @@ def main():
 
     vcs.set_version(version)
 
-    print(construct_info_message(module, args.branch, args.area, version,
+    usermsg.info(construct_info_message(module, args.branch, args.area, version,
                                  build))
 
     if args.area in ["ioc", "support"]:
@@ -429,7 +431,7 @@ def main():
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
             build, args.local_build, vcs)
-        print(test_build_message)
+        usermsg.info(test_build_message)
         if test_build_fail:
             sys.exit(1)
 
@@ -440,4 +442,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    try:
+        log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
+        main()
+    except Exception as e:
+        log.exception(e)
+        exit(1)
