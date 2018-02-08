@@ -24,8 +24,8 @@ from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
 
-log = logging.getLogger(name="dls_ade")
 logconfig.setup_logging()
+log = logging.getLogger(name="dls_ade")
 usermsg = logging.getLogger(name="usermessages")
 
 usage = """
