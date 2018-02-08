@@ -413,9 +413,6 @@ def main():
     commit_msg = log_mess.format(module=module, version=version,
                                  message=args.message)
 
-    if not vcs.check_version_exists(version) and not args.test_only:
-        vcs.release_version(version, commit_msg)
-
     vcs.set_version(version)
 
     print(construct_info_message(module, args.branch, args.area, version,
