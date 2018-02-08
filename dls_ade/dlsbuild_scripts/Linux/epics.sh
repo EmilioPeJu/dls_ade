@@ -50,19 +50,19 @@ esac
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
 
-# If force, remove existing version directory (wether or not it exists)
+# If force, remove existing version directory (whether or not it exists)
 if [ "$_force" == "true" ] ; then
     rm -rf $_module                           || ReportFailure "Could not rm $_module"
 fi
 
-# Checkout module
+# Clone module if it doesn't already exist
 if [ ! -d $_module ]; then
     git clone --depth=100 $_git_dir $_module                            || ReportFailure "Can not clone $_git_dir"
-    cd $_module                                                         || ReportFailure "Could not cd to $_module"
-    git fetch --depth=1 origin tag $_version && git checkout $_version  || ReportFailure "Could not checkout $_version"
-elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
-    ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi
+
+# Checkout module
+cd $_module                                                         || ReportFailure "Could not cd to $_module"
+git fetch --depth=1 origin tag $_version && git checkout $_version  || ReportFailure "Could not checkout $_version"
 
 # Build
 error_log=${_build_name}.err
