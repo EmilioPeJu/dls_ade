@@ -1,6 +1,4 @@
 import unittest
-from pkg_resources import require
-require("mock")
 from mock import patch, MagicMock  # @UnresolvedImport
 
 from dls_ade.bitbucketserver import BitbucketServer, BITBUCKET_SERVER_URL

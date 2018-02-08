@@ -15,8 +15,6 @@ import sys
 import shutil
 import logging
 import csv
-from pkg_resources import require
-require("python_ldap>=2.3.12")
 import ldap
 
 from dls_ade.argument_parser import ArgParser
@@ -391,4 +389,6 @@ def main():
 
 
 if __name__ == "__main__":
+    from pkg_resources import require
+    require("python_ldap>=2.3.12")
     sys.exit(main())

@@ -3,8 +3,6 @@
 from __future__ import print_function
 from dls_ade import dls_module_contacts
 import unittest
-from pkg_resources import require
-require("mock")
 from mock import patch, MagicMock, mock_open, ANY
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
