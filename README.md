@@ -14,7 +14,6 @@ Setup a virtualenv in the root of the project and install the dependencies:
   virtualenv -p /path/to/your/python2.7 venv
   source venv/bin/activate
   pip install -r requirements.txt
-  pip install sphinx nose
   
   # Setup the module in development mode
   python setup.py develop
@@ -26,7 +25,7 @@ Setup a virtualenv in the root of the project and install the dependencies:
   python setup.py build_sphinx
   
   # Optional: Run the unittests with nose
-  nosetests
+  python setup.py nosetests
 ```
 
 ## dls-release.py offline testing

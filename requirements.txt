@@ -2,6 +2,10 @@ GitPython==2.1.8
 python-ldap==2.4.41
 six==1.10.0
 
+# For docs
+sphinx>=1.6.0
+sphinx_rtd_theme
+
 # For testing
 requests>=2.13.0
 mock>=1.0.1
