@@ -120,6 +120,7 @@ build_log=${_build_name}.log
 status_log=${_build_name}.sta
 {
     {
+        mkdir -p ${INSTALL_DIR}
         make clean && make
         echo $? >$status_log
 
