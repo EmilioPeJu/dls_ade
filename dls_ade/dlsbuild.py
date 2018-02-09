@@ -7,8 +7,14 @@ import tempfile
 import stat
 import shutil
 import ldap
+import logging
 
 from dls_ade.dls_environment import environment
+
+# Optional but useful in a library or non-main module:
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger("usermessages")
 
 build_scripts = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "dlsbuild_scripts")
@@ -222,21 +228,24 @@ class Builder:
         build_dir = os.path.join(
             root_dir, "work", "etc", "build", "test", build_name)
 
-        print("Test build of module in " + build_dir)
+        usermsg.info("Test build of module in {}".format(build_dir))
 
         params = self.build_params(
             build_dir, vcs, build_name)
 
         dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/", "_"))
         filename = os.path.join(dirname, build_name+self.exten)
-        print("Got build file "+filename+" to build module in " + build_dir)
+        usermsg.info("Got build file {filename} to build module in {build_dir}"
+                     .format(filename=filename, build_dir=build_dir))
+        log.info("Local test-build parameters: {}".format(params))
         with open(filename, "w") as f:
             f.write(self.build_script(params))
 
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
-        print("Created build file " + filename + " to build module in " + build_dir)
-        print("Performing local test build...")
+        usermsg.info("Created build file {filename} to build module in {build_dir}"
+                     .format(filename=filename,build_dir=build_dir))
+        usermsg.info("Performing local test build...")
 
         command = "/bin/env -i "
         keys = [k for k in os.environ.keys() if k.startswith("SSH")]
@@ -246,9 +255,9 @@ class Builder:
         status = subprocess.call(command, shell=True)
 
         if status != 0:
-            print("Local test build failed. Results are in " + build_dir)
+            usermsg.info("Local test build failed. Results are in {}".format(build_dir))
         else:
-            print("Local test build succeeded")
+            usermsg.info("Local test build succeeded")
             shutil.rmtree(build_dir)
         return status
 
@@ -273,16 +282,17 @@ class Builder:
         filename = "%s.%s" % (params["build_name"], self.server)
 
         # Submit the build script
+        log.info("Build server job parameters: {}".format(params))
         with open(os.path.join(pathname, filename), "w") as f:
             f.write(self.build_script(params))
 
         # Create a log of the build
         with open(os.path.expanduser(os.path.join("~", ".dls-release-log")), "a") as f:
-            f.write(" ".join([
+            f.write("\t".join([
                 params["build_dir"], params["module"], params["version"],
                 params["build_name"], self.server]) + "\n")
 
-        print("Build request file: %s\nCreated in : %s" % (filename, pathname))
+        usermsg.info("Build request file: {fname}\nCreated in : {dirname}".format(fname=filename, dirname=pathname))
 
 
 class WindowsBuild(Builder):

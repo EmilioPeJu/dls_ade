@@ -23,10 +23,7 @@ from dls_ade import Server
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-
-logconfig.setup_logging()
-log = logging.getLogger(name="dls_ade")
-usermsg = logging.getLogger(name="usermessages")
+from dls_ade.exceptions import VCSGitError
 
 usage = """
 Default <area> is 'support'.
@@ -36,8 +33,6 @@ the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
 prod.
 """
-
-log_mess = "{module}: Released version {version}. {message}"
 
 
 def make_parser():
@@ -159,7 +154,7 @@ def create_build_object(args):
     return build_object
 
 
-def check_parsed_arguments_valid(args,  parser):
+def check_parsed_arguments_valid(args, parser):
     """
     Checks that incorrect arguments invoke parser errors
 
@@ -226,8 +221,8 @@ def next_version_number(releases, module=None):
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
         if module:
-            usermsg.info("Last release for {module} was {last_release}".format(
-                module=module, last_release=last_release))
+            logging.getLogger(name="usermessages").info("Last release for {module} was {last_release}"
+                                                        .format(module=module, last_release=last_release))
     return version
 
 
@@ -287,8 +282,8 @@ def construct_info_message(module, branch, area, version, build_object):
     if branch:
         btext = "branch {}".format(branch)
     else:
-        btext = "trunk"
-    info += ('Releasing {module} {version} from {btext}, '.format(
+        btext = "tag: {}".format(version)
+    info += ('{module} {version} from {btext}, '.format(
         module=module, version=version, btext=btext))
     info += ('using {} build server'.format(build_object.get_server()))
     if area in ("ioc", "support"):
@@ -389,8 +384,11 @@ def perform_test_build(build_object, local_build, vcs):
     return message, test_fail
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+
+    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
     parser = make_parser()
     args = parser.parse_args()
 
@@ -412,13 +410,12 @@ def main():
     else:
         version = format_argument_version(args.release)
 
-    commit_msg = log_mess.format(module=module, version=version,
-                                 message=args.message)
-
-    vcs.set_version(version)
-
-    usermsg.info(construct_info_message(module, args.branch, args.area, version,
-                                 build))
+    try:
+        vcs.set_version(version)
+    except VCSGitError as err:
+        log.exception(err)
+        usermsg.error("Aborting: {msg}".format(msg=err))
+        sys.exit(1)
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
@@ -426,6 +423,7 @@ def main():
             sure = check_epics_version_consistent(
                 module_epics, args.epics_version, build.epics())
             if not sure:
+                usermsg.info("Cancelling: EPICS version not consistent")
                 sys.exit(0)
 
     if not args.skip_test:
@@ -433,19 +431,34 @@ def main():
             build, args.local_build, vcs)
         usermsg.info(test_build_message)
         if test_build_fail:
+            usermsg.error("Aborting: local test build failed")
             sys.exit(1)
 
     if args.local_build:
+        usermsg.info("Done. Local test build only.")
         sys.exit(0)
 
+    msg_build_job = "test-release" if args.test_only else "Release"
+    msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(
+        buildjob=msg_build_job,
+        info_msg=construct_info_message(module, args.branch, args.area, version, build))
+    usermsg.info(msg_create_build_job)
+
     build.submit(vcs, test=args.test_only)
+    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} submitted to build server queue".format(
+        build_job=msg_build_job, area=args.area, module=module, version=str(version)))
+
+
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-release.py')
+        _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
 
 
 if __name__ == "__main__":
-    import sys
-    try:
-        log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
-        main()
-    except Exception as e:
-        log.exception(e)
-        exit(1)
+    main()
