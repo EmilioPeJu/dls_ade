@@ -20,7 +20,7 @@ default_config = {
             "format": "%(message)s"
         },
         "extended": {
-            "format": "%(asctime)s - %(name)20s - %(levelname)6s - %(message)s"
+            "format": "%(asctime)s - %(filename)20s:%(lineno)d - %(name)20s - %(levelname)6s - %(message)s"
         },
         "json": {
             "format": "name: %(name)s, level: %(levelname)s, time: %(asctime)s, message: %(message)s"
