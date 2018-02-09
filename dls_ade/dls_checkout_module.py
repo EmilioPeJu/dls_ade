@@ -7,11 +7,13 @@ the given branch.
 """
 
 import sys
+import logging
 
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import Server
+from dls_ade import logconfig
 
 usage = """
 Default <area> is 'support'.
@@ -63,7 +65,10 @@ def check_technical_area(area, module):
         raise Exception("Missing Technical Area under Beamline")
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
+    usermsg = logging.getLogger(name="usermessages")
+    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
@@ -89,13 +94,13 @@ def main():
         source = server.dev_module_path(module, args.area)
 
     if module == "":
-        print("Checking out entire " + args.area + " area...\n")
+        usermsg.info("Checking out entire {} area".format(args.area))
         server.clone_multi(source)
     elif module.endswith('/') and args.area == 'ioc':
-        print("Checking out " + module + " technical area...")
+        usermsg.info("Checking out {} technical area...".format(module))
         server.clone_multi(source)
     else:
-        print("Checking out " + module + " from " + args.area + " area...")
+        usermsg.info("Checking out {module} from {area}".format(module=module, area=args.area))
         vcs = server.clone(source, module)
 
         if args.branch:
@@ -105,11 +110,21 @@ def main():
                 vcs_git.checkout_remote_branch(args.branch, vcs.repo)
             else:
                 # Invalid branch name, print branches list and exit
-                print("Branch '" + args.branch + "' does not exist in " +
-                      source + "\nBranch List:\n")
-                for entry in branches:
-                    print(entry)
+                usermsg.info("Branch '{branch}' does not exist in {source}. Leaving clone on default branch. "
+                             "Branch List: {branchlist}"
+                             .format(branch=args.branch, source=source, branchlist=str(branches)))
+
+
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-checkout-module.py')
+        _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
