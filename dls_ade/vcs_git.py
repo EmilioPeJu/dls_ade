@@ -1,9 +1,14 @@
 import os
 
 import git
+import logging
 
 from dls_ade.vcs import BaseVCS
 from dls_ade.exceptions import VCSGitError
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger("usermessages")
 
 
 def is_in_local_repo(path="./"):
@@ -79,9 +84,9 @@ def init_repo(path="./"):
     if is_local_repo_root(path):
         return git.Repo(path)
 
-    print("Initialising repo...")
+    usermsg.info("Initialising repo in {}".format(path))
     repo = git.Repo.init(path)
-    print("Repository created.")
+    usermsg.info("Repository created.")
 
     return repo
 
@@ -98,10 +103,10 @@ def stage_all_files_and_commit(repo, message="Initial commit."):
             repository.
     """
 
-    print("Staging files...")
+    usermsg.info("Staging files...")
     repo.git.add('--all')
 
-    print("Committing files to repo...")
+    usermsg.info("Committing files to repo... commit msg: \"{}\"".format(message))
     index = repo.index
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
@@ -187,7 +192,7 @@ def checkout_remote_branch(branch, repo):
     """
 
     if branch in list_remote_branches(repo):
-        print("Checking out " + branch + " branch.")
+        usermsg.info("Checking out branch: {}".format(branch))
         origin = repo.remotes.origin
         remote = origin.refs[branch]
         remote.checkout(b=branch)
@@ -411,7 +416,7 @@ class Git(BaseVCS):
                            "currently exist")
             raise VCSGitError(err_message.format(s_repo_path=server_repo_path))
 
-        print("Pushing repo to destination...")
+        usermsg.info("Pushing repo to destination...")
         remote.push(branch_name)
 
     def add_new_remote_and_push(self, dest, remote_name="origin",
@@ -455,10 +460,10 @@ class Git(BaseVCS):
             raise VCSGitError(err_message.format(remote=remote_name))
 
         self.parent.create_remote_repo(dest)
-        print("Adding remote to repo...")
-        remote = repo.create_remote(remote_name, os.path.join(
-            self.parent.url, dest))
-        print("Pushing repo to destination...")
+        remote_url = os.path.join(self.parent.url, dest)
+        usermsg.info("Adding remote to repo. {name}: {url}".format(name=dest, url=remote_url))
+        remote = repo.create_remote(remote_name, remote_url)
+        usermsg.info("Pushing repo to destination...")
         remote.push(branch_name)
 
     def push_all_branches_and_tags(self, server_repo_path, remote_name):
