@@ -57,7 +57,8 @@ default_config = {
             #  The following custom fields will be disabled if setting this False
             "include_extra_fields": True,
             "username": getpass.getuser(),
-            "pid": os.getpid()
+            "pid": os.getpid(),
+            "package": __package__
         }
     },
 
@@ -97,7 +98,8 @@ class ThreadContextFilter(logging.Filter):
 def setup_logging(
     default_log_config=None,
     default_level=logging.INFO,
-    env_key='ADE_LOG_CFG'
+    env_key='ADE_LOG_CFG',
+    application=None
 ):
     """Setup logging configuration
     
@@ -137,6 +139,11 @@ def setup_logging(
             dict_config = file_config
 
     if dict_config is not None:
+        if application is not None:
+            try:
+                default_config['handlers']['graylog_gelf'].update({'application': str(application)})
+            except KeyError:
+                pass
         logging.config.dictConfig(dict_config)
     else:
         logging.basicConfig(level=default_level)
