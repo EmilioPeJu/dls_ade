@@ -17,10 +17,9 @@ from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import vcs_git, Server
+from dls_ade import logconfig
 
 env = environment()
-logging.basicConfig(level=logging.DEBUG)
-
 
 usage = """
 Default <area> is 'support'.
@@ -85,7 +84,10 @@ def make_parser():
     return parser
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
+    usermsg = logging.getLogger(name="usermessages")
+    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
@@ -120,7 +122,7 @@ def main():
             source = os.path.join(source,
                                   "RHEL{0}-{1}".format(args.rhel_version,
                                                        platform.machine()))
-            logging.debug(source)
+            log.debug(source)
         release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
@@ -131,22 +133,31 @@ def main():
     # Check some releases have been made
     if len(releases) == 0:
         if args.git:
-            print(args.module_name + ": No releases made in git")
+            usermsg.info("{}: No releases made in git".format(args.module_name))
         else:
-            print(args.module_name + ": No releases made for " +
-                  args.epics_version)
+            usermsg.info("{module}: No releases made for {version}".format(module=args.module_name, version=args.epics_version))
         return 1
 
     releases = env.sortReleases(releases)
 
     if args.latest:
-        print("The latest release for " + args.module_name + " in " + target +
-              " is: " + releases[-1])
+        usermsg.info("The latest release for {module} in {target} is: {release}"
+                     .format(module=args.module_name, target=target, release=releases[-1]))
     else:
-        print("Previous releases for " + args.module_name + " in " +
-              target + ":")
-        for release in releases:
-            print(release)
+        usermsg.info("Previous releases for {module} in {target}: {releases}"
+                     .format(module=args.module_name, target=target, releases=str(releases)))
+
+
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-list-releases.py')
+        _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
