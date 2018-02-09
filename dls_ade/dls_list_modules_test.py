@@ -42,7 +42,7 @@ class PrintModuleListTest(unittest.TestCase):
     def test_server_repo_list_called(self):
         source = "test/source"
 
-        dls_list_modules.print_module_list(source)
+        dls_list_modules.get_module_list(source)
 
         self.server_mock.get_server_repo_list.assert_called_once_with()
 
@@ -53,7 +53,7 @@ class PrintModuleListTest(unittest.TestCase):
         source = "test/source"
 
         with patch.object(builtins, 'print') as mock_print:
-            dls_list_modules.print_module_list(source)
+            dls_list_modules.get_module_list(source)
 
         call_args = mock_print.call_args_list
         self.assertEqual(call_args[0][0][0], 'module')
@@ -67,6 +67,6 @@ class PrintModuleListTest(unittest.TestCase):
         source = "test/source"
 
         with patch.object(builtins, 'print') as mock_print:
-            dls_list_modules.print_module_list(source)
+            dls_list_modules.get_module_list(source)
 
         self.assertFalse(mock_print.call_count)

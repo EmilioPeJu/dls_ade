@@ -22,8 +22,7 @@ import re
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import SafeConfigParser
 
-# logging.basicConfig(level=logging.DEBUG)
-
+log = logging.getLogger(__name__)
 
 class environment(object):
     """
@@ -233,7 +232,7 @@ class environment(object):
             components += [0, ''] * int((6-len(components))/2)
         # pad to 12 elements
         components += [0, ''] * int((12-len(components))/2)
-        logging.debug(components)
+        log.debug(components)
         return components
 
     def sortReleases(self, paths):
@@ -259,7 +258,7 @@ class environment(object):
         sorted_releases = []
         for entry in sorted(releases):
             sorted_releases.append(entry[1])
-        logging.debug(sorted_releases)
+        log.debug(sorted_releases)
 
         return sorted_releases
 
