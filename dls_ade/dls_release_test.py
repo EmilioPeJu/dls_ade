@@ -475,7 +475,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions()
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
@@ -495,7 +495,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         build = dls_release.create_build_object(options)
 
         expected_message = \
-            'Releasing {module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
+            '{module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
@@ -514,7 +514,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions(area='ioc')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
