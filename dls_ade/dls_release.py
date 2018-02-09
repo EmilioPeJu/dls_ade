@@ -387,8 +387,8 @@ def perform_test_build(build_object, local_build, vcs):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-
     log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
+
     parser = make_parser()
     args = parser.parse_args()
 

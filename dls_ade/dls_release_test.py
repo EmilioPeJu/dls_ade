@@ -1,14 +1,11 @@
 #!/bin/env dls-python
 
 import unittest
-import logging
 from dls_ade import dls_release
 
 from mock import patch, ANY, MagicMock
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def set_up_mock(self, path):
