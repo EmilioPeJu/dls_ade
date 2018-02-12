@@ -336,18 +336,3 @@ class ArchiveBuild(Builder):
     def script_file(self):
         return os.path.join(build_scripts, self.os, "archive.sh")
 
-
-if __name__ == "__main__":
-    from pkg_resources import require
-    require("python_ldap>=2.3.12")
-
-    # test
-    bld = WindowsBuild("64")
-    bld.set_area("support")
-    bld.set_epics("R3.14.12.3")
-    print("build_script is:\n" + bld.build_script({"test": root_dir + "/test"}))
-
-    bld = ArchiveBuild(True)
-    bld.set_area("archive")
-    bld.set_epics("R3.14.12.3")
-    print("build_script is:\n"+bld.build_script({"test": root_dir+"/test"}))

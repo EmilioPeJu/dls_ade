@@ -4,7 +4,6 @@
 List the modules of an area or ioc domain on the repository
 """
 
-from __future__ import print_function
 import sys
 import logging
 
