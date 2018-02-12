@@ -20,6 +20,7 @@ import ldap
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import Server
+from dls_ade.exceptions import FedIdError
 from dls_ade import logconfig
 
 # Optional but useful in a library or non-main module:
@@ -131,6 +132,8 @@ def lookup_contact_name(fed_id):
     Returns:
         str: Contact name
 
+    Raises: FedIdError if the fed_id cannot be found in LDAP
+
     """
 
     # Set up ldap search parameters
@@ -156,7 +159,7 @@ def lookup_contact_name(fed_id):
         # If the FED-ID does not exist, ldap_output will look like:
         # (115, [(None,
         # ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
-        raise Exception("\"{}\" is not an existing contact".format(fed_id))
+        raise FedIdError("\"{}\" is not a FedID in LDAP".format(fed_id))
 
     # Extract contact name from output
     name_info_dict = ldap_output[1][0][1]
@@ -183,11 +186,19 @@ def output_csv_format(contact, cc_contact, module):
     # Check if <FED-ID>s are specified in repo, if not don't run lookup
     # function
     if contact != 'unspecified':
-        contact_name = lookup_contact_name(contact)
+        try:
+            contact_name = lookup_contact_name(contact)
+        except FedIdError as exception:
+            log.error(exception.message)
+            contact_name = contact
     else:
         contact_name = contact
     if cc_contact != 'unspecified':
-        cc_name = lookup_contact_name(cc_contact)
+        try:
+            cc_name = lookup_contact_name(cc_contact)
+        except FedIdError as exception:
+            log.error(exception.message)
+            cc_name = contact
     else:
         cc_name = cc_contact
 
@@ -348,8 +359,7 @@ def _main():
                 "module-cc", ".").split(' ')[-1]
 
             if args.csv:
-                print_out.append(output_csv_format(
-                    contact, cc_contact, module))
+                print_out.append(output_csv_format(contact, cc_contact, module))
             else:
                 print_out.append("{module} Contact: {contact}, CC: {cc}"
                                  .format(cc=cc_contact, contact=contact, module=module))
@@ -380,7 +390,11 @@ def _main():
         vcs = server.temp_clone(source)
         repo = vcs.repo
 
-        edit_summary = edit_contact_info(repo, contact, cc,)
+        try:
+            edit_summary = edit_contact_info(repo, contact, cc,)
+        except FedIdError as exception:
+            usermsg.error("ABORTING: {}".format(exception.message))
+            sys.exit(1)
 
         if edit_summary is not None:
             index = repo.index

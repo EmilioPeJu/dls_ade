@@ -47,3 +47,8 @@ class VerificationError(ModuleCreatorError):
 
     """
     pass
+
+
+class FedIdError(Exception):
+    """Exception class for errors related to fed-id"""
+    pass
