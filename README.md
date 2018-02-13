@@ -46,3 +46,15 @@ variables DLSBUILD_ROOT_DIR and/or DLSBUILD_WIN_ROOT_DIR
   # Now see and/or run build script in
   # $HOME/test/work/etc/build/queue
 ```
+
+## Logging
+
+The dls_ade scripts produce log messages as they progress. Messages for the regular
+user is printed to stdout and further debug and info messages are logged to the DLS
+graylog system.
+A local debug log is also written to the users home dir: `$HOME/.dls_ade_debug.log`
+
+To review logs produced by the scripts for a given user, visit 
+https://graylog.diamond.ac.uk or
+https://graylog2.diamond.ac.uk 
+and search `package:dls_ade AND username:fedid` (replacing `fedid` for the users FedID)
