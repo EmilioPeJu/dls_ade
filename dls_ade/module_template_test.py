@@ -396,13 +396,12 @@ class ModuleTemplatePrintMessageTest(unittest.TestCase):
     def test_given_print_message_called_then_not_implemented_error_raised(self):
 
         with self.assertRaises(NotImplementedError):
-            self.mt_obj.print_message()
+            self.mt_obj.get_print_message()
 
 
 class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self):
 
         mt_obj = mt.ModuleTemplateTools({'module_name': "test_module_name",
                                          'module_path': "test_module_path",
@@ -412,15 +411,13 @@ class ModuleTemplateToolsPrintMessageTest(unittest.TestCase):
                         "\ndirectory and edit test_module_path/build script "
                         "appropriately.")
 
-        mt_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
+        msg = mt_obj.get_print_message()
+        self.assertEqual(msg, comp_message)
 
 
 class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self):
 
         mt_obj = mt.ModuleTemplatePython({'module_name': "test_module_name",
                                           'module_path': "test_module_path",
@@ -435,15 +432,13 @@ class ModuleTemplatePythonPrintMessageTest(unittest.TestCase):
                         "\ndirectory and edit {setup_path} appropriately.")
         comp_message = comp_message.format(**message_dict)
 
-        mt_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
+        msg = mt_obj.get_print_message()
+        self.assertEqual(msg, comp_message)
 
 
 class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self):
 
         mt_obj = mt.ModuleTemplateWithApps({'module_name': "test_module_name",
                                                   'module_path': "test_module_path",
@@ -461,9 +456,8 @@ class ModuleTemplateWithAppsPrintMessageTest(unittest.TestCase):
                         "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
         comp_message = comp_message.format(**message_dict)
 
-        mt_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
+        msg = mt_obj.get_print_message()
+        self.assertEqual(msg, comp_message)
 
 
 class ModuleTemplateSupportCreateCustomFilesTest(unittest.TestCase):
@@ -601,8 +595,7 @@ class ModuleTemplateIOCBLCreateCustomFilesTest(unittest.TestCase):
 
 class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
 
-    @patch('dls_ade.module_template.print', create=True)
-    def test_given_print_message_called_then_message_printed(self, mock_print):
+    def test_given_print_message_called_then_message_printed(self):
 
         mt_obj = mt.ModuleTemplateIOCBL({'module_name': "test_module_name",
                                          'module_path': "test_module_path",
@@ -623,6 +616,5 @@ class ModuleTemplateIOCBLPrintMessageTest(unittest.TestCase):
 
         comp_message = comp_message.format(**message_dict)
 
-        mt_obj.print_message()
-
-        mock_print.assert_called_once_with(comp_message)
+        msg = mt_obj.get_print_message()
+        self.assertEqual(msg, comp_message)

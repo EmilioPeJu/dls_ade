@@ -10,11 +10,11 @@ Can currently create modules in the following areas:
 - ioc (including BL gui)
 """
 
-from __future__ import print_function
-
 import sys
+import logging
 from dls_ade.argument_parser import ArgParser
 from dls_ade.get_module_creator import get_module_creator
+from dls_ade import logconfig
 
 usage = ("Default <area> is 'support'."
          "\nStart a new diamond module of a particular type."
@@ -65,7 +65,10 @@ def make_parser():
     return parser
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
+    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
+    usermsg = logging.getLogger("usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -87,7 +90,20 @@ def main():
     if export_to_server:
         module_creator.push_repo_to_remote()
 
-    module_creator.print_message()
+    msg = module_creator.get_print_message()
+    usermsg.info(msg)
+
+
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-release.py')
+        return _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
+
 
 if __name__ == "__main__":
     sys.exit(main())
