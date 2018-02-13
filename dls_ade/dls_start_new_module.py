@@ -11,6 +11,7 @@ Can currently create modules in the following areas:
 """
 
 import sys
+import json
 import logging
 from dls_ade.argument_parser import ArgParser
 from dls_ade.get_module_creator import get_module_creator
@@ -67,11 +68,12 @@ def make_parser():
 
 def _main():
     log = logging.getLogger(name="dls_ade")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
     usermsg = logging.getLogger("usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     module_name = args.module_name
     area = args.area

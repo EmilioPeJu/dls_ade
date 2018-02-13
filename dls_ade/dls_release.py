@@ -15,6 +15,7 @@ the server
 """
 
 import sys
+import json
 import re
 import logging
 import logconfig
@@ -387,10 +388,11 @@ def perform_test_build(build_object, local_build, vcs):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     check_parsed_arguments_valid(args, parser)
     module = args.module_name

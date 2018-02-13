@@ -5,6 +5,7 @@ List the branches of a module on the repository.
 """
 
 import sys
+import json
 import shutil
 import logging
 
@@ -38,10 +39,11 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     pathf.check_technical_area(args.area, args.module_name)
 

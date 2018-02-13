@@ -8,6 +8,7 @@ the given branch.
 
 import sys
 import logging
+import json
 
 from dls_ade import vcs_git
 from dls_ade.argument_parser import ArgParser
@@ -68,11 +69,12 @@ def check_technical_area(area, module):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
 
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
+    
     if args.module_name == "":
         answer = raw_input("Would you like to checkout the whole " +
                            args.area +

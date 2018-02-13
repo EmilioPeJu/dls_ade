@@ -10,6 +10,7 @@ The git flag will list releases from the repository.
 import os
 import sys
 import shutil
+import json
 import platform
 import logging
 
@@ -87,10 +88,11 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     env.check_epics_version(args.epics_version)
     pathf.check_technical_area(args.area, args.module_name)

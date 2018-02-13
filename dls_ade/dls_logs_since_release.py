@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import shutil
+import json
 import time
 import logging
 from operator import itemgetter
@@ -548,10 +549,11 @@ def format_message_width(message, line_len):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     raw = set_raw_argument(args.raw)
     pathf.check_technical_area(args.area, args.module_name)

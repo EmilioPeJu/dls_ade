@@ -13,6 +13,7 @@ will be left as it was.
 import os
 import sys
 import shutil
+import json
 import logging
 import csv
 import ldap
@@ -318,10 +319,10 @@ def edit_contact_info(repo, contact='', cc=''):
 
 
 def _main():
-    log.info("application: %s: arguments: %s", sys.argv[0], sys.argv)
-
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc,
                                  parser)
