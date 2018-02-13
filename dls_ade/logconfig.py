@@ -6,6 +6,7 @@ the project or site requirements.
 """
 
 import os
+import os.path
 import json
 import logging.config
 import getpass
@@ -20,7 +21,7 @@ default_config = {
             "format": "%(message)s"
         },
         "extended": {
-            "format": "%(asctime)s - %(filename)20s:%(lineno)d - %(name)20s - %(levelname)6s - %(message)s"
+            "format": "%(asctime)s - %(filename)24s:%(lineno)d - %(name)24s - %(levelname)6s - %(message)s"
         },
         "json": {
             "format": "name: %(name)s, level: %(levelname)s, time: %(asctime)s, message: %(message)s"
@@ -40,7 +41,7 @@ default_config = {
             #  "class": "logging.handlers.FileHandler",
             "level": "DEBUG",
             "formatter": "extended",
-            "filename": "debug.log",
+            "filename": os.path.join(os.getenv('HOME', '~'), ".dls_ade_debug.log"),
             "maxBytes": 1048576,
             "backupCount": 20,
             "encoding": "utf8",

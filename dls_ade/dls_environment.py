@@ -232,7 +232,7 @@ class environment(object):
             components += [0, ''] * int((6-len(components))/2)
         # pad to 12 elements
         components += [0, ''] * int((12-len(components))/2)
-        log.debug(components)
+        # log.debug(components)
         return components
 
     def sortReleases(self, paths):
