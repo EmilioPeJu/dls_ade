@@ -45,15 +45,16 @@ default_config = {
             "maxBytes": 1048576,
             "backupCount": 20,
             "encoding": "utf8",
-            "delay" : True
+            "delay": True
         },
 
         "graylog_gelf": {
-            "class": "pygelf.GelfUdpHandler",
+            "class": "pygelf.GelfTcpHandler",
             "level": "INFO",
             # Obviously a DLS-specific configuration: the graylog server address and port
-            "host": "cs04r-sc-serv-14.diamond.ac.uk",
-            "port": 12202,
+            # Graylog2 cluster. Input: "Load-Balanced GELF TCP"
+            "host": "graylog2",
+            "port": 12201,
             "debug": True,
             #  The following custom fields will be disabled if setting this False
             "include_extra_fields": True,
