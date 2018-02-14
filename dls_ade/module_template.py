@@ -1,10 +1,10 @@
-from __future__ import print_function
 import os
 import shutil
 import logging
 from dls_ade.exceptions import ArgumentError, TemplateFolderError
-logging.basicConfig(level=logging.DEBUG)
 
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
 
 MODULE_TEMPLATES = "module_templates"
 
@@ -112,12 +112,12 @@ class ModuleTemplate(object):
                 `template_folder` does not exist.
 
         """
-        logging.debug("About to get template files from folder.")
+        log.debug("About to get template files from folder.")
 
         if not os.path.isdir(template_folder):
             raise TemplateFolderError(template_folder)
 
-        logging.debug("Template files to add (relative paths):")
+        log.debug("Template files to add (relative paths):")
 
         template_files = {}
         for dir_path, _, files in os.walk(template_folder):
@@ -127,7 +127,7 @@ class ModuleTemplate(object):
                     contents = f.read()
                 rel_path = os.path.relpath(file_path, template_folder)
 
-                logging.debug("        " + rel_path)
+                log.debug("        " + rel_path)
 
                 # This stops the installer from compiling the .py files.
                 if rel_path.endswith(".py_template"):
@@ -174,21 +174,21 @@ class ModuleTemplate(object):
 
         """
         # dictionary keys are the relative file paths for the documents
-        logging.debug("About to create files from template.")
-        logging.debug("Template files to create (relative paths):")
+        log.debug("About to create files from template.")
+        log.debug("Template files to create (relative paths):")
         for path, contents in self._template_files.iteritems():
             # Using template_args allows us to insert eg. module_name
             rel_path = path.format(**self._template_args)
 
             dir_path = os.path.dirname(rel_path)
 
-            logging.debug("        " + rel_path)
+            log.debug("        " + rel_path)
 
             # Stops us from overwriting files in folder (eg .gitignore and
             # .gitattributes when adding to Old-Style IOC modules
             # (ModuleCreatorAddAppToModule))
             if os.path.isfile(rel_path):
-                logging.debug("File already exists: " + rel_path)
+                log.debug("File already exists: " + rel_path)
                 continue
 
             if os.path.normpath(dir_path) == os.path.normpath(rel_path):
@@ -205,8 +205,8 @@ class ModuleTemplate(object):
             with open(rel_path, "w") as f:
                 f.write(contents.format(**self._template_args))
 
-    def print_message(self):
-        """Prints a message to detail the user's next steps."""
+    def get_print_message(self):
+        """Return a string with a message to detail the user's next steps."""
         raise NotImplementedError
 
 
@@ -237,15 +237,14 @@ class ModuleTemplateTools(ModuleTemplate):
 
         self._set_template_files_from_area("tools")
 
-    def print_message(self):
+    def get_print_message(self):
         message_dict = {'module_path': self._template_args['module_path']}
 
         message = ("\nPlease add your patch files to the {module_path:s}"
                    "\ndirectory and edit {module_path:s}/build script "
                    "appropriately.")
         message = message.format(**message_dict)
-
-        print(message)
+        return message
 
 
 class ModuleTemplatePython(ModuleTemplate):
@@ -266,7 +265,7 @@ class ModuleTemplatePython(ModuleTemplate):
 
         self._set_template_files_from_area("python")
 
-    def print_message(self):
+    def get_print_message(self):
         module_path = self._template_args['module_path']
         message_dict = {'module_path': module_path,
                         'setup_path': os.path.join(module_path, "setup.py")
@@ -276,7 +275,7 @@ class ModuleTemplatePython(ModuleTemplate):
                    "\ndirectory and edit {setup_path:s} appropriately.")
         message = message.format(**message_dict)
 
-        print(message)
+        return message
 
 
 class ModuleTemplateWithApps(ModuleTemplate):
@@ -311,7 +310,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
         self._set_template_files_from_area("default")
 
-    def print_message(self):
+    def get_print_message(self):
         # This message is shared between support and IOC
         module_path = self._template_args['module_path']
         app_name = self._template_args['app_name']
@@ -333,7 +332,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
                    "{srcMakefile:s}\nand {DbMakefile:s} if appropriate.")
         message = message.format(**message_dict)
 
-        print(message)
+        return message
 
 
 class ModuleTemplateSupport(ModuleTemplateWithApps):
@@ -429,7 +428,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
         """
         os.system('makeBaseApp.pl -t dlsBL ' + self._template_args['app_name'])
 
-    def print_message(self):
+    def get_print_message(self):
         module_path = self._template_args['module_path']
         app_name = self._template_args['app_name']
         message_dict = {
@@ -451,7 +450,7 @@ class ModuleTemplateIOCBL(ModuleTemplateWithApps):
                    " has been placed in {opi/edl:s}. Please modify these.")
         message = message.format(**message_dict)
 
-        print(message)
+        return message
 
 
 class ModuleTemplateMatlab(ModuleTemplate):
@@ -481,11 +480,11 @@ class ModuleTemplateMatlab(ModuleTemplate):
 
         self._set_template_files_from_area("default")
 
-    def print_message(self):
+    def get_print_message(self):
         message_dict = {'module_path': self._template_args['module_path']}
 
         message = ("\nPlease add your matlab files to the {module_path:s}"
                    "\ndirectory and commit them before releasing.")
         message = message.format(**message_dict)
 
-        print(message)
+        return message

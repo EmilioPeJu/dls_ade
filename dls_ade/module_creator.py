@@ -1,15 +1,11 @@
-from __future__ import print_function
 import os
+import logging
 from getpass import getuser
 from dls_ade import path_functions as pathf
 import shutil
-import logging
-from dls_ade.vcs_git import git
 from dls_ade import vcs_git, Server
 from dls_ade.exceptions import (RemoteRepoError, VerificationError,
                                 ArgumentError)
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 class ModuleCreator(object):
@@ -50,6 +46,7 @@ class ModuleCreator(object):
                 Must be a non-abstract subclass of ModuleTemplate.
             kwargs: Additional arguments for module creation.
         """
+        self._usermsg = logging.getLogger("usermessages")
 
         self._area = area
         self._cwd = os.getcwd()
@@ -216,7 +213,7 @@ class ModuleCreator(object):
 
         self._can_create_local_module = False
 
-        print("Making clean directory structure for " + self._module_path)
+        self._usermsg.info("Making clean directory structure for {}".format(self._module_path))
 
         os.makedirs(self.abs_module_path)
 
@@ -232,9 +229,9 @@ class ModuleCreator(object):
         repo = vcs_git.init_repo(self.abs_module_path)
         vcs_git.stage_all_files_and_commit(repo)
 
-    def print_message(self):
+    def get_print_message(self):
         """Prints a message to detail the user's next steps."""
-        self._module_template.print_message()
+        return self._module_template.get_print_message()
 
     def push_repo_to_remote(self):
         """Pushes the local repo to the remote server.
@@ -431,7 +428,7 @@ class ModuleCreatorAddAppToModule(ModuleCreatorWithApps):
 
         self._can_create_local_module = False
 
-        print("Cloning module to " + self._module_path)
+        self._usermsg.info("Cloning module to {}".format(self._module_path))
 
         vcs = self.server.clone(self._server_repo_path, self.abs_module_path)
 
