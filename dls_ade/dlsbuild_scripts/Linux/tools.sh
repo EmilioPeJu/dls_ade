@@ -39,18 +39,21 @@ TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
 TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
 build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
-# Checkout module
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
 
+GrayLog debug "version dir: " `pwd`/$_version
 
 # If force, remove existing version directory (whether or not it exists)
 if [ "$_force" == "true" ]; then
+    GrayLog info "Force: removing previous version: " `pwd`/$_version
     rm -rf $_version || ReportFailure "Can not rm $_version"
 fi
 
 if [ ! -d $_version ]; then
+    GrayLog info "Cloning repo: " $_git_dir
     git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    GrayLog info "Checking out version tag: " $_version
     ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
 elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
@@ -75,11 +78,14 @@ TOOLS_SUPPORT=$TOOLS_ROOT" "$release_file"
 fi
 
 # Build
+GrayLog info "Building tool. Build log: ${PWD}/${_version}/${_build_name}.log"
 $TOOLS_BUILD/build_program -n $_build_name ${_version}
 
 if (( $(cat ${_version}/${_build_name}.sta) != 0 )) ; then
-    ReportFailure ${_version}/${_build_name}.log
+    ReportFailure ${PWD}/${_version}/${_build_name}.log
 fi
 
+GrayLog info "make-defaults: " $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
 $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
 
+GrayLog info "Build complete"
