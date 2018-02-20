@@ -192,8 +192,9 @@ class Builder:
         for name in params.keys():
             script += format % ("_" + name, params[name]+"\n")
 
-        for line in file(self.script_file()):
-            script += line
+        with open(self.script_file(), 'r') as f:
+            # skip the first line with the bin/bash
+            script += "".join(f.readlines()[1:])
 
         return script
 
