@@ -20,16 +20,6 @@
 #   _area      : The build area
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
-#
-
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version" $_email
-    exit 2
-}
-
 
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}

@@ -22,14 +22,6 @@
 #   _build_name: The base name to use for log files etc.
 #
 
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version" $_email
-    exit 2
-}
-
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
