@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -19,14 +20,6 @@
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
 #
-
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version"         $_email
-    exit 2
-}
 
 # Set up environment
 export PATH

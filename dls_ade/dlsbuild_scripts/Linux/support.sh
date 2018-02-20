@@ -28,17 +28,23 @@ source /dls_sw/etc/profile
 
 build_dir=${_build_dir}/${_module}
 
-# Checkout module
 mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
+SysLog debug "version dir: " ${PWD}/$_version
+
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
     elif [ "$_force" == "true" ] ; then
+        SysLog info "Force: removing previous version: " ${PWD}/$_version
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0 )) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
@@ -83,6 +89,7 @@ EPICS_BASE=${EPICS_BASE}
 SUPPORT=/dls_sw/prod/$(echo $_epics | cut -d_ -f1)/support
 EOF
 cp configure/RELEASE.${EPICS_HOST_ARCH} configure/RELEASE.${EPICS_HOST_ARCH}.Common
+SysLog debug "Wrote configure/RELEASE.${EPICS_HOST_ARCH}[.Common]: " $(cat configure/RELEASE.${EPICS_HOST_ARCH})
 
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     git ls-files configure/VERSION --error-unmatch 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
@@ -95,6 +102,7 @@ echo $_version > configure/VERSION
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log
+SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
     {
         make clean && make
@@ -108,3 +116,5 @@ if (( $(cat ${_build_name}.sta) != 0 )) ; then
 elif (( $(stat -c%s $error_log) != 0 )) ; then
     cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email
 fi
+
+SysLog info "Build complete"
