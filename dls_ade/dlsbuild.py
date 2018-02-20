@@ -185,12 +185,24 @@ class Builder:
         """Returns the files system path to the raw build script file"""
         return os.path.join(build_scripts, self.os, self.area+self.exten)
 
+    def script_utils_template_file(self):
+        """Returns the file system path to the script utility template for the relevant OS"""
+        return os.path.join(build_scripts, self.os, "utils_template" + self.exten)
+
     def _script(self, params, header, format):
         """Returns the build script with headers and variables defined"""
         script = header+"\n\n"
 
         for name in params.keys():
             script += format % ("_" + name, params[name]+"\n")
+
+        try:
+            with open(self.script_utils_template_file(), 'r') as f:
+                # skip the first line with the bin/bash
+                script += "".join(f.readlines()[1:])
+        except IOError:
+            # No all platforms have a utils_template and thats ok...
+            log.debug("No utils_template script found in: {}".format(self.script_utils_template_file()))
 
         with open(self.script_file(), 'r') as f:
             # skip the first line with the bin/bash
