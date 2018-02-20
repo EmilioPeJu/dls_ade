@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.

@@ -205,6 +205,7 @@ class Builder:
     def build_params(self, build_dir, vcs, build_name):
         return {
             "email"                 : self.email,
+            "user"                  : self.user,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
             "%s_dir" % vcs.vcs_type : vcs.source_repo,
