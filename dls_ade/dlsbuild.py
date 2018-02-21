@@ -34,7 +34,7 @@ windows_root_dir = os.getenv("DLSBUILD_WIN_ROOT_DIR", "W:/")
 build_servers = {
     "Linux": {
         "redhat6-x86_64": ["R3.14.12.3"],
-        "redhat7-x86_64": ["R3.14.12.6"]
+        "redhat7-x86_64": ["R3.14.12.7"]
     },
     "Windows": {
         "windows6-x86"   : ["R3.14.12.3"],
