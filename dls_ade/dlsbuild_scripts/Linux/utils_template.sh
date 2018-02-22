@@ -6,8 +6,8 @@
 SysLog()
 {
     echo ${@:2} |
-    /dls_sw/prod/tools/RHEL6-x86_64/util-linux/2-30-1/prefix/bin/logger \
-    --tag dcs_build_server-$(uname -m) \
+    logger \
+    --tag dcs_build_job-$(uname -m) \
     -s -d -p local2.$1 \
     -n cs03r-sc-serv-30 -P 5150 \
     --rfc5424 \
