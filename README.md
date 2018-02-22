@@ -57,3 +57,8 @@ A local debug log is also written to the users home dir: `$HOME/.dls_ade_debug.l
 To review logs produced by the scripts for a given user, visit 
 https://graylog2.diamond.ac.uk 
 and search `package:dls_ade AND username:fedid` (replacing `fedid` for the users FedID)
+
+For releases on the build server, it is possible to view both logs from the client side
+script (i.e. dls-release.py) as well as the build server process. See all logs for a
+given module that you have released with the search:
+`username:FEDID module:MODULE` replacing FEDID and MODULE.
