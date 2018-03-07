@@ -5,7 +5,7 @@
 #  _dls_syslog_server_port : The port of the _dls_syslog_server to send messages to
 
 # Arguments: 
-#     1) log level. Valid levels are: alert, crit, debug, emerg, err, info, notice, warning
+#     1) log level. Valid levels are: alert, crit, err, warn, notice, info, debug
 #     2) Message
 SysLog()
 {
@@ -19,9 +19,12 @@ SysLog()
     # assuming log facility 'local2'.
     case "${syslog_level_str}" in
     alert)
+      PRI=145
+      ;;
+    crit)
       PRI=146
       ;;
-    crit|err*)
+    err*)
       PRI=147
       ;;
     warn*)
@@ -45,7 +48,8 @@ SysLog()
     # Fail safe implmented so that different logging mechanisms are tried in order, catching failures:
     #    1: dls-logger (requires module controls-tools to be pre-loaded)
     #    2: netcat (nc)
-    #    3:
+    #    3: logger (to local syslog)
+    #    4: echo (to stdout. Final, safe option if all else fails)
     echo ${syslog_message} |
     dls-logger \
     --tag dcs_build_job-$(uname -m) \
