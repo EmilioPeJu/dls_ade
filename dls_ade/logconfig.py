@@ -53,8 +53,8 @@ default_config = {
             "level": "INFO",
             # Obviously a DLS-specific configuration: the graylog server address and port
             # Graylog2 cluster. Input: "Load-Balanced GELF TCP"
-            "host": "graylog2",
-            "port": 12201,
+            "host": os.getenv('ADE_GELFLOG_SERVER', "graylog2.diamond.ac.uk"),
+            "port": int(os.getenv('ADE_GELFLOG_SERVER_PORT', '12201')),
             "debug": True,
             #  The following custom fields will be disabled if setting this False
             "include_extra_fields": True,

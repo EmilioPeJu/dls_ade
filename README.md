@@ -62,3 +62,6 @@ For releases on the build server, it is possible to view both logs from the clie
 script (i.e. dls-release.py) as well as the build server process. See all logs for a
 given module that you have released with the search:
 `username:FEDID module:MODULE` replacing FEDID and MODULE.
+
+The environment variables ADE_GELFLOG_SERVER and ADE_GELFLOG_SERVER_PORT can be used to
+override the log destination of the ADE scripts for testing/development purposes.
