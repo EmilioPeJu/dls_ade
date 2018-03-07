@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
+# Expected pre-defined variables are:
+#  _dls_syslog_server      : The address of the server to send syslog messages to
+#  _dls_syslog_server_port : The port of the _dls_syslog_server to send messages to
+
 # Arguments: 
 #     1) log level. Valid levels are: alert, crit, debug, emerg, err, info, notice, warning
 #     2) Message
 SysLog()
 {
-    local dls_syslog_server=cs03r-sc-serv-30
-    local dls_syslog_server_port=5150
+    local dls_syslog_server=${_dls_syslog_server}
+    local dls_syslog_server_port=${_dls_syslog_server_port}
 
     local syslog_level_str=$1
     local syslog_message=${@:2}

@@ -65,3 +65,6 @@ given module that you have released with the search:
 
 The environment variables ADE_GELFLOG_SERVER and ADE_GELFLOG_SERVER_PORT can be used to
 override the log destination of the ADE scripts for testing/development purposes.
+
+The environment variables ADE_SYSLOG_SERVER and ADE_SYSLOG_SERVER_PORT can be used to
+override the log destination of the Controls Build Server scripts for testing/development purposes.

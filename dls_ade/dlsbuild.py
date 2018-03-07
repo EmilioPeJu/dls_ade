@@ -226,7 +226,10 @@ class Builder:
             "version"               : vcs.version,
             "area"                  : self.area,
             "force"                 : "true" if self.force else "false",
-            "build_name"            : build_name}
+            "build_name"            : build_name,
+            "dls_syslog_server"     : os.getenv("ADE_SYSLOG_SERVER", "graylog2.diamond.ac.uk"),
+            "dls_syslog_server_port": os.getenv("ADE_SYSLOG_SERVER_PORT", "12209")
+        }
 
     def local_test_possible(self):
         """Returns True if a local test build is possible"""
