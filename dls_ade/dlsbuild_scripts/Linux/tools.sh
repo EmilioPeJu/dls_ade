@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -19,16 +20,6 @@
 #   _area      : The build area
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
-#
-
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version" $_email
-    exit 2
-}
-
 
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
@@ -48,18 +39,21 @@ TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
 TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
 build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
-# Checkout module
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
 
+SysLog debug "version dir: " ${PWD}/$_version
 
 # If force, remove existing version directory (whether or not it exists)
 if [ "$_force" == "true" ]; then
+    SysLog info "Force: removing previous version: " ${PWD}/$_version
     rm -rf $_version || ReportFailure "Can not rm $_version"
 fi
 
 if [ ! -d $_version ]; then
+    SysLog info "Cloning repo: " $_git_dir
     git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    SysLog info "Checking out version tag: " $_version
     ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
 elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
@@ -84,11 +78,14 @@ TOOLS_SUPPORT=$TOOLS_ROOT" "$release_file"
 fi
 
 # Build
+SysLog info "Building tool. Build log: ${PWD}/${_version}/${_build_name}.log"
 $TOOLS_BUILD/build_program -n $_build_name ${_version}
 
 if (( $(cat ${_version}/${_build_name}.sta) != 0 )) ; then
-    ReportFailure ${_version}/${_build_name}.log
+    ReportFailure ${PWD}/${_version}/${_build_name}.log
 fi
 
+SysLog info "make-defaults: " $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
 $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
 
+SysLog info "Build complete"

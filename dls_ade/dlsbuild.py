@@ -185,6 +185,10 @@ class Builder:
         """Returns the files system path to the raw build script file"""
         return os.path.join(build_scripts, self.os, self.area+self.exten)
 
+    def script_utils_template_file(self):
+        """Returns the file system path to the script utility template for the relevant OS"""
+        return os.path.join(build_scripts, self.os, "utils_template" + self.exten)
+
     def _script(self, params, header, format):
         """Returns the build script with headers and variables defined"""
         script = header+"\n\n"
@@ -192,8 +196,17 @@ class Builder:
         for name in params.keys():
             script += format % ("_" + name, params[name]+"\n")
 
-        for line in file(self.script_file()):
-            script += line
+        try:
+            with open(self.script_utils_template_file(), 'r') as f:
+                # skip the first line with the bin/bash
+                script += "".join(f.readlines()[1:])
+        except IOError:
+            # No all platforms have a utils_template and thats ok...
+            log.debug("No utils_template script found in: {}".format(self.script_utils_template_file()))
+
+        with open(self.script_file(), 'r') as f:
+            # skip the first line with the bin/bash
+            script += "".join(f.readlines()[1:])
 
         return script
 
@@ -205,6 +218,7 @@ class Builder:
     def build_params(self, build_dir, vcs, build_name):
         return {
             "email"                 : self.email,
+            "user"                  : self.user,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
             "%s_dir" % vcs.vcs_type : vcs.source_repo,
@@ -212,7 +226,10 @@ class Builder:
             "version"               : vcs.version,
             "area"                  : self.area,
             "force"                 : "true" if self.force else "false",
-            "build_name"            : build_name}
+            "build_name"            : build_name,
+            "dls_syslog_server"     : os.getenv("ADE_SYSLOG_SERVER", "graylog2.diamond.ac.uk"),
+            "dls_syslog_server_port": os.getenv("ADE_SYSLOG_SERVER_PORT", "12209")
+        }
 
     def local_test_possible(self):
         """Returns True if a local test build is possible"""

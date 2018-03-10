@@ -1,3 +1,4 @@
+#!/bin/bash
 # ******************************************************************************
 # 
 # Script to build a Diamond production module for support, ioc or matlab areas
@@ -7,6 +8,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -19,14 +21,6 @@
 #   _build_name: The base name to use for log files etc.
 #
 
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version"         $_email
-    exit 2
-}
-
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
@@ -38,11 +32,16 @@ cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
     elif [ "$_force" == "true" ] ; then
+        SysLog info "Force: removing previous version: " ${PWD}/$_version
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     elif (( $(git status -uno --porcelain | wc -l) != 0)) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
@@ -73,6 +72,7 @@ fi
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log
+SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
     {
         make
@@ -84,5 +84,7 @@ build_log=${_build_name}.log
 if (( $(cat ${_build_name}.sta) != 0 )) ; then
     ReportFailure $error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
-    cat $error_log | mail -s "Build Errors: $_area $_module $_version"         $_email
+    cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email || SysLog err "Failed to email build errors"
 fi
+
+SysLog info "Build complete"

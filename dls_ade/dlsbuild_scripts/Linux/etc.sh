@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -20,18 +21,12 @@
 #   _build_name: The base name to use for log files etc.
 #
 
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version"         $_email
-    exit 2
-}
-
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 build_dir=${_build_dir}
+
+SysLog info "Building etc in ${build_dir}"
 
 # Checkout module
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
@@ -45,6 +40,9 @@ else
 fi
 
 if [ -e Makefile ] ; then
-    make clean
-    make
+    SysLog info "Running make"
+    make clean || ReportFailure "make clean failed"
+    make       || ReportFailure "make failed"
 fi
+
+SysLog info "Build complete"
