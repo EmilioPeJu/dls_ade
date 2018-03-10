@@ -3,7 +3,7 @@ from pkg_resources import require
 require("mock")
 from mock import patch, MagicMock  # @UnresolvedImport
 
-from dls_ade.gitoliteserver import GitoliteServer
+from dls_ade.gitoliteserver import GitoliteServer, GIT_SSH_ROOT
 
 
 class IsServerRepoTest(unittest.TestCase):
@@ -61,7 +61,7 @@ class CreateRemoteRepoTest(unittest.TestCase):
 
         mock_is_server_repo.assert_called_once_with("test_destination")
         mock_clone_from.assert_called_once_with(
-            'ssh://dascgitolite@dasc-git.diamond.ac.uk/test_destination', "tempdir")
+            '{git_ssh_root}test_destination'.format(git_ssh_root=GIT_SSH_ROOT), "tempdir")
         mock_mkdtemp.assert_called_once_with()
         mock_rmtree.assert_called_once_with("tempdir")
 
