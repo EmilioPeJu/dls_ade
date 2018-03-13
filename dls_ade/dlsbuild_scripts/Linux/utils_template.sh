@@ -57,12 +57,12 @@ SysLog()
     -n ${dls_syslog_server} -P ${dls_syslog_server_port} \
     --rfc5424 \
     --sd-id dcs@32121 \
-      --sd-param build_job_parameters=\"build_name=$_build_name\ area=$_area\ module=$_module\ version=$_version\ email=$_email\ username=$_user\" \
-    || echo "<${PRI}>$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*-/\1-/g') $(hostname) ${0##*/}($$) - - [dcs@32121 build_job_parameters=\"build_name=$_build_name area=$_area module=$_module version=$_version email=$_email username=$_user\"] ${syslog_message}" |
+      --sd-param build_job_parameters=\"build_name=$_build_name\ area_module_version=$_area/$_module/$_version\ email=$_email\ username=$_user\" \
+    || echo "<${PRI}>1 $(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*-/\1-/g') $(hostname) dcs_build_job-$(uname -m) - - [dcs@32121 build_job_parameters=\"build_name=$_build_name area_module_version=$_area/$_module/$_version email=$_email username=$_user\"] ${syslog_message}" |
     nc -w1 -u ${dls_syslog_server} ${dls_syslog_server_port} \
     || echo ${syslog_message} |
     logger \
-    -t "<${PRI}>$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*-/\1-/g') $(hostname) ${0##*/}($$) - - [dcs@32121 build_job_parameters=\"build_name=$_build_name area=$_area module=$_module version=$_version email=$_email username=$_user\"] " \
+    -t "<${PRI}>1 $(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*-/\1-/g') $(hostname) dcs_build_job-$(uname -m) - - [dcs@32121 build_job_parameters=\"build_name=$_build_name area_module_version=$_area/$_module/$_version email=$_email username=$_user\"] " \
     -s -d -p local2.$1 \
     || echo "(logger failed) Build server error:" $_build_name ${syslog_message}
 }
