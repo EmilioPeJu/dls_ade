@@ -9,6 +9,7 @@ import shutil
 import ldap
 import logging
 
+from dls_ade.constants import BUILD_SERVERS, SERVER_SHORTCUT, DLSBUILD_ROOT_DIR, DLSBUILD_WIN_ROOT_DIR, LDAP_SERVER_URL, SYSLOG_SERVER, SYSLOG_SERVER_PORT
 from dls_ade.dls_environment import environment
 
 # Optional but useful in a library or non-main module:
@@ -18,47 +19,15 @@ usermsg = logging.getLogger("usermessages")
 
 build_scripts = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "dlsbuild_scripts")
-
-
-# Root directory to perform build operations.
-# For testing/development, this can be changed to redirect build scripts away
-# from the build server, e.g. a user's home directory. Set the environment
-# variables DLSBUILD_ROOT_DIR and/or DLSBUILD_WIN_ROOT_DIR to override the
-# default location.
-# Be sure that the root dir contains the expected directories (e.g. work/etc/build/queue).
-
-root_dir = os.getenv("DLSBUILD_ROOT_DIR", "/dls_sw")
-windows_root_dir = os.getenv("DLSBUILD_WIN_ROOT_DIR", "W:/")
-
-# A list of build servers and the EPICS releases they support
-build_servers = {
-    "Linux": {
-        "redhat6-x86_64": ["R3.14.12.3"],
-        "redhat7-x86_64": ["R3.14.12.7"]
-    },
-    "Windows": {
-        "windows6-x86"   : ["R3.14.12.3"],
-        "windows6-AMD64" : ["R3.14.12.3"]
-    }
-}
+os_list = set(os.listdir(build_scripts))
+os_list -= set([".svn"])
 
 
 def epics_servers(os, epics):
     """Return list of servers that can build a version of epics"""
-    servers = build_servers[os]
+    servers = BUILD_SERVERS[os]
     servers = [s for s in servers if epics in servers[s]]
     return servers
-
-server_shortcut = {
-    "6": "redhat6-x86_64",
-    "7": "redhat7-x86_64",
-    "32": "windows6-x86",
-    "64": "windows6-AMD64"}
-
-os_list = set(os.listdir(build_scripts))
-os_list -= set([".svn"])
-svn_rw = os.environ["SVN_ROOT"]
-svn_ro = "http://serv0002.cs.diamond.ac.uk/repos/controls"
 
 
 def default_build(epics):
@@ -87,7 +56,7 @@ def get_email(user):
     """Get a users email address from Active directory using LDAP"""
     try:
         # Try and get email from Active DIrectory
-        l = ldap.initialize('ldap://altfed.cclrc.ac.uk')
+        l = ldap.initialize(LDAP_SERVER_URL)
         result = l.search_s(
             "OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk",
             ldap.SCOPE_SUBTREE, "(CN=%s)" % user, ['mail'])
@@ -102,8 +71,8 @@ class Builder:
     "Base class for Diamond build server submissions"
 
     def __init__(self, bld_os, server=None, epics=None):
-        if server in server_shortcut.keys():
-            server = server_shortcut[server]
+        if server in SERVER_SHORTCUT.keys():
+            server = SERVER_SHORTCUT[server]
         assert bld_os in os_list, "Build operating system not supported"
 
         self.os = bld_os
@@ -122,15 +91,15 @@ class Builder:
                 # set specified server
                 self.server = server
             # set epics from server
-            if self.epics() not in build_servers[self.os][self.server]:
-                self.set_epics(build_servers[self.os][self.server][0])
+            if self.epics() not in BUILD_SERVERS[self.os][self.server]:
+                self.set_epics(BUILD_SERVERS[self.os][self.server][0])
         else:
             # if we have specified epics version then set it
             self.set_epics(epics)
             if server is None:
                 # set server from epics
                 self.server = default_server()
-                if self.epics() not in build_servers[self.os][self.server]:
+                if self.epics() not in BUILD_SERVERS[self.os][self.server]:
                     servers = epics_servers(self.os, self.epics())
                     assert servers, \
                         "No %s build servers exist for epics version %s" % \
@@ -140,9 +109,9 @@ class Builder:
                 # set specified server
                 self.server = server
 
-        assert self.server in build_servers[self.os].keys(), \
+        assert self.server in BUILD_SERVERS[self.os].keys(), \
             "No build server for this OS server: %s" % self.server
-        assert self.epics() in build_servers[self.os][self.server], \
+        assert self.epics() in BUILD_SERVERS[self.os][self.server], \
             "EPICS version %s not allowed for server %s" % (
                 self.epics(),
                 self.server)
@@ -167,7 +136,7 @@ class Builder:
     def build_servers(self):
         """Returns a list if the available build servers that can be used for
         the build"""
-        return build_servers
+        return BUILD_SERVERS
 
     def get_server(self):
         """Returns the build server to use in the build"""
@@ -227,8 +196,8 @@ class Builder:
             "area"                  : self.area,
             "force"                 : "true" if self.force else "false",
             "build_name"            : build_name,
-            "dls_syslog_server"     : os.getenv("ADE_SYSLOG_SERVER", "graylog2.diamond.ac.uk"),
-            "dls_syslog_server_port": os.getenv("ADE_SYSLOG_SERVER_PORT", "12209")
+            "dls_syslog_server"     : SYSLOG_SERVER,
+            "dls_syslog_server_port": SYSLOG_SERVER_PORT
         }
 
     def local_test_possible(self):
@@ -243,7 +212,7 @@ class Builder:
 
         build_name = self.build_name("local", vcs.module, vcs.version)
         build_dir = os.path.join(
-            root_dir, "work", "etc", "build", "test", build_name)
+            DLSBUILD_ROOT_DIR, "work", "etc", "build", "test", build_name)
 
         usermsg.info("Test build of module in {}".format(build_dir))
 
@@ -287,7 +256,7 @@ class Builder:
         build_name = self.build_name("build", vcs.module, vcs.version)
         if test:
             build_dir = os.path.join(
-                root_dir, "work", "etc", "build", "test", build_name)
+                DLSBUILD_ROOT_DIR, "work", "etc", "build", "test", build_name)
         else:
             build_dir = self.dls_env.prodArea(self.area)
 
@@ -295,7 +264,7 @@ class Builder:
             build_dir, vcs, build_name)
 
         # generate the filename
-        pathname = os.path.join(root_dir, "work", "etc", "build", "queue")
+        pathname = os.path.join(DLSBUILD_ROOT_DIR, "work", "etc", "build", "queue")
         filename = "%s.%s" % (params["build_name"], self.server)
 
         # Submit the build script
@@ -321,7 +290,7 @@ class WindowsBuild(Builder):
     def build_script(self, params):
         for name in params.keys():
             if params[name][:1] == "/":
-                params[name] = params[name].replace(root_dir, windows_root_dir)
+                params[name] = params[name].replace(DLSBUILD_ROOT_DIR, DLSBUILD_WIN_ROOT_DIR)
         params["make"] = "make"
 
         return Builder._script(self, params, "@echo on", "set %s=%s")

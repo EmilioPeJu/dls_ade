@@ -23,6 +23,7 @@ from dls_ade import path_functions as pathf
 from dls_ade import Server
 from dls_ade.exceptions import FedIdError
 from dls_ade import logconfig
+from dls_ade.constants import LDAP_SERVER_URL
 
 # Optional but useful in a library or non-main module:
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -138,7 +139,7 @@ def lookup_contact_name(fed_id):
     """
 
     # Set up ldap search parameters
-    l = ldap.initialize('ldap://altfed.cclrc.ac.uk')
+    l = ldap.initialize(LDAP_SERVER_URL)
     basedn = "dc=fed,dc=cclrc,dc=ac,dc=uk"
     search_filter = "(&(cn={}))".format(fed_id)
     search_attribute = ["givenName", "sn"]

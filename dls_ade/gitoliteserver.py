@@ -4,11 +4,10 @@ import tempfile
 import subprocess
 import logging
 
+from dls_ade.constants import GIT_ROOT
 from dls_ade.gitserver import GitServer
-from dls_ade import path_functions as pathf
 from dls_ade.vcs_git import git
 
-GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

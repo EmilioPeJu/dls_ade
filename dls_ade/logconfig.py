@@ -11,7 +11,7 @@ import json
 import logging.config
 import getpass
 import threading
-
+from dls_ade.constants import GELFLOG_SERVER, GELFLOG_SERVER_PORT
 
 default_config = {
     "version": 1,
@@ -53,8 +53,8 @@ default_config = {
             "level": "INFO",
             # Obviously a DLS-specific configuration: the graylog server address and port
             # Graylog2 cluster. Input: "Load-Balanced GELF TCP"
-            "host": os.getenv('ADE_GELFLOG_SERVER', "graylog2.diamond.ac.uk"),
-            "port": int(os.getenv('ADE_GELFLOG_SERVER_PORT', '12201')),
+            "host": GELFLOG_SERVER,
+            "port": int(GELFLOG_SERVER_PORT),
             "debug": True,
             #  The following custom fields will be disabled if setting this False
             "include_extra_fields": True,
