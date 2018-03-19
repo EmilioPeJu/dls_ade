@@ -75,7 +75,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
 } >$build_log 3>&1
 
 if (( $(cat ${_build_name}.sta) != 0 )) ; then
-    ReportFailure $error_log
+    ReportFailure ${PWD}/$error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
     cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email
 fi

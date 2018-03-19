@@ -146,7 +146,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
 } 1>$build_log 3>&1  # redirect STDOUT and STDERR to build log
 
 if (( $(cat $status_log) != 0 )) ; then
-    ReportFailure $error_log
+    ReportFailure ${PWD}/$error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
     cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email || SysLog err "Failed to email build errors"
 elif [ -e documentation/Makefile ]; then
