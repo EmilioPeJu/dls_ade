@@ -99,7 +99,7 @@ def _main():
 def main():
     # Catch unhandled exceptions and ensure they're logged
     try:
-        logconfig.setup_logging(application='dls-release.py')
+        logconfig.setup_logging(application='dls-start-new-module.py')
         return _main()
     except Exception as e:
         logging.exception(e)
