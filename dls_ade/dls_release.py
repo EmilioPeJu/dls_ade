@@ -411,6 +411,9 @@ def _main():
         version = next_version_number(releases, module=module)
     else:
         version = format_argument_version(args.release)
+        if '.' in args.release:
+            usermsg.warning("Release \'{}\' contain \'.\' which will be replaced by \'-\' to: \'{}\'"
+                            .format(args.release, version))
 
     try:
         vcs.set_version(version)

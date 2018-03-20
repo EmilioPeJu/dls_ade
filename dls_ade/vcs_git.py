@@ -255,7 +255,6 @@ class Git(BaseVCS):
     """
 
     def __init__(self, module, area, parent=None, repo=None):
-
         self._module = module
         self.area = area
         self.parent = parent
@@ -345,8 +344,11 @@ class Git(BaseVCS):
         Returns:
             bool: True or False for whether the version exists or not
         """
-
-        return version in self.list_releases()
+        release_list = self.list_releases()
+        release_exist = version in release_list
+        if not release_exist:
+            log.warning("Release \'{}\' not found in releases: {}".format(version, release_list))
+        return release_exist
 
     def set_branch(self, branch):
         origin = self.repo.remotes.origin
@@ -363,7 +365,7 @@ class Git(BaseVCS):
 
         if self.parent is not None \
                 and not self.check_version_exists(version):
-            raise VCSGitError('version does not exist')
+            raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
         self._version = version
 
     def push_to_remote(self, remote_name="origin", branch_name="master"):
