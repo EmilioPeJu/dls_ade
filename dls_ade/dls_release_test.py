@@ -1,15 +1,11 @@
 #!/bin/env dls-python
 
 import unittest
-import logging
 from dls_ade import dls_release
-from pkg_resources import require
-require("mock")
+
 from mock import patch, ANY, MagicMock
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def set_up_mock(self, path):
@@ -300,17 +296,15 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_message)
 
-    def test_given_git_and_epics_area_else_good_options_then_raise_error(self):
+    def test_given_git_and_epics_area_else_good_options_then_error_not_raised(self):
 
         self.args.module_name = "module"
         self.args.release = "version"
         self.args.area = "epics"
 
-        expected_error_message = self.args.area + " area not supported by git"
-
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
-        self.mock_error.assert_called_once_with(expected_error_message)
+        self.assertFalse(self.mock_error.call_count)
 
     def test_given_git_and_matlab_area_else_good_options_then_error_not_raised(self):
 
@@ -476,7 +470,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions()
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
@@ -496,7 +490,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         build = dls_release.create_build_object(options)
 
         expected_message = \
-            'Releasing {module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
+            '{module} {version} from branch {branch}, '.format(module=module, version=version, branch=branch)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
@@ -515,7 +509,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions(area='ioc')
         build = dls_release.create_build_object(options)
 
-        expected_message = 'Releasing {module} {version} from trunk, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 

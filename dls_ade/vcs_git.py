@@ -1,11 +1,14 @@
 import os
 
-from pkg_resources import require
-require('GitPython')
 import git
+import logging
 
 from dls_ade.vcs import BaseVCS
 from dls_ade.exceptions import VCSGitError
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger("usermessages")
 
 
 def is_in_local_repo(path="./"):
@@ -81,9 +84,9 @@ def init_repo(path="./"):
     if is_local_repo_root(path):
         return git.Repo(path)
 
-    print("Initialising repo...")
+    usermsg.info("Initialising repo in {}".format(path))
     repo = git.Repo.init(path)
-    print("Repository created.")
+    usermsg.info("Repository created.")
 
     return repo
 
@@ -100,10 +103,10 @@ def stage_all_files_and_commit(repo, message="Initial commit."):
             repository.
     """
 
-    print("Staging files...")
+    usermsg.info("Staging files...")
     repo.git.add('--all')
 
-    print("Committing files to repo...")
+    usermsg.info("Committing files to repo... commit msg: \"{}\"".format(message))
     index = repo.index
     # If there are no changes to commit, then GitCommandError will be raised.
     # There is no reason to raise an exception for this.
@@ -189,7 +192,7 @@ def checkout_remote_branch(branch, repo):
     """
 
     if branch in list_remote_branches(repo):
-        print("Checking out " + branch + " branch.")
+        usermsg.info("Checking out branch: {}".format(branch))
         origin = repo.remotes.origin
         remote = origin.refs[branch]
         remote.checkout(b=branch)
@@ -252,7 +255,6 @@ class Git(BaseVCS):
     """
 
     def __init__(self, module, area, parent=None, repo=None):
-
         self._module = module
         self.area = area
         self.parent = parent
@@ -342,8 +344,11 @@ class Git(BaseVCS):
         Returns:
             bool: True or False for whether the version exists or not
         """
-
-        return version in self.list_releases()
+        release_list = self.list_releases()
+        release_exist = version in release_list
+        if not release_exist:
+            log.warning("Release \'{}\' not found in releases: {}".format(version, release_list))
+        return release_exist
 
     def set_branch(self, branch):
         origin = self.repo.remotes.origin
@@ -360,16 +365,8 @@ class Git(BaseVCS):
 
         if self.parent is not None \
                 and not self.check_version_exists(version):
-            raise VCSGitError('version does not exist')
+            raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
         self._version = version
-
-    def release_version(self, version, message=""):
-
-        self.repo.create_tag(version, message=message)
-
-        origin = self.repo.remotes.origin
-        # This is equivalent to 'git push origin <tag_name>'
-        origin.push(version)
 
     def push_to_remote(self, remote_name="origin", branch_name="master"):
         """
@@ -421,7 +418,7 @@ class Git(BaseVCS):
                            "currently exist")
             raise VCSGitError(err_message.format(s_repo_path=server_repo_path))
 
-        print("Pushing repo to destination...")
+        usermsg.info("Pushing repo to destination...")
         remote.push(branch_name)
 
     def add_new_remote_and_push(self, dest, remote_name="origin",
@@ -465,10 +462,10 @@ class Git(BaseVCS):
             raise VCSGitError(err_message.format(remote=remote_name))
 
         self.parent.create_remote_repo(dest)
-        print("Adding remote to repo...")
-        remote = repo.create_remote(remote_name, os.path.join(
-            self.parent.url, dest))
-        print("Pushing repo to destination...")
+        remote_url = os.path.join(self.parent.url, dest)
+        usermsg.info("Adding remote to repo. {name}: {url}".format(name=dest, url=remote_url))
+        remote = repo.create_remote(remote_name, remote_url)
+        usermsg.info("Pushing repo to destination...")
         remote.push(branch_name)
 
     def push_all_branches_and_tags(self, server_repo_path, remote_name):

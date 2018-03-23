@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import shutil
+import json
 import time
 import logging
 from operator import itemgetter
@@ -22,8 +23,7 @@ from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
 from dls_ade import path_functions as pathf
 from dls_ade import vcs_git, Server
-
-logging.basicConfig(level=logging.WARNING)
+from dls_ade import logconfig
 
 usage = """
 Default <area> is 'support'.
@@ -546,10 +546,14 @@ def format_message_width(message, line_len):
     return message
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
+    usermsg = logging.getLogger(name="usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     raw = set_raw_argument(args.raw)
     pathf.check_technical_area(args.area, args.module_name)
@@ -564,7 +568,7 @@ def main():
     if server.is_server_repo(source):
         vcs = server.temp_clone(source)
         releases = vcs_git.list_module_releases(vcs.repo)
-        logging.debug(releases)
+        log.debug(releases)
     else:
         raise Exception("Module " + args.module_name +
                         " doesn't exist in " + source)
@@ -593,7 +597,7 @@ def main():
 
     # Check if there are any logs, exit if not
     if not log_info['logs']:
-        print("No logs for " + args.module_name + " between releases " +
+        usermsg.info("No logs for " + args.module_name + " between releases " +
               args.earlier_release + " and " + args.later_release)
         return 0
 
@@ -609,16 +613,29 @@ def main():
         print_bool = False
 
     release_marker = "(RELEASE: {})"
+    messages = []
     for log in formatted_logs:
         if log.endswith(release_marker.format(end)):
             print_bool = True
         if print_bool:
-            print(log)
+            messages.append(log)
         if log.endswith(release_marker.format(start)):
             break
+    usermsg.info("\n".join(messages))
 
     shutil.rmtree(vcs.repo.working_tree_dir)
 
 
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-logs-since-release.py')
+        _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -1133,13 +1133,6 @@ class GitSettersTest(unittest.TestCase):
 
         self.vcs.repo.remotes.origin.refs.__getitem__().checkout.assert_called_once_with(b=branch)
 
-    def test_given_version_then_create_tag_and_push(self):
-
-        self.vcs.release_version('1-0', message='Release 1-0')
-
-        self.vcs.repo.create_tag.assert_called_once_with('1-0', message='Release 1-0')
-        self.vcs.repo.remotes.origin.push.assert_called_once_with('1-0')
-
 
 class FakeTag(object):
     def __init__(self, name):

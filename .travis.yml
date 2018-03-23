@@ -10,6 +10,9 @@ install:
   - pip install -r requirements.txt
   - python setup.py bdist_egg
 
-script: nosetests
+script:
+  - python setup.py nosetests
+  - python setup.py build_sphinx
+
 
 after_script: coveralls

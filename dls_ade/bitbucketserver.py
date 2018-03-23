@@ -1,7 +1,5 @@
 import os
 import json
-from pkg_resources import require
-require('requests')
 import requests
 
 from dls_ade.gitserver import GitServer

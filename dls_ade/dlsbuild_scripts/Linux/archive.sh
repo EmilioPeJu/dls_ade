@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -19,12 +20,6 @@
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
 #
-
-ReportFailure()
-{
-    cat "$TEMP_LOG" |  mail -s "dls-tar-module.py ${_action} failure" $_email
-    exit 2
-}
 
 __run_job()
 {
@@ -41,11 +36,15 @@ __run_job()
 
         if [ "${_action}" == "archive" ] ; then
             find ${release_dir}/${_version} -name O.\* -prune -exec rm -rf {} \;
-            tar -czf  $archive -C  $release_dir ${_version}
-            rm -rf ${release_dir}/${_version}
+            SysLog info "Archiving: ${release_dir}/${_version} to ${archive}"
+            tar -czf  $archive -C  $release_dir ${_version} || ReportFailure "Archiving failed"
+            SysLog info "Removing release: ${_version}"
+            rm -rf ${release_dir}/${_version} || ReportFailure "Unable to remove archived release dir"
         else
-            tar -xzpf $archive -C  $release_dir ${_version}
-            rm -rf ${archive}
+            SysLog info "Unpacking from archive: ${archive} into ${release_dir} ${_version}"
+            tar -xzpf $archive -C  $release_dir ${_version} || ReportFailure "Unarchiving failed"
+            SysLog info "Removing archive: ${archive}"
+            rm -rf ${archive} || ReportFailure "Unable to remove archive"
         fi
     } > "$TEMP_LOG" 2>&1
 }

@@ -9,6 +9,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -19,114 +20,74 @@
 #   _area      : The build area
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
-#
+
+# Set up environment
+DLS_EPICS_RELEASE=${_epics}
+source /dls_sw/etc/profile
+
+work_tar_dir=/dls_sw/work/targetOS/tar-files
+prod_tar_dir=/dls_sw/prod/targetOS/tar-files
+if [ ! -z "$(ls $work_tar_dir/)" -a -w $prod_tar_dir ]; then
+    mv $work_tar_dir/* $prod_tar_dir || ReportFailure "Can not move tar files"
+fi
+
+# Ensure there is a architecture dependent build directory available
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 
 
-ReportFailure()
-{
-    cat "$TEMP_LOG" |  mail -s "Build Errors: $_area $_module $_version" $_email
-    exit 2
-}
+TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
+TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
+build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
-TEMP_LOG="$(mktemp)"
-trap ReportFailure ERR
-trap 'rm -f "$TEMP_LOG"' EXIT
-set -o errexit
-set -o xtrace
+mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
+cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
 
-{
-    # Set up environment
-    DLS_EPICS_RELEASE=${_epics}
-    source /dls_sw/etc/profile
-    export SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
+SysLog debug "version dir: " ${PWD}/$_version
 
-    work_tar_dir=/dls_sw/work/targetOS/tar-files
-    prod_tar_dir=/dls_sw/prod/targetOS/tar-files
-    if [ ! -z "$(ls $work_tar_dir/)" -a -w $prod_tar_dir ]; then
-        mv $work_tar_dir/* $prod_tar_dir || { echo Can not move tar files; exit 1; }
-    fi
+# If force, remove existing version directory (whether or not it exists)
+if [ "$_force" == "true" ]; then
+    SysLog info "Force: removing previous version: " ${PWD}/$_version
+    rm -rf $_version || ReportFailure "Can not rm $_version"
+fi
 
-    # Ensure there is a architecture dependent build directory available
-    OS_VERSION=$(lsb_release -sr | cut -d. -f1)
+if [ ! -d $_version ]; then
+    SysLog info "Cloning repo: " $_git_dir
+    git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    SysLog info "Checking out version tag: " $_version
+    ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
+    ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
+fi
 
-    if (( $OS_VERSION < 6 )) ; then
-        build_dir=$_build_dir/RHEL$OS_VERSION
+# Add the ROOT definition to the RELEASE file
+release_file="$_version"/configure/RELEASE
 
-        mkdir -p $build_dir
-        cd $build_dir
+# The following is for short term compatibility purposes
+[ ! -f "$release_file" ] && release_file="$_version"/RELEASE
 
-        # Checkout build program - always from RHEL5 directory in branches
-        if [ ! -d build_scripts ]; then
-            svn checkout -q --depth=files $SVN_ROOT/diamond/branches/build_scripts/RHEL5 build_scripts
-        else
-            svn switch --depth=files $SVN_ROOT/diamond/branches/build_scripts/RHEL5 build_scripts 
-        fi
-
-        cd build_scripts
-
-        [ "$_force" == "true" ] && rm -rf $_module
-
-        if [ ! -d $_module ]; then
-            svn checkout -q $_svn_dir $_module
-        else
-            svn switch $_svn_dir $_module
-        fi
-
-        ./build_program $_module
-    else
-        TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-        TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
-        build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
-
-        # Checkout module
-        mkdir -p $build_dir/${_module}
-        cd $build_dir/${_module}
-
-        if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
-            if [ ! -d $_version ]; then
-                git clone --depth=100 $_git_dir $_version
-                ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )
-            elif [ "$_force" == "true" ] ; then
-                rm -rf $_version
-                git clone --depth=100 $_git_dir $_version
-                ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )
-            elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
-                ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
-            fi
-        elif [[ "${_git_dir:-undefined}" == "undefined" ]] ; then
-            if [ ! -d $_version ]; then
-                svn checkout -q "$_svn_dir" "$_version"
-            elif [ "$_force" == "true" ] ; then
-                rm -rf $_version
-                svn checkout -q "$_svn_dir" "$_version"
-            elif (( $(svn status -qu "$_version" | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
-                ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
-            fi
-        else 
-            ReportFailure "both _git_dir and _svn_dir are defined; unclear which to use"
-        fi
-
-        # Add the ROOT definition to the RELEASE file
-        release_file="$_version"/configure/RELEASE
-
-        # The following is for short term compatibility purposes
-        [ ! -f "$release_file" ] && release_file="$_version"/RELEASE
-
-        if [ -f "$release_file" ] ; then
-            if (( ! $(grep -c '^( *ROOT| *TOOLS_SUPPORT)' "$release_file") )) ; then
-                sed -i "1i\
+if [ -f "$release_file" ] ; then
+    if (( ! $(grep -c '^( *ROOT| *TOOLS_SUPPORT)' "$release_file") )) ; then
+        sed -i "1i\
 TOOLS_SUPPORT=$TOOLS_ROOT" "$release_file"
-            else
-                sed -i \
-                    -e 's,^ *ROOT *=.*$,ROOT='"$TOOLS_ROOT," \
-                    -e 's,^ *TOOLS_SUPPORT *=.*$,TOOLS_SUPPORT='"$TOOLS_ROOT," \
-                    "$release_file"
-            fi
-        fi
-
-        $TOOLS_BUILD/build_program -n $_build_name ${_version}
-
-        $TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+    else
+        sed -i \
+            -e 's,^ *ROOT *=.*$,ROOT='"$TOOLS_ROOT," \
+            -e 's,^ *TOOLS_SUPPORT *=.*$,TOOLS_SUPPORT='"$TOOLS_ROOT," \
+            "$release_file"
     fi
+fi
 
-} > "$TEMP_LOG" 2>&1
+# Build
+SysLog info "Building tool. Build log: ${PWD}/${_version}/${_build_name}.log"
+build_program_log=${PWD}/${_version}/build_program_${_build_name}.log
+$TOOLS_BUILD/build_program -n $_build_name ${_version} > ${build_program_log} 2>&1 \
+  || ReportFailure "Build aborted. Failed command: build_program -n ${_build_name} ${_version} " $(cat ${build_program_log})
+
+if (( $(cat ${_version}/${_build_name}.sta) != 0 )) ; then
+    ReportFailure ${PWD}/${_version}/${_build_name}.log
+fi
+
+SysLog info "make-defaults: " $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+$TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+
+SysLog info "Build complete"

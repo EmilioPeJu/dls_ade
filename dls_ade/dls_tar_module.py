@@ -11,12 +11,15 @@ untar the module and remove the archive (reversing the original process)
 
 import os
 import sys
+import json
+import logging
 
 from dls_ade import vcs_git
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_ade import dlsbuild
 from dls_ade import path_functions as pathf
+from dls_ade import logconfig
 
 env = environment()
 
@@ -109,10 +112,14 @@ def check_file_paths(release_dir, archive, untar):
             raise IOError("Archive '{0}' already exists".format(archive))
 
 
-def main():
+def _main():
+    log = logging.getLogger(name="dls_ade")
+    usermsg = logging.getLogger("usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     check_area_archivable(args.area)
     env.check_epics_version(args.epics_version)
@@ -136,6 +143,17 @@ def main():
     git.set_version(args.release)
 
     build.submit(git)
+
+
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-tar-module.py')
+        return _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
 
 
 if __name__ == "__main__":

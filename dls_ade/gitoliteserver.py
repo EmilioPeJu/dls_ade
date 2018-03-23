@@ -2,13 +2,17 @@ import os
 import shutil
 import tempfile
 import subprocess
+import logging
 
+from dls_ade.constants import GIT_ROOT
 from dls_ade.gitserver import GitServer
-from dls_ade import path_functions as pathf
 from dls_ade.vcs_git import git
 
-GIT_ROOT = "dascgitolite@dasc-git.diamond.ac.uk"
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger("usermessages")
 
 
 class GitoliteServer(GitServer):
@@ -41,7 +45,9 @@ class GitoliteServer(GitServer):
         list_cmd = "ssh " + GIT_ROOT + " expand controls"
         if area:
             list_cmd += "/" + area
+        log.debug("area: \"{area}\" ssh: \"{sshcmd}\"".format(area=area, sshcmd=list_cmd))
         list_cmd_output = subprocess.check_output(list_cmd.split())
+        log.debug("\"gitolite response\": \"{}\"".format(list_cmd_output))
         # list_cmd_output is a heading followed by a module list in the form:
         # R   W 	(alan.greer)	controls/support/ADAndor
         # R   W 	(ronaldo.mercado)	controls/support/ethercat
@@ -72,7 +78,7 @@ class GitoliteServer(GitServer):
 
         git_dest = os.path.join(self.url, dest)
 
-        print("Creating remote...")
+        usermsg.info("Creating remote on gitolite: {}".format(git_dest))
         temp_dir = tempfile.mkdtemp()
 
         try:

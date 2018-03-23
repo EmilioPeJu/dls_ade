@@ -1,12 +1,9 @@
-from __future__ import print_function
 from dls_ade import path_functions as pathf
 import logging
 from dls_ade import Server
 from dls_ade import module_template as mt
 from dls_ade import module_creator as mc
 from dls_ade.exceptions import ParsingError
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 def get_module_creator(module_name, area="support", fullname=False):

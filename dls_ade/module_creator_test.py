@@ -329,7 +329,7 @@ class ModuleCreatorPrintMessageTest(unittest.TestCase):
 
     def test_given_function_called_then_module_template_print_message_called(self):
 
-        self.nmc_obj.print_message()
+        self.nmc_obj.get_print_message()
 
         self.mock_module_template.print_message_assert_called_once_with()
 

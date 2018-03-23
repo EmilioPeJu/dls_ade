@@ -13,17 +13,22 @@ will be left as it was.
 import os
 import sys
 import shutil
+import json
 import logging
 import csv
-from pkg_resources import require
-require("python_ldap>=2.3.12")
 import ldap
 
 from dls_ade.argument_parser import ArgParser
 from dls_ade import path_functions as pathf
 from dls_ade import Server
+from dls_ade.exceptions import FedIdError
+from dls_ade import logconfig
+from dls_ade.constants import LDAP_SERVER_URL
 
-# logging.basicConfig(level=logging.DEBUG)
+# Optional but useful in a library or non-main module:
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger(name="usermessages")
 
 usage = """
 Default <area> is 'support'.
@@ -129,10 +134,12 @@ def lookup_contact_name(fed_id):
     Returns:
         str: Contact name
 
+    Raises: FedIdError if the fed_id cannot be found in LDAP
+
     """
 
     # Set up ldap search parameters
-    l = ldap.initialize('ldap://altfed.cclrc.ac.uk')
+    l = ldap.initialize(LDAP_SERVER_URL)
     basedn = "dc=fed,dc=cclrc,dc=ac,dc=uk"
     search_filter = "(&(cn={}))".format(fed_id)
     search_attribute = ["givenName", "sn"]
@@ -140,12 +147,12 @@ def lookup_contact_name(fed_id):
 
     # Perform search, print message so user knows where program hangs
     # The lookup can hang at l.result() if the FED-ID does not exist.
-    print("Performing search for " + fed_id + "...")
+    log.debug("Performing search for {}".format(fed_id))
     l.simple_bind_s()
     ldap_result_id = l.search(basedn, search_scope, search_filter,
                               search_attribute)
     ldap_output = l.result(ldap_result_id, 0)
-    logging.debug(ldap_output)
+    log.debug(ldap_output)
     # ldap_output has the form:
     # (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
     # {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
@@ -154,7 +161,7 @@ def lookup_contact_name(fed_id):
         # If the FED-ID does not exist, ldap_output will look like:
         # (115, [(None,
         # ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
-        raise Exception(fed_id + " is not an existing contact")
+        raise FedIdError("\"{}\" is not a FedID in LDAP".format(fed_id))
 
     # Extract contact name from output
     name_info_dict = ldap_output[1][0][1]
@@ -167,7 +174,7 @@ def lookup_contact_name(fed_id):
 
 def output_csv_format(contact, cc_contact, module):
     """
-    Print out contact info in CSV format.
+    Format contact info string in CSV format.
 
     Args:
         contact(str): Contact FED-ID
@@ -181,11 +188,19 @@ def output_csv_format(contact, cc_contact, module):
     # Check if <FED-ID>s are specified in repo, if not don't run lookup
     # function
     if contact != 'unspecified':
-        contact_name = lookup_contact_name(contact)
+        try:
+            contact_name = lookup_contact_name(contact)
+        except FedIdError as exception:
+            log.error(exception.message)
+            contact_name = contact
     else:
         contact_name = contact
     if cc_contact != 'unspecified':
-        cc_name = lookup_contact_name(cc_contact)
+        try:
+            cc_name = lookup_contact_name(cc_contact)
+        except FedIdError as exception:
+            log.error(exception.message)
+            cc_name = contact
     else:
         cc_name = cc_contact
 
@@ -215,7 +230,7 @@ def import_from_csv(modules, area, imp):
     csv_file = []
     for row in reader:
         csv_file.append(row)
-    logging.debug(csv_file)
+    log.debug(csv_file)
 
     if not csv_file:
         raise Exception("CSV file is empty")
@@ -267,8 +282,8 @@ def edit_contact_info(repo, contact='', cc=''):
     current_cc = repo.git.check_attr("module-cc", ".").split(' ')[-1]
 
     if contact in [current_contact, ''] and cc in [current_cc, '']:
-        print("Leaving contacts unchanged")
-        return 0
+        usermsg.info("Leaving contacts unchanged ({contact}, {cc})".format(contact=current_contact, cc=current_cc))
+        return
 
     # Check that FED-IDs exist,
     # if they don't lookup...() will (possibly) hang and raise an exception
@@ -290,22 +305,25 @@ def edit_contact_info(repo, contact='', cc=''):
             repo.working_tree_dir, '.gitattributes'), 'w') as git_attr_file:
 
         commit_message = ''
+        user_msg = "{}: ".format(module)
         if contact:
-            print("{0}: Setting contact to {1}".format(module, contact))
+            user_msg += "Setting contact to {}".format(contact)
             commit_message += "Set contact to {}. ".format(contact)
             git_attr_file.write("* module-contact={}\n".format(contact))
         if cc:
-            print("{0}: Setting cc to {1}".format(module, cc))
+            user_msg += " Setting cc to {}".format(cc)
             commit_message += "Set cc to {}.".format(cc)
             git_attr_file.write("* module-cc={}\n".format(cc))
+        usermsg.info(user_msg)
 
     return commit_message
 
 
-def main():
-
+def _main():
     parser = make_parser()
     args = parser.parse_args()
+
+    log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     check_parsed_args_compatible(args.imp, args.modules, args.contact, args.cc,
                                  parser)
@@ -332,7 +350,7 @@ def main():
             try:
                 vcs = server.temp_clone(source)
             except ValueError:
-                print("Module {} does not exist in {} [{}]".format(
+                log.error("Module {} does not exist in {} [{}]".format(
                     module, args.area, source))
                 continue
 
@@ -343,21 +361,19 @@ def main():
                 "module-cc", ".").split(' ')[-1]
 
             if args.csv:
-                print_out.append(output_csv_format(
-                    contact, cc_contact, module))
+                print_out.append(output_csv_format(contact, cc_contact, module))
             else:
-                print_out.append(module +
-                                 " Contact: " + contact +
-                                 " (CC: " + cc_contact + ")")
+                print_out.append("{module} Contact: {contact}, CC: {cc}"
+                                 .format(cc=cc_contact, contact=contact, module=module))
 
             shutil.rmtree(vcs.repo.working_tree_dir)
 
+        module_contacts_str = ""
         if args.csv:
-            print("Module,Contact,Contact Name,CC,CC Name")
-        for entry in print_out:
-            print(entry)
-
-        return 0
+            module_contacts_str += "Module,Contact,Contact Name,CC,CC Name\n"
+        module_contacts_str += "\n".join(print_out)
+        usermsg.info(module_contacts_str)  # print the list of module owners
+        return
 
     # If we get to this point, we are assigning contacts
 
@@ -371,24 +387,39 @@ def main():
 
     # Checkout modules and change contacts
     for module, contact, cc in contacts:
-
-        print("Cloning " + module + " from " + args.area + " area...")
+        log.debug("Cloning {module} from {area}".format(module=module, area=args.area))
         source = server.dev_module_path(module, args.area)
         vcs = server.temp_clone(source)
         repo = vcs.repo
 
-        edit_summary = edit_contact_info(repo, contact, cc,)
+        try:
+            edit_summary = edit_contact_info(repo, contact, cc,)
+        except FedIdError as exception:
+            usermsg.error("ABORTING: {}".format(exception.message))
+            sys.exit(1)
 
-        if edit_summary != 0:
+        if edit_summary is not None:
             index = repo.index
             index.add(['.gitattributes'])
             index.commit(edit_summary)
 
             origin = repo.remotes.origin
+            log.debug("Pushing module contact/cc attributes to remote on \'{}\'".format(repo.active_branch))
             origin.push(repo.active_branch)
 
         shutil.rmtree(repo.working_tree_dir)
 
 
+def main():
+    # Catch unhandled exceptions and ensure they're logged
+    try:
+        logconfig.setup_logging(application='dls-module-contacts.py')
+        _main()
+    except Exception as e:
+        logging.exception(e)
+        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        exit(1)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

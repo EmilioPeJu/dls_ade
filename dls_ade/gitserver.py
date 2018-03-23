@@ -1,8 +1,12 @@
 import os
 import tempfile
+import logging
 
 from dls_ade.vcs_git import Git, git
 from dls_ade import path_functions as pathf
+
+log = logging.getLogger(__name__)
+usermsg = logging.getLogger("usermessages")
 
 
 class GitServer(object):
@@ -138,16 +142,16 @@ class GitServer(object):
 
                 # Remove controls/<area>/ from front of save path
                 module = path.split('/', 2)[-1]
-                print("Module: " + module)
+                log.debug("Module: {}".format(module))
 
                 if module not in os.listdir("./"):
-                    print("Cloning: " + path + "...")
+                    usermsg.info("Cloning: {}".format(path))
                     git.Repo.clone_from(
                         os.path.join(self.clone_url,
                                      self.get_clone_path(path)),
                         os.path.join("./", module))
                 else:
-                    print(module + " already exists in current directory")
+                    usermsg.info(module + " already exists in current directory")
 
     def create_remote_repo(self, dest):
         """

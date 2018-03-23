@@ -1,3 +1,4 @@
+#!/bin/bash
 # ******************************************************************************
 # 
 # Script to build a Diamond production module for support, ioc or matlab areas
@@ -7,6 +8,7 @@
 # dls-release mechanism. These variables are:
 #
 #   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
@@ -18,14 +20,6 @@
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
 #
-
-
-ReportFailure()
-{
-    { [ -f "$1" ] && cat $1 || echo $*; } |
-    mail -s "Build Errors: $_area $_module $_version"         $_email
-    exit 2
-}
 
 # Uncomment the following for tracing
 # set -o xtrace
@@ -56,17 +50,24 @@ case "$OS_VERSION" in
         ReportFailure "OS Version ${OS_VERSION} not handled"
 esac
 
+SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
+
 # Checkout module
 mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
     if [ ! -d $_version ]; then
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
     elif [ "$_force" == "true" ] ; then
+        SysLog info "Force: removing previous version: " ${PWD}/$_version
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
+        SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
+        SysLog info "checkout version tag: " $_version
         ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
@@ -96,15 +97,15 @@ fi
 case "$OS_VERSION" in
     4)
         # Modify setup.py
-        mv setup.py setup.py.vcs || { echo Can not move setup.py to setup.py.vcs; exit 1; }
+        mv setup.py setup.py.vcs || ReportFailure "Can not move setup.py to setup.py.vcs"
         cat <<EOF > setup.py
 # The following line was added by the release script
 version = $(echo ${_version} | sed 's/-/./g')
 EOF
-        cat setup.py.vcs >> setup.py || { echo Can not edit setup.py; exit 1; }
+        cat setup.py.vcs >> setup.py || ReportFailure "Can not edit setup.py"
         ;;
     *)
-        cat <<EOF > Makefile.private || { echo Cannot write to Makefile.private; exit 1; }
+        cat <<EOF > Makefile.private || ReportFailure "Cannot write to Makefile.private"
 # Overrides for release info
 PREFIX = ${PREFIX}
 PYTHON=${PYTHON}
@@ -118,6 +119,7 @@ esac
 error_log=${_build_name}.err
 build_log=${_build_name}.log
 status_log=${_build_name}.sta
+SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
     {
         mkdir -p ${INSTALL_DIR}
@@ -126,12 +128,14 @@ status_log=${_build_name}.sta
 
         # This is a bit of a hack to only install in production builds
         if  [[ "$build_dir" =~ "/prod/" && "$(cat $status_log)" == "0" ]] ; then
+            SysLog info "Doing make install in prod"
             make install
             echo $? >$status_log
 
             # If successful, run make-defaults
             if (( ! $(cat $status_log) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
+                SysLog info "Running make-defaults" $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
                 $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
             fi
         fi
@@ -143,9 +147,12 @@ status_log=${_build_name}.sta
 } 1>$build_log 3>&1  # redirect STDOUT and STDERR to build log
 
 if (( $(cat $status_log) != 0 )) ; then
-    ReportFailure $error_log
+    ReportFailure ${PWD}/$error_log
 elif (( $(stat -c%s $error_log) != 0 )) ; then
-    cat $error_log | mail -s "Build Errors: $_area $_module $_version"         $_email
-elif [ -e documentation/Makefile ]; then 
-    make -C documentation
+    cat $error_log | mail -s "Build Errors: $_area $_module $_version" $_email || SysLog err "Failed to email build errors"
+elif [ -e documentation/Makefile ]; then
+    SysLog info "Building documentation"
+    make -C documentation || ReportFailure "Documentation build failed"
 fi
+
+SysLog info "Build complete"
