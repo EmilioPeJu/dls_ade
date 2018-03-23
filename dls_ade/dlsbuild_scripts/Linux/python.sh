@@ -122,6 +122,7 @@ status_log=${_build_name}.sta
 SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
     {
+        mkdir -p ${INSTALL_DIR}
         make clean && make
         echo $? >$status_log
 
