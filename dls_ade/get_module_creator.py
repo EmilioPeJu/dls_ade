@@ -114,11 +114,17 @@ def get_module_creator_ioc(module_name, fullname=False):
 
     """
     area = "ioc"
+    module_template_cls = mt.ModuleTemplateIOC
 
     dash_separated, cols = split_ioc_module_name(module_name)
 
     domain = cols[0]
     technical_area = cols[1]
+    template_args = {
+        "domain": domain,
+        "technical_area": technical_area,
+        "ioc_number": "01"
+    }
 
     if technical_area == "BL":
         if dash_separated:
@@ -128,17 +134,18 @@ def get_module_creator_ioc(module_name, fullname=False):
             app_name = domain
             module_path = domain + "/" + technical_area
 
+        template_args["app_name"] = app_name
         return mc.ModuleCreatorWithApps(module_path, area,
                                         mt.ModuleTemplateIOCBL,
-                                        app_name=app_name)
+                                        **template_args)
 
-    module_template_cls = mt.ModuleTemplateIOC
 
     if dash_separated:
         app_name = module_name
         module_path = domain + "/" + app_name
+        template_args['app_name'] = app_name
         return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        app_name=app_name)
+                                        **template_args)
 
     if len(cols) == 3 and cols[2]:
         ioc_number = cols[2]
@@ -147,10 +154,15 @@ def get_module_creator_ioc(module_name, fullname=False):
 
     app_name = "-".join([domain, technical_area, "IOC", ioc_number])
 
+    template_args.update({
+        'app_name': app_name,
+        'ioc_number': ioc_number
+    })
+
     if fullname:
         module_path = domain + "/" + app_name
         return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        app_name=app_name)
+                                        **template_args)
     else:
         # This part is here to retain compatibility with "old-style" modules,
         # in which a single repo (or module) named "domain/technical_area"
@@ -168,14 +180,14 @@ def get_module_creator_ioc(module_name, fullname=False):
             # already exists on the remote server.
             return mc.ModuleCreatorAddAppToModule(module_path, area,
                                                   module_template_cls,
-                                                  app_name=app_name)
+                                                  **template_args)
         else:
             # Otherwise, the behaviour is exactly the same as that given
             # by the ordinary IOC class as module_path is the only thing
             # that is different
             return mc.ModuleCreatorWithApps(module_path, area,
                                             module_template_cls,
-                                            app_name=app_name)
+                                            **template_args)
 
 
 def split_ioc_module_name(module_name):
