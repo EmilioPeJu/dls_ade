@@ -82,8 +82,6 @@ def _main():
 
     module_creator = get_module_creator(module_name, area, fullname)
 
-    module_creator.verify_can_create_local_module()
-
     if export_to_server:
         module_creator.verify_remote_repo()
 

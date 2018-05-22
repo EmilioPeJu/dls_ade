@@ -132,9 +132,8 @@ class ModuleTemplate(object):
                 # This stops the installer from compiling the .py files.
                 if rel_path.endswith(".py_template"):
                     rel_path = rel_path[:-9]
-                    template_files[rel_path] = contents
-                else:
-                    template_files[rel_path] = contents
+
+                template_files[rel_path] = contents
 
         return template_files
 
