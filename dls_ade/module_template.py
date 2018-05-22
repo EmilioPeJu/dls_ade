@@ -1,12 +1,16 @@
 import os
 import shutil
 import logging
+
+from cookiecutter.main import cookiecutter
+
 from dls_ade.exceptions import ArgumentError, TemplateFolderError
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
 
 TEMPLATES_FOLDER = "module_templates"
+COOKIECUTTER_TEMPLATES_FOLDER = "cookiecutter_templates"
 
 
 class ModuleTemplate(object):
@@ -49,6 +53,8 @@ class ModuleTemplate(object):
         # The following code ought to be used in subclasses to ensure that the
         # template_args given contain the required ones.
         self._verify_template_args()
+
+        self._cookiecutter_template_path = ""
 
     def _verify_template_args(self):
         """Verify that the template_args fulfill the template requirements.
@@ -149,6 +155,7 @@ class ModuleTemplate(object):
 
         """
         self._create_custom_files()
+        self._run_cookiecutter()
         self._create_files_from_template_dict()
 
     def _create_custom_files(self):
@@ -202,6 +209,64 @@ class ModuleTemplate(object):
 
             with open(rel_path, "w") as f:
                 f.write(contents.format(**self._template_args))
+
+    def _run_cookiecutter(self):
+        """ Run CookieCutter to populate the module folder
+
+        It uses the template specified by propety cookiecutter_template.
+
+        The template project folder is expected to be
+        {{cookiecutter.project_name}}, this name will be set to one of the
+        template args, firstly it tries using app_name if it does not exits, it
+        uses module_name otherwise CookieCutter's defaults
+        """
+        if self._cookiecutter_template_path:
+            log.info("Running CookieCutter using template: %s",
+                     self.cookiecutter_template)
+            _cwd = os.getcwd()
+            # ModuleCreator enters the module directory, but CookieCutters
+            # expects to be in the parent folder
+            os.chdir('..')
+
+            project_name = self._template_args.get('app_name') \
+                or self._template_args.get('module_name')
+
+            if project_name:
+                self._template_args['project_name'] = project_name
+
+            project_path = cookiecutter(
+                template=self._cookiecutter_template_path, no_input=True,
+                overwrite_if_exists=True,
+                extra_context=self._template_args)
+
+            project_basename = os.path.basename(project_path)
+            if project_basename != project_name:
+                log.warning("The cookiecutter template was not applied over "
+                            "the module folder, %s was used instead",
+                            project_basename)
+            os.chdir(_cwd)
+
+    @property
+    def cookiecutter_template(self):
+        """Get CookieCutter template used
+        
+        if none is used, it returns an empty string
+        """
+        return os.path.basename(self._cookiecutter_template_path)
+
+    @cookiecutter_template.setter
+    def cookiecutter_template(self, template_name):
+        """Set this property to defined the CookieCutter template used"""
+        template_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            COOKIECUTTER_TEMPLATES_FOLDER,
+            template_name
+        )
+
+        if not os.path.isdir(template_path):
+            raise TemplateFolderError(template_path)
+
+        self._cookiecutter_template_path = template_path
 
     def get_print_message(self):
         """Return a string with a message to detail the user's next steps."""
@@ -287,7 +352,7 @@ class ModuleTemplateWithApps(ModuleTemplate):
 
     For this class to work properly, the following template arguments must be\
     specified upon initialisation:
-    
+
         - module_path
         - user_login
         - app_name
@@ -486,3 +551,4 @@ class ModuleTemplateMatlab(ModuleTemplate):
         message = message.format(**message_dict)
 
         return message
+
