@@ -6,7 +6,7 @@ from dls_ade.exceptions import ArgumentError, TemplateFolderError
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
 
-MODULE_TEMPLATES = "module_templates"
+TEMPLATES_FOLDER = "module_templates"
 
 
 class ModuleTemplate(object):
@@ -82,10 +82,9 @@ class ModuleTemplate(object):
                 folder does not exist.
 
         """
-        templates_folder = MODULE_TEMPLATES
         template_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            templates_folder,
+            TEMPLATES_FOLDER,
             template_area
         )
 
