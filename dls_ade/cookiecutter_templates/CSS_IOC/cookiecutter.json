@@ -1,0 +1,6 @@
+{
+  "project_name": "BL01-UI-IOC-01",
+  "domain": "{{cookiecutter.project_name.split('-')[0]}}", 
+  "technical_area": "{{cookiecutter.project_name.split('-')[1]}}", 
+  "ioc_number": "{{cookiecutter.project_name.split('-')[3]}}"
+}

@@ -552,3 +552,43 @@ class ModuleTemplateMatlab(ModuleTemplate):
 
         return message
 
+
+class ModuleTemplateIOCUI(ModuleTemplateWithApps):
+
+    def __init__(self, template_args, additional_required_args=None):
+        super(ModuleTemplateIOCUI, self).__init__(
+                template_args,
+                additional_required_args
+        )
+
+        self.cookiecutter_template = "CSS_IOC"
+
+    def get_print_message(self):
+        module_path = self._template_args['module_path']
+        app_name = self._template_args['app_name']
+        message_dict = {
+            'RELEASE': os.path.join(module_path, "configure/RELEASE"),
+            'DbMakefile': os.path.join(
+                module_path,
+                app_name + "App/Db/Makefile"
+            ),
+            'create_gui': os.path.join(
+                module_path,
+                app_name + "App/op/opi/create_gui"
+            ),
+            'synoptic': os.path.join(
+                module_path,
+                app_name + "App/op/opi/synoptic.opi"
+            )
+        }
+
+        message = ("\nPlease now edit {RELEASE:s} to put in correct paths "
+                   "for the ioc's other technical areas and path to scripts."
+                   "\nAlso edit {DbMakefile:s} to add all database files "
+                   "from these technical areas.\nAn example set of screens"
+                   " has been created in {create_gui:s}. Please modify these."
+                   "\nThe synoptic opi in {synoptic:s} will need to be "
+                   "expanded as needed.")
+        message = message.format(**message_dict)
+
+        return message

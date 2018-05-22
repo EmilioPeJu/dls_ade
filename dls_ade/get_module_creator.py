@@ -138,6 +138,8 @@ def get_module_creator_ioc(module_name, fullname=False):
         return mc.ModuleCreatorWithApps(module_path, area,
                                         mt.ModuleTemplateIOCBL,
                                         **template_args)
+    elif technical_area == "UI":
+        module_template_cls = mt.ModuleTemplateIOCUI
 
 
     if dash_separated:
