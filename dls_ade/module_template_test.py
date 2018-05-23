@@ -74,7 +74,7 @@ class ModuleTemplateSetTemplateFilesFromArea(unittest.TestCase):
 
     def setUp(self):
 
-        self.module_template_folder = mt.MODULE_TEMPLATES
+        self.module_template_folder = mt.TEMPLATES_FOLDER
 
         self.mock_os = set_up_mock(self, 'dls_ade.module_template.os')
         self.mock_get_from_folder = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate._get_template_files_from_folder')
