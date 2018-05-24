@@ -41,7 +41,8 @@ class GetModuleCreatorTest(unittest.TestCase):
             'Support',
             'Tools',
             'IOC',
-            'IOCBL'
+            'IOCBL',
+            'IOCUI'
         ]
 
         self.mt_mocks = {}
@@ -220,6 +221,27 @@ class GetModuleCreatorTestIOCBL(GetModuleCreatorTest):
                                                         app_name="test-BL-IOC-01",
                                                         domain="test",
                                                         technical_area="BL",
+                                                        ioc_number="01")
+
+
+class GetModuleCreatorTestIOCUI(GetModuleCreatorTest):
+
+    def test_given_module_name_with_invalid_separators_then_exception_raised_with_correct_message(self):
+
+        with self.assertRaises(ParsingError) as e:
+            get_mc.get_module_creator_ioc("test_UI_module")
+
+        self.assertTrue("test_UI_module" in str(e.exception))
+
+    def test_given_module_name_dash_separated_then_module_creator_with_apps_returned_with_correct_args_used(self):
+
+        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test-UI-IOC-01", "ioc")
+
+        self.assertEqual(new_ioc_bl_creator, "ModuleCreatorWithApps")
+        self.mock_nmc_with_apps.assert_called_once_with("test/test-UI-IOC-01", "ioc", self.mt_mocks['IOCUI'],
+                                                        app_name="test-UI-IOC-01",
+                                                        domain="test",
+                                                        technical_area="UI",
                                                         ioc_number="01")
 
 
