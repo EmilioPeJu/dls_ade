@@ -217,8 +217,8 @@ class ModuleTemplate(object):
 
         The template project folder is expected to be
         {{cookiecutter.project_name}}, this name will be set to one of the
-        template args, firstly it tries using app_name if it does not exits, it
-        uses module_name otherwise CookieCutter's defaults
+        template args, firstly it tries using module_name if it does not exits, it
+        uses app_name otherwise CookieCutter's defaults
         """
         if self._cookiecutter_template_path:
             log.info("Running CookieCutter using template: %s",
@@ -228,8 +228,8 @@ class ModuleTemplate(object):
             # expects to be in the parent folder
             os.chdir('..')
 
-            project_name = self._template_args.get('app_name') \
-                or self._template_args.get('module_name')
+            project_name = self._template_args.get('module_name') \
+                or self._template_args.get('app_name')
 
             if project_name:
                 self._template_args['project_name'] = project_name
@@ -249,7 +249,7 @@ class ModuleTemplate(object):
     @property
     def cookiecutter_template(self):
         """Get CookieCutter template used
-        
+
         if none is used, it returns an empty string
         """
         return os.path.basename(self._cookiecutter_template_path)
