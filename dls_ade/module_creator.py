@@ -213,7 +213,8 @@ class ModuleCreator(object):
 
         self._can_create_local_module = False
 
-        self._usermsg.info("Making clean directory structure for {}".format(self._module_path))
+        self._usermsg.info("Making clean directory structure for %s",
+                           self._module_path)
 
         os.makedirs(self.abs_module_path)
 
