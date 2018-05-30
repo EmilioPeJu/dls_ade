@@ -1,10 +1,12 @@
 import os
 import shutil
 import logging
-
-from cookiecutter.main import cookiecutter
+from pkg_resources import require
 
 from dls_ade.exceptions import ArgumentError, TemplateFolderError
+
+require('cookiecutter')
+from cookiecutter.main import cookiecutter
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
