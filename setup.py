@@ -16,6 +16,9 @@ template_files = []
 for root, _, files in os.walk("module_templates"):
     template_files += [os.path.join(root, x) for x in files]
 
+for root, _, files in os.walk("cookiecutter_templates"):
+    template_files += [os.path.join(root, x) for x in files]
+
 additional_files = build_scripts + template_files
 os.chdir(savecwd)
 
