@@ -22,7 +22,9 @@ include $(TOP)/configure/RULES
 launch.nws: launch_gui
 
 launch_gui: ../create_gui.py $(TOP)/configure/RELEASE $(TOP)/data/{{cookiecutter.domain}}-gui.xml $(wildcard ../*.opi)
+	chmod +x $<
 	$< --allow_remove=$(allow_remove) --log_level=$(log_level)
+	chmod +x ../InsertNwsTop
 	../InsertNwsTop
 
 clean::
