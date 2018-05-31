@@ -6,6 +6,8 @@ MODULEVER = 0.0
 # Override with any release info
 -include Makefile.private
 
+.DEFAULT_GOAL := dist
+
 dist: setup.py $(wildcard */*.py)
 	MODULEVER=$(MODULEVER) $(PYTHON) setup.py bdist_egg
 	touch dist
