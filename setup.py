@@ -1,4 +1,5 @@
 from setuptools import setup
+from setuptools.command.build_py import build_py as setuptools_build_py
 
 # these lines allow the version to be specified in Makefile.private
 import os
@@ -22,9 +23,26 @@ for root, _, files in os.walk("cookiecutter_templates"):
 additional_files = build_scripts + template_files
 os.chdir(savecwd)
 
+
+class BuildPreservingPackageDataMode(setuptools_build_py):
+
+    def build_package_data(self):
+        """Copy data files into build directory"""
+        # Copied from distutils
+        for package, src_dir, build_dir, filenames in self.data_files:
+            for filename in filenames:
+                target = os.path.join(build_dir, filename)
+                self.mkpath(os.path.dirname(target))
+                self.copy_file(os.path.join(src_dir, filename), target,
+                               preserve_mode=True)
+
+
 setup(
     # name of the module
     name="dls_ade",
+    cmdclass={
+        'build_py': BuildPreservingPackageDataMode
+    },
     # version: over-ridden by the release script
     version=version,
     description='DLS Controls Group Application Development Environment scripts',
