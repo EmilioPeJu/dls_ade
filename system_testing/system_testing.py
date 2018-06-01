@@ -1,12 +1,9 @@
-#! /bin/env dls-python
 from __future__ import print_function
 import os
 import subprocess
 import tempfile
 import shutil
 import logging
-from pkg_resources import require
-require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
 
@@ -319,7 +316,7 @@ class SystemTest(object):
                               if key in self._settings_list})
 
         logging.debug("The test's local variables are:")
-        for key, value in self.__dict__.iteritems():
+        for key, value in self.__dict__.items():
             logging.debug(str(key) + ": " + str(value))
 
         logging.debug("End of local variables.")

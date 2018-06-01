@@ -183,7 +183,7 @@ class ModuleTemplate(object):
         # dictionary keys are the relative file paths for the documents
         log.debug("About to create files from template.")
         log.debug("Template files to create (relative paths):")
-        for path, contents in self._template_files.iteritems():
+        for path, contents in self._template_files.items():
             # Using template_args allows us to insert eg. module_name
             rel_path = path.format(**self._template_args)
 
