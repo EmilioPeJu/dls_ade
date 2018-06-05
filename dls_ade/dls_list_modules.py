@@ -4,12 +4,12 @@
 List the modules of an area or ioc domain on the repository
 """
 
+import os
 import sys
 import json
 import logging
 
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
 from dls_ade import Server
 from dls_ade import logconfig
 
@@ -51,9 +51,11 @@ def get_module_list(source):
     modules = []
     for module_path in split_list:
         if module_path.startswith(source + '/'):
-            # Split module path by slashes twice and print what remains
-            # after that, i.e. after 'controls/<area>/'
-            modules.append(module_path.split('/', 2)[-1])
+            # Split module path by area (and IOC domain if given)
+            # -s: controls/support/ADCore -> ADCore
+            # -i: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I/BL16I-MO-IOC-15
+            # -i BL16I: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I-MO-IOC-15
+            modules.append(module_path.split(source + '/')[-1])
     return modules
 
 
@@ -69,13 +71,13 @@ def _main():
     server = Server()
 
     if args.area == "ioc" and args.domain_name:
-        area = args.domain_name
+        search_area = os.path.join(args.area, args.domain_name)
         source = server.dev_module_path(args.domain_name, args.area)
     else:
-        area = args.area
+        search_area = args.area
         source = server.dev_area_path(args.area)
-    print_msg = "Modules in {area}:\n".format(area=area)
 
+    print_msg = "Modules in {area}:\n".format(area=search_area)
     print_msg += "\n".join(get_module_list(source))
     usermsg.info(print_msg)
 

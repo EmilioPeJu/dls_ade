@@ -42,22 +42,19 @@ class GitoliteServer(GitServer):
         Returns:
             list[str]: Repository paths on the server.
         """
-        list_cmd = "ssh " + GIT_ROOT + " expand controls"
-        if area:
-            list_cmd += "/" + area
-        log.debug("area: \"{area}\" ssh: \"{sshcmd}\"".format(area=area, sshcmd=list_cmd))
+        list_cmd = "ssh " + GIT_ROOT + " expandcontrols"
+        log.debug("Command: \"{sshcmd}\"".format(sshcmd=list_cmd))
         list_cmd_output = subprocess.check_output(list_cmd.split())
         log.debug("\"gitolite response\": \"{}\"".format(list_cmd_output))
-        # list_cmd_output is a heading followed by a module list in the form:
-        # R   W 	(alan.greer)	controls/support/ADAndor
-        # R   W 	(ronaldo.mercado)	controls/support/ethercat
-        # This is split and entries with a '/' are added to a list of the
-        # module file paths
 
-        split_list = []
-        for entry in list_cmd_output.split():
-            if '/' in entry:
-                split_list.append(entry)
+        # list_cmd_output is a '\n' separated list of every repo on Gitolite:
+        #   controls/epics/base
+        #   controls/etc/redirector
+        #   controls/hardware/CommsCtrlFPGA
+        #   controls/hardware/FofbPMC
+
+        # Split by '\n' and ignore final empty entry
+        split_list = [entry for entry in list_cmd_output.split("\n")[:-1]]
 
         return split_list
 

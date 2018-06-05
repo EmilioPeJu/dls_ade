@@ -36,14 +36,15 @@ class GetServerRepoListTest(unittest.TestCase):
     @patch('subprocess.check_output')
     def test_given_expand_output_then_format_and_return(self, sub_mock):
 
-        sub_mock.return_value = "R   W 	(alan.greer)	controls/support/ADAndor\n" \
-                                "R   W 	(ronaldo.mercado)	controls/support/ethercat\n"
+        sub_mock.return_value = "controls/support/ADAndor\n" \
+                                "controls/support/ethercat\n"
 
         server = GitoliteServer()
 
         repo_list = server.get_server_repo_list()
 
-        self.assertEqual(repo_list, ["controls/support/ADAndor", "controls/support/ethercat"])
+        self.assertEqual(repo_list, ["controls/support/ADAndor",
+                                     "controls/support/ethercat"])
 
 
 @patch('tempfile.mkdtemp', return_value='tempdir')
