@@ -306,6 +306,12 @@ class environment(object):
         else:
             return "invalid", "invalid", self.epicsVer()
 
+    def getNameFromIni(self, ini):
+        parser = SafeConfigParser()
+        parser.read(ini)
+        module = parser.get("general", "name")
+        return module
+
     def classifyPath(self, path):
         """
         Return a (module, version) tuple for the path, where
@@ -323,11 +329,14 @@ class environment(object):
         e = self
         if epicsVer != self.epicsVer:
             e = self.__class__(epicsVer)
-        if os.path.isfile(os.path.join(path, "configure", "module.ini")):
+        if os.path.isfile(os.path.join(path, "etc", "module.ini")):
+            # try and find name from etc/module.ini
+            module = self.getNameFromIni(
+                os.path.join(path, "etc", "module.ini"))
+        elif os.path.isfile(os.path.join(path, "configure", "module.ini")):
             # try and find name from configure/module.ini
-            parser = SafeConfigParser()
-            parser.read(os.path.join(path, "configure", "module.ini"))
-            module = parser.get("general", "name")
+            module = self.getNameFromIni(
+                os.path.join(path, "configure", "module.ini"))
         else:
             # try and find the name in svn
             module = self.svnName(path)
