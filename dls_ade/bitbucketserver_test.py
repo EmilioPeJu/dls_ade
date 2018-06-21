@@ -99,14 +99,14 @@ class CreateRemoteRepoTest(unittest.TestCase):
         server = BitbucketServer()
 
         response = server.create_remote_repo("Support/test_module")
-        # Hope for deterministic json ordering.
-        data = json.dumps({'name': 'test_module', 'scmId': 'git', 'forkable': True})
 
         post_mock.assert_called_once_with(
             BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/SUPPORT/repos',
             auth=('TestUser', 'CrypticPassword123'),
-            data=data,
-            headers=ANY,
+            # JSON keys are sorted before posting to help with this test.
+            data='{"forkable": true, "name": "test_module", "scmId": "git"}',
+            headers={'Content-type': 'application/json',
+                     'Accept': 'application/json'},
             verify=True)
 
         self.assertEqual(post_mock.return_value, response)
