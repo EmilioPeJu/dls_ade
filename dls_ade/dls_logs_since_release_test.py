@@ -2,8 +2,6 @@
 
 import unittest
 from dls_ade import dls_logs_since_release
-from pkg_resources import require
-require("mock")
 from mock import patch, MagicMock, ANY
 from argparse import _StoreTrueAction
 

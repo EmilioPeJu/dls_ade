@@ -2,8 +2,6 @@
 
 import unittest
 from dls_ade import dls_environment
-from pkg_resources import require
-require("mock")
 from mock import patch, ANY, MagicMock
 
 

@@ -3,8 +3,6 @@
 import unittest
 import dls_ade.dls_start_new_module
 from argparse import _StoreTrueAction
-from pkg_resources import require
-require("mock")
 from mock import patch
 
 

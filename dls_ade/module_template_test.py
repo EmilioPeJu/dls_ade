@@ -4,8 +4,6 @@ import os
 import logging
 
 import dls_ade.module_template as mt
-from pkg_resources import require
-require("mock")
 from mock import patch, ANY, MagicMock, mock_open, call, mock_open
 
 from sys import version_info

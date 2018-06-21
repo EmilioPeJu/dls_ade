@@ -7,9 +7,8 @@ else:
     import builtins
 
 import unittest
-from pkg_resources import require
-require("mock")
 from mock import patch, ANY, MagicMock
+
 
 p = patch('dls_ade.Server')
 server_mock = MagicMock()

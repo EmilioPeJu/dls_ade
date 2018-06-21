@@ -1,6 +1,4 @@
 import unittest
-from pkg_resources import require
-require("mock")
 from mock import patch, MagicMock  # @UnresolvedImport
 
 from dls_ade.gitoliteserver import GitoliteServer, GIT_SSH_ROOT

@@ -3,8 +3,6 @@ from __future__ import print_function
 import unittest
 import os
 import logging
-from pkg_resources import require
-require("mock")
 from mock import patch, ANY, MagicMock, call
 
 import dls_ade.module_creator as mc
