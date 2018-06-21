@@ -54,6 +54,7 @@ def make_parser():
         * -m (message)
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
+        * -g (redundant_argument)
 
     Returns:
         :class:`argparse.ArgumentParser`: ArgParse instance
@@ -94,6 +95,9 @@ def make_parser():
     parser.add_argument(
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
+    parser.add_argument(
+        "-g", "--redundant_argument", action="store_true", dest="redundant_argument",
+        help="Redundant argument to preserve backward compatibility")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
