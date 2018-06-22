@@ -1,6 +1,5 @@
 import unittest
 from mock import patch, MagicMock, ANY  # @UnresolvedImport
-import json
 
 from dls_ade.bitbucketserver import BitbucketServer, BITBUCKET_SERVER_URL
 

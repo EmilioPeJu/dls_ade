@@ -1,1 +1,1 @@
-from .gitoliteserver import GitoliteServer as Server
+from dls_ade.gitoliteserver import GitoliteServer as Server
