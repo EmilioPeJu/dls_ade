@@ -634,7 +634,7 @@ class ModuleTemplateIOCUITest(unittest.TestCase):
     @patch("dls_ade.module_template.cookiecutter")
     def test_given_create_files_called_then_cookiecutter_called(self, mock_cookiecutter):
         mock_cookiecutter.return_value = 'dummy-basename'
-        self.mt_obj.create_files()
+        self.mt_obj._run_cookiecutter()
         self.assertEqual(mock_cookiecutter.call_args[1].get("template"),
                          self.template_path)
 
