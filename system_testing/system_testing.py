@@ -7,6 +7,7 @@ import shutil
 import logging
 from pkg_resources import require
 require('nose')
+require('GitPython')
 from nose.tools import assert_equal, assert_true, assert_false
 
 
@@ -16,7 +17,8 @@ ENVIRONMENT_CORRECT = False
 try:
     from dls_ade import vcs_git
     from dls_ade import Server
-except ImportError:
+except ImportError as e:
+    print(e)
     vcs_git = None
     Server = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
@@ -441,29 +443,23 @@ class SystemTest(object):
             :class:`dls_ade.exceptions.VCSGitError`: From the comparison tests.
 
         """
-        self.check_std_err_for_exception()
+        self.check_std_out_for_exception_string()
 
         self.compare_std_out_to_string()
         self.check_std_out_starts_with_string()
         self.check_std_out_ends_with_string()
 
-    def check_std_err_for_exception(self):
+    def check_std_out_for_exception_string(self):
         """Check the standard error for the exception information.
 
         Raises:
-            :class:`.SettingsError`: If either the exception type or string \
-                is blank while the other is not.
             :class:`AssertionError`: If the test does not pass.
 
         """
-        if not self._exception_type or not self._exception_string:
-            if not self._exception_type and not self._exception_string:
-                return
-            raise SettingsError("Both exception_type and exception_string "
-                                "must be provided.")
 
-        logging.debug("Checking return code is not 0.")
-        assert_false(self._return_code == 0)
+        if self._exception_type in (None, '') or \
+            self._exception_string in (None, ''):
+            return
 
         expected_string = "\n{exc_t:s}: {exc_s:s}\n"
         expected_string = expected_string.format(exc_t=self._exception_type,
@@ -471,7 +467,7 @@ class SystemTest(object):
 
         logging.debug("Expected error string: " + expected_string)
 
-        assert_true(self._std_err.endswith(expected_string))
+        assert_true(self._std_out.endswith(expected_string))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.
