@@ -318,7 +318,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
 
         st_obj = st.SystemTest("test_script", "test_name")
 
-        st_obj.check_std_err_for_exception()
+        st_obj.check_std_out_for_exception_string()
 
     def test_given_type_provided_but_no_message_then_exception_raised_with_correct_message(self):
 
@@ -331,7 +331,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
         })
 
         with self.assertRaises(st.SystemTestingError) as e:
-            st_obj.check_std_err_for_exception()
+            st_obj.check_std_out_for_exception_string()
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -346,7 +346,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
         })
 
         with self.assertRaises(st.SystemTestingError) as e:
-            st_obj.check_std_err_for_exception()
+            st_obj.check_std_out_for_exception_string()
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -361,7 +361,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
         })
 
         with self.assertRaises(AssertionError):
-            st_obj.check_std_err_for_exception()
+            st_obj.check_std_out_for_exception_string()
 
     def test_given_exception_not_raised_in_script_then_test_fails(self):
 
@@ -375,7 +375,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
         })
 
         with self.assertRaises(AssertionError):
-            st_obj.check_std_err_for_exception()
+            st_obj.check_std_out_for_exception_string()
 
     def test_given_exception_raised_in_script_then_test_passes(self):
 
@@ -388,7 +388,7 @@ class SystemTestCheckStdErrForExceptionTest(unittest.TestCase):
             'exception_string': "test exception string"
         })
 
-        st_obj.check_std_err_for_exception()
+        st_obj.check_std_out_for_exception_string()
 
 
 class SystemTestCompareStdOutToStringTest(unittest.TestCase):

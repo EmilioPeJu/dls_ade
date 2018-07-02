@@ -450,16 +450,20 @@ class SystemTest(object):
         self.check_std_out_ends_with_string()
 
     def check_std_out_for_exception_string(self):
-        """Check the standard error for the exception information.
+        """Check the standard out and error for the exception information.
 
         Raises:
+            :class:`.SettingsError`: If either the exception type or string \
+                is blank while the other is not.
             :class:`AssertionError`: If the test does not pass.
 
         """
 
-        if self._exception_type in (None, '') or \
-            self._exception_string in (None, ''):
-            return
+        if not self._exception_type or not self._exception_string:
+            if not self._exception_type and not self._exception_string:
+                return
+            raise SettingsError("Both exception_type and exception_string "
+                                "must be provided.")
 
         expected_string = "\n{exc_t:s}: {exc_s:s}\n"
         expected_string = expected_string.format(exc_t=self._exception_type,
@@ -467,7 +471,10 @@ class SystemTest(object):
 
         logging.debug("Expected error string: " + expected_string)
 
-        assert_true(self._std_out.endswith(expected_string))
+        if self._std_err in (None, ''):
+            assert_true(self._std_out.endswith(expected_string))
+        else:
+            assert_true(self._std_err.endswith(expected_string))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.
