@@ -11,7 +11,7 @@ folder_conflict_settings_list = [
 
         'arguments': "test_module",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "Directory test_module already exists, please move elsewhere and try again.",
 
@@ -23,7 +23,7 @@ folder_conflict_settings_list = [
 
         'arguments': "-i testB21-EA-IOC-01",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "Directory testB21/testB21-EA-IOC-01 already exists, please move elsewhere and try again.",
 
@@ -68,7 +68,7 @@ git_root_dir_settings_list = [
 
         'arguments': "test_module_git_root_directory",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "Currently in a git repository, please move elsewhere and try again.",
     },
@@ -109,7 +109,7 @@ git_nested_dir_settings_list = [
 
         'arguments': "test_module_git_nested_directory",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "Currently in a git repository, please move elsewhere and try again.",
     },

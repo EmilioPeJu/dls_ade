@@ -9,7 +9,7 @@ settings_list = [
 
         'arguments': "testsupportmod",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "The path controlstest/support/testsupportmod already exists on server, cannot continue",
     },
@@ -19,7 +19,7 @@ settings_list = [
 
         'arguments': "-i BTEST/TS/05",
 
-        'exception_type': "dls_ade.exceptions.VerificationError",
+        'exception_type': "VerificationError",
 
         'exception_string': "The repository controlstest/ioc/BTEST/TS has an app that conflicts with app name: BTEST-TS-IOC-05",
     },
