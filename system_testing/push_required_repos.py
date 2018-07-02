@@ -2,6 +2,9 @@
 """To be run at the end of setup_testing_environment.sh"""
 
 import os
+from pkg_resources import require
+require('GitPython')
+
 from dls_ade import Server
 import tarfile
 import shutil
