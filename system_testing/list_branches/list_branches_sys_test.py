@@ -1,6 +1,6 @@
 import system_testing as st
 
-branches_list = "Branches of dls_testpythonmod:\n\nbug-fix\nmaster\nnew-feature\n\n"
+branches_list = "Branches of controlstest/python/dls_testpythonmod: bug-fix, master, new-feature\n"
 
 settings_list = [
 
