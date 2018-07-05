@@ -249,6 +249,60 @@ def delete_remote(repo, remote_name):
     repo.delete_remote(remote_name)
 
 
+def parse_gitremotes_file(gitremotes_file):
+    """Parses .gitremotes file and returns dictionary of name to url.
+
+    Args:
+        gitremotes_file: absolute path to .gitremotes file
+
+    Returns:
+        dict: dictionary of (name, url)
+    """
+
+    remotes = {}
+    if os.path.exists(gitremotes_file):
+        fullpath_gitremotes_file = os.path.abspath(gitremotes_file)
+        usermsg.info("Reading remotes file {}".format(gitremotes_file))
+        remotes = {}
+        with open(fullpath_gitremotes_file) as f:
+            gf = f.readlines()
+            for line in gf:
+                splitline = line.replace('\n', '').split(' ')
+                if len(splitline) == 2:
+                    remote_name = splitline[0]
+                    remote_url = splitline[1]
+                    remotes[remote_name] = remote_url
+
+    return remotes
+
+
+def add_remotes(repo, module_name):
+    """Adds the remotes listed in module .gitremotes file.
+
+    Args:
+        repo(git.Repo): Git Repo instance
+        module_name: The name of the module.
+    """
+
+    gitremotes_file = os.path.join(module_name, '.gitremotes')
+
+    remotes = parse_gitremotes_file(gitremotes_file)
+
+    remotesfound = len(remotes.keys()) != 0
+
+    if remotesfound:
+        usermsg.info("Setting up remotes for {}".format(module_name))
+        for name, url in remotes.items():
+            if name != 'gitolite':  # origin -> named 'gitolite' during clone
+                if not has_remote(repo, name):
+                    usermsg.info("Adding remote {remote_name} {remote_url}".\
+                                     format(remote_name=name, remote_url=url))
+                    repo.create_remote(name, url)
+
+    else:
+        usermsg.info("No additional remotes defined in .gitremotes file.")
+
+
 class Git(BaseVCS):
     """
     A class to handle generic vcs operations in a git context.

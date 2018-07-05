@@ -107,7 +107,7 @@ class CloneTest(unittest.TestCase):
 
         is_server_repo_mock.assert_called_once_with("test/source/test_module")
         mock_clone_from.assert_called_once_with(
-            "test@url.ac.uk/test/source", "./test_module")
+            "test@url.ac.uk/test/source", "./test_module", origin='origin')
 
 
 @patch('tempfile.mkdtemp', return_value="tempdir")

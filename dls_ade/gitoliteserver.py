@@ -6,7 +6,8 @@ import logging
 
 from dls_ade.constants import GIT_ROOT
 from dls_ade.gitserver import GitServer
-from dls_ade.vcs_git import git
+from dls_ade.vcs_git import Git, git
+from dls_ade import path_functions as pathf
 
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 
@@ -57,6 +58,17 @@ class GitoliteServer(GitServer):
         split_list = [entry for entry in list_cmd_output.split("\n")[:-1]]
 
         return split_list
+
+    def get_clone_repo(self, server_repo_path, local_repo_path):
+        """
+        Get Repo clone given server and local repository paths
+
+        Args:
+            server_repo_path(str): server repository path
+            local_repo_path(str): local repository path
+        """
+        return super(GitoliteServer, self).get_clone_repo(server_repo_path,
+                                                   local_repo_path, 'gitolite')
 
     def create_remote_repo(self, dest):
         """

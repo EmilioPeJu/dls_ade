@@ -57,6 +57,22 @@ class GitServer(object):
         base_repo = git.Repo(path)
         return Git(module, area, self, base_repo)
 
+    def get_clone_repo(self, server_repo_path, local_repo_path, origin='origin'):
+        """
+        Get Repo clone given server and local repository paths
+
+        Args:
+            server_repo_path(str): server repository path
+            local_repo_path(str): local repository path
+            origin(str): name to be assigned to remote on clone
+        """
+        repo = git.Repo.clone_from(
+            os.path.join(self.clone_url,
+                         self.get_clone_path(server_repo_path)),
+            os.path.join("./", local_repo_path), origin=origin)
+
+        return repo
+
     def clone(self, server_repo_path, local_repo_path):
         """
         Clones a repository on the server to a local directory.
@@ -85,10 +101,7 @@ class GitServer(object):
         # Area is second section of path
         area = server_repo_path.split('/')[1]
 
-        repo = git.Repo.clone_from(
-            os.path.join(self.clone_url,
-                         self.get_clone_path(server_repo_path)),
-            os.path.join("./", local_repo_path))
+        repo = self.get_clone_repo(server_repo_path, local_repo_path)
 
         git_inst = Git(module, area, self, repo)
 

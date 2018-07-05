@@ -1,7 +1,7 @@
 import unittest
 from pkg_resources import require
 require("mock")
-from mock import patch, ANY, MagicMock, PropertyMock, call  # @UnresolvedImport
+from mock import patch, ANY, MagicMock, PropertyMock, call, mock_open  # @UnresolvedImport
 
 from dls_ade import vcs_git, gitserver, Server
 
@@ -568,6 +568,35 @@ class HasRemoteTest(unittest.TestCase):
         value = vcs_git.has_remote(mock_repo, "test_remote")
 
         self.assertTrue(value)
+
+
+class AddRemoteTest(unittest.TestCase):
+
+    @patch('__builtin__.open',
+           new_callable=mock_open,
+           read_data='remote_name_1 remote_url_1\nremote_name_2 remote_url_2',
+           create=True)
+    @patch('os.path.exists', return_value=True)
+    def test_given_file_remotes_object_created(self, mock_git, mock_exists):
+
+        read_remotes = vcs_git.parse_gitremotes_file('gitremotes_file')
+
+        self.assertEqual({'remote_name_1':'remote_url_1',
+                         'remote_name_2':'remote_url_2'}, read_remotes)
+
+    @patch('dls_ade.vcs_git.parse_gitremotes_file',
+           return_value= {'remote_name_1':'remote_url_1',
+                         'remote_name_2':'remote_url_2'})
+    def test_given_remotes_then_remotes_added(self, mock_git):
+
+        mock_repo = MagicMock()
+
+        vcs_git.add_remotes(mock_repo, "module_name")
+
+        mock_repo.create_remote.assert_has_calls([
+            call('remote_name_1', 'remote_url_1'),
+            call('remote_name_2', 'remote_url_2')
+        ])
 
 
 class ListModuleReleases(unittest.TestCase):
