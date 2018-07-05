@@ -7,7 +7,7 @@ if [ $# -eq 3 ]
     export PATH=$1:$PATH
     export PYTHONPATH=$2:$3:$PYTHONPATH
   else
-    echo Please give the /bin, the /...egg folder and the system_testing folder paths.
+    echo Please give the /bin, the site-packages folder and the system_testing folder paths.
     return 1
 fi
 
