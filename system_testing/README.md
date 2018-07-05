@@ -18,19 +18,23 @@ make clean
 make install
 ```
 
-Navigate to system_testing and run "source setup_testing_environment.sh" with three path arguments:
+Navigate to system_testing and run
 
-1. Path to the bin/ folder of the built python package
-2. Path to the site-packages folder containing the python eggs
-3. Path to the system_testing folder (location of this file), to access system testing code.
+```
+source setup_testing_environment.sh <installation-prefix>
+```
+
+where `<installation-prefix>` is the location to which `dls_ade` was installed,
+typically `dls_ade/prefix`.
 
 This script will:
 * setup your $PYTHONPATH appropriately
 * call push_required_repos.py (which will send the repositories located in necessary_server_repos/controlstest.tar.gz to the server, for testing)
 
+
 ```
 cd system_testing
-source setup_testing_environment.sh /path/to/dls_ade/prefix/bin /path/to/dls_ade/prefix/lib/python2.7/site-packages /path/to/dls_ade/system_testing
+source setup_testing_environment.sh /path/to/dls_ade/prefix
 ```
 
 ## Running the system tests
