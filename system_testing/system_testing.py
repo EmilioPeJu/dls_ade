@@ -465,16 +465,18 @@ class SystemTest(object):
             raise SettingsError("Both exception_type and exception_string "
                                 "must be provided.")
 
-        expected_string = "\n{exc_t:s}: {exc_s:s}\n"
-        expected_string = expected_string.format(exc_t=self._exception_type,
-                                                 exc_s=self._exception_string)
-
-        logging.debug("Expected error string: " + expected_string)
-
-        if self._std_err in (None, ''):
-            assert_true(self._std_out.endswith(expected_string))
+        if isinstance(self._exception_string, list):
+            expected_string_components = self._exception_string
         else:
-            assert_true(self._std_err.endswith(expected_string))
+            expected_string_components = [self._exception_string]
+
+        expected_string_components.append(self._exception_type)
+
+        logging.debug("Expected error string components: " +
+                      ",".join(expected_string_components))
+
+        chk_str = self._std_out if not self._std_err else self._std_err
+        assert_true(all(elem in chk_str for elem in expected_string_components))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.
@@ -488,7 +490,13 @@ class SystemTest(object):
 
         logging.debug("Comparing the standard output to comparison string.")
 
-        assert_equal(self._std_out, self._std_out_compare_string)
+        if isinstance(self._std_out_compare_string, list):
+            expected_string_components = self._std_out_compare_string
+        else:
+            expected_string_components = [self._std_out_compare_string]
+
+        assert_true(all(elem in self._std_out
+                        for elem in expected_string_components))
 
     def check_std_out_starts_with_string(self):
         """Check if the standard output starts with std_out_starts_with_string.

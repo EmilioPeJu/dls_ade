@@ -3,8 +3,8 @@ import os
 
 sys_test_dir_path = os.path.realpath(os.path.dirname(__file__))
 
-csv_output = 'Module,Contact,Contact Name,CC,CC Name\n' \
-             'dls_testpythonmod,lkz95212,Martin Gaughran,mef65357,Gary Yendell\n'
+csv_output = ['Module,Contact,Contact Name,CC,CC Name',
+             'dls_testpythonmod,lkz95212,Martin Gaughran,mef65357,Gary Yendell']
 
 default_contact = 'lkz95212'
 default_cc = 'mef65357'
@@ -18,7 +18,7 @@ settings_list = [
 
         'arguments': "-p dls_testpythonmod",
 
-        'std_out_compare_string': "dls_testpythonmod Contact: lkz95212, CC: mef65357\n",
+        'std_out_compare_string': "dls_testpythonmod Contact: lkz95212, CC: mef65357",
 
     },
 
