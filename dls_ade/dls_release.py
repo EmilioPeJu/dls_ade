@@ -465,7 +465,7 @@ def _main():
 
     if sha_specified:
         try:
-            vcs.create_new_tag_and_push(args.release, args.sha)
+            vcs.create_new_tag_and_push(args.release, args.sha, args.message)
         except VCSGitError as err:
             log.exception(err)
             usermsg.error("Aborting: {msg}".format(msg=err))

@@ -500,7 +500,7 @@ class Git(BaseVCS):
         usermsg.info("Pushing repo to destination...")
         remote.push(branch_or_tag_name)
 
-    def create_new_tag_and_push(self, tag, commit_ref, remote='origin'):
+    def create_new_tag_and_push(self, tag, commit_ref, usrmsg='', remote='origin'):
         """
         Tags a revision at commit_ref, and pushes to the server.
 
@@ -511,6 +511,7 @@ class Git(BaseVCS):
         Args:
             tag(str): The proposed tag.
             commit_ref(str): the SHA commit ID
+            message(str): (optional) user message
             remote(str): the name of the remote.
 
         Raises:
@@ -519,10 +520,11 @@ class Git(BaseVCS):
         """
 
         try:
-            self.repo.create_tag(tag, message="Tagging {}".format(tag),
+            self.repo.create_tag(tag, message="DLS Release {tag}: {usrmsg} ".
+                                 format(tag=tag, usrmsg=usrmsg),
                                  ref=commit_ref)
-        except git.exc.GitCommandError:
-            err_message = ("Failed to create tag {}.".format(tag))
+        except git.exc.GitCommandError as e:
+            err_message = ("Failed to create tag {}.".format(e))
             raise VCSGitError(err_message)
 
         self.push_to_remote(remote, tag)
