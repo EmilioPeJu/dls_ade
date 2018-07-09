@@ -13,6 +13,7 @@ def check_tag_is_valid(tag):
         :class:`exceptions.ParsingError`: Invalid tag format
 
     """
+
     check = re.compile('[0-9]+\-[0-9]+(\-[0-9]+)?(dls[0-9]+(\-[0-9]+)?)?')
     result = check.match(tag)
 

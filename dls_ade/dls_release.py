@@ -24,7 +24,8 @@ from dls_ade import Server
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-from dls_ade.exceptions import VCSGitError
+from dls_ade.exceptions import VCSGitError, ParsingError
+from dls_ade.tag_utility import check_tag_is_valid
 
 usage = """
 Default <area> is 'support'.
@@ -55,6 +56,7 @@ def make_parser():
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
         * -g (redundant_argument)
+        * -s (sha)
 
     Returns:
         :class:`argparse.ArgumentParser`: ArgParse instance
@@ -98,6 +100,11 @@ def make_parser():
     parser.add_argument(
         "-g", "--redundant_argument", action="store_true", dest="redundant_argument",
         help="Redundant argument to preserve backward compatibility")
+    parser.add_argument(
+        "-s", "--sha", action="store", type=str, dest="sha",
+        default="",
+        help="Specify the beginning of the SHA commit ID of the point in the"
+             "repository you wish to tag.")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
@@ -390,6 +397,7 @@ def perform_test_build(build_object, local_build, vcs):
 
 
 def _main():
+
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
 
@@ -410,14 +418,50 @@ def _main():
     if args.branch:
         vcs.set_branch(args.branch)
 
+    releases = vcs.list_releases()
+
+    tag = args.release
+    tag_is_valid = True
+    try:
+        check_tag_is_valid(tag)
+    except ParsingError as err:
+        tag_is_valid = False
+    tag_exists = tag in releases
+    sha_specified = args.sha
+
+    version = tag
     if args.next_version:
-        releases = vcs.list_releases()
         version = next_version_number(releases, module=module)
     else:
-        version = format_argument_version(args.release)
-        if '.' in args.release:
-            usermsg.warning("Release \'{}\' contain \'.\' which will be replaced by \'-\' to: \'{}\'"
-                            .format(args.release, version))
+        # SHA commit ID in repository specified
+        if not sha_specified:
+            # Tag must already exist to release without SHA ID
+            if not tag_exists:
+                usermsg.error("Aborting: tag {} not found and SHA commit ID "
+                              "not specified.".format(tag))
+                sys.exit(1)
+            # Warn if existing tag is of incorrect form
+            else:
+                usermsg.info("Releasing existing tag {}.".format(tag))
+                if not tag_is_valid:
+                    usermsg.warning("Warning: tag {} does not conform to "
+                                    "convention.".format(tag))
+                    version = format_argument_version(tag)
+                    if '.' in tag:
+                        usermsg.warning("Tag {} contains \'.\' which will"
+                                        " be replaced by \'-\' to: \'{}\'"
+                                        .format(tag, version))
+        # No commit reference specified
+        else:
+            # Tag must not be in use already
+            if tag_exists:
+                usermsg.error("Aborting: tag {} already exists.".format(tag))
+                sys.exit(1)
+            # Specified tag must be of correct form
+            else:
+                if not tag_is_valid:
+                    usermsg.error("Aborting: invalid tag {}.".format(tag))
+                    sys.exit(1)
 
     try:
         vcs.set_version(version)
