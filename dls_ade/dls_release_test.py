@@ -91,6 +91,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "next_version")
         self.assertIn("--next_version", option.option_strings)
 
+    def test_sha_option_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-s']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.default, "")
+        self.assertEqual(option.dest, "sha")
+        self.assertIn("--sha", option.option_strings)
+
     def test_rhel_version_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-r']
         self.assertIsInstance(option, _StoreAction)
