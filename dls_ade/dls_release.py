@@ -25,7 +25,7 @@ from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
 from dls_ade.exceptions import VCSGitError, ParsingError
-from dls_ade.tag_utility import check_tag_is_valid
+from dls_ade.dls_utilities import check_tag_is_valid
 
 usage = """
 Default <area> is 'support'.
@@ -421,11 +421,7 @@ def _main():
     releases = vcs.list_releases()
 
     tag = args.release
-    tag_is_valid = True
-    try:
-        check_tag_is_valid(tag)
-    except ParsingError as err:
-        tag_is_valid = False
+    tag_is_valid = check_tag_is_valid(tag)
     tag_exists = tag in releases
     sha_specified = args.sha
 
@@ -462,6 +458,7 @@ def _main():
                 if not tag_is_valid:
                     usermsg.error("Aborting: invalid tag {}.".format(tag))
                     sys.exit(1)
+
 
     if sha_specified:
         try:

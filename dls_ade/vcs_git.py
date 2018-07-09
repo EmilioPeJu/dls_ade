@@ -445,15 +445,14 @@ class Git(BaseVCS):
             raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
         self._version = version
 
-    def push_to_remote(self, remote_name="gitolite", branch_or_tag_name="master"):
+    def push_to_remote(self, remote_name="gitolite", ref="master"):
         """
         Pushes to the server path given by its remote name, on the given
         branch, or tag.
 
         Args:
             remote_name(str): The git repository's remote name to push to.
-            branch_or_tag_name(str): The name of the branch / tag to push
-            from / to.
+            ref(str): The name of the ref to push from / to
 
         This will fail if:
             - The path given is not a git repository.
@@ -472,11 +471,11 @@ class Git(BaseVCS):
                 the operation.
 
         """
-        if branch_or_tag_name not in \
+        if ref not in \
                 [x.name for x in self.repo.branches + self.repo.tags]:
-            err_message = ("Local repository branch/tag {branchtag:s} does not "
+            err_message = ("Local repository branch/tag {ref:s} does not "
                            "currently exist.")
-            raise VCSGitError(err_message.format(branchtag=branch_or_tag_name))
+            raise VCSGitError(err_message.format(ref=ref))
 
         check_remote_exists(self.repo, remote_name)
 
@@ -498,7 +497,7 @@ class Git(BaseVCS):
             raise VCSGitError(err_message.format(s_repo_path=server_repo_path))
 
         usermsg.info("Pushing repo to destination...")
-        remote.push(branch_or_tag_name)
+        remote.push(ref)
 
     def create_new_tag_and_push(self, tag, commit_ref, usrmsg='', remote='origin'):
         """
@@ -511,7 +510,7 @@ class Git(BaseVCS):
         Args:
             tag(str): The proposed tag.
             commit_ref(str): the SHA commit ID
-            message(str): (optional) user message
+            usrmsg(str): (optional) user message
             remote(str): the name of the remote.
 
         Raises:

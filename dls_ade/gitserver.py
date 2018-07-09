@@ -3,7 +3,7 @@ import tempfile
 import logging
 
 from dls_ade.vcs_git import Git, git
-from dls_ade import path_functions as pathf
+from dls_ade import dls_utilities as pathf
 
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger("usermessages")

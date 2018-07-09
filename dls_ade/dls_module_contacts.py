@@ -19,7 +19,7 @@ import csv
 import ldap
 
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
+from dls_ade import dls_utilities as pathf
 from dls_ade import Server
 from dls_ade.exceptions import FedIdError
 from dls_ade import logconfig

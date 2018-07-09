@@ -1,4 +1,4 @@
-from dls_ade import path_functions as pathf
+from dls_ade import dls_utilities as pathf
 import logging
 from dls_ade import Server
 from dls_ade import module_template as mt

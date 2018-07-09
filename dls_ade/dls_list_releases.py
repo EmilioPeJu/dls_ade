@@ -16,7 +16,7 @@ import logging
 
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
+from dls_ade import dls_utilities as pathf
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 

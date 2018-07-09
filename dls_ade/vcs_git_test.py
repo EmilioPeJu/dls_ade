@@ -393,7 +393,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", repo=mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(branch_or_tag_name="test_branch")
+            repo.push_to_remote(ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -411,7 +411,7 @@ class PushToRemoteTest(unittest.TestCase):
             repo = vcs_git.Git("test_module", "area", repo=mock_repo)
 
             with self.assertRaises(vcs_git.VCSGitError) as e:
-                repo.push_to_remote(branch_or_tag_name="test_tag")
+                repo.push_to_remote(ref="test_tag")
 
             self.assertEqual(str(e.exception), comp_message)
 
@@ -428,7 +428,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", repo=mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_or_tag_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -447,7 +447,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_or_tag_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
     def test_given_is_server_repo_false_then_exception_raised_with_correct_message(self):
@@ -470,7 +470,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_or_tag_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
         server_mock.is_server_repo.assert_called_once_with("test_URL")
@@ -491,7 +491,7 @@ class PushToRemoteTest(unittest.TestCase):
         server_mock.url = "ssh://GIT_SSH_ROOT/"
         repo = vcs_git.Git("test_module", "area", server_mock, repo=mock_repo)
 
-        repo.push_to_remote(remote_name="test_remote", branch_or_tag_name="test_branch")
+        repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         mock_remote.push.assert_called_once_with("test_branch")
 
