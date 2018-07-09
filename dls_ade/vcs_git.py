@@ -445,18 +445,19 @@ class Git(BaseVCS):
             raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
         self._version = version
 
-    def push_to_remote(self, remote_name="gitolite", branch_name="master"):
+    def push_to_remote(self, remote_name="gitolite", branch_or_tag_name="master"):
         """
         Pushes to the server path given by its remote name, on the given
-        branch.
+        branch, or tag.
 
         Args:
             remote_name(str): The git repository's remote name to push to.
-            branch_name(str): The name of the branch to push from / to.
+            branch_or_tag_name(str): The name of the branch / tag to push
+            from / to.
 
         This will fail if:
             - The path given is not a git repository.
-            - The local repository does not have the given branch name.
+            - The local repository does not have the given branch or tag name.
             - The local repository does not have the given remote name.
             - A git repository does not already exist on the destination path.
 
@@ -471,10 +472,11 @@ class Git(BaseVCS):
                 the operation.
 
         """
-        if branch_name not in [x.name for x in self.repo.branches]:
-            err_message = ("Local repository branch {branch:s} does not "
+        if branch_or_tag_name not in \
+                [x.name for x in self.repo.branches + self.repo.tags]:
+            err_message = ("Local repository branch/tag {branchtag:s} does not "
                            "currently exist.")
-            raise VCSGitError(err_message.format(branch=branch_name))
+            raise VCSGitError(err_message.format(branchtag=branch_or_tag_name))
 
         check_remote_exists(self.repo, remote_name)
 
@@ -496,7 +498,34 @@ class Git(BaseVCS):
             raise VCSGitError(err_message.format(s_repo_path=server_repo_path))
 
         usermsg.info("Pushing repo to destination...")
-        remote.push(branch_name)
+        remote.push(branch_or_tag_name)
+
+    def create_new_tag_and_push(self, tag, commit_ref, remote='origin'):
+        """
+        Tags a revision at commit_ref, and pushes to the server.
+
+        This will fail if:
+            - The tag fails to create.
+            - Push to remote fails
+
+        Args:
+            tag(str): The proposed tag.
+            commit_ref(str): the SHA commit ID
+            remote(str): the name of the remote.
+
+        Raises:
+            :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with
+            the operation.
+        """
+
+        try:
+            self.repo.create_tag(tag, message="Tagging {}".format(tag),
+                                 ref=commit_ref)
+        except git.exc.GitCommandError:
+            err_message = ("Failed to create tag {}.".format(tag))
+            raise VCSGitError(err_message)
+
+        self.push_to_remote(remote, tag)
 
     def add_new_remote_and_push(self, dest, remote_name="gitolite",
                                 branch_name="master"):

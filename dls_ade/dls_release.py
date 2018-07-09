@@ -463,6 +463,14 @@ def _main():
                     usermsg.error("Aborting: invalid tag {}.".format(tag))
                     sys.exit(1)
 
+    if sha_specified:
+        try:
+            vcs.create_new_tag_and_push(args.release, args.sha)
+        except VCSGitError as err:
+            log.exception(err)
+            usermsg.error("Aborting: {msg}".format(msg=err))
+            sys.exit(1)
+
     try:
         vcs.set_version(version)
     except VCSGitError as err:
