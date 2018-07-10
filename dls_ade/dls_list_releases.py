@@ -16,7 +16,7 @@ import logging
 
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
-from dls_ade import dls_utilities as pathf
+from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 
@@ -95,7 +95,7 @@ def _main():
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     env.check_epics_version(args.epics_version)
-    pathf.check_technical_area(args.area, args.module_name)
+    check_technical_area(args.area, args.module_name)
 
     # Force check of repo, not file system, for tools, etc and epics
     # (previous releases are only stored on repo)

@@ -9,7 +9,7 @@ from dls_ade import vcs_git, gitserver, Server
 def setUpModule():
     Server.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     Server.GIT_ROOT_DIR = "controlstest"
-    gitserver.pathf.GIT_ROOT_DIR = "controlstest"
+    gitserver.GIT_ROOT_DIR = "controlstest"
 
 
 def set_up_mock(test_case_object, path):

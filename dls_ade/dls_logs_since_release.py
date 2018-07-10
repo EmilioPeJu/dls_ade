@@ -21,7 +21,7 @@ from operator import itemgetter
 
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-from dls_ade import dls_utilities as pathf
+from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 
@@ -556,7 +556,7 @@ def _main():
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     raw = set_raw_argument(args.raw)
-    pathf.check_technical_area(args.area, args.module_name)
+    check_technical_area(args.area, args.module_name)
     check_parsed_args_compatible(args.releases, args.earlier_release,
                                  args.later_release, parser)
     check_releases_valid(args.releases, parser)
