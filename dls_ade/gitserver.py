@@ -4,7 +4,7 @@ import logging
 
 from dls_ade.vcs_git import Git, git
 
-import dls_utilities as dls_util
+from dls_ade import dls_utilities as dls_util
 
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger("usermessages")
