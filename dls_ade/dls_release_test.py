@@ -34,7 +34,7 @@ class ParserTest(unittest.TestCase):
 
         dls_release.make_parser()
 
-        parser_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with(optional=True)
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
     def test_branch_flag_set(self, parser_mock):
@@ -236,9 +236,12 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_no_release_then_parser_error_called_specifying_no_module_version(self):
+    def test_given_no_release_not_test_commit_then_parser_error_called_specifying_no_module_version(self):
         self.args.module_name = "build"
-        expected_error_msg = 'Module version not specified'
+        self.args.commit = ""
+        expected_error_msg = 'Module release not specified; required unless'
+        expected_error_msg += ' testing a specified commit, or requesting'
+        expected_error_msg += ' next version.'
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 

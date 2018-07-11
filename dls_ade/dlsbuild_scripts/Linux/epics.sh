@@ -60,7 +60,7 @@ fi
 # Checkout module
 cd $_module                                                         || ReportFailure "Could not cd to $_module"
 SysLog info "checkout version tag: " $_version
-git fetch --depth=1 origin tag $_version && git checkout $_version  || ReportFailure "Could not checkout $_version"
+git checkout $_version  || ReportFailure "Could not checkout $_version"
 
 # Build
 error_log=${_build_name}.err

@@ -6,6 +6,11 @@ from mock import patch, ANY, MagicMock, PropertyMock, call, mock_open  # @Unreso
 from dls_ade import vcs_git, gitserver, Server
 
 
+class FakeCommit(str):
+    def __init__(self, name):
+        pass
+
+
 def setUpModule():
     Server.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     Server.GIT_ROOT_DIR = "controlstest"
@@ -1024,6 +1029,47 @@ class GitListReleasesTest(unittest.TestCase):
         self.assertListEqual(['1-0', '1-0-1', '2-0'], releases)
 
 
+class GitListCommitsTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    def setUp(self, mclone):
+
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
+        self.addCleanup(self.patch_is_server_repo.stop)
+        self.mock_is_server_repo = self.patch_is_server_repo.start()
+
+        self.mock_is_server_repo.return_value = True
+
+        self.module = 'dummy'
+        self.area = "support"
+
+        server_mock = MagicMock()
+        server_mock.url = "ssh://GIT_SSH_ROOT/"
+        repo_mock = MagicMock()
+        self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
+
+    def test_given_repo_with_no_commits_then_return_empty_list(self):
+
+        self.vcs.repo.iter_commits.return_value = []
+        commits = self.vcs.list_commits()
+
+        self.assertListEqual([], commits)
+
+    def test_given_repo_with_some_commits_then_return_list_inc_commit(self):
+
+        self.vcs.repo.iter_commits.return_value = [FakeCommit('32fdsb')]
+        commits = self.vcs.list_commits()
+
+        self.assertTrue('32fdsb' in commits)
+
+    def test_given_repo_with_some_commits_then_return_all_commits(self):
+
+        self.vcs.repo.iter_commits.return_value = [FakeCommit('32fdsb'), FakeCommit('2425sb')]
+        commits = self.vcs.list_commits()
+
+        self.assertListEqual(['32fdsb', '2425sb'], commits)
+
+
 class GitSetLogMessageTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
@@ -1079,6 +1125,21 @@ class GitCheckVersionTest(unittest.TestCase):
 
         self.assertFalse(self.vcs.check_version_exists(version))
 
+    @patch('dls_ade.vcs_git.Git.list_commits')
+    def test_given_commit_in_list_of_commits_then_return_true(self, mlist):
+
+        commit = '8ffb4'
+        mlist.return_value = ['8ffb4130','432bdsa','1234bc']
+
+        self.assertTrue(self.vcs.check_commit_exists(commit))
+
+    @patch('dls_ade.vcs_git.Git.list_commits')
+    def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
+
+        commit = '8ff4b4'
+        mlist.return_value = ['8fab4130','432bdsa','1234bc']
+
+        self.assertFalse(self.vcs.check_commit_exists(commit))
 
 class ApiInterrogateTest(unittest.TestCase):
 

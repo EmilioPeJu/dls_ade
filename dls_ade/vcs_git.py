@@ -384,6 +384,20 @@ class Git(BaseVCS):
         except git.GitCommandError:
             return str('')
 
+    def list_commits(self):
+        """
+        Return list of commits of module.
+
+        Returns:
+            list[str]: Commits of module
+        """
+
+        commits = []
+        for commit in self.repo.iter_commits():
+            commits.append(str(commit))
+
+        return commits
+
     def list_releases(self):
         """
         Return list of release tags of module.
@@ -411,6 +425,25 @@ class Git(BaseVCS):
 
         return None
 
+    def check_commit_exists(self, commit):
+        """
+        Check if commit corresponds to a repository commit.
+
+        Args:
+            commit(str): Commit to check for
+
+        Returns:
+            bool: True or False for whether the commit exists or not
+        """
+        commit_list = self.list_commits()
+        commit_exist = False
+        for full_commit in commit_list:
+            if commit in full_commit:
+                commit_exist = True
+        if not commit_exist:
+            log.warning("Commit \'{}\' not found".format(commit))
+        return commit_exist
+
     def check_version_exists(self, version):
         """
         Check if version corresponds to a previous release.
@@ -434,15 +467,21 @@ class Git(BaseVCS):
 
     def set_version(self, version):
         """
-        Set version release tag for self
+        Set version release for self
 
         Args:
-            version(str): Version release tag
+            version(str): Version release (reference)
         """
 
+        is_version = self.check_version_exists(version)
+        is_commit = self.check_commit_exists(version)
         if self.parent is not None \
-                and not self.check_version_exists(version):
-            raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
+                and not is_version and not is_commit:
+            raise VCSGitError('Release \'{}\' does not exist in tag list or commit list: {}'.format(version, self.list_releases()))
+        if is_version:
+            usermsg.info("Release {} found".format(version))
+        elif is_commit:
+            usermsg.info("Commit {} found".format(version))
         self._version = version
 
     def push_to_remote(self, remote_name="gitolite", ref="master"):

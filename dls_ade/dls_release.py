@@ -65,7 +65,7 @@ def make_parser():
     parser = ArgParser(usage)
 
     parser.add_module_name_arg()
-    parser.add_release_arg()
+    parser.add_release_arg(optional=True)
     parser.add_branch_flag(
         help_msg="Release from a branch")
     parser.add_epics_version_flag(
@@ -176,7 +176,7 @@ def check_parsed_arguments_valid(args, parser):
     Raises:
         :class:`dls_ade.exceptions.VCSGitError`:
             * Module name not specified
-            * Module version not specified
+            * Module version not specified, and not using -T -c <commit>
             * Cannot release etc/build or etc/redirector as modules - use
                 configure system instead
             * When git is specified, version number must be provided
@@ -188,8 +188,10 @@ def check_parsed_arguments_valid(args, parser):
         parser.error("Module name not specified")
         logging.debug(args.module_name)
         logging.debug(args.next_version)
-    elif not args.release and not args.next_version:
-        parser.error("Module version not specified")
+    elif not args.release and not \
+            (args.next_version or (args.test_only and args.commit)):
+        parser.error("Module release not specified; required unless testing a "
+                     "specified commit, or requesting next version.")
     elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
@@ -419,15 +421,21 @@ def _main():
 
     releases = vcs.list_releases()
 
-    release = args.release
-    release_is_valid = check_tag_is_valid(release)
-    release_exists = release in releases
-    commit_specified = args.commit
+    commit_specified = args.commit is not None
+    release_specified = args.release is not None
+    if not release_specified:
+        usermsg.info("No release specified; able to test build at {} only.".\
+                     format(args.commit))
 
-    version = release
-    if args.next_version:
+    if args.next_version:  # Release = next version
         version = next_version_number(releases, module=module)
-    else:
+    elif not release_specified:  # Release = @ commit, not of release
+        version = args.commit
+    else:  # Release of version; check validity of version
+        release = args.release
+        version = release
+        release_is_valid = check_tag_is_valid(release)
+        release_exists = release in releases
         # Commit in repository specified
         if not commit_specified:
             # Release must already exist to release without a commit
@@ -450,18 +458,22 @@ def _main():
         else:
             # Release must not be in use already
             if release_exists:
-                usermsg.error("Aborting: release {} already exists.".format(release))
+                usermsg.error("Aborting: release {} already exists.".\
+                              format(release))
                 sys.exit(1)
             # Specified release must be of correct form
             else:
                 if not release_is_valid:
-                    usermsg.error("Aborting: invalid release {}.".format(release))
+                    usermsg.error("Aborting: invalid release {}.".\
+                                  format(release))
                     sys.exit(1)
             usermsg.info("Releasing new release {rel} from {comm}.".\
                          format(rel=release, comm=args.commit))
 
-    if commit_specified:
+    if commit_specified and release_specified:  # Make Release if repo required
         try:
+            usermsg.info("Making tag {ver} at {comm}".\
+                         format(ver=version, comm=args.commit))
             vcs.create_new_tag_and_push(args.release, args.commit, args.message)
         except VCSGitError as err:
             log.exception(err)
@@ -499,12 +511,15 @@ def _main():
     msg_build_job = "test-release" if args.test_only else "Release"
     msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(
         buildjob=msg_build_job,
-        info_msg=construct_info_message(module, args.branch, args.area, version, build))
+        info_msg=construct_info_message(module, args.branch, args.area, version,
+                                        build))
     usermsg.info(msg_create_build_job)
 
     build.submit(vcs, test=args.test_only)
-    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} submitted to build server queue".format(
-        build_job=msg_build_job, area=args.area, module=module, version=str(version)))
+    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} "\
+                 "submitted to build server queue".format(
+        build_job=msg_build_job,
+        area=args.area, module=module, version=str(version)))
 
 
 def main():

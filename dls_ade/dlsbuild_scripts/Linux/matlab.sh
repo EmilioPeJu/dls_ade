@@ -35,14 +35,14 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
         SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
         SysLog info "checkout version tag: " $_version
-        ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+        ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
     elif [ "$_force" == "true" ] ; then
         SysLog info "Force: removing previous version: " ${PWD}/$_version
         rm -rf $_version                            || ReportFailure "Can not rm $_version"
         SysLog info "Cloning repo: " $_git_dir
         git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
         SysLog info "checkout version tag: " $_version
-        ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
+        ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
     elif (( $(git status -uno --porcelain | wc -l) != 0)) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
     fi
