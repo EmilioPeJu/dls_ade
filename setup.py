@@ -70,7 +70,8 @@ setup(
                    'dls-module-contacts.py = dls_ade.dls_module_contacts:main',
                    'dls-release.py = dls_ade.dls_release:main',
                    'dls-start-new-module.py = dls_ade.dls_start_new_module:main',
-                   'dls-tar-module.py = dls_ade.dls_tar_module:main']},
+                   'dls-tar-module.py = dls_ade.dls_tar_module:main',
+                   'dls-pipfilelock-to-venv.py = dls_pipfilelock_to_venv:main']},
 
     include_package_data=True,
     tests_require=['nose', 'mock'],
