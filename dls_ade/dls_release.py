@@ -56,7 +56,7 @@ def make_parser():
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
         * -g (redundant_argument)
-        * -s (sha)
+        * -c (commit)
 
     Returns:
         :class:`argparse.ArgumentParser`: ArgParse instance
@@ -101,10 +101,9 @@ def make_parser():
         "-g", "--redundant_argument", action="store_true", dest="redundant_argument",
         help="Redundant argument to preserve backward compatibility")
     parser.add_argument(
-        "-s", "--sha", action="store", type=str, dest="sha",
+        "-c", "--commit", action="store", type=str, dest="commit",
         default="",
-        help="Specify the beginning of the SHA commit ID of the point in the"
-             "repository you wish to tag.")
+        help="Perform script actions at the specified commit.")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
@@ -420,49 +419,50 @@ def _main():
 
     releases = vcs.list_releases()
 
-    tag = args.release
-    tag_is_valid = check_tag_is_valid(tag)
-    tag_exists = tag in releases
-    sha_specified = args.sha
+    release = args.release
+    release_is_valid = check_tag_is_valid(release)
+    release_exists = release in releases
+    commit_specified = args.commit
 
-    version = tag
+    version = release
     if args.next_version:
         version = next_version_number(releases, module=module)
     else:
-        # SHA commit ID in repository specified
-        if not sha_specified:
-            # Tag must already exist to release without SHA ID
-            if not tag_exists:
-                usermsg.error("Aborting: tag {} not found and SHA commit ID "
-                              "not specified.".format(tag))
+        # Commit in repository specified
+        if not commit_specified:
+            # Release must already exist to release without a commit
+            if not release_exists:
+                usermsg.error("Aborting: release {} not found and commit "
+                              "not specified.".format(release))
                 sys.exit(1)
-            # Warn if existing tag is of incorrect form
+            # Warn if existing release is of incorrect form
             else:
-                usermsg.info("Releasing existing tag {}.".format(tag))
-                if not tag_is_valid:
-                    usermsg.warning("Warning: tag {} does not conform to "
-                                    "convention.".format(tag))
-                    version = format_argument_version(tag)
-                    if '.' in tag:
-                        usermsg.warning("Tag {} contains \'.\' which will"
+                usermsg.info("Releasing existing release {}.".format(release))
+                if not release_is_valid:
+                    usermsg.warning("Warning: release {} does not conform to "
+                                    "convention.".format(release))
+                    version = format_argument_version(release)
+                    if '.' in release:
+                        usermsg.warning("Release {} contains \'.\' which will"
                                         " be replaced by \'-\' to: \'{}\'"
-                                        .format(tag, version))
+                                        .format(release, version))
         # No commit reference specified
         else:
-            # Tag must not be in use already
-            if tag_exists:
-                usermsg.error("Aborting: tag {} already exists.".format(tag))
+            # Release must not be in use already
+            if release_exists:
+                usermsg.error("Aborting: release {} already exists.".format(release))
                 sys.exit(1)
-            # Specified tag must be of correct form
+            # Specified release must be of correct form
             else:
-                if not tag_is_valid:
-                    usermsg.error("Aborting: invalid tag {}.".format(tag))
+                if not release_is_valid:
+                    usermsg.error("Aborting: invalid release {}.".format(release))
                     sys.exit(1)
+            usermsg.info("Releasing new release {rel} from {comm}.".\
+                         format(rel=release, comm=args.commit))
 
-
-    if sha_specified:
+    if commit_specified:
         try:
-            vcs.create_new_tag_and_push(args.release, args.sha, args.message)
+            vcs.create_new_tag_and_push(args.release, args.commit, args.message)
         except VCSGitError as err:
             log.exception(err)
             usermsg.error("Aborting: {msg}".format(msg=err))
