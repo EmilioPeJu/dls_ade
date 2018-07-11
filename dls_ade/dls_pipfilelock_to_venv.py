@@ -2,8 +2,18 @@ import sys
 import os
 import venv
 from collections import OrderedDict
+from git import Repo
 import json
 
+home_folder = '/home/svz41317'
+filesystem_root = home_folder + '/testing-root'
+central_location = filesystem_root + '/dls_sw/prod/python3/RHEL6-x86_64'
+
+work_dir = central_location+'/testapp/1.0.0'
+os.makedirs(work_dir)
+
+Repo.clone_from(home_folder+'/gitolite/testapp', work_dir)
+os.chdir(work_dir)
 
 def _main():
     home_folder = '/home/svz41317'
