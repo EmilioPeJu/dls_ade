@@ -54,7 +54,7 @@ settings_list = [
     {
         'description': "list_releases_for_a_module_in_prod_python",
 
-        'arguments': "-p dls_pilatus",
+        'arguments': "-p dls_pilatus -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': python_prod_releases_list,
 
@@ -63,7 +63,7 @@ settings_list = [
     {
         'description': "list_releases_for_a_module_in_prod",
 
-        'arguments': "dummy",
+        'arguments': "dummy -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': prod_releases_list,
 
@@ -72,7 +72,7 @@ settings_list = [
     {
         'description': "list_the_latest_release_for_a_module_in_prod",
 
-        'arguments': "dummy -l",
+        'arguments': "dummy -l -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': latest_prod_release,
 
