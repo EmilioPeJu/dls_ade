@@ -12,4 +12,4 @@ if [ $# -eq 1 ]
     return 1
 fi
 
-dls-python push_required_repos.py
+python push_required_repos.py

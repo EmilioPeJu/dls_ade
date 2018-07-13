@@ -33,7 +33,7 @@ class GitoliteServer(GitServer):
 
         """
         check_repo_cmd = "ssh " + GIT_ROOT + " expand " + server_repo_path
-        cmd_output = subprocess.check_output(check_repo_cmd.split())
+        cmd_output = str(subprocess.check_output(check_repo_cmd.split()))
         return server_repo_path in cmd_output
 
     def get_server_repo_list(self, area=""):

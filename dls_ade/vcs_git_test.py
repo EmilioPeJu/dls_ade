@@ -1,7 +1,5 @@
 import unittest
-from pkg_resources import require
-require("mock")
-from mock import patch, ANY, MagicMock, PropertyMock, call, mock_open  # @UnresolvedImport
+from mock import patch, ANY, MagicMock, PropertyMock, call  # @UnresolvedImport
 
 from dls_ade import vcs_git, gitserver, Server
 
@@ -43,6 +41,7 @@ class IsInLocalRepoTest(unittest.TestCase):
         path = "/"
 
         git_inst = MagicMock()
+        git_inst.git.git_rev_parse.return_value = 'dummy'
         mock_git.Repo.return_value = git_inst
 
         return_value = vcs_git.is_in_local_repo(path)
@@ -58,11 +57,13 @@ class IsLocalRepoRootTest(unittest.TestCase):
         path = "test/path"
 
         git_inst = MagicMock()
-        mock_git.Repo = git_inst
+        mock_git.Repo.return_value = git_inst
+        git_inst.git = MagicMock()
+        git_inst.git.rev_parse = MagicMock(return_value='test/path')
 
         vcs_git.is_local_repo_root(path)
 
-        git_inst.assert_called_once_with(path)
+        mock_git.Repo.assert_called_once_with(path)
 
     @patch('dls_ade.vcs_git.is_in_local_repo', return_value=False)
     @patch('dls_ade.vcs_git.git')
@@ -111,6 +112,7 @@ class IsLocalRepoRootTest(unittest.TestCase):
 
         git_inst = MagicMock()
         mock_git.Repo = git_inst
+        mock_git.Repo.git.rev_parse.return_value = 'dummy'
 
         return_value = vcs_git.is_local_repo_root(path)
 
@@ -307,6 +309,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "test@url.ac.uk"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         git_inst = vcs_git.Git("test_module", "area", server_mock)
         git_inst.repo = mock_repo
 
@@ -328,6 +331,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "test@url.ac.uk"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         git_inst = vcs_git.Git("test_module", "area", server_mock)
         git_inst.repo = mock_repo
 
@@ -431,6 +435,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
@@ -453,6 +458,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         server_mock.is_server_repo.return_value = False
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
@@ -476,6 +482,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, repo=mock_repo)
 
         repo.push_to_remote(remote_name="test_remote", branch_name="test_branch")
@@ -494,6 +501,7 @@ class PushToRemoteTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         repo.push_to_remote()
@@ -804,6 +812,7 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, self.mock_repo)
 
         repo.push_all_branches_and_tags("test_server_path", "test_remote")
@@ -820,6 +829,7 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, self.mock_repo)
 
         repo.push_all_branches_and_tags("test_server_path", "test_remote")
@@ -957,6 +967,7 @@ class GitListReleasesTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo_mock = MagicMock()
         self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
         self.vcs.repo.tags = [FakeTag("1-0"), FakeTag("1-0-1"), FakeTag("2-0")]
@@ -1091,6 +1102,7 @@ class GitSettersTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path.return_value = 'dummy-string'
         repo_mock = MagicMock()
         self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
 
