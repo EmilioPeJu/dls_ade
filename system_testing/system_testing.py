@@ -7,7 +7,6 @@ import shutil
 import logging
 from pkg_resources import require
 require('nose')
-require('GitPython')
 from nose.tools import assert_equal, assert_true, assert_false
 
 
