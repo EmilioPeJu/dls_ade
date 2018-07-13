@@ -39,11 +39,11 @@ source setup_testing_environment.sh /path/to/dls_ade/prefix
 
 ## Running the system tests
 
-Run the tests in the system_testing/<script_name> folders, using 'nosetests'.
+Run the tests in the system_testing/<script_name> folders, using 'python -m nose'.
 
 e.g.
 ```
-nosetests changes_since_release/
+python -m nose changes_since_release/
 ```
 
 #### Notes
