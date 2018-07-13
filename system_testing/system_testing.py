@@ -16,7 +16,8 @@ ENVIRONMENT_CORRECT = False
 try:
     from dls_ade import vcs_git
     from dls_ade import Server
-except ImportError:
+except ImportError as e:
+    print(e)
     vcs_git = None
     Server = None
     raise ImportError("PYTHONPATH must contain the dls_ade package")
@@ -441,14 +442,14 @@ class SystemTest(object):
             :class:`dls_ade.exceptions.VCSGitError`: From the comparison tests.
 
         """
-        self.check_std_err_for_exception()
+        self.check_std_out_for_exception_string()
 
         self.compare_std_out_to_string()
         self.check_std_out_starts_with_string()
         self.check_std_out_ends_with_string()
 
-    def check_std_err_for_exception(self):
-        """Check the standard error for the exception information.
+    def check_std_out_for_exception_string(self):
+        """Check the standard out and error for the exception information.
 
         Raises:
             :class:`.SettingsError`: If either the exception type or string \
@@ -456,22 +457,25 @@ class SystemTest(object):
             :class:`AssertionError`: If the test does not pass.
 
         """
+
         if not self._exception_type or not self._exception_string:
             if not self._exception_type and not self._exception_string:
                 return
             raise SettingsError("Both exception_type and exception_string "
                                 "must be provided.")
 
-        logging.debug("Checking return code is not 0.")
-        assert_false(self._return_code == 0)
+        if isinstance(self._exception_string, list):
+            expected_string_components = self._exception_string
+        else:
+            expected_string_components = [self._exception_string]
 
-        expected_string = "\n{exc_t:s}: {exc_s:s}\n"
-        expected_string = expected_string.format(exc_t=self._exception_type,
-                                                 exc_s=self._exception_string)
+        expected_string_components.append(self._exception_type)
 
-        logging.debug("Expected error string: " + expected_string)
+        logging.debug("Expected error string components: " +
+                      ",".join(expected_string_components))
 
-        assert_true(self._std_err.endswith(expected_string))
+        chk_str = self._std_out if not self._std_err else self._std_err
+        assert_true(all(elem in chk_str for elem in expected_string_components))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.
@@ -485,7 +489,13 @@ class SystemTest(object):
 
         logging.debug("Comparing the standard output to comparison string.")
 
-        assert_equal(self._std_out, self._std_out_compare_string)
+        if isinstance(self._std_out_compare_string, list):
+            expected_string_components = self._std_out_compare_string
+        else:
+            expected_string_components = [self._std_out_compare_string]
+
+        assert_true(all(elem in self._std_out
+                        for elem in expected_string_components))
 
     def check_std_out_starts_with_string(self):
         """Check if the standard output starts with std_out_starts_with_string.

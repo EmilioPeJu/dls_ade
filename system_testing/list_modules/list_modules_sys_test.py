@@ -1,17 +1,11 @@
 import system_testing as st
 import os
 
-support_list = "Modules in support:\n\n" \
-               "mock_repo/support/testsupportmod\n"
+support_list = ["testsupportmod"]
 
-ioc_list = "Modules in ioc:\n\n" \
-           "mock_repo/ioc/BTEST2/TS\n" \
-           "mock_repo/ioc/BTEST/BTEST-EB-IOC-03\n" \
-           "mock_repo/ioc/BTEST/TS\n"
+ioc_list = ["BTEST2/TS", "BTEST/BTEST-EB-IOC-03", "BTEST/TS"]
 
-ioc_domain_list = "Modules in BTEST:\n\n" \
-                  "mock_repo/ioc/BTEST/BTEST-EB-IOC-03\n" \
-                  "mock_repo/ioc/BTEST/TS\n"
+ioc_domain_list = ["BTEST-EB-IOC-03", "TS"]
 
 settings_list = [
 

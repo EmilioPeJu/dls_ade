@@ -94,31 +94,13 @@ First, in the dls_ade repository root, run in the terminal:
 
   make clean && make install
 
-For the environment variables, you need three paths:
-
-1. The path to the bin folder.
-    These are the executables that are run by the end user. From the root of
-    the repository, this is `prefix/bin`.
-
-2. The path to the python library egg.
-    From the root of the repository, this is
-    `prefix/lib/pythonx.x/site-packages/dls_ade-y.y-pyx.x.egg`, where `x`
-    varies depending on python or dls_ade version numbers.
-
-3. The path to the system_testing folder.
-    From the root of the repository, this is just `system_testing`
-
-To get the absolute path, use:
-
-.. code:: bash
-
-  readlink -f relative/path/to/folder
+For the environment variables, you need to provide the installation prefix: the location where `dls_ade` has been installed. This directory will include `bin/` (containing the scripts) and `lib/` (containing the site-packages directory).
 
 In the dls_ade/system_testing folder, run in the terminal:
 
 .. code:: bash
 
-  source setup_testing_environment.sh /path/to/bin /path/to/egg /path/to/system_testing
+  source setup_testing_environment.sh <installation-prefix>
 
 What this script will do:
 

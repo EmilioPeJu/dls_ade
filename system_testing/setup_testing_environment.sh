@@ -1,13 +1,14 @@
 #! /bin/bash
 
 export GIT_ROOT_DIR="controlstest"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ $# -eq 3 ]
+if [ $# -eq 1 ]
   then
-    export PATH=$1:$PATH
-    export PYTHONPATH=$2:$3:$PYTHONPATH
+    export PATH=$1/bin:$PATH
+    export PYTHONPATH=$1/lib/python*/site-packages:$SCRIPT_DIR:$PYTHONPATH
   else
-    echo Please give the /bin, the /...egg folder and the system_testing folder paths.
+    echo "Usage: $0 <installation-prefix>"
     return 1
 fi
 

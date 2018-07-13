@@ -14,7 +14,7 @@ settings_list = [
 
         'arguments': "-p test_python_module",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
@@ -24,7 +24,7 @@ settings_list = [
 
         'arguments': "-p dls_test_python.module",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
@@ -34,7 +34,7 @@ settings_list = [
 
         'arguments': "-p dls_test_python-module",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Python module names must start with 'dls_' and be valid python identifiers",
     },
@@ -44,7 +44,7 @@ settings_list = [
 
         'arguments': "-i test_ioc_module",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Need a name with '-' or '/' in it, got test_ioc_module",
     },
@@ -54,7 +54,7 @@ settings_list = [
 
         'arguments': "-i test/",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Need a name with '-' or '/' in it, got test/",
     },
@@ -64,7 +64,7 @@ settings_list = [
 
         'arguments': "-i test//ioc",
 
-        'exception_type': "dls_ade.exceptions.ParsingError",
+        'exception_type': "ParsingError",
 
         'exception_string': "Need a name with '-' or '/' in it, got test//ioc",
     },
