@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from dls_ade import dls_environment
 env = dls_environment.environment()
 
-areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
+areas = ["support", "ioc", "matlab", "python", "python3", "etc", "tools", "epics"]
 
 
 class ArgParser(ArgumentParser):
@@ -26,6 +26,9 @@ class ArgParser(ArgumentParser):
         area.add_argument(
             "-i", "--ioc", action="store_true", dest="ioc",
             help="Set 'ioc' area")
+        area.add_argument(
+            "-3", "--python3", action="store_true", dest="python3",
+            help="Set 'python3' area")
 
     def parse_args(self, args=None, namespace=None):
         """
@@ -45,6 +48,8 @@ class ArgParser(ArgumentParser):
             args.area = "ioc"
         elif args.python:
             args.area = "python"
+        elif args.python3:
+            args.area = "python3"
         return args
 
     def add_module_name_arg(self, help_msg="Name of module"):
