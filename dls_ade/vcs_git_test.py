@@ -320,6 +320,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
             "test_remote", "test@url.ac.uk/test_destination")
         mock_remote.push.assert_called_once_with("test_branch")
 
+
     def test_given_only_destination_given_then_sensible_defaults_applied(self):
 
         mock_remote = MagicMock()  # Mock to represent the 'remote' local variable
@@ -339,7 +340,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock.create_remote_repo.assert_called_once_with("test_destination")
         mock_create_remote.assert_called_once_with(
-            "origin", "test@url.ac.uk/test_destination")
+            "gitolite", "test@url.ac.uk/test_destination")
         mock_remote.push.assert_called_once_with("master")
 
 
@@ -495,8 +496,8 @@ class PushToRemoteTest(unittest.TestCase):
 
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("master")]  # Set these to the function's default values
-        remotes_list = [self.RemoteEntry("origin")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "origin", "ssh://GIT_SSH_ROOT/test_URL")
+        remotes_list = [self.RemoteEntry("gitolite")]
+        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "gitolite", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         server_mock = MagicMock()
@@ -648,9 +649,10 @@ class ListRemoteBranchesTest(unittest.TestCase):
 
 class CheckoutRemoteBranchTest(unittest.TestCase):
 
+    @patch('dls_ade.vcs_git.has_remote', return_value=True)
     @patch('dls_ade.vcs_git.list_remote_branches', return_value=['test_module'])
     @patch('dls_ade.vcs_git.git')
-    def test_given_valid_branch_then_checkout_called(self, mock_git, _2):
+    def test_given_valid_branch_then_checkout_called(self, mock_git, _2, _3):
         branch = "test_module"
 
         repo = MagicMock()
@@ -1137,7 +1139,8 @@ class GitSettersTest(unittest.TestCase):
         with self.assertRaises(vcs_git.VCSGitError):
             self.vcs.set_version(version)
 
-    def test_given_branch_then_checkout(self):
+    @patch('dls_ade.vcs_git.has_remote', return_value=True)
+    def test_given_branch_then_checkout(self, _1):
 
         branch = "test_branch"
 
