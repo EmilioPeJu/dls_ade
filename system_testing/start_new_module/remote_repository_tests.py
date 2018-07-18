@@ -140,7 +140,7 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'repo_comp_method': "all_comp",
+        'repo_comp_method': "local_comp",
 
         'path': "test_support_module",
 
@@ -412,10 +412,7 @@ def alter_settings_dictionaries(simplified_settings_list):
         settings_dict['local_comp_path_one'] = path
 
         # Search the COMPARISON_FILES folder for folders to compare with.
-        settings_dict['local_comp_path_two'] = os.path.join(
-                COMPARISON_FILES,
-                path,
-        )
+        settings_dict['local_comp_path_two'] = path
 
         # Create the full server repo path from the given simplified version.
         settings_dict['server_repo_path'] = Server().dev_module_path(
