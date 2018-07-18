@@ -144,6 +144,29 @@ def has_remote(repo, remote_name):
     return remote_name in [x.name for x in repo.remotes]
 
 
+def get_origin(repo):
+    """Return the first remote used ('origin').
+
+    Args:
+        repo: The git.Repo object representing the repository
+
+    Returns:
+        git.Remote("origin") or git.Remote("gitolite") as appropriate
+
+    Raises:
+        :class:`~dls_ade.exceptions.VCSGitError`: If the first remote cannot
+        be found.
+    """
+
+    if has_remote(repo, 'origin'):
+        origin = repo.remotes.origin
+    elif has_remote(repo, 'gitolite'):
+        origin = repo.remotes.gitolite
+    else:
+        raise VCSGitError('Origin not found in repo.remotes')
+    return origin
+
+
 def list_module_releases(repo):
     """
     Return list of release tags of module.
@@ -193,7 +216,7 @@ def checkout_remote_branch(branch, repo):
 
     if branch in list_remote_branches(repo):
         usermsg.info("Checking out branch: {}".format(branch))
-        origin = repo.remotes.origin
+        origin = get_origin(repo)
         remote = origin.refs[branch]
         remote.checkout(b=branch)
 
@@ -405,7 +428,7 @@ class Git(BaseVCS):
         return release_exist
 
     def set_branch(self, branch):
-        origin = self.repo.remotes.origin
+        origin = get_origin(self.repo)
         remote = origin.refs[branch]
         remote.checkout(b=branch)
 
@@ -422,7 +445,7 @@ class Git(BaseVCS):
             raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
         self._version = version
 
-    def push_to_remote(self, remote_name="origin", branch_name="master"):
+    def push_to_remote(self, remote_name="gitolite", branch_name="master"):
         """
         Pushes to the server path given by its remote name, on the given
         branch.
@@ -475,7 +498,7 @@ class Git(BaseVCS):
         usermsg.info("Pushing repo to destination...")
         remote.push(branch_name)
 
-    def add_new_remote_and_push(self, dest, remote_name="origin",
+    def add_new_remote_and_push(self, dest, remote_name="gitolite",
                                 branch_name="master"):
         """
         Adds a remote to a git repository, and pushes to the server.

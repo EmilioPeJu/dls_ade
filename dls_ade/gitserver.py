@@ -57,7 +57,7 @@ class GitServer(object):
         base_repo = git.Repo(path)
         return Git(module, area, self, base_repo)
 
-    def get_clone_repo(self, server_repo_path, local_repo_path, origin='origin'):
+    def get_clone_repo(self, server_repo_path, local_repo_path, origin='gitolite'):
         """
         Get Repo clone given server and local repository paths
 
