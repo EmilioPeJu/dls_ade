@@ -1,5 +1,8 @@
+"""
+Reads Pipfile.lock, creates a paths.pth and a venv only if all packages are installed
+"""
+
 import sys
-import os
 import os.path
 import venv
 from collections import OrderedDict
@@ -18,12 +21,8 @@ def main():
             packages = OrderedDict(j['default'])
             packages.update(j['develop'])
     except FileNotFoundError:
-        sys.exit('Pipfile.lock was not found!')
-        
-    if not os.path.exists('venv'):
-        venv.create('venv',system_site_packages=False, clear=False, symlinks=False, with_pip=False)
-    else:
-        sys.exit('venv already present!')
+        sys.exit('Job aborted: Pipfile.lock was not found!')
+
 
     path_list = []
     pkg_not_found = False
@@ -42,9 +41,15 @@ def main():
             absent_pkg_list.append(p)
 
     if not pkg_not_found:
+        
+        if not os.path.exists('venv'):
+            venv.create('venv',system_site_packages=False, clear=False, symlinks=False, with_pip=False)
+        else:
+            sys.exit('venv already present!')
         with open('./venv/lib/python3.6/site-packages/paths.pth', 'w') as f:
             for pl in path_list:
                 f.write(pl +'\n')
+        print('venv with path.pth has been created successfully!)
     else:
         print('The following packages need to be installed:')
         print(*absent_pkg_list, sep='\n')
