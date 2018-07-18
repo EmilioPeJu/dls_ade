@@ -26,5 +26,5 @@ nosetests tar_module
 
 cd start_new_module
 echo "Running start_new_module tests ..."
-nosetests start_new_module
+nosetests
 cd ..
