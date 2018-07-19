@@ -43,13 +43,13 @@ def main():
     if not pkg_not_found:
         
         if not os.path.exists('venv'):
-            venv.create('venv',system_site_packages=False, clear=False, symlinks=False, with_pip=False)
+            venv.create('venv',system_site_packages=True, clear=False, symlinks=False, with_pip=False)
         else:
             sys.exit('venv already present!')
         with open('./venv/lib/python3.6/site-packages/paths.pth', 'w') as f:
             for pl in path_list:
                 f.write(pl +'\n')
-        print('venv with path.pth has been created successfully!)
+        print('venv with path.pth has been created successfully!')
     else:
         print('The following packages need to be installed:')
         print(*absent_pkg_list, sep='\n')
