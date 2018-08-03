@@ -102,7 +102,6 @@ def make_parser():
         help="Redundant argument to preserve backward compatibility")
     parser.add_argument(
         "-c", "--commit", action="store", type=str, dest="commit",
-        default="",
         help="Perform script actions at the specified commit.")
 
     title = "Build operating system arguments"
@@ -423,6 +422,7 @@ def _main():
 
     commit_specified = args.commit is not None
     release_specified = args.release is not None
+
     if not release_specified:
         usermsg.info("No release specified; able to test build at {} only.".\
                      format(args.commit))
