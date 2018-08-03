@@ -95,7 +95,6 @@ class ParserTest(unittest.TestCase):
         option = self.parser._option_string_actions['-c']
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.type, str)
-        self.assertEqual(option.default, "")
         self.assertEqual(option.dest, "commit")
         self.assertIn("--commit", option.option_strings)
 
