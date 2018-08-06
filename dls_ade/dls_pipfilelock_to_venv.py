@@ -10,7 +10,7 @@ from git import Repo
 import json
 
 
-TESTING_ROOT = '/home/svz41317/testing-root'
+TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 
 
 def main():
