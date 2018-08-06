@@ -5,35 +5,45 @@ Subprocesses are used deliberatelly as the reccommended way of executing pip pro
 
 from collections import OrderedDict
 import json
+import logging
 import subprocess
 import sys
 import os
 import os.path
 import shutil
 
-TESTING_ROOT = '/home/svz41317/testing-root'
-central_location = TESTING_ROOT+'/dls_sw/prod/python3/RHEL6-x86_64'
-prod_wheel_dir = TESTING_ROOT+'/dls_sw/prod/python3/distributions'
-work_wheel_dir = TESTING_ROOT+'/dls_sw/work/python3/distributions'
+
+TESTING_ROOT = os.getenv('TESTING_ROOT', "")
+central_location = TESTING_ROOT + '/dls_sw/prod/python3/RHEL6-x86_64'
+prod_wheel_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
+work_wheel_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 
 
 def main():
     
-    cur_dir = os.getcwd()
-    os.chdir(work_wheel_dir)
-    for wheel in os.listdir(work_wheel_dir):
-        shutil.copy(wheel, prod_wheel_dir)
+    for wheel in os.listdir(work_wheel_dir):   # Figure out how to avoid copying every file
+        work_wheel_path = os.path.join(work_wheel_dir, wheel)
+        prod_wheel_path = os.path.join(prod_wheel_dir, wheel)
+        if not os.path.exists(prod_wheel_path):
+            logging.info('Copying file {} from work to prod'.format(wheel))
+            shutil.copy(work_wheel_path, prod_wheel_dir)
     
-    os.chdir(cur_dir)
     try:
         with open('Pipfile.lock') as f:
             j = json.load(f, object_pairs_hook=OrderedDict)
             packages = OrderedDict(j['default'])
             packages.update(j['develop'])
             for package, contents in packages.items():
-                file_path='{}/dls_sw/prod/python3/RHEL6-x86_64/{}/{}/prefix/lib/python3.6/site-packages'.format(TESTING_ROOT, package, contents['version'][2:])
-                if not os.path.exists(file_path):
-                    subprocess.check_call([sys.executable,'-m','pip', 'install','--ignore-installed','--prefix='+central_location+'/'+package+'/'+contents['version'][2:]+'/prefix','--find-links='+prod_wheel_dir,'--no-index','--no-deps',package+contents['version']])
+                # specifier is package and version e.g. flask==1.0.2
+                specifier = package + contents['version']
+                # Remove '==' from start of version string e.g. 1.0.2
+                version = contents['version'][2:]
+                prefix_location = os.path.join(central_location, package, version, 'prefix')               
+                site_packages_location = os.path.join(prefix_location, 'lib/python3.6/site-packages')
+                if not os.path.exists(site_packages_location):
+                    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--ignore-installed', 
+                                           '--prefix=' + prefix_location, '--find-links=' + prod_wheel_dir,
+                                           '--no-index', '--no-deps', specifier])
     except FileNotFoundError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
     except subprocess.CalledProcessError as err:
