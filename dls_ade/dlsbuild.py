@@ -61,7 +61,7 @@ def get_email(user):
             "OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk",
             ldap.SCOPE_SUBTREE, "(CN=%s)" % user, ['mail'])
         # Just return the first result from the result structure
-        return result[0][1]["mail"][0]
+        return result[0][1]["mail"][0].decode('ascii')
     except:
         # Return default email address
         return "%s@rl.ac.uk" % user
@@ -225,7 +225,9 @@ class Builder:
                      .format(filename=filename, build_dir=build_dir))
         log.info("Local test-build parameters: {}".format(params))
         with open(filename, "w") as f:
-            f.write(self.build_script(params))
+            script = self.build_script(params)
+            print('\n{}\n'.format(script))
+            f.write(script)
 
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
@@ -244,7 +246,7 @@ class Builder:
             usermsg.info("Local test build failed. Results are in {}".format(build_dir))
         else:
             usermsg.info("Local test build succeeded")
-            shutil.rmtree(build_dir)
+            #shutil.rmtree(build_dir)
         return status
 
     def submit(self, vcs, test=False):
@@ -270,7 +272,9 @@ class Builder:
         # Submit the build script
         log.info("Build server job parameters: {}".format(params))
         with open(os.path.join(pathname, filename), "w") as f:
-            f.write(self.build_script(params))
+            script = self.build_script(params)
+            print('\n{}\n'.format(script))
+            f.write(script)
 
         # Create a log of the build
         with open(os.path.expanduser(os.path.join("~", ".dls-release-log")), "a") as f:
