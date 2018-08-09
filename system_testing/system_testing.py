@@ -474,8 +474,8 @@ class SystemTest(object):
         logging.debug("Expected error string components: " +
                       ",".join(expected_string_components))
 
-        chk_str = self._std_out if not self._std_err else self._std_err
-        assert_true(all(elem in chk_str for elem in expected_string_components))
+        assert_true(all(elem in self._std_out for elem in expected_string_components) or
+                    all(elem in self._std_err for elem in expected_string_components))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.
