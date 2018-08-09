@@ -63,19 +63,14 @@ fi
 
 # BUILD MODULE
 
-# Declare variables
-PYTHON3_LOCATION=/dls_sw/prod/tools/RHEL6-x86_64/Python3/3-7/prefix
-TESTING_ROOT=/home/svz41317/testing-root
-CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/RHEL6-x86_64
-PYTHON3_TEST_LOCATION=/home/svz41317/dls_ade/prefix
+# Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
+#export PATH=~/dls_ade/prefix/bin:$PATH
+#export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
+#export TESTING_ROOT=~/testing-root
 
 # Create venv from Pipfile.lock
-source /home/svz41317/dls_ade/venvpython3/bin/activate
-export PYTHONPATH=$PYTHON3_TEST_LOCATION/lib/python3.6/site-packages/
-export PATH=$PYTHON3_TEST_LOCATION/bin:$PATH
 cd $_version || ReportFailure "Can not cd to $_version"
 dls-pipfilelock-to-venv.py
-deactivate
 
 # Create prefix and install app using the its own venv
 mkdir -p prefix/lib/python3.6/site-packages
@@ -86,6 +81,5 @@ echo $SITE_PACKAGES >> $(pwd)/venv/lib/python3.6/site-packages/paths.pth
 
 # Install app - so that it is available from its own venv
 python setup.py install --prefix=prefix
-
-
+deactivate
 echo "Script finished."
