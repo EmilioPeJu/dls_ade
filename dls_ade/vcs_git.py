@@ -157,7 +157,7 @@ def get_origin(repo):
         :class:`~dls_ade.exceptions.VCSGitError`: If the first remote cannot
         be found.
     """
-    usermsg.info(repo.remotes)
+
     if has_remote(repo, 'origin'):
         origin = repo.remotes.origin
     elif has_remote(repo, 'gitolite'):
