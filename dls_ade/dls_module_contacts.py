@@ -167,7 +167,7 @@ def lookup_contact_name(fed_id):
     name_info_dict = ldap_output[1][0][1]
     # name_info_dict: {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
     contact_name = \
-        name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
+        name_info_dict['givenName'][0].decode('utf-8') + ' ' + name_info_dict['sn'][0].decode('utf-8')
 
     return contact_name
 

@@ -45,7 +45,7 @@ class GitoliteServer(GitServer):
         """
         list_cmd = "ssh " + GIT_ROOT + " expandcontrols"
         log.debug("Command: \"{sshcmd}\"".format(sshcmd=list_cmd))
-        list_cmd_output = subprocess.check_output(list_cmd.split())
+        list_cmd_output = subprocess.check_output(list_cmd.split()).decode('utf-8')
         log.debug("\"gitolite response\": \"{}\"".format(list_cmd_output))
 
         # list_cmd_output is a '\n' separated list of every repo on Gitolite:
