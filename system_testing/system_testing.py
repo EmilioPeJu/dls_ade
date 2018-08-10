@@ -400,8 +400,8 @@ class SystemTest(object):
                                    stdin=stdin_pipe)
 
         self._std_out, self._std_err = process.communicate(self._input)
-        self._std_out = self._std_out.decode('utf-8')
-        self._std_err = self._std_err.decode('utf-8')
+        self._std_out = self._std_out
+        self._std_err = self._std_err
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
