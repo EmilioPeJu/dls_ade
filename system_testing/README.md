@@ -7,48 +7,36 @@ see [docs/system_testing_info.rst](../docs/system_testing_info.rst).
 
 You must have permissions to access the controlstest area of gitolite.
 
+You must have set up the Development Environment as described in the root README
+
 ## Setting up the testing environment
-
-Setup a virtualenv in the root of the project and install the system tests.
-
-```
-virtualenv -p /path/to/your/python2.7 venv
-source venv/bin/activate
-make clean
-make install
-```
 
 Navigate to system_testing and run
 
 ```
-source setup_testing_environment.sh <installation-prefix>
+source setup_testing_environment.sh
 ```
-
-where `<installation-prefix>` is the location to which `dls_ade` was installed,
-typically `dls_ade/prefix`.
 
 This script will:
 * setup your $PYTHONPATH appropriately
 * call push_required_repos.py (which will send the repositories located in necessary_server_repos/controlstest.tar.gz to the server, for testing)
 
-
-```
-cd system_testing
-source setup_testing_environment.sh /path/to/dls_ade/prefix
-```
-
 ## Running the system tests
 
-Run all the tests:
-```
-source run_tests.sh
-```
-
-Or alternatively run the tests in the system_testing/<script_name> folders individually, using 'python -m nose'.
+Run the tests in the system_testing/<script_name> folders individually, using 'python -m nose' or 'nosetests'.
 
 e.g.
 ```
-python -m nose changes_since_release/
+nosetests changes_since_release/
+```
+
+or
+
+Run all tests using the run_tests.sh script
+
+```
+./run_tests.sh
+
 ```
 
 #### Notes
