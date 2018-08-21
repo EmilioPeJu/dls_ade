@@ -13,6 +13,7 @@ ENVIRONMENT_CORRECT = False
 try:
     from dls_ade import vcs_git
     from dls_ade import Server
+    from dls_ade import bytes_to_string
 except ImportError as e:
     print(e)
     vcs_git = None
@@ -400,8 +401,8 @@ class SystemTest(object):
                                    stdin=stdin_pipe)
 
         self._std_out, self._std_err = process.communicate(self._input)
-        self._std_out = self._std_out
-        self._std_err = self._std_err
+        self._std_out = bytes_to_string(self._std_out)
+        self._std_err = bytes_to_string(self._std_err)
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
