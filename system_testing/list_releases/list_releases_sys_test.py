@@ -6,7 +6,7 @@ no_git_release = "testB06/TS: No releases made in git"
 module_does_not_exist = "Repository does not contain controlstest/python/testpythonmod"
 no_prod_release = "dummy2: No releases made for R3.14.12.3"
 prod_releases_list = "Previous releases for dummy in prod: ['0-3', '0-5', '0-6', '0-7', '0-8', '0-8-6']"
-python_prod_releases_list = "Previous releases for dls_pilatus in prod: ['1-0', '1-1', '1-2']"
+python_prod_releases_list = "Previous releases for dls_pilatus in prod: ['1-0', '1-1', '1-2', '1-3']"
 latest_prod_release = "The latest release for dummy in prod is: 0-8-6"
 e_release_list = "Previous releases for symbols in prod: ['1-9', '1-10']"
 e_latest_release = "The latest release for symbols in prod is: 1-10"
@@ -52,9 +52,9 @@ settings_list = [
     },
 
     {
-        'description': "list_releases_for_a_module_in_prod_python",
+        'description': "list_releases_for_a_module_in_r6_prod_python",
 
-        'arguments': "-p dls_pilatus",
+        'arguments': "-p dls_pilatus -r 6",
 
         'std_out_compare_string': python_prod_releases_list,
 
@@ -63,7 +63,7 @@ settings_list = [
     {
         'description': "list_releases_for_a_module_in_prod",
 
-        'arguments': "dummy",
+        'arguments': "dummy -r 6",
 
         'std_out_compare_string': prod_releases_list,
 
@@ -72,7 +72,7 @@ settings_list = [
     {
         'description': "list_the_latest_release_for_a_module_in_prod",
 
-        'arguments': "dummy -l",
+        'arguments': "dummy -l -r 6",
 
         'std_out_compare_string': latest_prod_release,
 
@@ -81,7 +81,7 @@ settings_list = [
     {
         'description': "raise_exception_for_non_existent_module_in_prod",
 
-        'arguments': "dummy2",
+        'arguments': "dummy2 -r 6",
 
         'std_out_compare_string': no_prod_release,
 
@@ -90,7 +90,7 @@ settings_list = [
     {
         'description': "list_the_latest_release_for_a_module_in_prod_with_another_epics_version",
 
-        'arguments': "symbols -e R3.14.8.2",
+        'arguments': "symbols -e R3.14.8.2 -r 6",
 
         'std_out_compare_string': e_release_list,
 
@@ -99,7 +99,7 @@ settings_list = [
     {
         'description': "list_the_latest_release_for_a_module_in_prod_with_another_epics_version",
 
-        'arguments': "symbols -e R3.14.8.2 -l",
+        'arguments': "symbols -e R3.14.8.2 -l -r 6",
 
         'std_out_compare_string': e_latest_release,
 
