@@ -237,7 +237,8 @@ class SystemTestCallScriptTest(unittest.TestCase):
 
     def test_given_no_input_then_popen_has_no_standard_input_set_and_communicate_called_without_input(self):
         mock_process = MagicMock(returncode=1)
-        mock_process.communicate.return_value = ("test_out", "test_err")
+        # Subprocess typically returns byte strings.
+        mock_process.communicate.return_value = (b"test_out", b"test_err")
         self.mock_popen.return_value = mock_process
 
         st_obj = st.SystemTest("test_script", "test_name")
@@ -262,7 +263,8 @@ class SystemTestCallScriptTest(unittest.TestCase):
 
     def test_given_input_then_popen_has_standard_input_set_to_pipe_and_communicate_called_with_input(self):
         mock_process = MagicMock(returncode=1)
-        mock_process.communicate.return_value = ("test_out", "test_err")
+        # Subprocess typically returns byte strings.
+        mock_process.communicate.return_value = (b"test_out", b"test_err")
         self.mock_popen.return_value = mock_process
 
         st_obj = st.SystemTest("test_script", "test_name")
@@ -288,7 +290,8 @@ class SystemTestCallScriptTest(unittest.TestCase):
 
     def test_given_input_is_blank_string_then_popen_has_standard_input_set_to_pipe_and_communicate_called_with_input(self):
         mock_process = MagicMock(returncode=1)
-        mock_process.communicate.return_value = ("test_out", "test_err")
+        # Subprocess typically returns byte strings.
+        mock_process.communicate.return_value = (b"test_out", b"test_err")
         self.mock_popen.return_value = mock_process
 
         st_obj = st.SystemTest("test_script", "test_name")
