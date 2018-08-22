@@ -507,7 +507,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("master")]  # Set these to the function's default values
         remotes_list = [self.RemoteEntry("gitolite")]
-        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, mock_remote, "origin", "ssh://GIT_SSH_ROOT/test_URL")
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, mock_remote, "gitolite", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         server_mock = MagicMock()
