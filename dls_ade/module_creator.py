@@ -1,8 +1,8 @@
 import os
+import shutil
 import logging
 from getpass import getuser
-from dls_ade import path_functions as pathf
-import shutil
+
 from dls_ade import vcs_git, Server
 from dls_ade.exceptions import (RemoteRepoError, VerificationError,
                                 ArgumentError)
@@ -228,7 +228,7 @@ class ModuleCreator(object):
         os.chdir(self._cwd)
 
         repo = vcs_git.init_repo(self.abs_module_path)
-        vcs_git.stage_all_files_and_commit(repo)
+        vcs_git.stage_all_files_and_commit(repo, "Initial commit")
 
     def get_print_message(self):
         """Prints a message to detail the user's next steps."""
