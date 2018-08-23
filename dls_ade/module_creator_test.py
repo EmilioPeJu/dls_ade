@@ -1,15 +1,10 @@
 from __future__ import print_function
 
-import unittest
 import os
-import logging
-from pkg_resources import require
-require("mock")
-from mock import patch, ANY, MagicMock, call
+import unittest
+from mock import patch, MagicMock, call
 
 import dls_ade.module_creator as mc
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 def set_up_mock(test_case_object, path):
@@ -317,7 +312,7 @@ class ModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_os.chdir.assert_has_calls(call_list)
         self.assertTrue(self.mock_create_files.called)
         self.mock_vcs_git.init_repo.assert_called_once_with(self.nmc_obj.abs_module_path)
-        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(repo_mock)
+        self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(repo_mock, "Initial commit")
 
 
 class ModuleCreatorPrintMessageTest(unittest.TestCase):

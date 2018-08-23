@@ -91,7 +91,7 @@ def init_repo(path="./"):
     return repo
 
 
-def stage_all_files_and_commit(repo, message="Initial commit."):
+def stage_all_files_and_commit(repo, message):
     """Stage and commit all files in a local git repository.
 
     Args:

@@ -193,16 +193,6 @@ class StageAllFilesAndCommitTest(unittest.TestCase):
 
         self.mock_git_repo.return_value = self.mock_repo
 
-    def test_given_both_tests_pass_then_repo_staged_and_committed_with_correct_defaults(self):
-
-        self.mock_is_dir.return_value = True
-        self.mock_is_local_repo_root.return_value = True
-
-        vcs_git.stage_all_files_and_commit(self.mock_repo)
-
-        self.mock_repo.git.add.assert_called_once_with("--all")
-        self.mock_repo.index.commit.assert_called_once_with("Initial commit.")
-
     def test_given_both_tests_pass_and_both_arguments_supplied_then_repo_committed_with_correct_arguments(self):
 
         self.mock_is_dir.return_value = True
