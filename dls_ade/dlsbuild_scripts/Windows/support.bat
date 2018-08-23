@@ -47,14 +47,24 @@ if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not cd to %build_dir%
 )
 
+(echo %build_dir% | findstr /i /c:"prod" >nul) && (set is_test="false") || (set is_test="true")
+
 if not defined _svn_dir (
     if not exist %_version% (
 
-        git clone --depth=100 %_git_dir% %_version%
+        if %is_test% == "false" (
+            git clone --depth=100 %_git_dir% %_version%
+        ) else (
+            git clone %_git_dir% %_version%
+        )
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not clone %_git_dir%
         )
-        pushd %_version% && git fetch --tags && git checkout %_version% && popd
+        if %is_test% == "false" (
+            pushd %_version% && git fetch --tags && git checkout %_version% && popd
+        ) else (
+            pushd %_version% && git checkout %_version% && popd
+        )
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
         )
@@ -65,11 +75,19 @@ if not defined _svn_dir (
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not remove %_version%
         )
-        git clone --depth=100 %_git_dir% %_version%
+        if %is_test% == "false" (
+            git clone --depth=100 %_git_dir% %_version%
+        ) else (
+            git clone %_git_dir% %_version%
+        )
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not clone %_git_dir%
         )
-        pushd %_version%  && git fetch --tags && git checkout %_version% && popd
+        if %is_test% == "false" (
+            pushd %_version%  && git fetch --tags && git checkout %_version% && popd
+        ) else (
+            pushd %_version%  && git checkout %_version% && popd
+        )
         if errorlevel 1 (
             call :ReportFailure %ERRORLEVEL% Can not checkout %_version%
         )

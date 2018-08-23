@@ -3,7 +3,8 @@ import tempfile
 import logging
 
 from dls_ade.vcs_git import Git, git
-from dls_ade import path_functions as pathf
+
+from dls_ade import dls_utilities as dls_util
 
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger("usermessages")
@@ -11,7 +12,7 @@ usermsg = logging.getLogger("usermessages")
 
 class GitServer(object):
 
-    GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
+    GIT_ROOT_DIR = dls_util.GIT_ROOT_DIR
 
     def __init__(self, url, clone_url):
         self.url = url
@@ -88,7 +89,7 @@ class GitServer(object):
             in current directory
         """
 
-        pathf.remove_end_slash(server_repo_path)
+        dls_util.remove_end_slash(server_repo_path)
 
         if not self.is_server_repo(server_repo_path):
             raise ValueError("Repository does not contain " +
@@ -118,7 +119,7 @@ class GitServer(object):
             :class:`~git.repo.base.Repo`: Repository instance
         """
 
-        pathf.remove_end_slash(source)
+        dls_util.remove_end_slash(source)
 
         if not self.is_server_repo(source):
             raise ValueError("Repository does not contain " + source)

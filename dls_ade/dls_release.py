@@ -24,7 +24,8 @@ from dls_ade import Server
 from dls_ade import dlsbuild
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-from dls_ade.exceptions import VCSGitError
+from dls_ade.exceptions import VCSGitError, ParsingError
+from dls_ade.dls_utilities import check_tag_is_valid
 
 usage = """
 Default <area> is 'support'.
@@ -55,6 +56,7 @@ def make_parser():
         * -n (next_version)
         * -r (rhel_version) or --w (windows arguments)
         * -g (redundant_argument)
+        * -c (commit)
 
     Returns:
         :class:`argparse.ArgumentParser`: ArgParse instance
@@ -63,7 +65,7 @@ def make_parser():
     parser = ArgParser(usage)
 
     parser.add_module_name_arg()
-    parser.add_release_arg()
+    parser.add_release_arg(optional=True)
     parser.add_branch_flag(
         help_msg="Release from a branch")
     parser.add_epics_version_flag(
@@ -98,6 +100,9 @@ def make_parser():
     parser.add_argument(
         "-g", "--redundant_argument", action="store_true", dest="redundant_argument",
         help="Redundant argument to preserve backward compatibility")
+    parser.add_argument(
+        "-c", "--commit", action="store", type=str, dest="commit",
+        help="Perform script actions at the specified commit.")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
@@ -170,7 +175,7 @@ def check_parsed_arguments_valid(args, parser):
     Raises:
         :class:`dls_ade.exceptions.VCSGitError`:
             * Module name not specified
-            * Module version not specified
+            * Module version not specified, and not using -T -c <commit>
             * Cannot release etc/build or etc/redirector as modules - use
                 configure system instead
             * When git is specified, version number must be provided
@@ -182,8 +187,10 @@ def check_parsed_arguments_valid(args, parser):
         parser.error("Module name not specified")
         logging.debug(args.module_name)
         logging.debug(args.next_version)
-    elif not args.release and not args.next_version:
-        parser.error("Module version not specified")
+    elif not args.release and not \
+            (args.next_version or (args.test_only and args.commit)):
+        parser.error("Module release not specified; required unless testing a "
+                     "specified commit, or requesting next version.")
     elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
         parser.error("Cannot release etc/build or etc/redirector as modules"
                      " - use configure system instead")
@@ -390,6 +397,7 @@ def perform_test_build(build_object, local_build, vcs):
 
 
 def _main():
+
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
 
@@ -410,14 +418,67 @@ def _main():
     if args.branch:
         vcs.set_branch(args.branch)
 
-    if args.next_version:
-        releases = vcs.list_releases()
+    releases = vcs.list_releases()
+
+    commit_specified = args.commit is not None
+    release_specified = args.release is not None
+
+    if not release_specified:
+        usermsg.info("No release specified; able to test build at {} only.".\
+                     format(args.commit))
+
+    if args.next_version:  # Release = next version
         version = next_version_number(releases, module=module)
-    else:
-        version = format_argument_version(args.release)
-        if '.' in args.release:
-            usermsg.warning("Release \'{}\' contain \'.\' which will be replaced by \'-\' to: \'{}\'"
-                            .format(args.release, version))
+    elif not release_specified:  # Release = @ commit, not of release
+        version = args.commit
+    else:  # Release of version; check validity of version
+        release = args.release
+        version = release
+        release_is_valid = check_tag_is_valid(release)
+        release_exists = release in releases
+        # Commit in repository specified
+        if not commit_specified:
+            # Release must already exist to release without a commit
+            if not release_exists:
+                usermsg.error("Aborting: release {} not found and commit "
+                              "not specified.".format(release))
+                sys.exit(1)
+            # Warn if existing release is of incorrect form
+            else:
+                usermsg.info("Releasing existing release {}.".format(release))
+                if not release_is_valid:
+                    usermsg.warning("Warning: release {} does not conform to "
+                                    "convention.".format(release))
+                    version = format_argument_version(release)
+                    if '.' in release:
+                        usermsg.warning("Release {} contains \'.\' which will"
+                                        " be replaced by \'-\' to: \'{}\'"
+                                        .format(release, version))
+        # No commit reference specified
+        else:
+            # Release must not be in use already
+            if release_exists:
+                usermsg.error("Aborting: release {} already exists.".\
+                              format(release))
+                sys.exit(1)
+            # Specified release must be of correct form
+            else:
+                if not release_is_valid:
+                    usermsg.error("Aborting: invalid release {}.".\
+                                  format(release))
+                    sys.exit(1)
+            usermsg.info("Releasing new release {rel} from {comm}.".\
+                         format(rel=release, comm=args.commit))
+
+    if commit_specified and release_specified:  # Make Release if repo required
+        try:
+            usermsg.info("Making tag {ver} at {comm}".\
+                         format(ver=version, comm=args.commit))
+            vcs.create_new_tag_and_push(args.release, args.commit, args.message)
+        except VCSGitError as err:
+            log.exception(err)
+            usermsg.error("Aborting: {msg}".format(msg=err))
+            sys.exit(1)
 
     try:
         vcs.set_version(version)
@@ -450,12 +511,15 @@ def _main():
     msg_build_job = "test-release" if args.test_only else "Release"
     msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(
         buildjob=msg_build_job,
-        info_msg=construct_info_message(module, args.branch, args.area, version, build))
+        info_msg=construct_info_message(module, args.branch, args.area, version,
+                                        build))
     usermsg.info(msg_create_build_job)
 
     build.submit(vcs, test=args.test_only)
-    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} submitted to build server queue".format(
-        build_job=msg_build_job, area=args.area, module=module, version=str(version)))
+    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} "\
+                 "submitted to build server queue".format(
+        build_job=msg_build_job,
+        area=args.area, module=module, version=str(version)))
 
 
 def main():

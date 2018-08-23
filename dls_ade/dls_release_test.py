@@ -34,7 +34,7 @@ class ParserTest(unittest.TestCase):
 
         dls_release.make_parser()
 
-        parser_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with(optional=True)
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
     def test_branch_flag_set(self, parser_mock):
@@ -90,6 +90,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreTrueAction)
         self.assertEqual(option.dest, "next_version")
         self.assertIn("--next_version", option.option_strings)
+
+    def test_commit_option_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-c']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.dest, "commit")
+        self.assertIn("--commit", option.option_strings)
 
     def test_rhel_version_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-r']
@@ -228,9 +235,12 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_no_release_then_parser_error_called_specifying_no_module_version(self):
+    def test_given_no_release_not_test_commit_then_parser_error_called_specifying_no_module_version(self):
         self.args.module_name = "build"
-        expected_error_msg = 'Module version not specified'
+        self.args.commit = ""
+        expected_error_msg = 'Module release not specified; required unless'
+        expected_error_msg += ' testing a specified commit, or requesting'
+        expected_error_msg += ' next version.'
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
