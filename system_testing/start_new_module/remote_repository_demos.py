@@ -281,7 +281,8 @@ def setup_module():
     """
     global NEW_GIT_ROOT_DIR
 
-    with open("repo_test_num.txt", "r") as f:
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(file_dir, "repo_test_num.txt"), "r") as f:
         test_number = f.readline()
 
     if not test_number and not test_number.isdigit():
