@@ -1028,6 +1028,7 @@ class GitListCommitsTest(unittest.TestCase):
 
         server_mock = MagicMock()
         server_mock.url = "ssh://GIT_SSH_ROOT/"
+        server_mock.dev_module_path = MagicMock(return_value='dummy/support')
         repo_mock = MagicMock()
         self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
 
