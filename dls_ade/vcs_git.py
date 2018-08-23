@@ -384,6 +384,20 @@ class Git(BaseVCS):
         except git.GitCommandError:
             return str('')
 
+    def list_commits(self):
+        """
+        Return list of commits of module.
+
+        Returns:
+            list[str]: Commits of module
+        """
+
+        commits = []
+        for commit in self.repo.iter_commits():
+            commits.append(str(commit))
+
+        return commits
+
     def list_releases(self):
         """
         Return list of release tags of module.
@@ -411,6 +425,25 @@ class Git(BaseVCS):
 
         return None
 
+    def check_commit_exists(self, commit):
+        """
+        Check if commit corresponds to a repository commit.
+
+        Args:
+            commit(str): Commit to check for
+
+        Returns:
+            bool: True or False for whether the commit exists or not
+        """
+        commit_list = self.list_commits()
+        commit_exist = False
+        for full_commit in commit_list:
+            if commit in full_commit:
+                commit_exist = True
+        if not commit_exist:
+            log.warning("Commit \'{}\' not found".format(commit))
+        return commit_exist
+
     def check_version_exists(self, version):
         """
         Check if version corresponds to a previous release.
@@ -434,29 +467,35 @@ class Git(BaseVCS):
 
     def set_version(self, version):
         """
-        Set version release tag for self
+        Set version release for self
 
         Args:
-            version(str): Version release tag
+            version(str): Version release (reference)
         """
 
+        is_version = self.check_version_exists(version)
+        is_commit = self.check_commit_exists(version)
         if self.parent is not None \
-                and not self.check_version_exists(version):
-            raise VCSGitError('Version \'{}\' does not exist in tag list: {}'.format(version, self.list_releases()))
+                and not is_version and not is_commit:
+            raise VCSGitError('Release \'{}\' does not exist in tag list or commit list: {}'.format(version, self.list_releases()))
+        if is_version:
+            usermsg.info("Release {} found".format(version))
+        elif is_commit:
+            usermsg.info("Commit {} found".format(version))
         self._version = version
 
-    def push_to_remote(self, remote_name="gitolite", branch_name="master"):
+    def push_to_remote(self, remote_name="gitolite", ref="master"):
         """
         Pushes to the server path given by its remote name, on the given
-        branch.
+        branch, or tag.
 
         Args:
             remote_name(str): The git repository's remote name to push to.
-            branch_name(str): The name of the branch to push from / to.
+            ref(str): The name of the ref to push from / to
 
         This will fail if:
             - The path given is not a git repository.
-            - The local repository does not have the given branch name.
+            - The local repository does not have the given branch or tag name.
             - The local repository does not have the given remote name.
             - A git repository does not already exist on the destination path.
 
@@ -471,10 +510,11 @@ class Git(BaseVCS):
                 the operation.
 
         """
-        if branch_name not in [x.name for x in self.repo.branches]:
-            err_message = ("Local repository branch {branch:s} does not "
+        if ref not in \
+                [x.name for x in self.repo.branches + self.repo.tags]:
+            err_message = ("Local repository branch/tag {ref:s} does not "
                            "currently exist.")
-            raise VCSGitError(err_message.format(branch=branch_name))
+            raise VCSGitError(err_message.format(ref=ref))
 
         check_remote_exists(self.repo, remote_name)
 
@@ -496,7 +536,36 @@ class Git(BaseVCS):
             raise VCSGitError(err_message.format(s_repo_path=server_repo_path))
 
         usermsg.info("Pushing repo to destination...")
-        remote.push(branch_name)
+        remote.push(ref)
+
+    def create_new_tag_and_push(self, tag, commit_ref, usrmsg='', remote='origin'):
+        """
+        Tags a revision at commit_ref, and pushes to the server.
+
+        This will fail if:
+            - The tag fails to create.
+            - Push to remote fails
+
+        Args:
+            tag(str): The proposed tag.
+            commit_ref(str): the SHA commit ID
+            usrmsg(str): (optional) user message
+            remote(str): the name of the remote.
+
+        Raises:
+            :class:`~dls_ade.exceptions.VCSGitError`: If there is an issue with
+            the operation.
+        """
+
+        try:
+            self.repo.create_tag(tag, message="DLS Release {tag}: {usrmsg} ".
+                                 format(tag=tag, usrmsg=usrmsg),
+                                 ref=commit_ref)
+        except git.exc.GitCommandError as e:
+            err_message = ("Failed to create tag {}.".format(e))
+            raise VCSGitError(err_message)
+
+        self.push_to_remote(remote, tag)
 
     def add_new_remote_and_push(self, dest, remote_name="gitolite",
                                 branch_name="master"):

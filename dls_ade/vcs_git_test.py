@@ -4,10 +4,15 @@ from mock import patch, ANY, MagicMock, PropertyMock, call  # @UnresolvedImport
 from dls_ade import vcs_git, gitserver, Server
 
 
+class FakeCommit(str):
+    def __init__(self, name):
+        pass
+
+
 def setUpModule():
     Server.GIT_SSH_ROOT = "ssh://GIT_SSH_ROOT/"
     Server.GIT_ROOT_DIR = "controlstest"
-    gitserver.pathf.GIT_ROOT_DIR = "controlstest"
+    gitserver.GIT_ROOT_DIR = "controlstest"
 
 
 def set_up_mock(test_case_object, path):
@@ -340,14 +345,19 @@ class PushToRemoteTest(unittest.TestCase):
         def __init__(self, name):
             self.name = name  # Allows us to specify x.name in list comprehension
 
+    class TagEntry(object):
+        def __init__(self, name):
+            self.name = name  # Allows us to specify x.name in list comprehension
+
     class RemoteEntry(object):
         def __init__(self, name):
             self.name = name
 
     class StubGitRepo(object):  # Used to mock out the git.Repo() function
-        def __init__(self, branches_list, remotes_list, mock_remote, remote_name="origin", remote_url=""):
+        def __init__(self, branches_list, tags_list, remotes_list, mock_remote, remote_name="origin", remote_url=""):
 
             self.branches = branches_list  # set this to a list eg. [BranchEntry("branch_name")] for list comprehension
+            self.tags = tags_list  # set this to a list e.g. [TagEntry("tag name")] for list comprehension
             self.remotes_list = remotes_list
             self.remotes_count = 0
 
@@ -385,24 +395,42 @@ class PushToRemoteTest(unittest.TestCase):
 
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("branch_1"), self.BranchEntry("branch_2"), self.BranchEntry("branch_3")]
-        mock_repo = self.StubGitRepo(branches_list, [], MagicMock())
+        mock_repo = self.StubGitRepo(branches_list, [], [], MagicMock())
         self.mock_git.Repo.return_value = mock_repo
 
-        comp_message = "Local repository branch {branch:s} does not currently exist.".format(branch="test_branch")
+        comp_message = "Local repository branch/tag {branch:s} does not currently exist.".format(branch="test_branch")
 
         repo = vcs_git.Git("test_module", "area", repo=mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(branch_name="test_branch")
+            repo.push_to_remote(ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
+
+    def test_given_tag_name_not_in_repo_branches_then_exception_raised_with_correct_message(self):
+            self.mock_is_local_repo_root.return_value = True
+            tags_list = [self.TagEntry("tag_1"),
+                         self.TagEntry("tag_2"),
+                         self.TagEntry("tag_3")]
+            mock_repo = self.StubGitRepo([], tags_list, [], MagicMock())
+            self.mock_git.Repo.return_value = mock_repo
+
+            comp_message = "Local repository branch/tag {branch:s} does not currently exist.".format(
+                branch="test_tag")
+
+            repo = vcs_git.Git("test_module", "area", repo=mock_repo)
+
+            with self.assertRaises(vcs_git.VCSGitError) as e:
+                repo.push_to_remote(ref="test_tag")
+
+            self.assertEqual(str(e.exception), comp_message)
 
     def test_given_remote_name_does_not_exist_then_exception_raised_with_correct_message(self):
 
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("remote_1"), self.RemoteEntry("remote_2"), self.RemoteEntry("remote_3")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, MagicMock())
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, MagicMock())
         self.mock_git.Repo.return_value = mock_repo
 
         comp_message = "Local repository does not have remote {remote:s}".format(remote="test_remote")
@@ -410,7 +438,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", repo=mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
 
@@ -419,7 +447,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, MagicMock(), "test_remote", "ssh://GIT_FAKE_SSH_ROOT/test_URL")
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, MagicMock(), "test_remote", "ssh://GIT_FAKE_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         comp_message = "Remote repository URL {remoteURL:s} does not begin with the parent server path".format(remoteURL="ssh://GIT_FAKE_SSH_ROOT/test_URL")
@@ -430,7 +458,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
         self.assertEqual(str(e.exception), comp_message)
 
     def test_given_is_server_repo_false_then_exception_raised_with_correct_message(self):
@@ -440,7 +468,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         self.mock_is_server_repo.return_value = False
@@ -454,7 +482,7 @@ class PushToRemoteTest(unittest.TestCase):
         repo = vcs_git.Git("test_module", "area", server_mock, mock_repo)
 
         with self.assertRaises(vcs_git.VCSGitError) as e:
-            repo.push_to_remote(remote_name="test_remote", branch_name="test_branch")
+            repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         self.assertEqual(str(e.exception), comp_message)
         server_mock.is_server_repo.assert_called_once_with("test_URL")
@@ -466,7 +494,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("test_branch")]
         remotes_list = [self.RemoteEntry("test_remote")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, mock_remote, "test_remote", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         self.mock_is_server_repo.return_value = True
@@ -476,7 +504,7 @@ class PushToRemoteTest(unittest.TestCase):
         server_mock.dev_module_path.return_value = 'dummy-string'
         repo = vcs_git.Git("test_module", "area", server_mock, repo=mock_repo)
 
-        repo.push_to_remote(remote_name="test_remote", branch_name="test_branch")
+        repo.push_to_remote(remote_name="test_remote", ref="test_branch")
 
         mock_remote.push.assert_called_once_with("test_branch")
 
@@ -487,7 +515,7 @@ class PushToRemoteTest(unittest.TestCase):
         self.mock_is_local_repo_root.return_value = True
         branches_list = [self.BranchEntry("master")]  # Set these to the function's default values
         remotes_list = [self.RemoteEntry("gitolite")]
-        mock_repo = self.StubGitRepo(branches_list, remotes_list, mock_remote, "gitolite", "ssh://GIT_SSH_ROOT/test_URL")
+        mock_repo = self.StubGitRepo(branches_list, [], remotes_list, mock_remote, "gitolite", "ssh://GIT_SSH_ROOT/test_URL")
         self.mock_git.Repo.return_value = mock_repo
 
         server_mock = MagicMock()
@@ -984,6 +1012,47 @@ class GitListReleasesTest(unittest.TestCase):
         self.assertListEqual(['1-0', '1-0-1', '2-0'], releases)
 
 
+class GitListCommitsTest(unittest.TestCase):
+
+    @patch('dls_ade.vcs_git.git.Repo.clone_from')
+    def setUp(self, mclone):
+
+        self.patch_is_server_repo = patch('dls_ade.Server.is_server_repo')
+        self.addCleanup(self.patch_is_server_repo.stop)
+        self.mock_is_server_repo = self.patch_is_server_repo.start()
+
+        self.mock_is_server_repo.return_value = True
+
+        self.module = 'dummy'
+        self.area = "support"
+
+        server_mock = MagicMock()
+        server_mock.url = "ssh://GIT_SSH_ROOT/"
+        repo_mock = MagicMock()
+        self.vcs = vcs_git.Git(self.module, self.area, server_mock, repo_mock)
+
+    def test_given_repo_with_no_commits_then_return_empty_list(self):
+
+        self.vcs.repo.iter_commits.return_value = []
+        commits = self.vcs.list_commits()
+
+        self.assertListEqual([], commits)
+
+    def test_given_repo_with_some_commits_then_return_list_inc_commit(self):
+
+        self.vcs.repo.iter_commits.return_value = [FakeCommit('32fdsb')]
+        commits = self.vcs.list_commits()
+
+        self.assertTrue('32fdsb' in commits)
+
+    def test_given_repo_with_some_commits_then_return_all_commits(self):
+
+        self.vcs.repo.iter_commits.return_value = [FakeCommit('32fdsb'), FakeCommit('2425sb')]
+        commits = self.vcs.list_commits()
+
+        self.assertListEqual(['32fdsb', '2425sb'], commits)
+
+
 class GitSetLogMessageTest(unittest.TestCase):
 
     @patch('dls_ade.vcs_git.git.Repo.clone_from')
@@ -1039,6 +1108,21 @@ class GitCheckVersionTest(unittest.TestCase):
 
         self.assertFalse(self.vcs.check_version_exists(version))
 
+    @patch('dls_ade.vcs_git.Git.list_commits')
+    def test_given_commit_in_list_of_commits_then_return_true(self, mlist):
+
+        commit = '8ffb4'
+        mlist.return_value = ['8ffb4130','432bdsa','1234bc']
+
+        self.assertTrue(self.vcs.check_commit_exists(commit))
+
+    @patch('dls_ade.vcs_git.Git.list_commits')
+    def test_given_version_not_in_list_of_releases_then_return_false(self, mlist):
+
+        commit = '8ff4b4'
+        mlist.return_value = ['8fab4130','432bdsa','1234bc']
+
+        self.assertFalse(self.vcs.check_commit_exists(commit))
 
 class ApiInterrogateTest(unittest.TestCase):
 

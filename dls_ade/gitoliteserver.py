@@ -7,7 +7,6 @@ import logging
 from dls_ade.constants import GIT_ROOT
 from dls_ade.gitserver import GitServer
 from dls_ade.vcs_git import Git, git
-from dls_ade import path_functions as pathf
 from dls_ade import bytes_to_string
 
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
