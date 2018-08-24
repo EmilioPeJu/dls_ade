@@ -140,7 +140,7 @@ settings_list = [
 
         'attributes_dict': {'module-contact': os.getlogin()},
 
-        'repo_comp_method': "all_comp",
+        'repo_comp_method': "local_comp",
 
         'path': "test_support_module",
 
@@ -281,7 +281,8 @@ def setup_module():
     """
     global NEW_GIT_ROOT_DIR
 
-    with open("repo_test_num.txt", "r") as f:
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(file_dir, "repo_test_num.txt"), "r") as f:
         test_number = f.readline()
 
     if not test_number and not test_number.isdigit():
@@ -412,10 +413,7 @@ def alter_settings_dictionaries(simplified_settings_list):
         settings_dict['local_comp_path_one'] = path
 
         # Search the COMPARISON_FILES folder for folders to compare with.
-        settings_dict['local_comp_path_two'] = os.path.join(
-                COMPARISON_FILES,
-                path,
-        )
+        settings_dict['local_comp_path_two'] = path
 
         # Create the full server repo path from the given simplified version.
         settings_dict['server_repo_path'] = Server().dev_module_path(

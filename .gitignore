@@ -42,6 +42,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.pytest_cache/
 
 # Translations
 *.mo
@@ -63,8 +64,12 @@ target/
 /.settings/
 /.pydevproject
 
+# Vim temporary files
+*.swp
+*.swo
+
 # DLS build dir and virtual environment
 /prefix/
-/venv/
+/venv*/
 /installed.files
 

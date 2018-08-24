@@ -295,10 +295,7 @@ def test_generator_local():
         settings_dict['local_comp_path_one'] = path
 
         # Search the COMPARISON_FILES folder for folders to compare with.
-        settings_dict['local_comp_path_two'] = os.path.join(
-                COMPARISON_FILES,
-                path
-        )
+        settings_dict['local_comp_path_two'] = path
 
     tempdir = tempfile.mkdtemp()
     cwd = os.getcwd()

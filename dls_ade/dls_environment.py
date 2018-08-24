@@ -20,7 +20,10 @@ import logging
 import os
 import re
 from subprocess import Popen, PIPE, STDOUT
-from ConfigParser import SafeConfigParser
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError:  # Python 3
+    from configparser import SafeConfigParser
 
 log = logging.getLogger(__name__)
 

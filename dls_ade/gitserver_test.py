@@ -1,6 +1,4 @@
 import unittest
-from pkg_resources import require
-require("mock")
 from mock import ANY, patch, MagicMock  # @UnresolvedImport
 
 from dls_ade.gitserver import GitServer
@@ -93,7 +91,7 @@ class CloneTest(unittest.TestCase):
 
     @patch('dls_ade.gitserver.GitServer.get_clone_path',
            return_value="test/source")
-    @patch('dls_ade.gitserver.GitServer.dev_area_path')
+    @patch('dls_ade.gitserver.GitServer.dev_area_path', return_value='dummy')
     @patch('dls_ade.gitserver.GitServer.is_server_repo', return_value=True)
     @patch('os.path.isdir', return_value=False)
     @patch('git.Repo.clone_from')
@@ -127,7 +125,7 @@ class TempCloneTest(unittest.TestCase):
 
     @patch('dls_ade.gitserver.GitServer.get_clone_path',
            return_value="controls/area/test_module")
-    @patch('dls_ade.gitserver.GitServer.dev_area_path')
+    @patch('dls_ade.gitserver.GitServer.dev_area_path', return_value='dummy')
     @patch('dls_ade.gitserver.GitServer.is_server_repo', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_valid_inputs_then_clone_from_called(self, mock_clone_from, _1, _2, _3, mock_mkdtemp):
@@ -143,7 +141,7 @@ class TempCloneTest(unittest.TestCase):
 
     @patch('dls_ade.gitserver.GitServer.get_clone_path',
            return_value="controls/ioc/domain/test_module")
-    @patch('dls_ade.gitserver.GitServer.dev_area_path')
+    @patch('dls_ade.gitserver.GitServer.dev_area_path', return_value='dummy')
     @patch('dls_ade.gitserver.GitServer.is_server_repo', return_value=True)
     @patch('git.Repo.clone_from')
     def test_given_repo_with_domain_code_then_tempdir_arg_has_forwardslash_removed(self, mock_clone_from, _1, _2, _3, mock_mkdtemp):

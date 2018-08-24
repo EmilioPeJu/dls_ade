@@ -15,6 +15,7 @@ from dls_ade.argument_parser import ArgParser
 from dls_ade import Server
 from dls_ade import logconfig
 
+from six.moves import input
 
 usage = """
 Default <area> is 'support'.
@@ -77,7 +78,7 @@ def _main():
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
     
     if args.module_name == "":
-        answer = raw_input("Would you like to checkout the whole " +
+        answer = input("Would you like to checkout the whole " +
                            args.area +
                            " area? This may take some time. Enter Y or N: ")
         if answer.upper() != "Y":

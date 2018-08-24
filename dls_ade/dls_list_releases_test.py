@@ -5,8 +5,6 @@ import unittest
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
-from pkg_resources import require
-require("mock")
 from mock import patch, ANY, MagicMock
 
 

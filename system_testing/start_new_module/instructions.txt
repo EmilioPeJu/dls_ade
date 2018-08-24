@@ -8,3 +8,7 @@ local_repository_tests.py script, as here they are directly used for comparison.
 
 Note: The testB06/TS module requires the use of the server in order to create the full
 repository, as it tests the addition of an App to a previously existing module.
+
+Also note: remote_repository_demos.py can not easily be run repeatably
+because it would require removing a remote repository from Gitolite. You can
+run it directly using 'nosetests remote_repository_demos.py'.

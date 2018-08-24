@@ -47,7 +47,7 @@ def is_local_repo_root(path="./"):
             This is the current working directory by default.
 
     Returns:
-        bool: True if the path is inside a git repository, false otherwise.
+        bool: True if the path is the root of a git repository, false otherwise.
 
     Raises:
         :class:`~dls_ade.exceptions.VCSGitError`: If path given is not a \

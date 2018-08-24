@@ -4,7 +4,7 @@ releases_list = "Previous releases for dls_testpythonmod2 in the repository: ['1
 latest_release = "The latest release for dls_testpythonmod2 in the repository is: 2-1"
 no_git_release = "testB06/TS: No releases made in git"
 module_does_not_exist = "Repository does not contain controlstest/python/testpythonmod"
-no_prod_release = "dummy2: No releases made for R3.14.12.3"
+no_prod_release = "dummy2: No releases made for R3"
 prod_releases_list = "Previous releases for dummy in prod: ['0-3', '0-5', '0-6', '0-7', '0-8', '0-8-6']"
 python_prod_releases_list = "Previous releases for dls_pilatus in prod: ['1-0', '1-1', '1-2', '1-3']"
 latest_prod_release = "The latest release for dummy in prod is: 0-8-6"
@@ -54,7 +54,7 @@ settings_list = [
     {
         'description': "list_releases_for_a_module_in_r6_prod_python",
 
-        'arguments': "-p dls_pilatus -r 6",
+        'arguments': "-p dls_pilatus -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': python_prod_releases_list,
 
@@ -63,7 +63,7 @@ settings_list = [
     {
         'description': "list_releases_for_a_module_in_prod",
 
-        'arguments': "dummy -r 6",
+        'arguments': "dummy -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': prod_releases_list,
 
@@ -72,7 +72,7 @@ settings_list = [
     {
         'description': "list_the_latest_release_for_a_module_in_prod",
 
-        'arguments': "dummy -l -r 6",
+        'arguments': "dummy -l -r=6 -e=R3.14.12.3",
 
         'std_out_compare_string': latest_prod_release,
 

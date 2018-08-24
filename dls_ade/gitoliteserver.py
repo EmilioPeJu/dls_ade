@@ -7,6 +7,7 @@ import logging
 from dls_ade.constants import GIT_ROOT
 from dls_ade.gitserver import GitServer
 from dls_ade.vcs_git import Git, git
+from dls_ade import bytes_to_string
 
 GIT_SSH_ROOT = "ssh://" + GIT_ROOT + "/"
 
@@ -33,6 +34,7 @@ class GitoliteServer(GitServer):
         """
         check_repo_cmd = "ssh " + GIT_ROOT + " expand " + server_repo_path
         cmd_output = subprocess.check_output(check_repo_cmd.split())
+        cmd_output = bytes_to_string(cmd_output)
         return server_repo_path in cmd_output
 
     def get_server_repo_list(self, area=""):
@@ -45,6 +47,7 @@ class GitoliteServer(GitServer):
         list_cmd = "ssh " + GIT_ROOT + " expandcontrols"
         log.debug("Command: \"{sshcmd}\"".format(sshcmd=list_cmd))
         list_cmd_output = subprocess.check_output(list_cmd.split())
+        list_cmd_output = bytes_to_string(list_cmd_output)
         log.debug("\"gitolite response\": \"{}\"".format(list_cmd_output))
 
         # list_cmd_output is a '\n' separated list of every repo on Gitolite:

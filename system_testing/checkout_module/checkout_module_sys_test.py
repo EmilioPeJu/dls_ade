@@ -99,7 +99,9 @@ class MultiCheckoutTest(unittest.TestCase):
                                    stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE)
 
-        std_out, std_err = process.communicate('Y')
+        std_out, std_err = process.communicate('Y'.encode())
+        std_out = std_out.decode('utf-8')
+        std_err = std_err.decode('utf-8')
 
         logging.debug("Standard out:\n" + std_out)
         logging.debug("Standard error:\n" + std_err)
@@ -140,7 +142,8 @@ class MultiCheckoutTest(unittest.TestCase):
                                    stdin=subprocess.PIPE)
 
         std_out, std_err = process.communicate()
-
+        std_out = std_out.decode('utf-8')
+        std_err = std_err.decode('utf-8')
         logging.debug("Standard out:\n" + std_out)
         logging.debug("Standard error:\n" + std_err)
 

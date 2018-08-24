@@ -1,10 +1,7 @@
 #!/bin/env dls-python
 
 import unittest
-from pkg_resources import require
 from dls_ade import dls_checkout_module
-
-require("mock")
 from mock import patch, MagicMock
 
 

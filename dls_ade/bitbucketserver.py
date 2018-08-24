@@ -88,9 +88,10 @@ class BitbucketServer(GitServer):
             os.path.join(self.url, "rest/api/1.0/projects",
                          project.replace('/', '_').upper(), "repos"),
             auth=(self.user, self.pw),
+            # Sort json output for help with testing.
             data=json.dumps({'name': repo_name,
                              'scmId': "git",
-                             'forkable': True}),
+                             'forkable': True}, sort_keys=True),
             headers={'Content-type': 'application/json',
                      'Accept': 'application/json'},
             verify=True)

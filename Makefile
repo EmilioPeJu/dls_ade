@@ -16,7 +16,7 @@ clean:
 	$(PYTHON) setup.py clean
 	-rm -rf build dist *egg-info installed.files
 	-rm -rf prefix
-	-find -name '*.pyc' -exec rm {} \;
+	-find -name '*.pyc' -exec rm -f {} \;
 
 install: dist
 	mkdir -p $(PREFIX)/lib/python2.7/site-packages

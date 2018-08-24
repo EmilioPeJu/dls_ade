@@ -1,12 +1,9 @@
-#! /bin/env dls-python
 from __future__ import print_function
 import os
 import subprocess
 import tempfile
 import shutil
 import logging
-from pkg_resources import require
-require('nose')
 from nose.tools import assert_equal, assert_true, assert_false
 
 
@@ -16,6 +13,7 @@ ENVIRONMENT_CORRECT = False
 try:
     from dls_ade import vcs_git
     from dls_ade import Server
+    from dls_ade import bytes_to_string
 except ImportError as e:
     print(e)
     vcs_git = None
@@ -319,7 +317,7 @@ class SystemTest(object):
                               if key in self._settings_list})
 
         logging.debug("The test's local variables are:")
-        for key, value in self.__dict__.iteritems():
+        for key, value in self.__dict__.items():
             logging.debug(str(key) + ": " + str(value))
 
         logging.debug("End of local variables.")
@@ -403,6 +401,8 @@ class SystemTest(object):
                                    stdin=stdin_pipe)
 
         self._std_out, self._std_err = process.communicate(self._input)
+        self._std_out = bytes_to_string(self._std_out)
+        self._std_err = bytes_to_string(self._std_err)
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode

@@ -1,5 +1,5 @@
 import unittest
-from mock import patch, MagicMock  # @UnresolvedImport
+from mock import patch, MagicMock, ANY  # @UnresolvedImport
 
 from dls_ade.bitbucketserver import BitbucketServer, BITBUCKET_SERVER_URL
 
@@ -102,7 +102,8 @@ class CreateRemoteRepoTest(unittest.TestCase):
         post_mock.assert_called_once_with(
             BITBUCKET_SERVER_URL + '/rest/api/1.0/projects/SUPPORT/repos',
             auth=('TestUser', 'CrypticPassword123'),
-            data='{"scmId": "git", "forkable": true, "name": "test_module"}',
+            # JSON keys are sorted before posting to help with this test.
+            data='{"forkable": true, "name": "test_module", "scmId": "git"}',
             headers={'Content-type': 'application/json',
                      'Accept': 'application/json'},
             verify=True)
@@ -138,4 +139,4 @@ class CheckResponseOKTest(unittest.TestCase):
         with self.assertRaises(IOError) as e:
             server._check_response_ok(response_mock)
 
-        self.assertEqual(example_error_message + '\n', e.exception.message)
+        self.assertEqual(example_error_message, str(e.exception).strip())

@@ -18,10 +18,10 @@ import sys
 import json
 import re
 import logging
-import logconfig
 
 from dls_ade import Server
 from dls_ade import dlsbuild
+from dls_ade import logconfig
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
 from dls_ade.exceptions import VCSGitError, ParsingError
