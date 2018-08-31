@@ -5,14 +5,14 @@ settings_list = [
     # {
     #     'description': "tar_a_module_in_prod",
     #
-    #     'arguments': "dummy",
+    #     'arguments': "-e R3.14.12.3 dummy 0-8",
     #
     # },
     #
     # {
     #     'description': "untar_a_module_in_prod",
     #
-    #     'arguments': "dummy -u",
+    #     'arguments': "-e R3.14.12.3 -u dummy 0-8",
     #
     # },
 

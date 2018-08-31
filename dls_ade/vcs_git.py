@@ -339,7 +339,7 @@ class Git(BaseVCS):
         self._version = None
 
         if self.parent is None:
-            self._remote_repo = None
+            self._remote_repo = ""
         else:
             server_repo_path = self.parent.dev_module_path(self._module,
                                                            self.area)

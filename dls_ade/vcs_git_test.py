@@ -883,7 +883,7 @@ class GitClassInitTest(unittest.TestCase):
         self.assertEqual("test@server.ac.uk/controlstest/support/dummy",
                          git_inst._remote_repo)
 
-    def test_given_no_parent_then_set_as_None(self):
+    def test_given_no_parent_then_set_as_empty(self):
         repo_mock = MagicMock()
 
         git = vcs_git.Git("dummy", "support", repo=repo_mock)
@@ -894,7 +894,7 @@ class GitClassInitTest(unittest.TestCase):
         self.assertIsNone(git._version)
 
         self.assertIsNone(git.parent)
-        self.assertIsNone(git._remote_repo)
+        self.assertEqual("", git._remote_repo)
 
 
 class GitCatTest(unittest.TestCase):
