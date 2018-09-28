@@ -393,7 +393,8 @@ class Git(BaseVCS):
         """
 
         commits = []
-        for commit in self.repo.iter_commits():
+
+        for commit in self.repo.iter_commits('--all'):
             commits.append(str(commit))
 
         return commits
