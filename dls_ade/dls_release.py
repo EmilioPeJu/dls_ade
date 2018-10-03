@@ -182,7 +182,9 @@ def check_parsed_arguments_valid(args, parser):
             * <args.area> area not supported by git
 
     """
-    git_supported_areas = ['support', 'ioc', 'epics', 'python', 'matlab', 'tools', 'targetOS']
+    git_supported_areas = ["support", "ioc", "epics", "python", "matlab",
+                           "tools", "targetOS", "etc"]
+    etc_supported_areas = ["init", "Launcher"]
     if not args.module_name:
         parser.error("Module name not specified")
         logging.debug(args.module_name)
@@ -191,9 +193,12 @@ def check_parsed_arguments_valid(args, parser):
             (args.next_version or (args.test_only and args.commit)):
         parser.error("Module release not specified; required unless testing a "
                      "specified commit, or requesting next version.")
-    elif args.area is 'etc' and args.module_name in ['build', 'redirector']:
-        parser.error("Cannot release etc/build or etc/redirector as modules"
-                     " - use configure system instead")
+    elif args.area is "etc" and args.module_name not in etc_supported_areas:
+        parser.error(
+            "Only supported etc modules are {} - "
+            "for others you may need to use configure system instead".format(
+                etc_supported_areas)
+        )
     elif args.next_version:
         parser.error("When git is specified, version number must be provided")
     elif args.area not in git_supported_areas:

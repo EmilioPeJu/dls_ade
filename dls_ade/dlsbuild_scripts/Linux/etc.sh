@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# ******************************************************************************
+# *****************************************************************************
 # 
 # Script to build a Diamond etc module
 #
@@ -13,7 +13,7 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir   : The directory in subversion where the module is located.
+#   _git_dir   : The gitolite URL where the module is located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -29,14 +29,14 @@ build_dir=${_build_dir}
 SysLog info "Building etc in ${build_dir}"
 
 # Checkout module
-mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
-cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
+mkdir -p $build_dir              || ReportFailure "Cannot mkdir $build_dir"
+cd $build_dir                    || ReportFailure "Cannot cd to $build_dir"
 if [ ! -d $_module ]; then
-    svn checkout -q $_svn_dir $_module      || ReportFailure "Can not check out  $_svn_dir"
-    cd $_module                             || ReportFailure "Can not cd to $_module"
+    git clone $_git_dir $_module || ReportFailure "Cannot clone $_git_dir"
+    cd $_module                  || ReportFailure "Cannot cd to $_module"
 else
-    cd $_module                             || ReportFailure "Can not cd to $_module"
-    svn switch $_svn_dir                    || ReportFailure "Can not switch to $_version"
+    cd $_module                  || ReportFailure "Cannot cd to $_module"
+    git pull --ff-only           || ReportFailure "Cannot pull latest version"
 fi
 
 if [ -e Makefile ] ; then
