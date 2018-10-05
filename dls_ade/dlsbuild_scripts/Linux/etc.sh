@@ -41,7 +41,6 @@ fi
 
 if [ -e Makefile ] ; then
     SysLog info "Running make"
-    make clean || ReportFailure "make clean failed"
     make       || ReportFailure "make failed"
 fi
 
