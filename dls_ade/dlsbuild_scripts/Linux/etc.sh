@@ -29,19 +29,13 @@ build_dir=${_build_dir}
 SysLog info "Building etc in ${build_dir}"
 
 # Checkout module
-mkdir -p $build_dir              || ReportFailure "Cannot mkdir $build_dir"
 cd $build_dir                    || ReportFailure "Cannot cd to $build_dir"
-if [ ! -d $_module ]; then
-    git clone $_git_dir $_module || ReportFailure "Cannot clone $_git_dir"
-    cd $_module                  || ReportFailure "Cannot cd to $_module"
-else
-    cd $_module                  || ReportFailure "Cannot cd to $_module"
-    git pull --ff-only           || ReportFailure "Cannot pull latest version"
-fi
+cd $_module                      || ReportFailure "Cannot cd to $_module"
+git pull --ff-only               || ReportFailure "Cannot pull latest version"
 
 if [ -e Makefile ] ; then
     SysLog info "Running make"
-    make       || ReportFailure "make failed"
+    make                         || ReportFailure "make failed"
 fi
 
 SysLog info "Build complete"
