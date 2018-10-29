@@ -246,31 +246,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
-
-        self.args.module_name = "build"
-        self.args.release = "12"
-        self.args.area = "etc"
-
-        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
-        expected_error_msg += ' modules - use configure system instead'
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
-    def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self):
-        self.args.module_name = "redirector"
-        self.args.release = "12"
-        self.args.area = "etc"
-
-        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
-        expected_error_msg += ' modules - use configure system instead'
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
     def test_given_default_area_and_module_of_redirector_then_parser_error_not_called(self):
 
         self.args.module_name = "redirector"
@@ -326,13 +301,35 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_git_and_etc_area_else_good_options_then_raise_error(self):
+    def test_given_git_and_etc_area_and_Launcher(self):
 
-        self.args.module_name = "module"
+        self.args.module_name = "Launcher"
         self.args.release = "version"
         self.args.area = "etc"
 
-        expected_error_message = self.args.area + " area not supported by git"
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_not_called()
+
+    def test_given_git_and_etc_area_and_init(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_not_called()
+
+    def test_given_git_and_etc_area_and_invalid_module_then_raise_error(self):
+
+        self.args.module_name = "redirector"
+        self.args.release = "version"
+        self.args.area = "etc"
+
+        expected_error_message = \
+            "Only supported etc modules are ['init', 'Launcher'] - " \
+            "for others you may need to use configure system instead"
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
