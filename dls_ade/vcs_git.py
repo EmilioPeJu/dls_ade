@@ -393,9 +393,9 @@ class Git(BaseVCS):
         """
 
         commits = []
-
-        for commit in self.repo.iter_commits('--all'):
-            commits.append(str(commit))
+        if self.repo is not None:
+            for commit in self.repo.iter_commits('--all'):
+                commits.append(str(commit))
 
         return commits
 
@@ -408,8 +408,9 @@ class Git(BaseVCS):
         """
 
         releases = []
-        for tag in self.repo.tags:
-            releases.append(tag.name)
+        if self.repo is not None:
+            for tag in self.repo.tags:
+                releases.append(tag.name)
 
         return releases
 
