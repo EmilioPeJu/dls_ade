@@ -199,8 +199,6 @@ def check_parsed_arguments_valid(args, parser):
             "for others you may need to use configure system instead".format(
                 etc_supported_areas)
         )
-    elif args.next_version:
-        parser.error("When git is specified, version number must be provided")
     elif args.area not in git_supported_areas:
         parser.error("%s area not supported by git" % args.area)
 
@@ -425,17 +423,23 @@ def _main():
 
     releases = vcs.list_releases()
 
+    commit = args.commit
+    release = args.release
     commit_specified = args.commit is not None
     release_specified = args.release is not None
 
     if not release_specified:
         usermsg.info("No release specified; able to test build at {} only.".\
-                     format(args.commit))
+                     format(commit))
 
     if args.next_version:  # Release = next version
         version = next_version_number(releases, module=module)
+        release = version
+        commit = "HEAD"
+        commit_specified = True
+        release_specified = True
     elif not release_specified:  # Release = @ commit, not of release
-        version = args.commit
+        version = commit
     else:  # Release of version; check validity of version
         release = args.release
         version = release
@@ -473,13 +477,13 @@ def _main():
                                   format(release))
                     sys.exit(1)
             usermsg.info("Releasing new release {rel} from {comm}.".\
-                         format(rel=release, comm=args.commit))
+                         format(rel=release, comm=commit))
 
     if commit_specified and release_specified:  # Make Release if repo required
         try:
             usermsg.info("Making tag {ver} at {comm}".\
-                         format(ver=version, comm=args.commit))
-            vcs.create_new_tag_and_push(args.release, args.commit, args.message)
+                         format(ver=version, comm=commit))
+            vcs.create_new_tag_and_push(release, commit, args.message)
         except VCSGitError as err:
             log.exception(err)
             usermsg.error("Aborting: {msg}".format(msg=err))
