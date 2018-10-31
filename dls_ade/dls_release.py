@@ -193,12 +193,15 @@ def check_parsed_arguments_valid(args, parser):
             (args.next_version or (args.test_only and args.commit)):
         parser.error("Module release not specified; required unless testing a "
                      "specified commit, or requesting next version.")
-    elif args.area is "etc" and args.module_name not in etc_supported_areas:
-        parser.error(
-            "Only supported etc modules are {} - "
-            "for others you may need to use configure system instead".format(
-                etc_supported_areas)
-        )
+    elif args.area == "etc":
+        if args.module_name not in etc_supported_areas:
+            parser.error("The only supported etc modules are {} - "
+                         "for others, use configure system instead".format(
+                            etc_supported_areas))
+        if not args.skip_test or args.test_only or args.local_build:
+            parser.error("Test builds are not possible for etc modules. "
+                         "Use -t to skip the local test build. "
+                         "Do not use -T or -l.")
     elif args.area not in git_supported_areas:
         parser.error("%s area not supported by git" % args.area)
 
