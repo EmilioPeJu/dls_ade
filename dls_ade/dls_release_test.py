@@ -256,19 +256,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_next_version_and_git_flag_then_parser_error_called(self):
-
-        self.args.module_name = "module_name"
-        self.args.release = "12"
-        self.args.area = "support"
-        self.args.next_version = True
-
-        expected_error_message = "When git is specified, version number must be provided"
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
-
     def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
 
         self.args.module_name = "module"
@@ -306,6 +293,9 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "Launcher"
         self.args.release = "version"
         self.args.area = "etc"
+        self.args.test_only = False
+        self.args.skip_test = True
+        self.args.local_build = False
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
@@ -316,20 +306,78 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.module_name = "init"
         self.args.release = "version"
         self.args.area = "etc"
+        self.args.test_only = False
+        self.args.skip_test = True
+        self.args.local_build = False
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.mock_error.assert_not_called()
+
+    def test_given_etc_area_and_not_skip_local_test_build_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.test_only = False
+        self.args.local_build = False
+
+        self.args.skip_test = False
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_given_etc_area_and_local_test_build_only_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.skip_test = False
+        self.args.test_only = False
+
+        self.args.local_build = True
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_given_etc_area_and_server_test_build_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.skip_test = True
+        self.args.local_build = False
+
+        # Not skip local test build
+        self.args.test_only = True
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_etc_area_and_invalid_module_then_raise_error(self):
 
         self.args.module_name = "redirector"
         self.args.release = "version"
         self.args.area = "etc"
+        self.args.test_only = False
+        self.args.no_test_build = True
+        self.args.local_build = False
 
         expected_error_message = \
-            "Only supported etc modules are ['init', 'Launcher'] - " \
-            "for others you may need to use configure system instead"
+            "The only supported etc modules are ['init', 'Launcher'] - " \
+            "for others, use configure system instead"
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
