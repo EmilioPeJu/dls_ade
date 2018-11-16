@@ -1,10 +1,10 @@
-#!$(INSTALL)/bin/$(ARCH)/BL15J-BL-IOC-01
+#!$(INSTALL)/bin/$(ARCH)/{{cookiecutter.domain}}-{{cookiecutter.technical_area}}-IOC-01
 
 cd "$(INSTALL)"
 
 ## Register all support components
 dbLoadDatabase("dbd/{{cookiecutter.domain}}-{{cookiecutter.technical_area}}-IOC-01.dbd")
-{{cookiecutter.domain}}-{{cookiecutter.technical_area}}-IOC-01_registerRecordDeviceDriver(pdbbase)
+{{cookiecutter.domain}}_{{cookiecutter.technical_area}}_IOC_01_registerRecordDeviceDriver(pdbbase)
 
 ## Load record instances
 dbLoadRecords("db/{{cookiecutter.domain}}-{{cookiecutter.technical_area}}-IOC-01.db")
