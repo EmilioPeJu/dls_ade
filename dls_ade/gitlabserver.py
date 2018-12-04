@@ -9,6 +9,7 @@ from dls_ade.dls_utilities import GIT_ROOT_DIR
 GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_API_VERSION = 4
+GITLAB_TOKEN_ENV = "GITLAB_TOKEN"
 # make sure the file mode is 440
 TOKEN_FILE_PATH = "/dls_sw/work/common/gitlab/token"
 
@@ -20,8 +21,14 @@ class GitlabServer(GitServer):
     def __init__(self, token=''):
         super(GitlabServer, self).__init__(GITLAB_URL,
                                            GITLAB_URL)
+
         if not token:
-            # if token is not provided, get it from a predefined file
+            # first try to get it from environment
+            token = os.environ.get(GITLAB_TOKEN_ENV, '')
+
+        if not token:
+            # if argument and environment variable are not set, get it from a
+            # predefined file
             with open(TOKEN_FILE_PATH, 'r') as fhandle:
                 token = fhandle.read().strip()
 
