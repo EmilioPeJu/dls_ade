@@ -15,7 +15,7 @@ FAKE_PROJECT_LIST = [
 class GetServerRepoList(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
     def test_get_server_repo_list_returns_correct_path(self, mock_gitlab):
-        gl = GitlabServer()
+        gl = GitlabServer('FakeToken')
         gl._gitlab_handle.projects.list.return_value = FAKE_PROJECT_LIST
         projects = gl.get_server_repo_list()
         self.assertIn('controls/ioc/BL01-EA-IOC-01', projects)
@@ -26,7 +26,7 @@ class GetServerRepoList(unittest.TestCase):
 class CreateRemoteRepoTest(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
     def test_create_remote_repo_with_normal_arguments(self, mock_gitlab):
-        gl = GitlabServer()
+        gl = GitlabServer('FakeToken')
         gl.create_remote_repo('controls/support/support_module')
         gl._gitlab_handle.projects.create.assert_called_once()
 
