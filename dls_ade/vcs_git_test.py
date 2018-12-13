@@ -335,7 +335,7 @@ class AddNewRemoteAndPushTest(unittest.TestCase):
 
         server_mock.create_remote_repo.assert_called_once_with("test_destination")
         mock_create_remote.assert_called_once_with(
-            "gitolite", "test@url.ac.uk/test_destination")
+            "gitlab", "test@url.ac.uk/test_destination")
         mock_remote.push.assert_called_once_with("master")
 
 

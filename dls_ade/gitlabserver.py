@@ -7,7 +7,9 @@ from dls_ade.gitserver import GitServer
 from dls_ade.dls_utilities import GIT_ROOT_DIR
 
 GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
-GITLAB_URL = "ssh://git@gitlab.diamond.ac.uk"
+GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
+GITLAB_CLONE_URL = "ssh://git@gitlab.diamond.ac.uk"
+GITLAB_RELEASE_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_API_VERSION = 4
 GITLAB_TOKEN_ENV = "GITLAB_TOKEN"
 GITLAB_DEFAULT_TOKEN = ""
@@ -22,8 +24,10 @@ log = logging.getLogger(__name__)
 class GitlabServer(GitServer):
 
     def __init__(self, token=''):
-        super(GitlabServer, self).__init__(GITLAB_URL,
-                                           GITLAB_URL)
+        super(GitlabServer, self).__init__(GITLAB_CREATE_URL,
+                                           GITLAB_CLONE_URL,
+                                           GITLAB_RELEASE_URL)
+
 
         if not token:
             # first try to get it from environment

@@ -160,6 +160,8 @@ def get_origin(repo):
 
     if has_remote(repo, 'origin'):
         origin = repo.remotes.origin
+    elif has_remote(repo, 'gitlab'):
+        origin = repo.remotes.gitlab
     elif has_remote(repo, 'gitolite'):
         origin = repo.remotes.gitolite
     else:
@@ -344,6 +346,8 @@ class Git(BaseVCS):
             server_repo_path = self.parent.dev_module_path(self._module,
                                                            self.area)
             self._remote_repo = os.path.join(self.parent.url, server_repo_path)
+            self._remote_release_repo = os.path.join(self.parent.release_url,
+                                                     server_repo_path)
 
     @property
     def vcs_type(self):
@@ -356,6 +360,10 @@ class Git(BaseVCS):
     @property
     def source_repo(self):
         return self._remote_repo
+
+    @property
+    def release_repo(self):
+        return self._remote_release_repo
 
     @property
     def version(self):
@@ -569,7 +577,7 @@ class Git(BaseVCS):
 
         self.push_to_remote(remote, tag)
 
-    def add_new_remote_and_push(self, dest, remote_name="gitolite",
+    def add_new_remote_and_push(self, dest, remote_name="gitlab",
                                 branch_name="master"):
         """
         Adds a remote to a git repository, and pushes to the server.
