@@ -18,16 +18,27 @@ GLOBAL_TOKEN_FILE_PATH = "/dls_sw/prod/common/python/gitlab/token"
 # 400 for this one
 USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
 
+GITLAB_DEFAULT_PROJECT_ATTRIBUTES = {
+    "visibility": "public",
+    "issues_enabled": True,
+    "wiki_enabled": False
+}
+
+GITLAB_DEFAULT_GROUP_ATTRIBUTES = {
+    'visibility': 'public'
+}
+
 log = logging.getLogger(__name__)
 
 
 class GitlabServer(GitServer):
 
-    def __init__(self, token=''):
+    def __init__(self, token='', create_on_push=True):
         super(GitlabServer, self).__init__(GITLAB_CREATE_URL,
                                            GITLAB_CLONE_URL,
                                            GITLAB_RELEASE_URL)
 
+        self.create_on_push = create_on_push
 
         if not token:
             # first try to get it from environment
@@ -100,13 +111,15 @@ class GitlabServer(GitServer):
             already exists on the destination path.
         """
 
-        project, repo_name = dest.rsplit('/', 1)
-        group_id = self._gitlab_handle.groups.get(project).id
-        self._gitlab_handle.projects.create({"name": repo_name,
-                                             "visibility": "internal",
-                                             "issues_enabled": False,
-                                             "wiki_enabled": False},
-                                            namespace_id=group_id)
+        if not self.create_on_push:
+            path, repo_name = dest.rsplit('/', 1)
+
+            group_id = self._gitlab_handle.groups.get(path).id
+
+            project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
+            project_data["name"] = repo_name
+            self._gitlab_handle.projects.create(project_data,
+                                                namespace_id=group_id)
 
     @staticmethod
     def dev_area_path(area="support"):

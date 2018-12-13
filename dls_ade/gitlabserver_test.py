@@ -28,9 +28,16 @@ class GetServerRepoList(unittest.TestCase):
 class CreateRemoteRepoTest(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
     def test_create_remote_repo_with_normal_arguments(self, mock_gitlab):
-        gl = GitlabServer()
+        gl = GitlabServer(create_on_push=False)
         gl.create_remote_repo('controls/support/support_module')
         gl._gitlab_handle.projects.create.assert_called_once()
+
+    @patch('dls_ade.gitlabserver.gitlab.Gitlab')
+    def test_create_remote_repo_on_push_with_normal_arguments(self, mock_gitlab):
+        # create_on_push shouldn't create the project using Gitlab API
+        gl = GitlabServer(create_on_push=True)
+        gl.create_remote_repo('controls/support/support_module')
+        self.assertEqual(gl._gitlab_handle.projects.create.called, False)
 
 
 class DevAreaPathTest(unittest.TestCase):
