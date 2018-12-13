@@ -50,6 +50,22 @@ class GitlabServer(GitServer):
                                             private_token=token,
                                             api_version=GITLAB_API_VERSION)
 
+    def is_server_repo(self, server_repo_path):
+        """
+        Checks if path exists on repository
+
+        Args:
+            server_repo_path(str): Path to module to check for
+
+        Returns:
+            bool: True if path does exist False if not
+
+        """
+        if server_repo_path.endswith('.git'):
+            server_repo_path = server_repo_path[:-4]
+        repo_list = self.get_server_repo_list()
+        return server_repo_path in repo_list
+
     def get_server_repo_list(self):
         """
         Returns list of module repository paths from all projects
@@ -101,6 +117,22 @@ class GitlabServer(GitServer):
 
         """
         return os.path.join(GIT_ROOT_DIR, area)
+
+    def dev_module_path(self, module, area="support"):
+        """
+        Return the full server path for the given module and area.
+
+        Args:
+            area(str): The area of the module.
+            module(str): The module name.
+
+        Returns:
+            str: The full server path for the given module.
+
+        """
+        # Gitlab doesn't allow "create project on push" if the repository url
+        # doesn't end with .git
+        return os.path.join(self.dev_area_path(area), "{}.git".format(module))
 
     def get_clone_repo(self, server_repo_path, local_repo_path,
                        origin='gitlab'):
