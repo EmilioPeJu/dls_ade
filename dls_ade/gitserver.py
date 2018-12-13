@@ -133,6 +133,9 @@ class GitServer(object):
         # Module is everything after area
         module = source.split('/', 2)[-1]
 
+        if module.endswith('.git'):
+            module = module[:-4]
+
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),
