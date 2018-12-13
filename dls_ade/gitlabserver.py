@@ -13,6 +13,7 @@ GITLAB_RELEASE_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_API_VERSION = 4
 GITLAB_TOKEN_ENV = "GITLAB_TOKEN"
 GITLAB_DEFAULT_TOKEN = ""
+HTTP_NOT_FOUND = 404
 # make sure the file mode is 440
 GLOBAL_TOKEN_FILE_PATH = "/dls_sw/prod/common/python/gitlab/token"
 # 400 for this one
@@ -114,12 +115,48 @@ class GitlabServer(GitServer):
         if not self.create_on_push:
             path, repo_name = dest.rsplit('/', 1)
 
+            self._create_groups_in_path(path)
             group_id = self._gitlab_handle.groups.get(path).id
 
             project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
             project_data["name"] = repo_name
             self._gitlab_handle.projects.create(project_data,
                                                 namespace_id=group_id)
+
+    def _is_group(self, path):
+        try:
+            self._gitlab_handle.groups.get(path)
+        except gitlab.exceptions.GitlabGetError as e:
+            if e.response_code == HTTP_NOT_FOUND:
+                return False
+            else:
+                raise
+        return True
+
+    def _create_groups_in_path(self, path):
+        if self._is_group(path):
+            return
+        parts = path.split('/')
+        for i in range(1, len(parts)):
+            semi_path = "/".join(parts[:i])
+            if not self._is_group(semi_path):
+                self._create_group(semi_path)
+        self._create_group(path)
+
+    def _create_group(self, path):
+        if "/" not in path:
+            parent_id = None
+        else:
+            parent_id = self._gitlab_handle.groups.get(
+                os.path.dirname(path)).id
+        group_name = os.path.basename(path)
+        group_data = dict(GITLAB_DEFAULT_GROUP_ATTRIBUTES)
+        group_data.update({
+            'name': group_name,
+            'path': group_name,
+            'parent_id': parent_id
+        })
+        self._gitlab_handle.groups.create(group_data)
 
     @staticmethod
     def dev_area_path(area="support"):
