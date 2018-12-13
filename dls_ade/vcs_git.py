@@ -494,7 +494,7 @@ class Git(BaseVCS):
             usermsg.info("Commit {} found".format(version))
         self._version = version
 
-    def push_to_remote(self, remote_name="gitolite", ref="master"):
+    def push_to_remote(self, remote_name="gitlab", ref="master"):
         """
         Pushes to the server path given by its remote name, on the given
         branch, or tag.
