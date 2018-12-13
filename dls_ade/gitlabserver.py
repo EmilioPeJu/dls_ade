@@ -79,8 +79,17 @@ class GitlabServer(GitServer):
         """
         if server_repo_path.endswith('.git'):
             server_repo_path = server_repo_path[:-4]
-        repo_list = self.get_server_repo_list()
-        return server_repo_path in repo_list
+        return self._is_project(server_repo_path)
+
+    def _is_project(self, path):
+        try:
+            self._gitlab_handle.projects.get(path)
+        except gitlab.exceptions.GitlabGetError as e:
+            if e.response_code == HTTP_NOT_FOUND:
+                return False
+            else:
+                raise
+        return True
 
     def get_server_repo_list(self):
         """
