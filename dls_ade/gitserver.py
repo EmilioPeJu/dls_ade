@@ -14,9 +14,13 @@ class GitServer(object):
 
     GIT_ROOT_DIR = dls_util.GIT_ROOT_DIR
 
-    def __init__(self, url, clone_url):
-        self.url = url
+    def __init__(self, url, clone_url, release_url):
+        # url used for cloning
         self.clone_url = clone_url
+        # url that the build server will use
+        self.release_url = release_url
+        # url used for everything else e.g: for starting a new module
+        self.url = url
 
     def is_server_repo(self, server_repo_path):
         """
@@ -58,7 +62,7 @@ class GitServer(object):
         base_repo = git.Repo(path)
         return Git(module, area, self, base_repo)
 
-    def get_clone_repo(self, server_repo_path, local_repo_path, origin='gitolite'):
+    def get_clone_repo(self, server_repo_path, local_repo_path, origin='gitlab'):
         """
         Get Repo clone given server and local repository paths
 
@@ -128,6 +132,9 @@ class GitServer(object):
         area = source.split('/')[1]
         # Module is everything after area
         module = source.split('/', 2)[-1]
+
+        if module.endswith('.git'):
+            module = module[:-4]
 
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,

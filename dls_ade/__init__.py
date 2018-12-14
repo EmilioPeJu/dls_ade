@@ -17,4 +17,4 @@ def bytes_to_string(bytes_obj):
         return bytes_obj
 
 
-from dls_ade.gitoliteserver import GitoliteServer as Server
+from dls_ade.gitlabserver import GitlabServer as Server

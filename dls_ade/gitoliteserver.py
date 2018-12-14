@@ -19,7 +19,8 @@ usermsg = logging.getLogger("usermessages")
 class GitoliteServer(GitServer):
 
     def __init__(self):
-        super(GitoliteServer, self).__init__(GIT_SSH_ROOT, GIT_SSH_ROOT)
+        super(GitoliteServer, self).__init__(GIT_SSH_ROOT, GIT_SSH_ROOT,
+                                             GIT_SSH_ROOT)
 
     def is_server_repo(self, server_repo_path):
         """

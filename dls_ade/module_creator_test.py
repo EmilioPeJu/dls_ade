@@ -56,7 +56,7 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.gitoliteserver.GitoliteServer.is_server_repo')
+        self.mock_is_server_repo = set_up_mock(self, 'dls_ade.gitlabserver.GitlabServer.is_server_repo')
 
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", MagicMock())
 
