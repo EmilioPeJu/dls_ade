@@ -300,7 +300,7 @@ def construct_info_message(module, branch, area, version, build_object):
     if branch:
         btext = "branch {}".format(branch)
     else:
-        btext = ": {}".format(version)
+        btext = "tag {}".format(version)
     info += ('{module} {version} from {btext}, '.format(
         module=module, version=version, btext=btext))
     info += ('using {} build server'.format(build_object.get_server()))
