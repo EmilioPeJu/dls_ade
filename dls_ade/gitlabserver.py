@@ -15,8 +15,6 @@ GITLAB_TOKEN_ENV = "GITLAB_TOKEN"
 GITLAB_DEFAULT_TOKEN = ""
 HTTP_NOT_FOUND = 404
 # make sure the file mode is 440
-GLOBAL_TOKEN_FILE_PATH = "/dls_sw/prod/common/python/gitlab/token"
-# 400 for this one
 USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
 
 GITLAB_DEFAULT_PROJECT_ATTRIBUTES = {
@@ -34,32 +32,20 @@ log = logging.getLogger(__name__)
 
 class GitlabServer(GitServer):
 
-    def __init__(self, token='', create_on_push=True):
+    def __init__(self, create_on_push=True):
         super(GitlabServer, self).__init__(GITLAB_CREATE_URL,
                                            GITLAB_CLONE_URL,
                                            GITLAB_RELEASE_URL)
 
         self.create_on_push = create_on_push
 
-        if not token:
-            # first try to get it from environment
-            token = os.environ.get(GITLAB_TOKEN_ENV, '')
+        token = GITLAB_DEFAULT_TOKEN
 
-        if not token:
-            # if argument and environment variable are not set, get it from a
-            # predefined file
-            token_location = ''
-            if os.access(USER_TOKEN_FILE_PATH, os.R_OK):
-                token_location = USER_TOKEN_FILE_PATH
-            elif os.access(GLOBAL_TOKEN_FILE_PATH, os.R_OK):
-                token_location = GLOBAL_TOKEN_FILE_PATH
+        if os.access(USER_TOKEN_FILE_PATH, os.R_OK):
 
-            if token_location:
-                with open(token_location, 'r') as fhandle:
-                    token = fhandle.read().strip()
-            else:
-                # if every token source fails, use a default token
-                token = GITLAB_DEFAULT_TOKEN
+            with open(USER_TOKEN_FILE_PATH, 'r') as fhandle:
+                token = fhandle.read().strip()
+
 
         log.debug("Initializing Gitlab server with token \"%s\"", token)
         self._gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
