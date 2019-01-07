@@ -47,7 +47,7 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
         if $is_test ; then
             ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
         else
-            ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version)  || ReportFailure "Can not checkout $_version"
+            ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version )  || ReportFailure "Can not checkout $_version"
         fi
     elif [ "$_force" == "true" ] ; then
         SysLog info "Force: removing previous version: " ${PWD}/$_version
@@ -62,7 +62,7 @@ if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
         if $is_test ; then
             ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
         else
-            ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version )   || ReportFailure "Can not checkout $_version"
+            ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version )   || ReportFailure "Can not checkout $_version"
         fi
     elif (( $(git status -uno --porcelain | wc -l) != 0)) ; then
         ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
