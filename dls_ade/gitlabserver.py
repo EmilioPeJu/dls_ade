@@ -32,12 +32,10 @@ log = logging.getLogger(__name__)
 
 class GitlabServer(GitServer):
 
-    def __init__(self, create_on_push=True):
+    def __init__(self):
         super(GitlabServer, self).__init__(GITLAB_CREATE_URL,
                                            GITLAB_CLONE_URL,
                                            GITLAB_RELEASE_URL)
-
-        self.create_on_push = create_on_push
 
         token = GITLAB_DEFAULT_TOKEN
 
@@ -63,8 +61,7 @@ class GitlabServer(GitServer):
             bool: True if path does exist False if not
 
         """
-        if server_repo_path.endswith('.git'):
-            server_repo_path = server_repo_path[:-4]
+
         return self._is_project(server_repo_path)
 
     def _is_project(self, path):
@@ -109,16 +106,15 @@ class GitlabServer(GitServer):
             already exists on the destination path.
         """
 
-        if not self.create_on_push:
-            path, repo_name = dest.rsplit('/', 1)
+        path, repo_name = dest.rsplit('/', 1)
 
-            self._create_groups_in_path(path)
-            group_id = self._gitlab_handle.groups.get(path).id
+        self._create_groups_in_path(path)
+        group_id = self._gitlab_handle.groups.get(path).id
 
-            project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
-            project_data["name"] = repo_name
-            self._gitlab_handle.projects.create(project_data,
-                                                namespace_id=group_id)
+        project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
+        project_data["name"] = repo_name
+        self._gitlab_handle.projects.create(project_data,
+                                            namespace_id=group_id)
 
     def _is_group(self, path):
         try:
@@ -169,21 +165,6 @@ class GitlabServer(GitServer):
         """
         return os.path.join(GIT_ROOT_DIR, area)
 
-    def dev_module_path(self, module, area="support"):
-        """
-        Return the full server path for the given module and area.
-
-        Args:
-            area(str): The area of the module.
-            module(str): The module name.
-
-        Returns:
-            str: The full server path for the given module.
-
-        """
-        # Gitlab doesn't allow "create project on push" if the repository url
-        # doesn't end with .git
-        return os.path.join(self.dev_area_path(area), "{}.git".format(module))
 
     def get_clone_repo(self, server_repo_path, local_repo_path,
                        origin='gitlab'):
