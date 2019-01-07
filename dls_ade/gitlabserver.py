@@ -11,8 +11,6 @@ GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_CLONE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_RELEASE_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_API_VERSION = 4
-GITLAB_TOKEN_ENV = "GITLAB_TOKEN"
-GITLAB_DEFAULT_TOKEN = ""
 HTTP_NOT_FOUND = 404
 # make sure the file mode is 440
 USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
@@ -37,18 +35,36 @@ class GitlabServer(GitServer):
                                            GITLAB_CLONE_URL,
                                            GITLAB_RELEASE_URL)
 
-        token = GITLAB_DEFAULT_TOKEN
+        self._anon_gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
+                                                 private_token="",
+                                                 api_version=GITLAB_API_VERSION
+                                                 )
+        self._private_gitlab_handle = None
 
-        if os.access(USER_TOKEN_FILE_PATH, os.R_OK):
+    def _setup_private_gitlab_handle(self):
+        if self._private_gitlab_handle:
+            return
 
-            with open(USER_TOKEN_FILE_PATH, 'r') as fhandle:
-                token = fhandle.read().strip()
+        if not os.access(USER_TOKEN_FILE_PATH, os.F_OK):
+            raise ValueError("Gitlab token file {} not found. "
+                          " See https://confluence.diamond.ac.uk/display/"
+                          "CNTRLS/How+to+generate+a+token"
+                          " for help.".format(USER_TOKEN_FILE_PATH))
 
+        if (os.stat(USER_TOKEN_FILE_PATH).st_mode & 0o777) != 0o400:
+            raise ValueError("Incorrect Gitlab token file permissions. "
+                             "It should be 400. "
+                             " See https://confluence.diamond.ac.uk/display/"
+                             "CNTRLS/How+to+generate+a+token for help."
+                             )
 
-        log.debug("Initializing Gitlab server with token \"%s\"", token)
-        self._gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
-                                            private_token=token,
-                                            api_version=GITLAB_API_VERSION)
+        with open(USER_TOKEN_FILE_PATH, 'r') as fhandle:
+            token = fhandle.read().strip()
+
+        self._private_gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
+                                                    private_token=token,
+                                                    api_version=GITLAB_API_VERSION
+                                                    )
 
     def is_server_repo(self, server_repo_path):
         """
@@ -66,7 +82,7 @@ class GitlabServer(GitServer):
 
     def _is_project(self, path):
         try:
-            self._gitlab_handle.projects.get(path)
+            self._anon_gitlab_handle.projects.get(path)
         except gitlab.exceptions.GitlabGetError as e:
             if e.response_code == HTTP_NOT_FOUND:
                 return False
@@ -83,7 +99,7 @@ class GitlabServer(GitServer):
         """
 
         repos = []
-        projects = self._gitlab_handle.projects.list(all=True)
+        projects = self._anon_gitlab_handle.projects.list(all=True)
         
 
         for project in projects:
@@ -106,19 +122,21 @@ class GitlabServer(GitServer):
             already exists on the destination path.
         """
 
+        self._setup_private_gitlab_handle()
+
         path, repo_name = dest.rsplit('/', 1)
 
         self._create_groups_in_path(path)
-        group_id = self._gitlab_handle.groups.get(path).id
+        group_id = self._private_gitlab_handle.groups.get(path).id
 
         project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
         project_data["name"] = repo_name
-        self._gitlab_handle.projects.create(project_data,
+        self._private_gitlab_handle.projects.create(project_data,
                                             namespace_id=group_id)
 
     def _is_group(self, path):
         try:
-            self._gitlab_handle.groups.get(path)
+            self._anon_gitlab_handle.groups.get(path)
         except gitlab.exceptions.GitlabGetError as e:
             if e.response_code == HTTP_NOT_FOUND:
                 return False
@@ -140,7 +158,7 @@ class GitlabServer(GitServer):
         if "/" not in path:
             parent_id = None
         else:
-            parent_id = self._gitlab_handle.groups.get(
+            parent_id = self._private_gitlab_handle.groups.get(
                 os.path.dirname(path)).id
         group_name = os.path.basename(path)
         group_data = dict(GITLAB_DEFAULT_GROUP_ATTRIBUTES)
@@ -149,7 +167,7 @@ class GitlabServer(GitServer):
             'path': group_name,
             'parent_id': parent_id
         })
-        self._gitlab_handle.groups.create(group_data)
+        self._private_gitlab_handle.groups.create(group_data)
 
     @staticmethod
     def dev_area_path(area="support"):
