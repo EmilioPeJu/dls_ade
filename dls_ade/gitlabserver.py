@@ -17,7 +17,7 @@ USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
 
 GITLAB_DEFAULT_PROJECT_ATTRIBUTES = {
     "visibility": "public",
-    "issues_enabled": True,
+    "issues_enabled": False,
     "wiki_enabled": False
 }
 
