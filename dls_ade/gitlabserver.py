@@ -75,6 +75,8 @@ class GitlabServer(GitServer):
             bool: True if path does exist False if not
 
         """
+        if server_repo_path.endswith(".git"):
+            server_repo_path = server_repo_path[:-4]
 
         return self._is_project(server_repo_path)
 
@@ -122,6 +124,9 @@ class GitlabServer(GitServer):
         self._setup_private_gitlab_handle()
 
         path, repo_name = dest.rsplit('/', 1)
+
+        if repo_name.endswith(".git"):
+            repo_name = repo_name[:-4]
 
         self._create_groups_in_path(path)
         group_id = self._private_gitlab_handle.groups.get(path).id
@@ -206,3 +211,18 @@ class GitlabServer(GitServer):
         """
 
         return path
+
+    def dev_module_path(self, module, area="support"):
+        """
+        Return the full server path for the given module and area.
+
+         Args:
+             area(str): The area of the module.
+             module(str): The module name.
+
+         Returns:
+             str: The full server path for the given module.
+
+         """
+        # Use .git ending to make it work when redirection is not supported
+        return os.path.join(self.dev_area_path(area), "{}.git".format(module))
