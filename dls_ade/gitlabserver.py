@@ -10,6 +10,8 @@ GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_CLONE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_RELEASE_URL = "https://gitlab.diamond.ac.uk"
+TOKEN_HELP_LINK = "https://confluence.diamond.ac.uk/display/CNTRLS/" \
+                  "How+to+generate+a+GitLab+API+token+for+use+with+dls_ade"
 GITLAB_API_VERSION = 4
 HTTP_NOT_FOUND = 404
 # make sure the file mode is 440
@@ -47,15 +49,13 @@ class GitlabServer(GitServer):
 
         if not os.access(USER_TOKEN_FILE_PATH, os.F_OK):
             raise ValueError("Gitlab token file {} not found. "
-                             " See https://confluence.diamond.ac.uk/display/"
-                             "CNTRLS/How+to+generate+a+token"
-                             " for help.".format(USER_TOKEN_FILE_PATH))
+                             " See {} for help.".format(USER_TOKEN_FILE_PATH,
+                                                        TOKEN_HELP_LINK))
 
         if (os.stat(USER_TOKEN_FILE_PATH).st_mode & 0o777) != 0o400:
             raise ValueError("Incorrect Gitlab token file permissions. "
                              "It should be 400. "
-                             " See https://confluence.diamond.ac.uk/display/"
-                             "CNTRLS/How+to+generate+a+token for help.")
+                             " See {} for help.".format(TOKEN_HELP_LINK))
 
         with open(USER_TOKEN_FILE_PATH, 'r') as fhandle:
             token = fhandle.read().strip()
