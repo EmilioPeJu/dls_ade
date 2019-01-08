@@ -47,24 +47,22 @@ class GitlabServer(GitServer):
 
         if not os.access(USER_TOKEN_FILE_PATH, os.F_OK):
             raise ValueError("Gitlab token file {} not found. "
-                          " See https://confluence.diamond.ac.uk/display/"
-                          "CNTRLS/How+to+generate+a+token"
-                          " for help.".format(USER_TOKEN_FILE_PATH))
+                             " See https://confluence.diamond.ac.uk/display/"
+                             "CNTRLS/How+to+generate+a+token"
+                             " for help.".format(USER_TOKEN_FILE_PATH))
 
         if (os.stat(USER_TOKEN_FILE_PATH).st_mode & 0o777) != 0o400:
             raise ValueError("Incorrect Gitlab token file permissions. "
                              "It should be 400. "
                              " See https://confluence.diamond.ac.uk/display/"
-                             "CNTRLS/How+to+generate+a+token for help."
-                             )
+                             "CNTRLS/How+to+generate+a+token for help.")
 
         with open(USER_TOKEN_FILE_PATH, 'r') as fhandle:
             token = fhandle.read().strip()
 
-        self._private_gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
-                                                    private_token=token,
-                                                    api_version=GITLAB_API_VERSION
-                                                    )
+        self._private_gitlab_handle = \
+            gitlab.Gitlab(GITLAB_API_URL, private_token=token,
+                          api_version=GITLAB_API_VERSION)
 
     def is_server_repo(self, server_repo_path):
         """
@@ -100,7 +98,6 @@ class GitlabServer(GitServer):
 
         repos = []
         projects = self._anon_gitlab_handle.projects.list(all=True)
-        
 
         for project in projects:
             repo_path = os.path.join(project.namespace["full_path"],
@@ -132,7 +129,7 @@ class GitlabServer(GitServer):
         project_data = dict(GITLAB_DEFAULT_PROJECT_ATTRIBUTES)
         project_data["name"] = repo_name
         self._private_gitlab_handle.projects.create(project_data,
-                                            namespace_id=group_id)
+                                                    namespace_id=group_id)
 
     def _is_group(self, path):
         try:
@@ -182,7 +179,6 @@ class GitlabServer(GitServer):
 
         """
         return os.path.join(GIT_ROOT_DIR, area)
-
 
     def get_clone_repo(self, server_repo_path, local_repo_path,
                        origin='gitlab'):
