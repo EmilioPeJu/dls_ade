@@ -72,7 +72,7 @@ SysLog info "checkout version tag: " $_version
 if $is_test ; then
     git checkout $_version  || ReportFailure "Could not checkout $_version"
 else
-    git fetch --depth=1 origin tag $_version && git checkout $_version  || ReportFailure "Could not checkout $_version"
+    ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version  || ReportFailure "Could not checkout $_version"
 fi
 # Build
 error_log=${_build_name}.err

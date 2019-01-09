@@ -18,7 +18,7 @@ class GetServerRepoList(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
     def test_get_server_repo_list_returns_correct_path(self, mock_gitlab):
         gl = GitlabServer()
-        gl._gitlab_handle.projects.list.return_value = FAKE_PROJECT_LIST
+        gl._anon_gitlab_handle.projects.list.return_value = FAKE_PROJECT_LIST
         projects = gl.get_server_repo_list()
         self.assertIn('controls/ioc/BL01I-EA-IOC-01', projects)
         self.assertIn('controls/support/support_module', projects)
@@ -27,17 +27,40 @@ class GetServerRepoList(unittest.TestCase):
 
 class CreateRemoteRepoTest(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
-    def test_create_remote_repo_with_normal_arguments(self, mock_gitlab):
-        gl = GitlabServer(create_on_push=False)
+    @patch('os.access')
+    @patch('os.stat')
+    @patch('dls_ade.gitlabserver.open')
+    def test_create_remote_repo_with_normal_arguments(self, mock_open,
+                                                      mock_stat,
+                                                      mock_access,
+                                                      mock_gitlab):
+        mock_access.return_value = True
+        mock_stat.return_value.st_mode = 0o400
+        gl = GitlabServer()
         gl.create_remote_repo('controls/support/support_module')
-        gl._gitlab_handle.projects.create.assert_called_once()
+        gl._private_gitlab_handle.projects.create.assert_called_once()
 
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
-    def test_create_remote_repo_on_push_with_normal_arguments(self, mock_gitlab):
-        # create_on_push shouldn't create the project using Gitlab API
-        gl = GitlabServer(create_on_push=True)
-        gl.create_remote_repo('controls/support/support_module')
-        self.assertEqual(gl._gitlab_handle.projects.create.called, False)
+    @patch('os.access')
+    def test_create_remote_repo_without_token_file(self, mock_access,
+                                                   mock_gitlab):
+        mock_access.return_value = False
+
+        gl = GitlabServer()
+        with self.assertRaises(ValueError) as e:
+            gl.create_remote_repo('controls/support/support_module')
+
+    @patch('dls_ade.gitlabserver.gitlab.Gitlab')
+    @patch('os.access')
+    @patch('os.stat')
+    def test_create_remote_repo_with_wrong_token_file(self, mock_stat,
+                                                      mock_access,
+                                                      mock_gitlab):
+        mock_access.return_value = True
+        mock_stat.return_value.st_mode = 0o664
+        gl = GitlabServer()
+        with self.assertRaises(ValueError) as e:
+            gl.create_remote_repo('controls/support/support_module')
 
 
 class DevAreaPathTest(unittest.TestCase):
