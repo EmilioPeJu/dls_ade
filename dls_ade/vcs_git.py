@@ -539,7 +539,9 @@ class Git(BaseVCS):
 
         # Removes initial GIT_SSH_ROOT (with slash at end)
         server_repo_path = remote.url[len(self.parent.url):]
-
+        server_repo_path = server_repo_path.lstrip('/')
+        if server_repo_path.endswith('.git'):
+            server_repo_path = server_repo_path[:-4]
         if not self.parent.is_server_repo(server_repo_path):
             err_message = ("Server repo path {s_repo_path:s} does not "
                            "currently exist")
