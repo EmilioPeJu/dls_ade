@@ -133,9 +133,6 @@ class GitServer(object):
         # Module is everything after area
         module = source.split('/', 2)[-1]
 
-        if module.endswith('.git'):
-            module = module[:-4]
-
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),
@@ -163,6 +160,10 @@ class GitServer(object):
 
                 # Remove controls/<area>/ from front of save path
                 module = path.split('/', 2)[-1]
+
+                if module.endswith('.git'):
+                    module = module[:-4]
+
                 log.debug("Module: {}".format(module))
 
                 if module not in os.listdir("./"):

@@ -55,7 +55,10 @@ def get_module_list(source):
             # -s: controls/support/ADCore -> ADCore
             # -i: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I/BL16I-MO-IOC-15
             # -i BL16I: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I-MO-IOC-15
-            modules.append(module_path.split(source + '/')[-1])
+            module_name = module_path.split(source + '/')[-1]
+            if module_name.endswith('.git'):
+                module_name = module_name[:-4]
+            modules.append(module_name)
     return modules
 
 
