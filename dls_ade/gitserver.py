@@ -2,6 +2,7 @@ import os
 import tempfile
 import logging
 
+from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade.vcs_git import Git, git
 
 from dls_ade import dls_utilities as dls_util
@@ -133,9 +134,6 @@ class GitServer(object):
         # Module is everything after area
         module = source.split('/', 2)[-1]
 
-        if module.endswith('.git'):
-            module = module[:-4]
-
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),
@@ -162,7 +160,8 @@ class GitServer(object):
             if path.startswith(source):
 
                 # Remove controls/<area>/ from front of save path
-                module = path.split('/', 2)[-1]
+                module = remove_git_at_end(path.split('/', 2)[-1])
+
                 log.debug("Module: {}".format(module))
 
                 if module not in os.listdir("./"):
@@ -200,6 +199,20 @@ class GitServer(object):
         """
 
         raise NotImplementedError("Must be implemented in child classes")
+
+    def dev_group_path(self, group, area="support"):
+        """
+        Return the full server path for the given group of  modules in an area.
+
+        Args:
+            area(str): The area of the module.
+            group(str): The group name.
+
+        Returns:
+            str: The full server path for the given group.
+
+        """
+        return os.path.join(self.dev_area_path(area), group)
 
     def dev_module_path(self, module, area="support"):
         """

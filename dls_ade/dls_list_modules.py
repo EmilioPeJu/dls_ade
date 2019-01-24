@@ -10,6 +10,7 @@ import json
 import logging
 
 from dls_ade.argument_parser import ArgParser
+from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade import Server
 from dls_ade import logconfig
 
@@ -55,7 +56,10 @@ def get_module_list(source):
             # -s: controls/support/ADCore -> ADCore
             # -i: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I/BL16I-MO-IOC-15
             # -i BL16I: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I-MO-IOC-15
-            modules.append(module_path.split(source + '/')[-1])
+            module_name = remove_git_at_end(
+                module_path.split(source + '/')[-1])
+
+            modules.append(module_name)
     return modules
 
 
@@ -72,7 +76,7 @@ def _main():
 
     if args.area == "ioc" and args.domain_name:
         search_area = os.path.join(args.area, args.domain_name)
-        source = server.dev_module_path(args.domain_name, args.area)
+        source = server.dev_group_path(args.domain_name, args.area)
     else:
         search_area = args.area
         source = server.dev_area_path(args.area)

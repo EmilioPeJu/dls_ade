@@ -848,7 +848,7 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
 
         self.mock_repo.create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_server_path")
 
-        push_call_list = [call("test_remote", "*:*"), call("test_remote", "--tags")]
+        push_call_list = [call("test_remote", "--all"), call("test_remote", "--tags")]
 
         self.mock_repo.git.push.assert_has_calls(push_call_list)
 
@@ -868,7 +868,7 @@ class PushAllBranchesAndTagsTest(unittest.TestCase):
 
         self.mock_repo.create_remote.assert_called_once_with("test_remote", "ssh://GIT_SSH_ROOT/test_server_path")
 
-        push_call_list = [call("test_remote", "*:*"), call("test_remote", "--tags")]
+        push_call_list = [call("test_remote", "--all"), call("test_remote", "--tags")]
 
         self.mock_repo.git.push.assert_has_calls(push_call_list)
 
