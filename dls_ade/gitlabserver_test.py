@@ -20,9 +20,9 @@ class GetServerRepoList(unittest.TestCase):
         gl = GitlabServer()
         gl._anon_gitlab_handle.projects.list.return_value = FAKE_PROJECT_LIST
         projects = gl.get_server_repo_list()
-        self.assertIn('controls/ioc/BL01I-EA-IOC-01', projects)
-        self.assertIn('controls/support/support_module', projects)
-        self.assertIn('controls/python/python_module', projects)
+        self.assertIn('controls/ioc/BL01I-EA-IOC-01.git', projects)
+        self.assertIn('controls/support/support_module.git', projects)
+        self.assertIn('controls/python/python_module.git', projects)
 
 
 class CreateRemoteRepoTest(unittest.TestCase):

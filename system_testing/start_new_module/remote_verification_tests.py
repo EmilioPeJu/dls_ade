@@ -11,7 +11,7 @@ settings_list = [
 
         'exception_type': "VerificationError",
 
-        'exception_string': "The path controlstest/support/testsupportmod already exists on server, cannot continue",
+        'exception_string': "The path controlstest/support/testsupportmod.git already exists on server, cannot continue",
     },
 
     {
@@ -21,7 +21,7 @@ settings_list = [
 
         'exception_type': "VerificationError",
 
-        'exception_string': "The repository controlstest/ioc/BTEST/TS has an app that conflicts with app name: BTEST-TS-IOC-05",
+        'exception_string': "The repository controlstest/ioc/BTEST/TS.git has an app that conflicts with app name: BTEST-TS-IOC-05",
     },
 ]
 
