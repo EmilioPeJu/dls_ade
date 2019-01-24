@@ -19,6 +19,7 @@ def push_repo(local_path):
     server = Server()
     if not server.is_server_repo(server_repo_path):
         repo = server.create_new_local_repo(module, area, local_path)
+        server.create_remote_repo(server_repo_path)
         repo.push_all_branches_and_tags(server_repo_path, "systest")
         print("Pushed to server:")
     else:
