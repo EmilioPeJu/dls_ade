@@ -2,6 +2,7 @@ import os
 import tempfile
 import logging
 
+from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade.vcs_git import Git, git
 
 from dls_ade import dls_utilities as dls_util
@@ -159,10 +160,7 @@ class GitServer(object):
             if path.startswith(source):
 
                 # Remove controls/<area>/ from front of save path
-                module = path.split('/', 2)[-1]
-
-                if module.endswith('.git'):
-                    module = module[:-4]
+                module = remove_git_at_end(path.split('/', 2)[-1])
 
                 log.debug("Module: {}".format(module))
 

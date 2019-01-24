@@ -10,6 +10,7 @@ import json
 import logging
 
 from dls_ade.argument_parser import ArgParser
+from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade import Server
 from dls_ade import logconfig
 
@@ -55,9 +56,9 @@ def get_module_list(source):
             # -s: controls/support/ADCore -> ADCore
             # -i: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I/BL16I-MO-IOC-15
             # -i BL16I: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I-MO-IOC-15
-            module_name = module_path.split(source + '/')[-1]
-            if module_name.endswith('.git'):
-                module_name = module_name[:-4]
+            module_name = remove_git_at_end(
+                module_path.split(source + '/')[-1])
+
             modules.append(module_name)
     return modules
 

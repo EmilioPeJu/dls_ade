@@ -12,6 +12,14 @@ def remove_end_slash(path_string):
     return path_string
 
 
+def remove_git_at_end(path_string):
+
+    if path_string and path_string.endswith('.git'):
+        return path_string[:-4]
+
+    return path_string
+
+
 def check_technical_area(area, module):
     """
     Checks if given area is IOC and if so, checks that the technical area is
