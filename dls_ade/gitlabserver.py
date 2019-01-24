@@ -104,9 +104,9 @@ class GitlabServer(GitServer):
         for project in projects:
             repo_path = os.path.join(project.namespace["full_path"],
                                      project.name)
+            repo_path = "{}.git".format(repo_path)
             repos.append(repo_path)
 
-        repos = [item for item in repos if item.startswith('controls')]
         return repos
 
     def create_remote_repo(self, dest):
