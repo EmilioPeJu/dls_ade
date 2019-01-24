@@ -201,6 +201,20 @@ class GitServer(object):
 
         raise NotImplementedError("Must be implemented in child classes")
 
+    def dev_group_path(self, group, area="support"):
+        """
+        Return the full server path for the given group of  modules in an area.
+
+        Args:
+            area(str): The area of the module.
+            group(str): The group name.
+
+        Returns:
+            str: The full server path for the given group.
+
+        """
+        return os.path.join(self.dev_area_path(area), group)
+
     def dev_module_path(self, module, area="support"):
         """
         Return the full server path for the given module and area.

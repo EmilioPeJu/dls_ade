@@ -72,7 +72,7 @@ def _main():
 
     if args.area == "ioc" and args.domain_name:
         search_area = os.path.join(args.area, args.domain_name)
-        source = server.dev_module_path(args.domain_name, args.area)
+        source = server.dev_group_path(args.domain_name, args.area)
     else:
         search_area = args.area
         source = server.dev_area_path(args.area)

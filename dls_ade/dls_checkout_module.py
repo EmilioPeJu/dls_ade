@@ -102,6 +102,9 @@ def _main():
         server.clone_multi(source)
     elif module.endswith('/') and args.area == 'ioc':
         usermsg.info("Checking out {} technical area...".format(module))
+
+        source = server.dev_group_path(module, args.area)
+
         server.clone_multi(source)
     else:
         usermsg.info("Checking out {module} from {area}".format(module=module,
