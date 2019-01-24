@@ -647,7 +647,7 @@ class Git(BaseVCS):
 
         repo.create_remote(remote_name, os.path.join(self.parent.url,
                                                      server_repo_path))
-        repo.git.push(remote_name, "*:*")
+        repo.git.push(remote_name, "--all")
         repo.git.push(remote_name, "--tags")
 
 # sanity check: ensure class fully implements the interface (abc)
