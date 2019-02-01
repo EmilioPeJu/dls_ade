@@ -24,6 +24,9 @@
 # Uncomment the following for tracing
 # set -o xtrace
 
+# don't let standard input block the script execution
+exec 0</dev/null
+
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
