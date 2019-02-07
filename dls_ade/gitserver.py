@@ -132,7 +132,7 @@ class GitServer(object):
         # Area is second section of path
         area = source.split('/')[1]
         # Module is everything after area
-        module = source.split('/', 2)[-1]
+        module = dls_util.remove_git_at_end(source.split('/', 2)[-1])
 
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
