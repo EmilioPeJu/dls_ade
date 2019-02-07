@@ -2,8 +2,10 @@ import os
 import tempfile
 import logging
 
+from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade.vcs_git import Git, git
-from dls_ade import path_functions as pathf
+
+from dls_ade import dls_utilities as dls_util
 
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger("usermessages")
@@ -11,11 +13,15 @@ usermsg = logging.getLogger("usermessages")
 
 class GitServer(object):
 
-    GIT_ROOT_DIR = pathf.GIT_ROOT_DIR
+    GIT_ROOT_DIR = dls_util.GIT_ROOT_DIR
 
-    def __init__(self, url, clone_url):
-        self.url = url
+    def __init__(self, url, clone_url, release_url):
+        # url used for cloning
         self.clone_url = clone_url
+        # url that the build server will use
+        self.release_url = release_url
+        # url used for everything else e.g: for starting a new module
+        self.url = url
 
     def is_server_repo(self, server_repo_path):
         """
@@ -57,7 +63,7 @@ class GitServer(object):
         base_repo = git.Repo(path)
         return Git(module, area, self, base_repo)
 
-    def get_clone_repo(self, server_repo_path, local_repo_path, origin='gitolite'):
+    def get_clone_repo(self, server_repo_path, local_repo_path, origin='gitlab'):
         """
         Get Repo clone given server and local repository paths
 
@@ -88,7 +94,7 @@ class GitServer(object):
             in current directory
         """
 
-        pathf.remove_end_slash(server_repo_path)
+        dls_util.remove_end_slash(server_repo_path)
 
         if not self.is_server_repo(server_repo_path):
             raise ValueError("Repository does not contain " +
@@ -118,7 +124,7 @@ class GitServer(object):
             :class:`~git.repo.base.Repo`: Repository instance
         """
 
-        pathf.remove_end_slash(source)
+        dls_util.remove_end_slash(source)
 
         if not self.is_server_repo(source):
             raise ValueError("Repository does not contain " + source)
@@ -154,7 +160,8 @@ class GitServer(object):
             if path.startswith(source):
 
                 # Remove controls/<area>/ from front of save path
-                module = path.split('/', 2)[-1]
+                module = remove_git_at_end(path.split('/', 2)[-1])
+
                 log.debug("Module: {}".format(module))
 
                 if module not in os.listdir("./"):
@@ -192,6 +199,20 @@ class GitServer(object):
         """
 
         raise NotImplementedError("Must be implemented in child classes")
+
+    def dev_group_path(self, group, area="support"):
+        """
+        Return the full server path for the given group of  modules in an area.
+
+        Args:
+            area(str): The area of the module.
+            group(str): The group name.
+
+        Returns:
+            str: The full server path for the given group.
+
+        """
+        return os.path.join(self.dev_area_path(area), group)
 
     def dev_module_path(self, module, area="support"):
         """

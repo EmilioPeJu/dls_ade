@@ -162,94 +162,6 @@ settings_list = [
 
         'module_area': "ioc",
     },
-    #
-    # {
-    #     'description': "test_exported_IOC_BL_dash_form_module_is_created_with_correct_files",
-    #
-    #     'arguments': "-i testB22-BL-IOC-01",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-BL-dash'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'path': "testB22/testB22-BL-IOC-01",
-    #
-    #     'module_area': "ioc",
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_slash_form_without_ioc_number_is_created_with_correct_ioc_number_and_module_name_and_files",
-    #
-    #     'arguments': "-i testB01/TS",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B01'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'path': "testB01/TS",
-    #
-    #     'module_area': "ioc",
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_slash_form_with_ioc_number_is_created_with_correct_ioc_number_and_module_name_and_files",
-    #
-    #     'arguments': "-i testB02/TS/03",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B02'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'path': "testB02/TS",
-    #
-    #     'module_area': "ioc",
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_slash_form_with_no_ioc_number_and_fullname_is_created_with_correct_module_name_and_files",
-    #
-    #     'arguments': "-i testB03/TS/ --fullname",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B03'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'path': "testB03/testB03-TS-IOC-01",
-    #
-    #     'module_area': "ioc",
-    # },
-    #
-    # {
-    #     'description': "test_exported_IOC_module_slash_form_with_ioc_number_and_fullname_is_created_with_correct_module_name_and_files",
-    #
-    #     'arguments': "-i testB04/TS/04 --fullname",
-    #
-    #     'input': "",
-    #
-    #     'std_out_ends_with_string': printed_messages['IOC-B04'],
-    #
-    #     'attributes_dict': {'module-contact': os.getlogin()},
-    #
-    #     'repo_comp_method': "all_comp",
-    #
-    #     'path': "testB04/testB04-TS-IOC-04",
-    #
-    #     'module_area': "ioc",
-    # },
 
     {
         'description': "test_exported_IOC_module_dash_form_is_created_with_correct_module_name_and_files",
@@ -281,7 +193,8 @@ def setup_module():
     """
     global NEW_GIT_ROOT_DIR
 
-    with open("repo_test_num.txt", "r") as f:
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(file_dir, "repo_test_num.txt"), "r") as f:
         test_number = f.readline()
 
     if not test_number and not test_number.isdigit():

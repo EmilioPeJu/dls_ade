@@ -71,9 +71,9 @@
 .. automodule:: dls_ade.exceptions
     :members:
 
-:mod:`dls_ade.path_functions` module
+:mod:`dls_ade.dls_utilities` module
 ------------------------------------
-.. automodule:: dls_ade.path_functions
+.. automodule:: dls_ade.dls_utilities
     :members:
 
 :mod:`dls_ade.vcs` module

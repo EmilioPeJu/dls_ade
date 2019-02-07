@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# ******************************************************************************
+# *****************************************************************************
 # 
 # Script to build a Diamond etc module
 #
@@ -13,13 +13,16 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir   : The directory in subversion where the module is located.
+#   _git_dir   : The gitolite URL where the module is located.
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
 #
+
+# don't let standard input block the script execution
+exec 0</dev/null
 
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
@@ -29,20 +32,13 @@ build_dir=${_build_dir}
 SysLog info "Building etc in ${build_dir}"
 
 # Checkout module
-mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
-cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
-if [ ! -d $_module ]; then
-    svn checkout -q $_svn_dir $_module      || ReportFailure "Can not check out  $_svn_dir"
-    cd $_module                             || ReportFailure "Can not cd to $_module"
-else
-    cd $_module                             || ReportFailure "Can not cd to $_module"
-    svn switch $_svn_dir                    || ReportFailure "Can not switch to $_version"
-fi
+cd $build_dir                    || ReportFailure "Cannot cd to $build_dir"
+cd $_module                      || ReportFailure "Cannot cd to $_module"
+git pull --ff-only               || ReportFailure "Cannot pull latest version"
 
 if [ -e Makefile ] ; then
     SysLog info "Running make"
-    make clean || ReportFailure "make clean failed"
-    make       || ReportFailure "make failed"
+    make                         || ReportFailure "make failed"
 fi
 
 SysLog info "Build complete"

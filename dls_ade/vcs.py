@@ -35,6 +35,12 @@ class BaseVCS(object):
 
 
     @abc.abstractmethod
+    def list_commits(self):
+        '''Return list of commits of module'''
+        raise NotImplementedError
+
+
+    @abc.abstractmethod
     def list_releases(self):
         ''' Return list of releases/tags of module '''
         raise NotImplementedError
@@ -45,6 +51,12 @@ class BaseVCS(object):
         '''
         Abstraction for callback function to return message string for log.
         '''
+        raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def check_commit_exists(self, commit):
+        '''True/False for existence of commit in repository'''
         raise NotImplementedError
 
 

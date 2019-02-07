@@ -190,7 +190,7 @@ class Builder:
             "user"                  : self.user,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
-            "%s_dir" % vcs.vcs_type : vcs.source_repo,
+            "%s_dir" % vcs.vcs_type : vcs.release_repo,
             "module"                : vcs.module,
             "version"               : vcs.version,
             "area"                  : self.area,

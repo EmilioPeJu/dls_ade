@@ -2,7 +2,7 @@ import system_testing as st
 
 changes = "Changes have been made to dls_testpythonmod since release 1-1"
 no_changes = "No changes have been made to dls_testpythonmod2 since most recent release 2-1"
-exception_msg = "controlstest/python/testpythonmod does not exist on the repository"
+exception_msg = "controlstest/python/testpythonmod.git does not exist on the repository"
 
 settings_list = [
 

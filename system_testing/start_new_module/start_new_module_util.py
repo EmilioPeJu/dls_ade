@@ -2,7 +2,9 @@ import os
 import tarfile
 import subprocess
 
-COMPARISON_FILES = "comparison_files"
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+COMPARISON_FILES = os.path.join(dir_path, "comparison_files")
 
 
 def find_and_replace_characters_in_folder(find, replace_with, folder):

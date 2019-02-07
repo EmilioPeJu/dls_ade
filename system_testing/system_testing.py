@@ -13,6 +13,7 @@ ENVIRONMENT_CORRECT = False
 try:
     from dls_ade import vcs_git
     from dls_ade import Server
+    from dls_ade import bytes_to_string
 except ImportError as e:
     print(e)
     vcs_git = None
@@ -400,8 +401,8 @@ class SystemTest(object):
                                    stdin=stdin_pipe)
 
         self._std_out, self._std_err = process.communicate(self._input)
-        self._std_out = self._std_out.decode('utf-8')
-        self._std_err = self._std_err.decode('utf-8')
+        self._std_out = bytes_to_string(self._std_out)
+        self._std_err = bytes_to_string(self._std_err)
         logging.debug("standard out:\n" + self._std_out)
         logging.debug("standard error:\n" + self._std_err)
         self._return_code = process.returncode
@@ -473,9 +474,8 @@ class SystemTest(object):
         logging.debug("Expected error string components: " +
                       ",".join(expected_string_components))
 
-        #chk_str = self._std_out if not self._std_err else self._std_err
-        assert_true(all(elem in self._std_out for elem in expected_string_components) \
-                    or all(elem in self._std_err for elem in expected_string_components))
+        assert_true(all(elem in self._std_out for elem in expected_string_components) or
+                    all(elem in self._std_err for elem in expected_string_components))
 
     def compare_std_out_to_string(self):
         """Compare the standard output to std_out_compare_string.

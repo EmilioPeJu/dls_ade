@@ -24,7 +24,7 @@ python -m nose module_contacts
 echo "Running tar_module test ..."
 python -m nose tar_module
 
-cd start_new_module
 echo "Running start_new_module tests ..."
 python -m nose start_new_module
+
 cd ..

@@ -18,7 +18,7 @@ from dls_ade import vcs_git
 from dls_ade.dls_environment import environment
 from dls_ade.argument_parser import ArgParser
 from dls_ade import dlsbuild
-from dls_ade import path_functions as pathf
+from dls_ade.dls_utilities import check_technical_area
 from dls_ade import logconfig
 
 env = environment()
@@ -123,7 +123,7 @@ def _main():
 
     check_area_archivable(args.area)
     env.check_epics_version(args.epics_version)
-    pathf.check_technical_area(args.area, args.module_name)
+    check_technical_area(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)

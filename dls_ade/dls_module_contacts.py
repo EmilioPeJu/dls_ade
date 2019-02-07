@@ -19,7 +19,6 @@ import csv
 import ldap
 
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
 from dls_ade import Server
 from dls_ade.exceptions import FedIdError
 from dls_ade import logconfig
@@ -167,7 +166,7 @@ def lookup_contact_name(fed_id):
     name_info_dict = ldap_output[1][0][1]
     # name_info_dict: {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
     contact_name = \
-        name_info_dict['givenName'][0] + ' ' + name_info_dict['sn'][0]
+        name_info_dict['givenName'][0].decode('utf-8') + ' ' + name_info_dict['sn'][0].decode('utf-8')
 
     return contact_name
 

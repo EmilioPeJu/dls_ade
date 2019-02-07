@@ -34,7 +34,7 @@ class ParserTest(unittest.TestCase):
 
         dls_release.make_parser()
 
-        parser_mock.assert_called_once_with()
+        parser_mock.assert_called_once_with(optional=True)
 
     @patch('dls_ade.dls_changes_since_release.ArgParser.add_branch_flag')
     def test_branch_flag_set(self, parser_mock):
@@ -90,6 +90,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreTrueAction)
         self.assertEqual(option.dest, "next_version")
         self.assertIn("--next_version", option.option_strings)
+
+    def test_commit_option_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-c']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.type, str)
+        self.assertEqual(option.dest, "commit")
+        self.assertIn("--commit", option.option_strings)
 
     def test_rhel_version_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-r']
@@ -228,34 +235,12 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_msg)
 
-    def test_given_no_release_then_parser_error_called_specifying_no_module_version(self):
+    def test_given_no_release_not_test_commit_then_parser_error_called_specifying_no_module_version(self):
         self.args.module_name = "build"
-        expected_error_msg = 'Module version not specified'
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
-    def test_given_area_option_of_etc_and_module_equals_build_then_parser_error_specifying_this(self):
-
-        self.args.module_name = "build"
-        self.args.release = "12"
-        self.args.area = "etc"
-
-        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
-        expected_error_msg += ' modules - use configure system instead'
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_msg)
-
-    def test_given_area_option_of_etc_and_module_equals_redirector_then_parser_error_specifying_this(self):
-        self.args.module_name = "redirector"
-        self.args.release = "12"
-        self.args.area = "etc"
-
-        expected_error_msg = 'Cannot release etc/build or etc/redirector as'
-        expected_error_msg += ' modules - use configure system instead'
+        self.args.commit = ""
+        expected_error_msg = 'Module release not specified; required unless'
+        expected_error_msg += ' testing a specified commit, or requesting'
+        expected_error_msg += ' next version.'
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
@@ -270,19 +255,6 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
         self.assertFalse(self.mock_error.call_count)
-
-    def test_given_next_version_and_git_flag_then_parser_error_called(self):
-
-        self.args.module_name = "module_name"
-        self.args.release = "12"
-        self.args.area = "support"
-        self.args.next_version = True
-
-        expected_error_message = "When git is specified, version number must be provided"
-
-        dls_release.check_parsed_arguments_valid(self.args, self.parser)
-
-        self.mock_error.assert_called_once_with(expected_error_message)
 
     def test_given_git_and_archive_area_else_good_options_then_raise_error(self):
 
@@ -316,13 +288,96 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.assertFalse(self.mock_error.call_count)
 
-    def test_given_git_and_etc_area_else_good_options_then_raise_error(self):
+    def test_given_git_and_etc_area_and_Launcher(self):
 
-        self.args.module_name = "module"
+        self.args.module_name = "Launcher"
         self.args.release = "version"
         self.args.area = "etc"
+        self.args.test_only = False
+        self.args.skip_test = True
+        self.args.local_build = False
 
-        expected_error_message = self.args.area + " area not supported by git"
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_not_called()
+
+    def test_given_git_and_etc_area_and_init(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.test_only = False
+        self.args.skip_test = True
+        self.args.local_build = False
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_not_called()
+
+    def test_given_etc_area_and_not_skip_local_test_build_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.test_only = False
+        self.args.local_build = False
+
+        self.args.skip_test = False
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_given_etc_area_and_local_test_build_only_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.skip_test = False
+        self.args.test_only = False
+
+        self.args.local_build = True
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_given_etc_area_and_server_test_build_then_error(self):
+
+        self.args.module_name = "init"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.skip_test = True
+        self.args.local_build = False
+
+        # Not skip local test build
+        self.args.test_only = True
+        expected_error_message = \
+            "Test builds are not possible for etc modules. " \
+            "Use -t to skip the local test build. Do not use -T or -l."
+
+        dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+        self.mock_error.assert_called_once_with(expected_error_message)
+
+    def test_given_git_and_etc_area_and_invalid_module_then_raise_error(self):
+
+        self.args.module_name = "redirector"
+        self.args.release = "version"
+        self.args.area = "etc"
+        self.args.test_only = False
+        self.args.no_test_build = True
+        self.args.local_build = False
+
+        expected_error_message = \
+            "The only supported etc modules are ['init', 'Launcher'] - " \
+            "for others, use configure system instead"
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
@@ -470,7 +525,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions()
         build = dls_release.create_build_object(options)
 
-        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 
@@ -509,7 +564,7 @@ class TestConstructInfoMessage(unittest.TestCase):
         options = FakeOptions(area='ioc')
         build = dls_release.create_build_object(options)
 
-        expected_message = '{module} {version} from tag: {version}, '.format(module=module, version=version)
+        expected_message = '{module} {version} from tag {version}, '.format(module=module, version=version)
         expected_message += 'using {} build server'.format(build.get_server())
         expected_message += ' and epics {}'.format(build.epics())
 

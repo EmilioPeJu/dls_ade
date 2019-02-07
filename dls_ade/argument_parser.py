@@ -63,16 +63,21 @@ class ArgParser(ArgumentParser):
         self.add_argument("module_name", type=str, default="",
                           help=help_msg)
 
-    def add_release_arg(self, help_msg="Release of module"):
+    def add_release_arg(self, help_msg="Release of module", optional=False):
         """
         Add release argument with module specific help message.
 
         Args:
             help_msg(str): Help message relevant to module calling function
+            optional(bool): If True, set release argument to be an optional
+            positional argument.
 
         """
-        self.add_argument("release", type=str, default=None,
-                          help=help_msg)
+        if not optional:
+            self.add_argument("release", type=str, default=None, help=help_msg)
+        else:
+            self.add_argument("release", nargs='?', type=str, default=None,
+                              help=help_msg)
 
     def add_branch_flag(self, help_msg="Branch of repository"):
         """

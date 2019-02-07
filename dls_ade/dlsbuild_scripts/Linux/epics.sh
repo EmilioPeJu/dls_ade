@@ -45,6 +45,11 @@ SysLog debug "Creating dir: " $build_dir
 mkdir -p $build_dir                         || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
 
+export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
+    is_test=false
+fi
+
 # If force, remove existing version directory (whether or not it exists)
 if [ "$_force" == "true" ] ; then
     SysLog info "Force: removing previous version: " ${PWD}/$_module
@@ -54,14 +59,21 @@ fi
 # Clone module if it doesn't already exist
 if [ ! -d $_module ]; then
     SysLog info "Cloning repo: $_git_dir into: $_module"
-    git clone --depth=100 $_git_dir $_module                            || ReportFailure "Can not clone $_git_dir"
+    if $is_test ; then
+        git clone $_git_dir $_module
+    else
+        git clone --depth=100 $_git_dir $_module                            || ReportFailure "Can not clone $_git_dir"
+    fi
 fi
 
 # Checkout module
 cd $_module                                                         || ReportFailure "Could not cd to $_module"
 SysLog info "checkout version tag: " $_version
-git fetch --depth=1 origin tag $_version && git checkout $_version  || ReportFailure "Could not checkout $_version"
-
+if $is_test ; then
+    git checkout $_version  || ReportFailure "Could not checkout $_version"
+else
+    ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version  || ReportFailure "Could not checkout $_version"
+fi
 # Build
 error_log=${_build_name}.err
 build_log=${_build_name}.log

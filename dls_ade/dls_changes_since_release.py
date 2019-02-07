@@ -7,7 +7,7 @@ import shutil
 import logging
 
 from dls_ade.argument_parser import ArgParser
-from dls_ade import path_functions as pathf
+from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git
 from dls_ade import Server
 from dls_ade import logconfig
@@ -41,7 +41,7 @@ def _main():
 
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
-    pathf.check_technical_area(args.area, args.module_name)
+    check_technical_area(args.area, args.module_name)
 
     server = Server()
 

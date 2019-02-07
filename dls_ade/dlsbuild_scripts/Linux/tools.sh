@@ -21,6 +21,9 @@
 #   _force     : Force the build (i.e. rebuild even if already exists)
 #   _build_name: The base name to use for log files etc.
 
+# don't let standard input block the script execution
+exec 0</dev/null
+
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
@@ -41,6 +44,11 @@ build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
 
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
+export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
+
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
+    is_test=false
+fi
 
 SysLog debug "version dir: " ${PWD}/$_version
 
@@ -52,9 +60,17 @@ fi
 
 if [ ! -d $_version ]; then
     SysLog info "Cloning repo: " $_git_dir
-    git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    if $is_test ; then
+        git clone $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    else
+        git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
+    fi
     SysLog info "Checking out version tag: " $_version
-    ( cd $_version && git fetch --depth=1 origin tag $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+    if $is_test ; then
+        ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+    else
+        ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version )  || ReportFailure "Can not checkout $_version"
+    fi
 elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi
