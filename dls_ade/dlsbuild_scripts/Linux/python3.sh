@@ -64,9 +64,9 @@ fi
 # BUILD MODULE
 
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
-#export PATH=~/dls_ade/prefix/bin:$PATH
-#export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
-#export TESTING_ROOT=~/testing-root
+export PATH=~/dls_ade/prefix/bin:$PATH
+export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
+export TESTING_ROOT=~/testing-root
 
 # Create venv from Pipfile.lock
 cd $_version || ReportFailure "Can not cd to $_version"
