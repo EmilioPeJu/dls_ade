@@ -52,3 +52,4 @@ def main():
     else:
         print('The following packages need to be installed:')
         print(*absent_pkg_list, sep='\n')
+        sys.exit(1)

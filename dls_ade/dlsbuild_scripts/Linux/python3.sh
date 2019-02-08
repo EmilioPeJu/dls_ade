@@ -8,23 +8,11 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-case "$OS_VERSION" in
-    [45])
-        build_dir=${_build_dir}/${_module}
-        PREFIX=/dls_sw/prod/tools/RHEL$OS_VERSION
-        PYTHON=${PREFIX}/bin/python2.6
-        INSTALL_DIR=${PREFIX}/lib/python2.6/site-packages
-        ;;
-    [67])
-        build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
-        PREFIX=${build_dir}/${_version}/prefix
-        PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
-        INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
-        TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
-        ;;
-       *)
-        ReportFailure "OS Version ${OS_VERSION} not handled"
-esac
+
+build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
+PREFIX=${build_dir}/${_version}/prefix
+PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
+
 
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
 
@@ -62,7 +50,6 @@ else
 fi
 
 # BUILD MODULE
-
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
 export PATH=~/dls_ade/prefix/bin:$PATH
 export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
@@ -70,7 +57,7 @@ export TESTING_ROOT=~/testing-root
 
 # Create venv from Pipfile.lock
 cd $_version || ReportFailure "Can not cd to $_version"
-dls-pipfilelock-to-venv.py
+dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
 
 # Create prefix and install app using the its own venv
 mkdir -p prefix/lib/python3.6/site-packages
