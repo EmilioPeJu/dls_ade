@@ -34,7 +34,8 @@ class ModuleTemplateInitTest(unittest.TestCase):
 
     def test_given_function_called_then_attributes_set_and_verify_template_args_called_correctly(self):
 
-        mt_obj = mt.ModuleTemplate({'arg3': "argument3"}, ['arg2'])
+        mt_obj = mt.ModuleTemplate({'arg3': "argument3"})
+        mt_obj.add_required_args(['arg2'])
 
         self.assertEqual(mt_obj._template_args['arg3'], "argument3")
         self.assertEqual(mt_obj._required_template_args, {'arg2'})

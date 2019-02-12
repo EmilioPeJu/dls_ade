@@ -32,21 +32,17 @@ class ModuleTemplate(object):
 
     """
 
-    def __init__(self, template_args, extra_required_args=None):
+    def __init__(self, template_args):
         """Default initialisation of all object attributes.
 
         Args:
             template_args: Dictionary for module-specific phrases.
                 Used to replace {} tags in template files.
-            extra_required_args: Additional required template arguments.
 
         """
         self._template_files = {}
 
         self._required_template_args = set()
-
-        if extra_required_args is not None:
-            self._required_template_args.update(extra_required_args)
 
         self._template_args = template_args
 
@@ -55,6 +51,9 @@ class ModuleTemplate(object):
         self._verify_template_args()
 
         self._cookiecutter_template_path = ""
+
+    def add_required_args(self, required_args):
+        self._required_template_args.update(required_args)
 
     def _verify_template_args(self):
         """Verify that the template_args fulfill the template requirements.
@@ -284,19 +283,13 @@ class ModuleTemplateTools(ModuleTemplate):
         - user_login
 
     """
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
-    def __init__(self, template_args, additional_required_args=None):
+    def __init__(self, template_args):
         """Initialise template args and default template files."""
 
-        required_args = ['module_name', 'module_path', 'user_login']
-
-        if additional_required_args is not None:
-            required_args += additional_required_args
-
-        super(ModuleTemplateTools, self).__init__(
-                template_args,
-                required_args
-        )
+        super(ModuleTemplateTools, self).__init__(template_args)
+        self.add_required_args(ModuleTemplateTools.REQUIRED_ARGS)
 
         self._set_template_files_from_area("tools")
 
@@ -312,19 +305,14 @@ class ModuleTemplateTools(ModuleTemplate):
 
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
-    def __init__(self, template_args, additional_required_args=None):
+    def __init__(self, template_args):
         """Initialise template args and default template files."""
 
-        required_args = ['module_name', 'module_path', 'user_login']
+        super(ModuleTemplatePython, self).__init__(template_args)
 
-        if additional_required_args is not None:
-            required_args += additional_required_args
-
-        super(ModuleTemplatePython, self).__init__(
-                template_args,
-                required_args
-        )
+        self.add_required_args(ModuleTemplatePython.REQUIRED_ARGS)
 
         self._set_template_files_from_area("python")
 
@@ -339,6 +327,19 @@ class ModuleTemplatePython(ModuleTemplate):
         message = message.format(**message_dict)
 
         return message
+
+
+class ModuleTemplatePython3(ModuleTemplatePython):
+    """Class for managing creation of Python 3 modules.
+
+    It is substantially the same as Python modules, although the templates
+    are different.
+    """
+
+    def __init__(self, template_args):
+        super(ModuleTemplatePython, self).__init__(template_args)
+        # Override the template file location.
+        self._set_template_files_from_area("python3")
 
 
 class ModuleTemplateWithApps(ModuleTemplate):
@@ -358,18 +359,13 @@ class ModuleTemplateWithApps(ModuleTemplate):
         - app_name
 
     """
+    REQUIRED_ARGS = ['module_path', 'app_name', 'user_login']
 
-    def __init__(self, template_args, additional_required_args=None):
+    def __init__(self, template_args):
 
-        required_args = ['module_path', 'app_name', 'user_login']
+        super(ModuleTemplateWithApps, self).__init__(template_args)
 
-        if additional_required_args is not None:
-            required_args += additional_required_args
-
-        super(ModuleTemplateWithApps, self).__init__(
-                template_args,
-                required_args
-        )
+        self.add_required_args(ModuleTemplateWithApps.REQUIRED_ARGS)
 
         self._set_template_files_from_area("default")
 
@@ -404,15 +400,9 @@ class ModuleTemplateSupport(ModuleTemplateWithApps):
     These have apps with the same name as the module.
 
     """
-    def __init__(self, template_args, additional_required_args=None):
+    def __init__(self, template_args):
 
-        if additional_required_args is None:
-            additional_required_args = []
-
-        super(ModuleTemplateSupport, self).__init__(
-                template_args,
-                additional_required_args
-        )
+        super(ModuleTemplateSupport, self).__init__(template_args)
 
         # The difference between this and WithApps' template_files, is that a
         # number of '.keep' files are included in otherwise empty repositories
@@ -527,19 +517,14 @@ class ModuleTemplateMatlab(ModuleTemplate):
         - user_login
 
     """
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
-    def __init__(self, template_args, additional_required_args=None):
+    def __init__(self, template_args):
         """Initialise template args and default template files."""
 
-        required_args = ['module_name', 'module_path', 'user_login']
+        super(ModuleTemplateMatlab, self).__init__(template_args)
 
-        if additional_required_args is not None:
-            required_args += additional_required_args
-
-        super(ModuleTemplateMatlab, self).__init__(
-                template_args,
-                required_args
-        )
+        self.add_required_args(ModuleTemplateMatlab.REQUIRED_ARGS)
 
         self._set_template_files_from_area("default")
 
@@ -555,11 +540,8 @@ class ModuleTemplateMatlab(ModuleTemplate):
 
 class ModuleTemplateIOCUI(ModuleTemplateWithApps):
 
-    def __init__(self, template_args, additional_required_args=None):
-        super(ModuleTemplateIOCUI, self).__init__(
-                template_args,
-                additional_required_args
-        )
+    def __init__(self, template_args):
+        super(ModuleTemplateIOCUI, self).__init__(template_args)
 
         self.cookiecutter_template = "CSS_IOC"
 
