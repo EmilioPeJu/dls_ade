@@ -329,6 +329,19 @@ class ModuleTemplatePython(ModuleTemplate):
         return message
 
 
+class ModuleTemplatePython3(ModuleTemplatePython):
+    """Class for managing creation of Python 3 modules.
+
+    It is substantially the same as Python modules, although the templates
+    are different.
+    """
+
+    def __init__(self, template_args):
+        super(ModuleTemplatePython, self).__init__(template_args)
+        # Override the template file location.
+        self._set_template_files_from_area("python3")
+
+
 class ModuleTemplateWithApps(ModuleTemplate):
     """Abstract class to implement the 'app_name' attribute.
 
