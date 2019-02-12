@@ -38,7 +38,6 @@ class ModuleTemplate(object):
         Args:
             template_args: Dictionary for module-specific phrases.
                 Used to replace {} tags in template files.
-            extra_required_args: Additional required template arguments.
 
         """
         self._template_files = {}
@@ -284,16 +283,13 @@ class ModuleTemplateTools(ModuleTemplate):
         - user_login
 
     """
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
     def __init__(self, template_args):
         """Initialise template args and default template files."""
 
-
         super(ModuleTemplateTools, self).__init__(template_args)
-
-        required_args = ['module_name', 'module_path', 'user_login']
-        self.add_required_args(required_args)
-
+        self.add_required_args(ModuleTemplateTools.REQUIRED_ARGS)
 
         self._set_template_files_from_area("tools")
 
@@ -309,14 +305,14 @@ class ModuleTemplateTools(ModuleTemplate):
 
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
     def __init__(self, template_args):
         """Initialise template args and default template files."""
 
         super(ModuleTemplatePython, self).__init__(template_args)
 
-        required_args = ['module_name', 'module_path', 'user_login']
-        self.add_required_args(required_args)
+        self.add_required_args(ModuleTemplatePython.REQUIRED_ARGS)
 
         self._set_template_files_from_area("python")
 
@@ -350,13 +346,13 @@ class ModuleTemplateWithApps(ModuleTemplate):
         - app_name
 
     """
+    REQUIRED_ARGS = ['module_path', 'app_name', 'user_login']
 
     def __init__(self, template_args):
 
         super(ModuleTemplateWithApps, self).__init__(template_args)
 
-        required_args = ['module_path', 'app_name', 'user_login']
-        self.add_required_args(required_args)
+        self.add_required_args(ModuleTemplateWithApps.REQUIRED_ARGS)
 
         self._set_template_files_from_area("default")
 
@@ -508,14 +504,14 @@ class ModuleTemplateMatlab(ModuleTemplate):
         - user_login
 
     """
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
 
     def __init__(self, template_args):
         """Initialise template args and default template files."""
 
         super(ModuleTemplateMatlab, self).__init__(template_args)
 
-        required_args = ['module_name', 'module_path', 'user_login']
-        self.add_required_args(required_args)
+        self.add_required_args(ModuleTemplateMatlab.REQUIRED_ARGS)
 
         self._set_template_files_from_area("default")
 
