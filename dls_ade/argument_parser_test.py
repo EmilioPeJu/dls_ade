@@ -61,24 +61,36 @@ class AddModuleNameTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = ArgParser("")
-        self.parser.add_module_name_arg()
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'module_name')
+    def test_arg_parser_quits_if_module_name_not_added_and_module_name_provided(self):
+        try:
+            self.parser.parse_args("-p module1".split())
+            self.fail("Parser should have quit.")
+        except SystemExit:
+            pass
+
+    def test_arg_parser_parses_module_name_correctly(self):
+        self.parser.add_module_name_arg()
+        args = self.parser.parse_args("-p module1".split())
+        self.assertEqual(args.module_name, "module1")
 
 
 class AddReleaseTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = ArgParser("")
-        self.parser.add_release_arg()
 
-    def test_release_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'release')
+    def test_arg_parser_quits_if_release_not_added_and_release_provided(self):
+        try:
+            self.parser.parse_args("-p 0-1".split())
+            self.fail("Parser should have quit.")
+        except SystemExit:
+            pass
+
+    def test_arg_parser_parses_release_correctly(self):
+        self.parser.add_release_arg()
+        args = self.parser.parse_args("-p 0-1".split())
+        self.assertEqual(args.release, "0-1")
 
 
 class AddBranchTest(unittest.TestCase):

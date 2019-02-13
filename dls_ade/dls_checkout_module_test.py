@@ -18,11 +18,17 @@ class MakeParserTest(unittest.TestCase):
         parser_mock.assert_called_once_with(
             help_msg="Checkout a specific named branch rather than the default (master)")
 
-    def test_module_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[5]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.nargs, '?')
-        self.assertEqual(arguments.dest, 'module_name')
+    def test_parser_has_correct_attributes(self):
+        args = self.parser.parse_args("-p module1".split())
+        self.assertEqual(args.module_name, "module1")
+        self.assertEqual(args.area, "python")
+
+    def test_parser_does_not_accept_version(self):
+        try:
+            self.parser.parse_args("-p module1 0-1".split())
+            self.fail("dls-checkout-module should not accept a version")
+        except SystemExit:
+            pass
 
 
 class CheckTechnicalAreaTest(unittest.TestCase):
