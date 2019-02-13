@@ -11,10 +11,12 @@ import sys
 import os
 import os.path
 import shutil
+from dls_ade.dlsbuild import default_server
 
 
+os_version = default_server().replace('redhat', 'RHEL')
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-central_location = TESTING_ROOT + '/dls_sw/prod/python3/RHEL6-x86_64'
+central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 prod_dist_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
 work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 

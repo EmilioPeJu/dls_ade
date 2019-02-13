@@ -7,10 +7,11 @@ import os.path
 import venv
 from collections import OrderedDict
 import json
+from dls_ade.dlsbuild import default_server
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-
+os_version = default_server().replace('redhat', 'RHEL')
 
 def main():
  
@@ -30,8 +31,8 @@ def main():
         version_string = contents['version']
         assert version_string.startswith('==')
         version = version_string[2:]
-        file_path = '{}/dls_sw/prod/python3/RHEL6-x86_64/{}/{}/prefix/lib/python3.6/site-packages'.format(TESTING_ROOT,
-                                                                                                          package,version)
+        file_path = '{}/dls_sw/prod/python3/'.format(TESTING_ROOT) + os_version + '/{}/{}/prefix/lib/python3.6/site-packages'.format(
+                                                                                                           package,version)
         path_list.append(file_path)
 
     for p in path_list:
