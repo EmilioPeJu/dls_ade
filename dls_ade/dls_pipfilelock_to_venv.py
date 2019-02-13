@@ -38,7 +38,7 @@ def main():
         if not os.path.exists(p):
             absent_pkg_list.append(p)
 
-    if all(absent_pkg_list):
+    if not absent_pkg_list:
         
         if not os.path.exists('venv'):
             venv.create('venv', system_site_packages=True, clear=False, symlinks=False, with_pip=False)
