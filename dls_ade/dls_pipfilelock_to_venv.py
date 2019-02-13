@@ -24,7 +24,6 @@ def main():
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
     path_list = []
-    pkg_not_found = False
     absent_pkg_list = []
     
     for package, contents in packages.items():
@@ -37,10 +36,9 @@ def main():
 
     for p in path_list:
         if not os.path.exists(p):
-            pkg_not_found = True
             absent_pkg_list.append(p)
 
-    if not pkg_not_found:
+    if all(absent_pkg_list):
         
         if not os.path.exists('venv'):
             venv.create('venv', system_site_packages=True, clear=False, symlinks=False, with_pip=False)
