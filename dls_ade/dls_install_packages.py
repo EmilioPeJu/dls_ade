@@ -15,18 +15,18 @@ import shutil
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 central_location = TESTING_ROOT + '/dls_sw/prod/python3/RHEL6-x86_64'
-prod_wheel_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
-work_wheel_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
+prod_dist_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
+work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 
 
 def main():
     
-    for wheel in os.listdir(work_wheel_dir):   # Figure out how to avoid copying every file
-        work_wheel_path = os.path.join(work_wheel_dir, wheel)
-        prod_wheel_path = os.path.join(prod_wheel_dir, wheel)
+    for wheel in os.listdir(work_dist_dir):
+        work_wheel_path = os.path.join(work_dist_dir, wheel)
+        prod_wheel_path = os.path.join(prod_dist_dir, wheel)
         if not os.path.exists(prod_wheel_path):
             logging.info('Copying file {} from work to prod'.format(wheel))
-            shutil.copy(work_wheel_path, prod_wheel_dir)
+            shutil.copy(work_wheel_path, prod_dist_dir)
     
     try:
         with open('Pipfile.lock') as f:
@@ -42,9 +42,9 @@ def main():
                 site_packages_location = os.path.join(prefix_location, 'lib/python3.6/site-packages')
                 if not os.path.exists(site_packages_location):
                     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--ignore-installed', 
-                                           '--prefix=' + prefix_location, '--find-links=' + prod_wheel_dir,
+                                           '--prefix=' + prefix_location, '--find-links=' + prod_dist_dir,
                                            '--no-index', '--no-deps', specifier])
-    except FileNotFoundError:
+    except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
     except subprocess.CalledProcessError as err:
         sys.exit('One or more wheels were not found:\n{0}'.format(err))
