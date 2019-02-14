@@ -24,11 +24,11 @@ work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 def main():
     
     for wheel in os.listdir(work_dist_dir):
-        work_wheel_path = os.path.join(work_dist_dir, wheel)
-        prod_wheel_path = os.path.join(prod_dist_dir, wheel)
-        if not os.path.exists(prod_wheel_path):
+        work_dist_path = os.path.join(work_dist_dir, wheel)
+        prod_dist_path = os.path.join(prod_dist_dir, wheel)
+        if not os.path.exists(prod_dist_path):
             logging.info('Copying file {} from work to prod'.format(wheel))
-            shutil.copy(work_wheel_path, prod_dist_dir)
+            shutil.copy(work_dist_path, prod_dist_dir)
     
     try:
         with open('Pipfile.lock') as f:

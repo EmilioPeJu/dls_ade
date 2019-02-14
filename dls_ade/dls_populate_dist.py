@@ -13,7 +13,7 @@ import os
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-work_wheel_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions' 
+work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions' 
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
             for package, contents in packages.items():
                 version = contents['version']
                 specifier = package + version  # example: flask==1.0.2
-                subprocess.check_call([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir=' + work_wheel_dir, specifier])    
+                subprocess.check_call([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir=' + work_dist_dir, specifier])    
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
