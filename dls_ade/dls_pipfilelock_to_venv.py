@@ -20,7 +20,7 @@ def main():
             j = json.load(f, object_pairs_hook=OrderedDict)
             packages = OrderedDict(j['default'])
             packages.update(j['develop'])
-    except FileNotFoundError:
+    except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
     path_list = []

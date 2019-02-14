@@ -27,6 +27,6 @@ def main():
                 version = contents['version']
                 specifier = package + version  # example: flask==1.0.2
                 subprocess.check_call([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir=' + work_wheel_dir, specifier])    
-    except FileNotFoundError:
+    except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
