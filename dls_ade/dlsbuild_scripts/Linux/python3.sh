@@ -78,26 +78,30 @@ fi
 
 # BUILD MODULE
 prod_dist_dir=dls_sw/prod/python3/distributions
+#export PATH=/dls_sw/work/tools/RHEL6-x86_64/Python3/prefix/bin:$PATH
+export PATH=~/python3/bin:$PATH
+PYTHON_VERSION="python$(python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+
 
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
 export PATH=~/dls_ade/prefix/bin:$PATH
-export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
+export PYTHONPATH=~/dls_ade/prefix/lib/$PYTHON_VERSION/site-packages
 export TESTING_ROOT=~/testing-root
-export PATH=~/python3/bin:$PATH
+
 
 # Install phase 1
 cd $_version || ReportFailure "Can not cd to $_version"
 python3 setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
-mkdir -p prefix/lib/python3.6/site-packages
-SITE_PACKAGES=$(pwd)/prefix/lib/python3.6/site-packages    
+mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
+SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages    
 export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
 python3 setup.py install --prefix=prefix
 
 # Install phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
     dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
-    echo $SITE_PACKAGES >> $(pwd)/venv/lib/python3.6/site-packages/paths.pth
+    echo $SITE_PACKAGES >> $(pwd)/venv/lib/$PYTHON_VERSION/site-packages/paths.pth
 fi
 
 echo "Script finished."
