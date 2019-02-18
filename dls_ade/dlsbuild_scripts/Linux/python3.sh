@@ -77,28 +77,27 @@ fi
 
 
 # BUILD MODULE
+prod_dist_dir=dls_sw/prod/python3/distributions
+
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
 export PATH=~/dls_ade/prefix/bin:$PATH
 export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
 export TESTING_ROOT=~/testing-root
-prod_dist_dir=dls_sw/prod/python3/distributions
+export PATH=~/python3/bin:$PATH
 
-# Create venv from Pipfile.lock
+# Install phase 1
 cd $_version || ReportFailure "Can not cd to $_version"
-dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
-
-# Create Wheel and copy to dist_cache
-source venv/bin/activate
-python setup.py bdist_wheel
+python3 setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
+mkdir -p prefix/lib/python3.6/site-packages
+SITE_PACKAGES=$(pwd)/prefix/lib/python3.6/site-packages    
+export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
+python3 setup.py install --prefix=prefix
 
-# Create prefix and install app using its own venv on condition there is Pipfile.lock
+# Install phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
-    mkdir -p prefix/lib/python3.6/site-packages
-    SITE_PACKAGES=$(pwd)/prefix/lib/python3.6/site-packages    
-    export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
+    dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
     echo $SITE_PACKAGES >> $(pwd)/venv/lib/python3.6/site-packages/paths.pth
-    python setup.py install --prefix=prefix
 fi
 
 echo "Script finished."
