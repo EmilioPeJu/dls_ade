@@ -1,4 +1,30 @@
 #!/bin/bash
+# ******************************************************************************
+# 
+# Script to build a Diamond production module for support, ioc or matlab areas
+#
+# This is a partial script which builds a module in for the dls-release system.
+# The script is prepended with a list of variables before invocation by the
+# dls-release mechanism. These variables are:
+#
+#   _email     : The email address of the user who initiated the build
+#   _user      : The username (fed ID) of the user who initiated the build
+#   _epics     : The DLS_EPICS_RELEASE to use
+#   _build_dir : The parent directory in the file system in which to build the
+#                module. This does not include module or version directories.
+#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is
+#                           located.
+#   _module    : The module name
+#   _version   : The module version
+#   _area      : The build area
+#   _force     : Force the build (i.e. rebuild even if already exists)
+#   _build_name: The base name to use for log files etc.
+#
+
+# Uncomment the following for tracing
+# set -o xtrace
+
+# don't let standard input block the script execution
 
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
@@ -49,24 +75,30 @@ else
     ReportFailure "both _git_dir and _svn_dir are defined; unclear which to use"
 fi
 
+
 # BUILD MODULE
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
 export PATH=~/dls_ade/prefix/bin:$PATH
 export PYTHONPATH=~/dls_ade/prefix/lib/python3.6/site-packages
 export TESTING_ROOT=~/testing-root
+prod_dist_dir=dls_sw/prod/python3/distributions
 
 # Create venv from Pipfile.lock
 cd $_version || ReportFailure "Can not cd to $_version"
 dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
 
-# Create prefix and install app using the its own venv
-mkdir -p prefix/lib/python3.6/site-packages
-SITE_PACKAGES=$(pwd)/prefix/lib/python3.6/site-packages
-source  venv/bin/activate
-export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
-echo $SITE_PACKAGES >> $(pwd)/venv/lib/python3.6/site-packages/paths.pth
+# Create Wheel and copy to dist_cache
+source venv/bin/activate
+python setup.py bdist_wheel
+cp dist/* $TESTING_ROOT/$prod_dist_dir
 
-# Install app - so that it is available from its own venv
-python setup.py install --prefix=prefix
-deactivate
+# Create prefix and install app using its own venv on condition there is Pipfile.lock
+if [[ -e Pipfile.lock ]]; then
+    mkdir -p prefix/lib/python3.6/site-packages
+    SITE_PACKAGES=$(pwd)/prefix/lib/python3.6/site-packages    
+    export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
+    echo $SITE_PACKAGES >> $(pwd)/venv/lib/python3.6/site-packages/paths.pth
+    python setup.py install --prefix=prefix
+fi
+
 echo "Script finished."
