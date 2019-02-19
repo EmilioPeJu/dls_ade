@@ -15,6 +15,8 @@ from dls_ade.dlsbuild import default_server
 
 
 os_version = default_server().replace('redhat', 'RHEL')
+python_version = "python{}.{}".format(sys.version_info[0],sys.version_info[1])
+
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 prod_dist_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
@@ -53,7 +55,7 @@ def main():
                 # Remove '==' from start of version string e.g. 1.0.2
                 version = contents['version'][2:]
                 prefix_location = os.path.join(central_location, package, version, 'prefix')               
-                site_packages_location = os.path.join(prefix_location, 'lib/python3.6/site-packages')
+                site_packages_location = os.path.join(prefix_location, 'lib/'+ python_version + '/site-packages')
                 if not os.path.exists(site_packages_location):
                     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--ignore-installed', 
                                            '--prefix=' + prefix_location, '--find-links=' + prod_dist_dir,

@@ -12,6 +12,7 @@ from dls_ade.dlsbuild import default_server
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 os_version = default_server().replace('redhat', 'RHEL')
+python_version = "python{}.{}".format(sys.version_info[0],sys.version_info[1])
 
 def main():
  
@@ -30,8 +31,7 @@ def main():
         version_string = contents['version']
         assert version_string.startswith('==')
         version = version_string[2:]
-        file_path = '{}/dls_sw/prod/python3/'.format(TESTING_ROOT) + os_version + '/{}/{}/prefix/lib/python3.6/site-packages'.format(
-                                                                                                           package,version)
+        file_path = '{}/dls_sw/prod/python3/'.format(TESTING_ROOT) + os_version + '/{}/{}/prefix/lib/'.format(package, version) + python_version + '/site-packages'
         path_list.append(file_path)
 
     for p in path_list:
@@ -44,7 +44,7 @@ def main():
             venv.create('venv', system_site_packages=True, clear=False, symlinks=False, with_pip=False)
         else:
             sys.exit('venv already present!')
-        with open('./venv/lib/python3.6/site-packages/paths.pth', 'w') as f:
+        with open('./venv/lib/' + python_version + '/site-packages/paths.pth', 'w') as f:
             for pl in path_list:
                 f.write(pl + '\n')
         print('venv with path.pth has been created successfully!')
