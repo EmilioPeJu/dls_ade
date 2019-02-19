@@ -60,6 +60,8 @@ def main():
                     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--ignore-installed', 
                                            '--prefix=' + prefix_location, '--find-links=' + prod_dist_dir,
                                            '--no-index', '--no-deps', specifier])
+                else:
+                    print('Package {} is already installed:\n{}'.format(specifier, site_packages_location))
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
     except subprocess.CalledProcessError as err:
