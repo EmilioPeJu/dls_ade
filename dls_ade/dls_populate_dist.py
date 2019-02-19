@@ -16,7 +16,22 @@ TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions' 
 
 
+USAGE_MESSAGE ="""Usage: {} 
+
+Reads Pipfile.lock and fetches wheels for all dependencies into the 
+distribution directory.
+"""
+
+
+def usage():
+    print(USAGE_MESSAGE.format(sys.argv[0]))
+
+
 def main():
+
+    if len(sys.argv) > 1:
+        usage()
+        sys.exit(1)
 
     try:    
         with open('Pipfile.lock') as f:

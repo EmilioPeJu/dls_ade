@@ -20,9 +20,21 @@ central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 prod_dist_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
 work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 
+USAGE_MESSAGE ="""Usage: {} 
+
+Reads Pipfile.lock and installs dependencies into the central library
+"""
+
+def usage():
+    print(USAGE_MESSAGE.format(sys.argv[0]))
+
 
 def main():
     
+    if len(sys.argv) > 1:
+        usage()
+        sys.exit(1)
+
     for wheel in os.listdir(work_dist_dir):
         work_dist_path = os.path.join(work_dist_dir, wheel)
         prod_dist_path = os.path.join(prod_dist_dir, wheel)
