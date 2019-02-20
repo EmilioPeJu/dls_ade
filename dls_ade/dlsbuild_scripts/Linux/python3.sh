@@ -77,8 +77,9 @@ fi
 
 
 # BUILD MODULE
-prod_dist_dir=dls_sw/prod/python3/distributions
-#export PATH=/dls_sw/work/tools/RHEL6-x86_64/Python3/prefix/bin:$PATH
+
+# Testing section will, comment out for production
+#export PATH=/dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin:$PATH
 export PATH=~/python3/bin:$PATH
 PYTHON_VERSION="python$(python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
@@ -89,7 +90,7 @@ export PYTHONPATH=~/dls_ade/prefix/lib/$PYTHON_VERSION/site-packages
 export TESTING_ROOT=~/testing-root
 
 
-# Install phase 1
+# Build phase 1 - Build a wheel and install in prefix, for app or library
 cd $_version || ReportFailure "Can not cd to $_version"
 python3 setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
@@ -98,7 +99,7 @@ SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
 python3 setup.py install --prefix=prefix
 
-# Install phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
+# Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
     dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
     echo $SITE_PACKAGES >> $(pwd)/venv/lib/$PYTHON_VERSION/site-packages/paths.pth
