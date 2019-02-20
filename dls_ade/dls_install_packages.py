@@ -18,13 +18,16 @@ os_version = default_server().replace('redhat', 'RHEL')
 python_version = "python{}.{}".format(sys.version_info[0],sys.version_info[1])
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
-prod_dist_dir = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
-work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
+CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
+PROD_DIST_DIR = TESTING_ROOT + '/dls_sw/prod/python3/distributions'
+WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
+PIP_COMMAND = [sys.executable, '-m', 'pip', 'install', '--ignore-installed',
+              '--find-links=' + PROD_DIST_DIR, '--no-index', '--no-deps']
 
 USAGE_MESSAGE ="""Usage: {} 
 
 Reads Pipfile.lock and installs dependencies into the central library
+Runs without any arguments, on a folder with Pipfile.lock
 """
 
 def usage():
@@ -37,12 +40,12 @@ def main():
         usage()
         sys.exit(1)
 
-    for wheel in os.listdir(work_dist_dir):
-        work_dist_path = os.path.join(work_dist_dir, wheel)
-        prod_dist_path = os.path.join(prod_dist_dir, wheel)
+    for wheel in os.listdir(WORK_DIST_DIR):
+        work_dist_path = os.path.join(WORK_DIST_DIR, wheel)
+        prod_dist_path = os.path.join(PROD_DIST_DIR, wheel)
         if not os.path.exists(prod_dist_path):
             logging.info('Copying file {} from work to prod'.format(wheel))
-            shutil.copy(work_dist_path, prod_dist_dir)
+            shutil.copy(work_dist_path, PROD_DIST_DIR)
     
     try:
         with open('Pipfile.lock') as f:
@@ -54,14 +57,16 @@ def main():
                 specifier = package + contents['version']
                 # Remove '==' from start of version string e.g. 1.0.2
                 version = contents['version'][2:]
-                prefix_location = os.path.join(central_location, package, version, 'prefix')               
-                site_packages_location = os.path.join(prefix_location, 'lib/'+ python_version + '/site-packages')
+                prefix_location = os.path.join(CENTRAL_LOCATION, package,
+                                               version, 'prefix')               
+                site_packages_location = os.path.join(prefix_location,
+                                        'lib/'+ python_version + '/site-packages')
                 if not os.path.exists(site_packages_location):
-                    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--ignore-installed', 
-                                           '--prefix=' + prefix_location, '--find-links=' + prod_dist_dir,
-                                           '--no-index', '--no-deps', specifier])
+                    subprocess.check_call(PIP_COMMAND + ['--prefix=' + prefix_location,
+                                                                       specifier])
                 else:
-                    print('Package {} is already installed:\n{}'.format(specifier, site_packages_location))
+                    print('Package {} is already installed:\n{}'.format(specifier,
+                                                                 site_packages_location))
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
     except subprocess.CalledProcessError as err:

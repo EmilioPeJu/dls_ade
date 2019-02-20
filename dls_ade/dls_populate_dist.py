@@ -13,13 +13,14 @@ import os
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions' 
-
-
+WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions' 
+PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
+               'wheel', '--no-deps', '--wheel-dir='+ WORK_DIST_DIR]
 USAGE_MESSAGE ="""Usage: {} 
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
-distribution directory.
+distribution directory. Runs without any arguments, on a folder with
+Pipfile.lock
 """
 
 
@@ -41,7 +42,7 @@ def main():
             for package, contents in packages.items():
                 version = contents['version']
                 specifier = package + version  # example: flask==1.0.2
-                subprocess.check_call([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir=' + work_dist_dir, specifier])    
+                subprocess.check_call(PIP_COMMAND + [specifier])    
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
