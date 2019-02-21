@@ -12,6 +12,7 @@ import os
 import os.path
 import shutil
 from dls_ade.dlsbuild import default_server
+from dls_ade.dls_utilities import parse_pipfilelock
 
 
 os_version = default_server().replace('redhat', 'RHEL')
@@ -48,10 +49,7 @@ def main():
             shutil.copy(work_dist_path, PROD_DIST_DIR)
     
     try:
-        with open('Pipfile.lock') as f:
-            j = json.load(f, object_pairs_hook=OrderedDict)
-            packages = OrderedDict(j['default'])
-            packages.update(j['develop'])
+            packages = parse_pipfilelock('Pipfile.lock')
             for package, contents in packages.items():
                 # specifier is package and version e.g. flask==1.0.2
                 specifier = package + contents['version']
