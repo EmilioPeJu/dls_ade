@@ -82,7 +82,7 @@ fi
 #export PATH=/dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin:$PATH
 export PATH=~/python3/bin:$PATH
 PYTHON_VERSION="python$(python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
-
+prod_dist_dir=dls_sw/prod/python3/distributions
 
 # Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
 export PATH=~/dls_ade/prefix/bin:$PATH
