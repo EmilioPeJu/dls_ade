@@ -3,7 +3,7 @@
 If all required packages are not installed, the virtualenv cannot be
 correctly created, so report an error and quit.
 
-As the venv module is required
+This module must be run with the deployed version of Python 3.
 
 """
 import os.path
@@ -50,10 +50,10 @@ def main():
         else:
             sys.exit('venv already present!')
         with open('./venv/lib/' + PYTHON_VERSION + '/site-packages/paths.pth', 'w') as f:
-            for pl in path_list:
-                f.write(pl + '\n')
+            for path in path_list:
+                f.write(path + '\n')
         print('venv with path.pth has been created successfully!')
     else:
         print('The following packages need to be installed:')
-        print(*absent_pkg_list, sep='\n')
+        print('\n'.join(absent_pkg_list))
         sys.exit(1)
