@@ -37,7 +37,13 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
 PREFIX=${build_dir}/${_version}/prefix
-PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
+
+# Testing section, this will need correcting for the final version.
+PYTHON=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/dls-python3
+export TESTING_ROOT=/dls_sw/work/python3/test-root
+DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
+PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
+export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
 
 
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
@@ -78,31 +84,27 @@ fi
 
 # BUILD MODULE
 
-# Testing section will, comment out for production
-#export PATH=/dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin:$PATH
-export PATH=~/python3/bin:$PATH
-PYTHON_VERSION="python$(python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 prod_dist_dir=dls_sw/prod/python3/distributions
-
-# Testing section, necessary for running dls-pipfilelock-to-venv.py, comment out for production
-export PATH=~/dls_ade/prefix/bin:$PATH
-export PYTHONPATH=~/dls_ade/prefix/lib/$PYTHON_VERSION/site-packages
-export TESTING_ROOT=~/testing-root
 
 
 # Build phase 1 - Build a wheel and install in prefix, for app or library
 cd $_version || ReportFailure "Can not cd to $_version"
-python3 setup.py bdist_wheel
+$PYTHON setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
 mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
 SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages    
 export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
-python3 setup.py install --prefix=prefix
 
 # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
-    dls-pipfilelock-to-venv.py || ReportFailure "Dependencies not installed."
+    $PFL_TO_VENV || ReportFailure "Dependencies not installed."
     echo $SITE_PACKAGES >> $(pwd)/venv/lib/$PYTHON_VERSION/site-packages/paths.pth
+    source venv/bin/activate
+    # Use the python from the virtualenv
+    python setup.py install --prefix=prefix
+else
+    $PYTHON setup.py install --prefix=prefix
 fi
 
 echo "Script finished."
