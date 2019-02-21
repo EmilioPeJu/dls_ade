@@ -1,13 +1,16 @@
-"""
-Reads Pipfile.lock, creates a paths.pth and a venv only if all packages are installed
-"""
+"""Read Pipfile.lock and create a virtualenv including paths.pth
 
-import sys
+If all required packages are not installed, the virtualenv cannot be
+correctly created, so report an error and quit.
+
+As the venv module is required
+
+"""
 import os.path
+import sys
 import venv
-from collections import OrderedDict
-import json
 from dls_ade.dlsbuild import default_server
+from dls_ade.dls_utilities import  parse_pipfilelock
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
@@ -19,10 +22,7 @@ OS_DIR = '{}/dls_sw/prod/python3/{}'.format(TESTING_ROOT, OS_VERSION)
 def main():
  
     try:
-        with open('Pipfile.lock') as f:
-            j = json.load(f, object_pairs_hook=OrderedDict)
-            packages = OrderedDict(j['default'])
-            packages.update(j['develop'])
+        packages = parse_pipfilelock('Pipfile.lock')
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 

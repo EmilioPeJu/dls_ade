@@ -1,4 +1,7 @@
-import os, re
+import collections
+import json
+import os
+import re
 from dls_ade.exceptions import ParsingError
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
@@ -57,3 +60,22 @@ def check_tag_is_valid(tag):
         return False
 
     return True
+
+
+def parse_pipfilelock(pipfilelock, include_dev=False):
+    """Parse the JSON in Pipfile.lock and return the package info as a dict.
+
+    Args:
+        pipfilelock: path to Pipfile.lock
+        include_dev: whether to include dev packages
+
+    Returns:
+        dict: package name -> package details
+
+    """
+    with open(pipfilelock) as f:
+        j = json.load(f, object_pairs_hook=collections.OrderedDict)
+        packages = collections.OrderedDict(j['default'])
+        if include_dev:
+            packages.update(j['develop'])
+        return packages
