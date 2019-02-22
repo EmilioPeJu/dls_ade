@@ -10,13 +10,13 @@ import os.path
 import sys
 import venv
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import  parse_pipfilelock
+from dls_ade.dls_utilities import parse_pipfilelock
 
 
-TESTING_ROOT = os.getenv('TESTING_ROOT', "")
+TESTING_ROOT = os.getenv('TESTING_ROOT', '')
 OS_VERSION = default_server().replace('redhat', 'RHEL')
-PYTHON_VERSION = "python{}.{}".format(sys.version_info[0],sys.version_info[1])
-OS_DIR = '{}/dls_sw/prod/python3/{}'.format(TESTING_ROOT, OS_VERSION)
+PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
+OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
 
 def main():
@@ -49,7 +49,8 @@ def main():
                                         symlinks=False, with_pip=False)
         else:
             sys.exit('venv already present!')
-        with open('./venv/lib/' + PYTHON_VERSION + '/site-packages/paths.pth', 'w') as f:
+        paths_file = f'./venv/lib/{PYTHON_VERSION}/site-packages/paths.pth'
+        with open(paths_file, 'w') as f:
             for path in path_list:
                 f.write(path + '\n')
         print('venv with path.pth has been created successfully!')
