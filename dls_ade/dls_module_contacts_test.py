@@ -19,11 +19,9 @@ class MakeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_module_contacts.make_parser()
 
-    def test_modules_argument_has_correct_attributes(self):
-        argument = self.parser._positionals._actions[4]
-        self.assertEqual(argument.type, str)
-        self.assertEqual(argument.dest, 'modules')
-        self.assertEqual(argument.nargs, '*')
+    def test_modules_argument_is_correctly_understood(self):
+        args = self.parser.parse_args("a b c".split())
+        self.assertEqual(args.modules, ["a", "b", "c"])
 
     def test_contact_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-c']

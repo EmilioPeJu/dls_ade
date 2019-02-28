@@ -23,10 +23,10 @@ class ParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = dls_list_modules.make_parser()
 
-    def test_domain_name_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[4]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'domain_name')
+    def test_parser_understands_domain(self):
+        args = self.parser.parse_args("-i TS".split())
+        self.assertEqual(args.area, "ioc")
+        self.assertEqual(args.domain_name, "TS")
 
 
 class PrintModuleListTest(unittest.TestCase):
