@@ -71,8 +71,7 @@ class Builder:
     "Base class for Diamond build server submissions"
 
     def __init__(self, bld_os, server=None, epics=None):
-        if server in SERVER_SHORTCUT.keys():
-            server = SERVER_SHORTCUT[server]
+
         assert bld_os in os_list, "Build operating system not supported"
 
         self.os = bld_os
@@ -81,6 +80,12 @@ class Builder:
         self.user = getpass.getuser()
         self.email = get_email(self.user)
         self.dls_env = environment()
+
+        if server:
+            self.dls_env.check_rhel_version(server)
+
+        if server in SERVER_SHORTCUT.keys():
+            server = SERVER_SHORTCUT[server]
 
         if epics is None:
             # if we have not specifier the epics version
@@ -306,12 +311,12 @@ class RedhatBuild(Builder):
         return Builder._script(self, params, "#!/bin/bash", "%s=%s")
 
 
-class ArchiveBuild(Builder):
+class ArchiveBuild(RedhatBuild):
     """Implements the build class for archiving or de-archiving modules. The
     constructor takes a single parameter which, if true, dearchives, otherwise
     the module will be archived."""
-    def __init__(self, untar):
-        Builder.__init__(self, "Linux")
+    def __init__(self, server, epics, untar):
+        RedhatBuild.__init__(self, server, epics)
         self.exten = ".sh"
         self.action = "unarchive" if untar else "archive"
 

@@ -19,6 +19,7 @@
 import logging
 import os
 import re
+import platform
 from subprocess import Popen, PIPE, STDOUT
 try:
     from ConfigParser import SafeConfigParser
@@ -42,15 +43,19 @@ class environment(object):
         * epics(str): the version of epics - e.g R3.14.12.3
         * epics_ver_re(:class:`re.RegexObject`): a useful regex for matching the version of epics
         * areas(list): the areas that can be passed to devArea() or prodArea()
+        * rhel(str): the rhel version e.g. 7
 
     """
 
-    def __init__(self, epics=None):
+    def __init__(self, epics=None, rhel=None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
+        self.rhel = None
         self.areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
         if epics:
             self.setEpics(epics)
+        if rhel:
+            self.setRhel(rhel)
 
     def check_epics_version(self, epics_version):
         """
@@ -72,6 +77,18 @@ class environment(object):
             else:
                 raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
 
+    def check_rhel_version(self, rhel):
+        """
+        Checks if rhel version is provided.
+        Then sets environment rhel version.
+
+        Args:
+            rhel(str): rhel
+
+        """
+        if rhel:
+            self.setRhel(rhel)
+
     def setEpicsFromEnv(self):
         """
         Get epics version from the environment, and set self.epics. Set default 'R3.14.12.3' if environment
@@ -80,6 +97,19 @@ class environment(object):
         """
         default_epics = 'R3.14.12.3'
         self.epics = os.environ.get('DLS_EPICS_RELEASE', os.environ.get('EPICS_RELEASE', default_epics))
+
+    def setRhelFromPlatform(self):
+        """
+        Get rhel version from the platform, and set self.rhel. Set default '6' if platform
+        version acess fails.
+
+        """
+        default_rhel = '6'
+        platform_dist = platform.dist()
+        try:
+            self.rhel = platform.dist()[1].split('.')[0]
+        except:
+            self.rhel = default_rhel
 
     def copy(self):
         """
@@ -99,6 +129,15 @@ class environment(object):
             epics(str): EPICS version
         """
         self.epics = epics
+
+    def setRhel(self, rhel):
+        """
+        Force the version of rhel in self.
+
+        Args:
+            rhel(str): rhel linux version
+        """
+        self.rhel = rhel
 
     def epicsDir(self):
         """
@@ -128,6 +167,18 @@ class environment(object):
             self.setEpicsFromEnv()
         return self.epics
 
+    def rhelVer(self):
+        """
+        Return the version of rhel from self. If it not set, try and get it from the platform.
+
+        Returns:
+            str: Rhel version
+
+        """
+        if not self.rhel:
+            self.setRhelFromPlatform()
+        return self.rhel
+
     def epicsVerDir(self):
         """
         Return the directory version of epics from self. If it not set, try and get it from the environment.
@@ -140,6 +191,18 @@ class environment(object):
         if not self.epics:
             self.setEpicsFromEnv()
         return self.epics.split("_")[0]
+
+    def rhelVerDir(self):
+        """
+        Return the distribution directory from self. If it not set, return a default.
+
+        Returns:
+            str: Distribution directory
+
+        """
+        if not self.rhel:
+            self.setRhelFromPlatform()
+        return "RHEL"+self.rhel+"-x86_64"
 
     def devArea(self, area="support"):
         """
@@ -172,10 +235,14 @@ class environment(object):
         else:
             if area in ["support", "ioc"]:
                 return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
-            elif area in ["epics", "etc", "tools"]:
+            elif area in ["epics", "etc"]:
                 return os.path.join("/dls_sw", "work", area)
+            elif area in ["tools"]:
+                return os.path.join("/dls_sw", "work", area, self.rhelVerDir())
+            elif area in ["python"]:
+                return os.path.join("/dls_sw", "work", "common", area, self.rhelVerDir())
             else:
-                # matlab or python
+                # matlab
                 return os.path.join("/dls_sw", "work", "common", area)
 
     def prodArea(self, area="support"):

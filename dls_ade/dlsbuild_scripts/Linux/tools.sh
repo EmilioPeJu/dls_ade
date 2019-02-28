@@ -40,7 +40,7 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 
 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
 TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
-build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
+build_dir=$_build_dir
 
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"

@@ -10,7 +10,7 @@ class EnvironmentInitTest(unittest.TestCase):
     def test_given_epics_then_set(self):
         epics = 'R3.14.8.2'
 
-        env = dls_environment.environment(epics)
+        env = dls_environment.environment(epics=epics)
 
         self.assertEqual(env.epics, epics)
 
@@ -18,6 +18,20 @@ class EnvironmentInitTest(unittest.TestCase):
         env = dls_environment.environment()
 
         self.assertEqual(env.epics, None)
+
+
+    def test_given_rhel_then_set(self):
+
+        rhel = "6"
+
+        env = dls_environment.environment(rhel=rhel)
+
+        self.assertEqual(env.rhel, rhel)
+
+    def test_not_given_rhel_then_default(self):
+
+        env = dls_environment.environment()
+        self.assertEqual(env.rhel, None)
 
     @patch('dls_ade.dls_environment.re.compile', return_value="reg_ex")
     def test_reg_exp_set(self, mock_compile):
@@ -94,6 +108,21 @@ class SetEpicsFromEnvTest(unittest.TestCase):
 
         self.assertEqual(env.epics, "R3.14.12.3")
 
+class SetRhelFromPlatformTest(unittest.TestCase):
+
+    @patch('platform.dist', return_value=["redhat","5.2","Maipo"])
+    def test_given_platform_then_set(self, _1):
+        env = dls_environment.environment()
+        env.setRhelFromPlatform()
+
+        self.assertEqual(env.rhel, "5")
+
+    @patch('platform.dist', return_value="")
+    def test_given_no_platform_then_default(self, _1):
+        env = dls_environment.environment()
+        env.setRhelFromPlatform()
+
+        self.assertEqual(env.rhel, "6")
 
 class SetEpicsTest(unittest.TestCase):
 
@@ -293,8 +322,8 @@ class DevAreaTest(unittest.TestCase):
 
     def test_given_version_more_and_tools_then_dls_work(self):
         area = 'tools'
-        expected_path = "/dls_sw/work/" + area
         env = dls_environment.environment()
+        expected_path = "/dls_sw/work/" + area + "/" + env.rhelVerDir()
         env.epics = "R3.15"
 
         path = env.devArea(area)
@@ -313,8 +342,8 @@ class DevAreaTest(unittest.TestCase):
 
     def test_given_version_more_and_python_then_dls_work_common(self):
         area = 'python'
-        expected_path = "/dls_sw/work/common/" + area
         env = dls_environment.environment()
+        expected_path = "/dls_sw/work/common/" + area + "/" + env.rhelVerDir()
         env.epics = "R3.15"
 
         path = env.devArea(area)
