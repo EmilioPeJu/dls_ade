@@ -20,6 +20,7 @@ WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps', '--wheel-dir='+ WORK_DIST_DIR]
+pkgs_msg=[]
 USAGE_MESSAGE = """Usage: {}
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
@@ -31,20 +32,14 @@ Pipfile.lock
 def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
-def pkgs_to_install():
-    pkgs_msg=[]
-    packages = parse_pipfilelock('Pipfile.lock')
-    for package, contents in packages.items():
-        version = contents['version']
-        prefix_location = os.path.join(CENTRAL_LOCATION, package,
-                                       version, 'prefix')
-        site_packages_location = os.path.join(prefix_location,
-                                              'lib/' + python_version + '/site-packages')
-        if not os.path.isdir(site_packages_location):
-            pkgs_msg.append(package+' '+version[2:])
-    return pkgs_msg
+def pkgs_to_install(_package, _version):
 
-
+    prefix_location = os.path.join(CENTRAL_LOCATION, _package,
+                                       _version, 'prefix')
+    site_packages_location = os.path.join(prefix_location,
+                                          'lib/' + python_version + '/site-packages')
+    if not os.path.isdir(site_packages_location):
+        pkgs_msg.append(_package+' '+_version[2:])
 
 def main():
 
@@ -58,11 +53,10 @@ def main():
             version = contents['version']
             specifier = package + version  # example: flask==1.0.2
             subprocess.check_call(PIP_COMMAND + [specifier])
+            pkgs_to_install(package, version)
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
-    list = pkgs_to_install()
-
     print("\nEnter the following commands to install necessary dependencies:")
-    for item in list:
+    for item in pkgs_msg:
         print("dls-release.py --python3lib " + item)
