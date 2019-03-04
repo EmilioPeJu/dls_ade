@@ -20,7 +20,7 @@ WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps', '--wheel-dir='+ WORK_DIST_DIR]
-pkgs_msg=[]
+missing_pkgs=[]
 USAGE_MESSAGE = """Usage: {}
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
@@ -35,11 +35,11 @@ def usage():
 def pkgs_to_install(_package, _version):
 
     prefix_location = os.path.join(CENTRAL_LOCATION, _package,
-                                       _version, 'prefix')
+                                       _version[2:], 'prefix')
     site_packages_location = os.path.join(prefix_location,
                                           'lib/' + python_version + '/site-packages')
     if not os.path.isdir(site_packages_location):
-        pkgs_msg.append(_package+' '+_version[2:])
+        missing_pkgs.append(_package+' '+_version[2:])
 
 def main():
 
@@ -57,6 +57,9 @@ def main():
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
-    print("\nEnter the following commands to install necessary dependencies:")
-    for item in pkgs_msg:
-        print("dls-release.py --python3lib " + item)
+    if missing_pkgs:
+        print("\nEnter the following commands to install necessary dependencies:\n")
+        for item in missing_pkgs:
+            print("dls-release.py --python3lib" + item)
+    else:
+        print("All necessary dependencies are installed.")
