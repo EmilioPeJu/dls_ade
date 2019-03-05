@@ -21,12 +21,12 @@ OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
 def main():
 
-    pipfilelock_name = 'Pipfile.lock'
+    pipfilelock = 'Pipfile.lock'
     if len(sys.argv) > 1:
-        pipfilelock_name = sys.argv[1]
+        pipfilelock = sys.argv[1]
 
     try:
-        packages = parse_pipfilelock(pipfilelock_name)
+        packages = parse_pipfilelock(pipfilelock)
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
