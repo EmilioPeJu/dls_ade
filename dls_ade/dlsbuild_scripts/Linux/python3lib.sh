@@ -73,6 +73,12 @@ if $install_dist; then
             for script in $(ls $prefix_location/bin); do
                 sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
             done
+        else
+            echo "No Pipfile.lock is present"
         fi
+    else
+        echo "$_module-$_version is already installed in prod"
     fi
+else
+    echo "No matching distribution was found for $_module-$_version"
 fi
