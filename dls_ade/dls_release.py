@@ -410,7 +410,7 @@ def _main():
 
     parser = make_parser()
     args = parser.parse_args()
-    print(args)
+
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     check_parsed_arguments_valid(args, parser)
@@ -425,7 +425,6 @@ def _main():
         server = Server()
         source = server.dev_module_path(module, args.area)
         vcs = server.temp_clone(source)
-        print(vcs)
         if args.branch:
             vcs.set_branch(args.branch)
 
@@ -532,7 +531,7 @@ def _main():
                                         build))
     usermsg.info(msg_create_build_job)
 
-    build.submit(module, version, vcs, test=args.test_only)
+    build.submit(module, release, vcs, test=args.test_only)
     usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} "\
                  "submitted to build server queue".format(
         build_job=msg_build_job,

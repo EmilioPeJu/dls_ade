@@ -22,44 +22,57 @@
 #
 
 
-# Define environment
-
-
+# Testing section, this will need correcting for the final version.
 PYTHON=~/python3/bin/python3
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+DLS_ADE_LOCATION=~/dls_ade
+PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
+export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.6/site-packages
 
-TESTING_ROOT=~/testing-root
+export TESTING_ROOT=~/testing-root
 CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/$OS_VERSION
 WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
 PROD_DIST_DIR=$TESTING_ROOT/dls_sw/prod/python3/distributions
 
 export PATH=~/python3/bin:$PATH
 
-# Work
-# Copy wheel from work to prod folder
 
+# Copy dist (and lockfile if there is one) from work to prod folder
 install_dist=false
-
-for dist in $(ls $WORK_DIST_DIR);
-do
+for dist in $(ls $WORK_DIST_DIR); do
     module="$(cut -d'-' -f1 <<<"$dist")"
     version="$(cut -d'-' -f2 <<<"$dist")"
-    if [[ "$module" = "$_module" ]] && [[ "$version" = "$_version" ]] && [[ ! -f $PROD_DIST_DIR/$dist ]]; then
+    if [[ "$module" = "$_module" ]] && [[ "$version" = "$_version" ]]; then
         cp $WORK_DIST_DIR/$dist $PROD_DIST_DIR/$dist
         install_dist=true
-        break
+        if [[ -f $WORK_DIST_DIR/$module-$version.Pipfile.lock ]]; then
+            cp $WORK_DIST_DIR/$module-$version.Pipfile.lock $PROD_DIST_DIR/$module-$version.Pipfile.lock
+        fi
     fi
 done
 
 
+# Installation of dependency
 if $install_dist; then
     prefix_location=$CENTRAL_LOCATION/$_module/$_version/prefix
     site_packages_location=$prefix_location/lib/$PYTHON_VERSION/site-packages
     specifier="$_module==$_version"
-        if [[ ! -d $site_packages_location ]]; then
-            pip install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
-        else
-            echo "Package $specifier is already installed"
+
+    # Check if there is Pipfile.lock to create venv
+    if [[ ! -d $site_packages_location ]]; then
+        pip install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
+        if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
+            pipfilelock=$_module-$_version.Pipfile.lock
+            cd $CENTRAL_LOCATION/$_module/$_version
+            cp $PROD_DIST_DIR/$pipfilelock .
+            $PFL_TO_VENV $pipfilelock || ReportFailure "Dependencies not installed."
+            # Change header to the correct venv
+            shebang='#!'
+            new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/venv/bin/python"
+            for script in $(ls $prefix_location/bin); do
+                sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
+            done
         fi
+    fi
 fi
