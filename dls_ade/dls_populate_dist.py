@@ -60,6 +60,6 @@ def main():
     if missing_pkgs:
         print("\nEnter the following commands to install necessary dependencies:\n")
         for item in missing_pkgs:
-            print("dls-release.py --python3lib" + item)
+            print("dls-release.py --python3lib -l " + item)
     else:
         print("All necessary dependencies are installed.")
