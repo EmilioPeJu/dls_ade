@@ -39,7 +39,7 @@ def pkgs_to_install(_package, _version):
     site_packages_location = os.path.join(prefix_location,
                                           'lib/' + python_version + '/site-packages')
     if not os.path.isdir(site_packages_location):
-        missing_pkgs.append(_package+' '+_version[2:])
+        missing_pkgs.append(_package.replace('-','_')+' '+_version[2:])
 
 def main():
 

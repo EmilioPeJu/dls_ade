@@ -43,21 +43,15 @@ export PATH=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin:$PATH
 
 # Copy dist (and lockfile if there is one) from work to prod folder
 install_dist=false
-for dist in $(ls $WORK_DIST_DIR); do
-    module="$(cut -d'-' -f1 <<<"$dist")"
-    version="$(cut -d'-' -f2 <<<"$dist")"
-    if [[ "$module" = "$_module" ]] && [[ "$version" = "$_version" ]]; then
-        cp $WORK_DIST_DIR/$dist $PROD_DIST_DIR/$dist
-        install_dist=true
-        if [[ -f $WORK_DIST_DIR/$module-$version.Pipfile.lock ]]; then
-            cp $WORK_DIST_DIR/$module-$version.Pipfile.lock $PROD_DIST_DIR/$module-$version.Pipfile.lock
-        fi
-    fi
+for dist in $(ls $WORK_DIST_DIR/$_module-$_version*); do
+    cp $dist $PROD_DIST_DIR
+    install_dist=true
 done
 
 
 # Installation of dependency
 if $install_dist; then
+    _module=${_module/_/-}
     prefix_location=$CENTRAL_LOCATION/$_module/$_version/prefix
     site_packages_location=$prefix_location/lib/$PYTHON_VERSION/site-packages
     specifier="$_module==$_version"
