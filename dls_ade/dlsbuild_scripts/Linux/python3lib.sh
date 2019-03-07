@@ -64,7 +64,7 @@ if $install_dist; then
 
     # Check if there is Pipfile.lock to create venv
     if [[ ! -d $site_packages_location ]]; then
-        pip install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
+        pip3 install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
         if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
             pipfilelock=$_module-$_version.Pipfile.lock
             cd $CENTRAL_LOCATION/$_module/$_version
