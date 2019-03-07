@@ -27,12 +27,12 @@
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
-#DLS_ADE_LOCATION=~/dls_ade
-DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
+DLS_ADE_LOCATION=~/RHEL7/dls_ade
+#DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/$PYTHON_VERSION/site-packages
 
-export TESTING_ROOT=~/testing-root
+export TESTING_ROOT=~/testing-root2
 #export TESTING_ROOT=/dls_sw/work/python3/test-root
 CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/$OS_VERSION
 WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
