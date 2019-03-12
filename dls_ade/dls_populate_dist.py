@@ -33,13 +33,19 @@ def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
 def pkgs_to_install(_package, _version):
+    missing_pkgs.append(_package.replace('-','_')+' '+_version[2:])
 
+
+def populate_dist(_package, _contents):
+    version = _contents['version']
+    specifier = _package + version  # example: flask==1.0.2
     prefix_location = os.path.join(CENTRAL_LOCATION, _package,
-                                       _version[2:], 'prefix')
+                                       version[2:], 'prefix')
     site_packages_location = os.path.join(prefix_location,
-                                          'lib/' + python_version + '/site-packages')
+                                       'lib/' + python_version + '/site-packages')
     if not os.path.isdir(site_packages_location):
-        missing_pkgs.append(_package.replace('-','_')+' '+_version[2:])
+        subprocess.check_call(PIP_COMMAND + [specifier])
+        pkgs_to_install(_package, version)
 
 def main():
 
@@ -50,10 +56,7 @@ def main():
     try:
         packages = parse_pipfilelock('Pipfile.lock')
         for package, contents in packages.items():
-            version = contents['version']
-            specifier = package + version  # example: flask==1.0.2
-            subprocess.check_call(PIP_COMMAND + [specifier])
-            pkgs_to_install(package, version)
+            populate_dist(package, contents)
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
