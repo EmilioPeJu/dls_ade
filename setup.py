@@ -73,8 +73,7 @@ setup(
                    'dls-start-new-module.py = dls_ade.dls_start_new_module:main',
                    'dls-tar-module.py = dls_ade.dls_tar_module:main',
                    'dls-pipfilelock-to-venv.py = dls_ade.dls_pipfilelock_to_venv:main',
-                   'dls-populate-dist.py = dls_ade.dls_populate_dist:main',
-                   'dls-install-packages.py = dls_ade.dls_install_packages:main']},
+                   'dls-populate-dist.py = dls_ade.dls_populate_dist:main']},
 
     include_package_data=True,
     tests_require=['nose', 'mock'],
