@@ -53,6 +53,7 @@ def make_parser():
     parser.add_module_name_arg()
     parser.add_release_arg()
     parser.add_epics_version_flag()
+    parser.add_rhel_version_flag()
 
     parser.add_argument(
         "-u", "--untar", action="store_true", dest="untar",
@@ -123,16 +124,18 @@ def _main():
 
     check_area_archivable(args.area)
     env.check_epics_version(args.epics_version)
+    env.check_rhel_version(args.rhel_version)
     check_technical_area(args.area, args.module_name)
     
     # Check for the existence of release of this module/IOC    
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)
     release_dir = os.path.join(w_dir, args.release)
     archive = release_dir + ".tar.gz"
+
     check_file_paths(release_dir, archive, args.untar)
     
     # Create build object for release
-    build = dlsbuild.ArchiveBuild(args.untar)
+    build = dlsbuild.ArchiveBuild(args.rhel_version, args.epics_version, args.untar)
     
     if args.epics_version:
         build.set_epics(args.epics_version)
