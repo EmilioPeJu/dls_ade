@@ -23,7 +23,6 @@
 
 
 # Testing section, this will need correcting for the final version.
-#PYTHON=~/python3/bin/python3
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
@@ -74,8 +73,8 @@ if $install_dist; then
             echo "No Pipfile.lock is present"
         fi
     else
-        echo "$_module-$_version is already installed in prod"
+        ReportFailure "$_module-$_version is already installed in prod"
     fi
 else
-    echo "No matching distribution was found for $_module-$_version"
+    ReportFailure "No matching distribution was found for $_module-$_version"
 fi
