@@ -48,16 +48,16 @@ def main():
 
     if not absent_pkg_list:
         
-        if not os.path.exists('venv'):
-            venv.create('venv', system_site_packages=True, clear=False,
+        if not os.path.exists('lightweight-venv'):
+            venv.create('lightweight-venv', system_site_packages=True, clear=False,
                                         symlinks=False, with_pip=False)
         else:
-            sys.exit('venv already present!')
-        paths_file = f'./venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
+            sys.exit('lightweight-venv already present!')
+        paths_file = f'./lightweight-venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
         with open(paths_file, 'w') as f:
             for path in path_list:
                 f.write(path + '\n')
-        print('venv with path.pth has been created successfully!')
+        print('lightweight-venv with dls-installed-packages.pth has been created successfully!')
     else:
         print('The following packages need to be installed:')
         print('\n'.join(absent_pkg_list))
