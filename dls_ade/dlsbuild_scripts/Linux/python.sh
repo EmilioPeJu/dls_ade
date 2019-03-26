@@ -52,33 +52,11 @@ mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 if [ ! -d $_version ]; then
-    SysLog info "Cloning repo: " $_git_dir
-    if $is_test ; then
-        git clone $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-    else
-        git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-    fi
-    SysLog info "checkout version tag: " $_version
-    if $is_test ; then
-        ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
-    else
-        ( cd $_version && ( git fetch --depth=1 origin tag $_version  ||  git fetch origin tag $_version ) && git checkout $_version ) || ReportFailure "Can not checkout $_version"
-    fi
+    CloneRepo
 elif [ "$_force" == "true" ] ; then
     SysLog info "Force: removing previous version: " ${PWD}/$_version
     rm -rf $_version                            || ReportFailure "Can not rm $_version"
-    SysLog info "Cloning repo: " $_git_dir
-    if $is_test ; then
-        git clone $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-    else
-        git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-    fi
-    SysLog info "checkout version tag: " $_version
-    if $is_test ; then
-        ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-    else
-        ( cd $_version && ( git fetch --depth=1 origin tag $_version  ||  git fetch origin tag $_version ) && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-    fi
+    CloneRepo
 elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi
