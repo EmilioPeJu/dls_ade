@@ -340,8 +340,9 @@ class Git(BaseVCS):
         self.repo = repo
         self._version = None
 
-        if self.parent is None:
+        if self.parent is None: # required for tar-module
             self._remote_repo = ""
+            self._remote_release_repo = ""
         else:
             server_repo_path = self.parent.dev_module_path(self._module,
                                                            self.area)

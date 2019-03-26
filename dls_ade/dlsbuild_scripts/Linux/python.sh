@@ -34,7 +34,7 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
+build_dir=${_build_dir}/${_module}
 PREFIX=${build_dir}/${_version}/prefix
 PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
 INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
