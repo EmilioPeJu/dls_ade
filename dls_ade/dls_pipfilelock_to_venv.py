@@ -20,6 +20,15 @@ OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
 path_list = []
 absent_pkg_list = []
+USAGE_MESSAGE = """Usage: {}
+
+Run without arguments from a folder that contains the standard Pipfile.lock
+or specify lockfile name eg package-version.Pipfile.lock
+"""
+
+
+def usage():
+    print(USAGE_MESSAGE.format(sys.argv[0]))
 
 
 def construct_pkg_path(_packages):
@@ -59,7 +68,11 @@ def main():
 
     pipfilelock = 'Pipfile.lock'
     if len(sys.argv) > 1:
-        pipfilelock = sys.argv[1]
+        if sys.argv[1] == '-h' or sys.argv[1] == '--help':
+            usage()
+            sys.exit(1)
+        else:
+            pipfilelock = sys.argv[1]
 
     try:
         packages = parse_pipfilelock(pipfilelock)
