@@ -54,8 +54,8 @@ cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 if [ ! -d $_version ]; then
     CloneRepo
 elif [ "$_force" == "true" ] ; then
-    SysLog info "Force: removing previous version: " ${PWD}/$_version
-    rm -rf $_version                            || ReportFailure "Can not rm $_version"
+    SysLog info "Force: removing previous version: ${PWD}/$_version"
+    rm -rf $_version || ReportFailure "Can not rm $_version"
     CloneRepo
 elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
