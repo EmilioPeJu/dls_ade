@@ -14,7 +14,6 @@ from dls_ade.dls_utilities import parse_pipfilelock
 
 
 os_version = default_server().replace('redhat', 'RHEL')
-python_version = "python{}.{}".format(sys.version_info[0],sys.version_info[1])
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
 WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
@@ -41,9 +40,8 @@ def populate_dist(_package, _contents):
     specifier = _package + version  # example: flask==1.0.2
     prefix_location = os.path.join(CENTRAL_LOCATION, _package,
                                        version[2:], 'prefix')
-    site_packages_location = os.path.join(prefix_location,
-                                       'lib/' + python_version + '/site-packages')
-    if not os.path.isdir(site_packages_location):
+
+    if not os.path.isdir(prefix_location):
         subprocess.check_call(PIP_COMMAND + [specifier])
         pkgs_to_install(_package, version)
 
