@@ -106,5 +106,3 @@ if [[ -e Pipfile.lock ]]; then
 else
     $PYTHON setup.py install --prefix=prefix
 fi
-
-echo "Script finished."
