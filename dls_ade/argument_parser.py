@@ -27,10 +27,10 @@ class ArgParser(ArgumentParser):
             "-i", "--ioc", action="store_true", dest="ioc",
             help="Set 'ioc' area")
         area.add_argument(
-            "-3", "--python3", action="store_true", dest="python3",
+            "--python3", action="store_true", dest="python3",
             help="Set 'python3' area")
         area.add_argument(
-            "-3l", "--python3lib", action="store_true", dest="python3lib",
+            "--python3lib", action="store_true", dest="python3lib",
             help="Set 'python3lib' area")
 
     def parse_args(self, args=None, namespace=None):
