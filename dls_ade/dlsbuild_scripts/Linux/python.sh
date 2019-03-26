@@ -34,23 +34,11 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-case "$OS_VERSION" in
-    [45])
-        build_dir=${_build_dir}/${_module}
-        PREFIX=/dls_sw/prod/tools/RHEL$OS_VERSION
-        PYTHON=${PREFIX}/bin/python2.6
-        INSTALL_DIR=${PREFIX}/lib/python2.6/site-packages
-        ;;
-    [67])
-        build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
-        PREFIX=${build_dir}/${_version}/prefix
-        PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
-        INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
-        TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
-        ;;
-       *)
-        ReportFailure "OS Version ${OS_VERSION} not handled"
-esac
+build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
+PREFIX=${build_dir}/${_version}/prefix
+PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
+INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
+TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
 
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
 
@@ -98,19 +86,7 @@ fi
 cd $_version || ReportFailure "Can not cd to $_version"
 
 
-# Add Makefile.private
-case "$OS_VERSION" in
-    4)
-        # Modify setup.py
-        mv setup.py setup.py.vcs || ReportFailure "Can not move setup.py to setup.py.vcs"
-        cat <<EOF > setup.py
-# The following line was added by the release script
-version = $(echo ${_version} | sed 's/-/./g')
-EOF
-        cat setup.py.vcs >> setup.py || ReportFailure "Can not edit setup.py"
-        ;;
-    *)
-        cat <<EOF > Makefile.private || ReportFailure "Cannot write to Makefile.private"
+cat <<EOF > Makefile.private || ReportFailure "Cannot write to Makefile.private"
 # Overrides for release info
 PREFIX = ${PREFIX}
 PYTHON=${PYTHON}
@@ -118,7 +94,6 @@ INSTALL_DIR=${INSTALL_DIR}
 SCRIPT_DIR=${PREFIX}/bin
 MODULEVER = $(echo ${_version} | sed 's/-/./g')
 EOF
-esac
 
 # Build
 error_log=${_build_name}.err
