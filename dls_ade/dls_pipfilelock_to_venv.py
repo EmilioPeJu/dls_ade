@@ -1,4 +1,4 @@
-"""Read Pipfile.lock and create a virtualenv including paths.pth
+"""Read Pipfile.lock and create a virtualenv including a path file
 
 If all required packages are not installed, the virtualenv cannot be
 correctly created, so report an error and quit.
@@ -53,7 +53,7 @@ def main():
                                         symlinks=False, with_pip=False)
         else:
             sys.exit('venv already present!')
-        paths_file = f'./venv/lib/{PYTHON_VERSION}/site-packages/paths.pth'
+        paths_file = f'./venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
         with open(paths_file, 'w') as f:
             for path in path_list:
                 f.write(path + '\n')
