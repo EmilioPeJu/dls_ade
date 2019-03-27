@@ -39,7 +39,8 @@ export PATH=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin:$PATH
 
 # Copy dist (and lockfile if there is one) from work to prod folder
 install_dist=false
-for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname $_module-$_version*); do
+
+for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$_module-$_version*"); do
     cp $dist $PROD_DIST_DIR
     install_dist=true
 done
@@ -62,7 +63,7 @@ if $install_dist; then
             $PFL_TO_VENV $pipfilelock || ReportFailure "Dependencies not installed."
             # Change header to the correct venv
             shebang='#!'
-            new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/venv/bin/python"
+            new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/lightweight-venv/bin/python"
             for script in $(ls $prefix_location/bin); do
                 sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
             done
