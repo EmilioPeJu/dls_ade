@@ -78,8 +78,8 @@ export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
 # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
     $PFL_TO_VENV || ReportFailure "Dependencies not installed."
-    echo $SITE_PACKAGES >> $(pwd)/venv/lib/$PYTHON_VERSION/site-packages/paths.pth
-    source venv/bin/activate
+    echo $SITE_PACKAGES >> $(pwd)/lightweight-venv/lib/$PYTHON_VERSION/site-packages/dls-installed-packages.pth
+    source lightweight-venv/bin/activate
     # Use the python from the virtualenv
     python setup.py install --prefix=prefix
 else
