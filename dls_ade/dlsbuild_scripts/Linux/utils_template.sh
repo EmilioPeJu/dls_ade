@@ -75,3 +75,18 @@ ReportFailure()
     exit 2
 }
 
+CloneRepo()
+{
+    SysLog info "Cloning repo: $_git_dir"
+    if $is_test ; then
+        git clone $_git_dir $_version || ReportFailure "Can not clone $_git_dir"
+    else
+        git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone $_git_dir"
+    fi
+    SysLog info "Checking out tag: $_version"
+    if $is_test ; then
+        ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+    else
+        ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version ) || ReportFailure "Can not checkout $_version"
+    fi
+}
