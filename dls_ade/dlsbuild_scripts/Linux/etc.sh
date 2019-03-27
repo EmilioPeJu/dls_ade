@@ -13,7 +13,7 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _git_dir   : The gitolite URL where the module is located.
+#   _git_dir   : The Git URL to clone
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area

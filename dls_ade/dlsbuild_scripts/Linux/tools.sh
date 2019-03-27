@@ -13,8 +13,7 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir or _git_dir    : The directory in subversion where the module is
-#                             located.
+#   _git_dir   : The Git URL to clone
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -40,7 +39,7 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 
 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
 TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
-build_dir=$_build_dir/RHEL$OS_VERSION-$(uname -m)
+build_dir=$_build_dir
 
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
@@ -59,18 +58,7 @@ if [ "$_force" == "true" ]; then
 fi
 
 if [ ! -d $_version ]; then
-    SysLog info "Cloning repo: " $_git_dir
-    if $is_test ; then
-        git clone $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
-    else
-        git clone --depth=100 $_git_dir $_version || ReportFailure "Can not clone  $_git_dir"
-    fi
-    SysLog info "Checking out version tag: " $_version
-    if $is_test ; then
-        ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
-    else
-        ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-    fi
+    CloneRepo
 elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0)) ; then
     ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi

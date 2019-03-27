@@ -19,6 +19,7 @@
 import logging
 import os
 import re
+import platform
 from subprocess import Popen, PIPE, STDOUT
 try:
     from ConfigParser import SafeConfigParser
@@ -27,41 +28,54 @@ except ImportError:  # Python 3
 
 log = logging.getLogger(__name__)
 
+
 class environment(object):
     """
     A class representing the epics environment of a site.
 
-    If you modify this to suit your site environment, you will be able to use any of the dls modules without
-    modification. This module has the idea of areas. An area is simply an  argument that can be passed to devArea
-    or prodArea. support and ioc must exist to use modules like the  dependency checker, others may be added. For
-    example the dls support devArea contains all support modules, and is located at ``/dls_sw/work/R3.14.12.3/support``.
-    This is the area for testing modules. There is a similar prodArea at ``/dls_sw/prod/R3.14.12.3/support`` for
-    releases. These are then used to locate the root of a particular module.
+    If you modify this to suit your site environment, you will be able to use
+    any of the dls modules without modification. This module has the idea of
+    areas. An area is simply an  argument that can be passed to devArea or
+    prodArea. support and ioc must exist to use modules like the dependency
+    checker, others may be added. For example the dls support devArea contains
+    all support modules, and is located at ``/dls_sw/work/R3.14.12.3/support``.
+    This is the area for testing modules. There is a similar prodArea at
+    ``/dls_sw/prod/R3.14.12.3/support`` for releases. These are then used to
+    locate the root of a particular module.
 
     Variables
         * epics(str): the version of epics - e.g R3.14.12.3
-        * epics_ver_re(:class:`re.RegexObject`): a useful regex for matching the version of epics
+        * epics_ver_re(:class:`re.RegexObject`): a useful regex for matching
+          the version of epics
         * areas(list): the areas that can be passed to devArea() or prodArea()
+        * rhel(str): the rhel version e.g. 7
 
     """
 
-    def __init__(self, epics=None):
+    def __init__(self, epics=None, rhel=None):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
-        self.areas = ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
+        self.rhel = None
+        self.areas = \
+            ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
         if epics:
             self.setEpics(epics)
+        if rhel:
+            self.setRhel(rhel)
 
     def check_epics_version(self, epics_version):
         """
-        Checks if epics version is provided. If it is, checks that it starts with 'R' and if not appends an 'R'.
-        Then checks if the epics version matches the reg ex. Then sets environment epics version.
+        Checks if epics version is provided. If it is, checks that it starts
+        with 'R' and if not appends an 'R'.
+        Then checks if the epics version matches the reg ex.
+        Then sets environment epics version.
 
         Args:
             epics_version(str): Epics version to check
 
         Raises:
-            :class:`exception.Exception`: Expected epics version like R3.14.8.2, got <epics_version>
+            :class:`exception.Exception`: Expected epics version
+            like R3.14.8.2, got <epics_version>
 
         """
         if epics_version:
@@ -70,23 +84,56 @@ class environment(object):
             if self.epics_ver_re.match(epics_version):
                 self.setEpics(epics_version)
             else:
-                raise Exception("Expected epics version like R3.14.8.2, got: " + epics_version)
+                raise Exception("Expected epics version like R3.14.8.2, got: "
+                                + epics_version)
+
+    def check_rhel_version(self, rhel):
+        """
+        Checks if rhel version is provided.
+        Then sets environment rhel version.
+
+        Args:
+            rhel(str): rhel
+
+        """
+        if rhel:
+            self.setRhel(rhel)
 
     def setEpicsFromEnv(self):
         """
-        Get epics version from the environment, and set self.epics. Set default 'R3.14.12.3' if environment
-        epics version is inaccessible.
+        Get epics version from the environment, and set self.epics. Set default
+        'R3.14.12.3' if environment epics version is inaccessible.
 
         """
         default_epics = 'R3.14.12.3'
-        self.epics = os.environ.get('DLS_EPICS_RELEASE', os.environ.get('EPICS_RELEASE', default_epics))
+        self.epics = os.environ.get('DLS_EPICS_RELEASE',
+                                    os.environ.get('EPICS_RELEASE',
+                                                   default_epics))
+
+    def setRhelFromPlatform(self):
+        """
+        Get rhel version from the platform, and set self.rhel.
+        Set default '6' if platform
+        version access fails.
+
+        """
+        default_rhel = '6'
+
+        self.rhel = default_rhel
+
+        platform_dist = platform.dist()
+        if len(platform_dist) == 3:
+            version = platform_dist[1].split(".")
+            if len(version) > 0:
+                self.rhel = platform.dist()[1].split('.')[0]
 
     def copy(self):
         """
         Return a copy of self.
 
         Returns:
-            :class:`~dls_ade.dls_environment.environment`: A copy of the environment instance
+            :class:`~dls_ade.dls_environment.environment`:
+             A copy of the environment instance
 
         """
         return environment(self.epicsVer())
@@ -99,6 +146,15 @@ class environment(object):
             epics(str): EPICS version
         """
         self.epics = epics
+
+    def setRhel(self, rhel):
+        """
+        Force the version of rhel in self.
+
+        Args:
+            rhel(str): rhel linux version
+        """
+        self.rhel = rhel
 
     def epicsDir(self):
         """
@@ -117,7 +173,8 @@ class environment(object):
 
     def epicsVer(self):
         """
-        Return the version of epics from self. If it not set, try and get it from the environment.
+        Return the version of epics from self. If it not set, try and get it
+        from the environment.
         This may have a _64 suffix for 64 bit architectures.
 
         Returns:
@@ -128,9 +185,23 @@ class environment(object):
             self.setEpicsFromEnv()
         return self.epics
 
+    def rhelVer(self):
+        """
+        Return the version of rhel from self. If it not set, try and get it
+        from the platform.
+
+        Returns:
+            str: Rhel version
+
+        """
+        if not self.rhel:
+            self.setRhelFromPlatform()
+        return self.rhel
+
     def epicsVerDir(self):
         """
-        Return the directory version of epics from self. If it not set, try and get it from the environment.
+        Return the directory version of epics from self. If it not set, try and
+        get it from the environment.
         This will not have a _64 suffix for 64 bit architectures.
 
         Returns:
@@ -141,29 +212,51 @@ class environment(object):
             self.setEpicsFromEnv()
         return self.epics.split("_")[0]
 
+    def rhelVerDir(self):
+        """
+        Return the distribution directory from self. If it not set, return a
+        default.
+
+        Returns:
+            str: Distribution directory
+
+        """
+        if not self.rhel:
+            self.setRhelFromPlatform()
+        return "RHEL"+self.rhel+"-x86_64"
+
     def devArea(self, area="support"):
         """
-        Return the development directory for a particular area and epics version.
+        Return the development directory for a particular area and epics
+        version.
 
         Args:
             area(str): Area to generate path for
 
         Returns:
             str:
-                * `epicsVer` < R3.14 and `area` is support/ioc: /home/diamond/<EpicsVerDir>/work/<area>
-                * `epicsVer` < R3.14 and `area` is epics/etc/tools: /home/work/<area>
-                * `epicsVer` < R3.14 and `area` is matlab/python: /home/diamond/common/work/<area>
-                * `epicsVer` > R3.14 and `area` is support/ioc: /dls_sw/work/<EpicsVerDir>/<area>
-                * `epicsVer` > R3.14 and `area` is epics/etc/tools: /dls_sw/work/<area>
-                * `epicsVer` > R3.14 and `area` is matlab/python: /dls_sw/work/common/<area>
+                * `epicsVer` < R3.14 and `area` is
+                   support/ioc: /home/diamond/<EpicsVerDir>/work/<area>
+                * `epicsVer` < R3.14 and `area` is
+                   epics/etc/tools: /home/work/<area>
+                * `epicsVer` < R3.14 and `area` is matlab/python:
+                   /home/diamond/common/work/<area>
+                * `epicsVer` > R3.14 and `area` is support/ioc:
+                   /dls_sw/work/<EpicsVerDir>/<area>
+                * `epicsVer` > R3.14 and `area` is epics/etc/tools:
+                   /dls_sw/work/<area>
+                * `epicsVer` > R3.14 and `area` is matlab/python:
+                   /dls_sw/work/common/<area>
 
         """
         if area not in self.areas:
-            raise Exception("Only the following areas are supported: " + ", ".join(self.areas))
+            raise Exception("Only the following areas are supported: " +
+                            ", ".join(self.areas))
 
         if self.epicsVer() < "R3.14":
             if area in ["support", "ioc"]:
-                return os.path.join("/home", "diamond", self.epicsVerDir(), "work", area)
+                return os.path.join("/home", "diamond", self.epicsVerDir(),
+                                    "work", area)
             elif area in ["epics", "etc", "tools"]:
                 return os.path.join("/home", "work", area)
             else:
@@ -172,10 +265,15 @@ class environment(object):
         else:
             if area in ["support", "ioc"]:
                 return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
-            elif area in ["epics", "etc", "tools"]:
+            elif area in ["epics", "etc"]:
                 return os.path.join("/dls_sw", "work", area)
+            elif area in ["tools"]:
+                return os.path.join("/dls_sw", "work", area, self.rhelVerDir())
+            elif area in ["python"]:
+                return os.path.join("/dls_sw", "work", "common", area,
+                                    self.rhelVerDir())
             else:
-                # matlab or python
+                # matlab
                 return os.path.join("/dls_sw", "work", "common", area)
 
     def prodArea(self, area="support"):
@@ -188,7 +286,8 @@ class environment(object):
         Returns:
             str:
             * `area` is epics: /dls_sw/<area>
-            * Else: devArea(`area`) path with 'work' replaced by 'prod' - see devArea() doc string
+            * Else: devArea(`area`) path with 'work' replaced by 'prod' -
+              see devArea() doc string
 
         """
         if area in ["epics"]:
@@ -269,7 +368,8 @@ class environment(object):
         """
         Find the name that the module is under in svn. Very dls specific.
         """
-        output = Popen(["svn", "info", path], stdout=PIPE, stderr=STDOUT).communicate()[0]
+        output = Popen(["svn", "info", path],
+                       stdout=PIPE, stderr=STDOUT).communicate()[0]
         for line in output.splitlines():
             if line.startswith("URL:"):
                 split = line.split("/")
@@ -286,13 +386,15 @@ class environment(object):
 
     def classifyArea(self, path):
         """
-        Classify the area of a path, returning (area, work/prod/invalid, epicsVer).
+        Classify the area of a path, returning
+        (area, work/prod/invalid, epicsVer).
         
         Args:
             path(str): Path to a module or area
 
         Returns:
-            tuple: A tuple of <area>, <epics version> where <area> can be "work", "prod", or "invalid"
+            tuple: A tuple of <area>, <epics version> where <area> can be
+            "work", "prod", or "invalid"
 
         """
         for a in self.areas:
@@ -300,8 +402,7 @@ class environment(object):
                 return a, "work", self.epicsVer()
             elif path.startswith(self.prodArea(a)):
                 return a, "prod", self.epicsVer()
-            elif a in path:
-                area = a
+
         # not found, so strip epicsVer out and try again
         match = self.epics_ver_re.search(path)
         if match and match.group() != self.epicsVer():
@@ -328,10 +429,10 @@ class environment(object):
 
         """
         # classify the area
-        area, domain, epicsVer = self.classifyArea(path)
+        area, domain, epics_ver = self.classifyArea(path)
         e = self
-        if epicsVer != self.epicsVer:
-            e = self.__class__(epicsVer)
+        if epics_ver != self.epicsVer:
+            e = self.__class__(epics_ver)
         if os.path.isfile(os.path.join(path, "etc", "module.ini")):
             # try and find name from etc/module.ini
             module = self.getNameFromIni(
@@ -350,8 +451,10 @@ class environment(object):
             root = e.prodArea(area)
         else:
             root = ""
-        assert path.startswith(root), "'%s' should start with '%s'" % (path, root)
-        sections = os.path.normpath(path[len(root):]).strip(os.sep).split(os.sep)
+        assert path.startswith(root), \
+            "'%s' should start with '%s'" % (path, root)
+        sections = os.path.normpath(path[len(root):]).strip(os.sep).\
+            split(os.sep)
 
         # strip off a prefix suffix
         if sections[-1] == "prefix" and area in ["python", "tools"]:
@@ -359,18 +462,18 @@ class environment(object):
 
         # check they are the right length
         if domain == "work":        
-            if len(sections) == 1 or area in ["ioc", "tools", "python"] and len(sections) == 2:
+            if len(sections) == 1 or area in ["ioc", "tools", "python"] and \
+                    len(sections) == 2:
                 version = "work"
             else:
                 version = "invalid"
         elif domain == "prod":
-            if len(sections) == 2 or area in ["ioc", "tools", "python"] and len(sections) == 3:
+            if len(sections) == 2 or area in ["ioc", "tools", "python"] and \
+                    len(sections) == 3:
                 version = sections[-1]
                 module = os.sep.join(sections[:-1])
                 if area in ["tools", "python"]:
                     module = sections[-2]
-                else:
-                    module = os.sep.join(sections[:-1])
             else:
                 version = "invalid"
                 sections = sections[:-1]

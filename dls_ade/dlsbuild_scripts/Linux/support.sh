@@ -13,8 +13,7 @@
 #   _epics     : The DLS_EPICS_RELEASE to use
 #   _build_dir : The parent directory in the file system in which to build the
 #                module. This does not include module or version directories.
-#   _svn_dir or _git_dir  : The directory in the VCS repo where the module is
-#                           located.
+#   _git_dir   : The Git URL to clone
 #   _module    : The module name
 #   _version   : The module version
 #   _area      : The build area
@@ -41,49 +40,15 @@ fi
 
 SysLog debug "version dir: " ${PWD}/$_version
 
-if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
-    if [ ! -d $_version ]; then
-        SysLog info "Cloning repo: " $_git_dir
-        if $is_test ; then
-            git clone $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-        else
-            git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-        fi
-        SysLog info "checkout: " $_version
-        if $is_test ; then
-            ( cd $_version && git checkout $_version ) || ReportFailure "Can not checkout $_version"
-        else
-            ( cd $_version &&  ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version )  && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-        fi
-    elif [ "$_force" == "true" ] ; then
-        SysLog info "Force: removing previous version: " ${PWD}/$_version
-        rm -rf $_version                            || ReportFailure "Can not rm $_version"
-        SysLog info "Cloning repo: " $_git_dir
-        if $is_test ; then
-            git clone $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-        else
-            git clone --depth=100 $_git_dir $_version   || ReportFailure "Can not clone  $_git_dir"
-        fi
-        SysLog info "checkout version tag: " $_version
-        if $is_test ; then
-            ( cd $_version && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-        else
-            ( cd $_version && ( git fetch --depth=1 origin tag $_version || git fetch origin tag $_version ) && git checkout $_version )  || ReportFailure "Can not checkout $_version"
-        fi
-    elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0 )) ; then
-        ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
-    fi
-elif [[ "${_git_dir:-undefined}" == "undefined" ]] ; then
-    if [ ! -d $_version ]; then
-        svn checkout -q $_svn_dir $_version || ReportFailure "Can not check out  $_svn_dir"
-    elif [ "$_force" == "true" ] ; then
-        rm -rf $_version                    || ReportFailure "Can not rm $_version"
-        svn checkout -q $_svn_dir $_version || ReportFailure "Can not check out  $_svn_dir"
-    elif (( $(svn status -qu $_version | grep -Ev "^M.*configure/RELEASE$" | wc -l) != 1 )) ; then
-        ReportFailure "Directory $build_dir/$_version not up to date with $_svn_dir"
-    fi
-else 
-    ReportFailure "both _git_dir and _svn_dir are defined; unclear which to use"
+
+if [ ! -d $_version ]; then
+    CloneRepo
+elif [ "$_force" == "true" ] ; then
+    SysLog info "Force: removing previous version: ${PWD}/$_version"
+    rm -rf $_version || ReportFailure "Can not rm $_version"
+    CloneRepo
+elif (( $(git status -uno --porcelain | grep -Ev "M.*configure/RELEASE$" | wc -l) != 0 )) ; then
+    ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
 fi
 
 cd $_version || ReportFailure "Can not cd to $_version"
@@ -91,16 +56,7 @@ if [ ! -f configure/RELEASE.vcs ] ; then
     cp configure/RELEASE configure/RELEASE.vcs
 fi
 
-if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
-    git cat-file -p HEAD:configure/RELEASE > configure/RELEASE.vcs
-else
-    # Write some history (Kludging a definition of SVN_ROOT)
-    SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls \
-      dls-logs-since-release.py -r --area=$_area $_module > DEVHISTORY.autogen
-
-    # Modify configure/RELEASE
-    svn cat configure/RELEASE > configure/RELEASE.vcs
-fi
+git cat-file -p HEAD:configure/RELEASE > configure/RELEASE.vcs
 
 rm configure/RELEASE
 
@@ -115,11 +71,7 @@ EOF
 cp configure/RELEASE.${EPICS_HOST_ARCH} configure/RELEASE.${EPICS_HOST_ARCH}.Common
 SysLog debug "Wrote configure/RELEASE.${EPICS_HOST_ARCH}[.Common]: " $(cat configure/RELEASE.${EPICS_HOST_ARCH})
 
-if [[ "${_svn_dir:-undefined}" == "undefined" ]] ; then
-    git ls-files configure/VERSION --error-unmatch 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
-else
-    svn ls configure/VERSION 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
-fi
+git ls-files configure/VERSION --error-unmatch 1>&/dev/null && ReportFailure "configure/VERSION must not be in version control"
 mkdir -p configure
 echo $_version > configure/VERSION
 

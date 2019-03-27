@@ -19,9 +19,9 @@ class MakeParserTest(unittest.TestCase):
         parser_mock.assert_called_once_with()
 
     def test_earlier_argument_has_correct_attributes(self):
-        arguments = self.parser._positionals._actions[5]
-        self.assertEqual(arguments.type, str)
-        self.assertEqual(arguments.dest, 'releases')
+        args = self.parser.parse_args("module1 -e 0-1".split())
+        self.assertEqual(args.module_name, "module1")
+        self.assertEqual(args.earlier_release, "0-1")
 
     def test_verbose_argument_has_correct_attributes(self):
         option = self.parser._option_string_actions['-v']

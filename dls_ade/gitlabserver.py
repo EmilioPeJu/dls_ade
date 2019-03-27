@@ -20,7 +20,11 @@ USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
 GITLAB_DEFAULT_PROJECT_ATTRIBUTES = {
     "visibility": "public",
     "issues_enabled": False,
-    "wiki_enabled": False
+    "wiki_enabled": False,
+    "snippets_enabled": False,
+    # This setting enables Gitlab CI. We may want to turn this on but
+    # can do so per-repository when setting up CI.
+    "jobs_enabled": False
 }
 
 GITLAB_DEFAULT_GROUP_ATTRIBUTES = {

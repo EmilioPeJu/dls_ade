@@ -134,6 +134,8 @@ class GitServer(object):
         # Module is everything after area
         module = dls_util.remove_git_at_end(source.split('/', 2)[-1])
 
+        module = remove_git_at_end(module)
+
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),

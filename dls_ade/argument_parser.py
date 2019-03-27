@@ -118,3 +118,16 @@ class ArgParser(ArgumentParser):
         """
         self.add_argument("-e", "--epics_version", action="store", type=str, dest="epics_version",
                           default=env.epicsVer(), help=help_msg)
+
+    def add_rhel_version_flag(self, help_msg="Change the rhel version, "
+                                             "default is from /etc/redhat-release "
+                                             "(can be 6 or 7)"):
+        """
+        Add rhel version flag argument with module specific help message.
+
+        Args:
+            help_msg(str): Help message relevant to module calling function
+
+        """
+        self.add_argument("-r", "--rhel_version", action="store", type=str, dest="rhel_version",
+                          default=env.rhelVer(), help=help_msg)
