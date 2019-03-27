@@ -9,6 +9,7 @@ This module must be run with the deployed version of Python 3.
 import os.path
 import sys
 import venv
+import shutil
 from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock
 
@@ -20,6 +21,7 @@ OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
 path_list = []
 absent_pkg_list = []
+force = False
 USAGE_MESSAGE = """Usage: {}
 
 Run without arguments from a folder that contains the standard Pipfile.lock
@@ -52,6 +54,10 @@ def create_venv():
         if not os.path.exists('lightweight-venv'):
             venv.create('lightweight-venv', system_site_packages=True, clear=False,
                         symlinks=False, with_pip=False)
+        elif os.path.exists('lightweight-venv') and force:
+            shutil.rmtree('lightweight-venv')
+            venv.create('lightweight-venv', system_site_packages=True, clear=False,
+                        symlinks=False, with_pip=False)
         else:
             sys.exit('lightweight-venv already present!')
         paths_file = f'./lightweight-venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
@@ -65,12 +71,14 @@ def create_venv():
         sys.exit(1)
 
 def main():
-
     pipfilelock = 'Pipfile.lock'
     if len(sys.argv) > 1:
         if sys.argv[1] == '-h' or sys.argv[1] == '--help':
             usage()
             sys.exit(1)
+        elif sys.argv[1]  == '-f' or sys.argv[1] == '--force':
+            global force
+            force = True
         else:
             pipfilelock = sys.argv[1]
 
