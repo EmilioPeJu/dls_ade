@@ -222,13 +222,12 @@ def format_argument_version(arg_version):
     return arg_version.replace(".", "-")
 
 
-def next_version_number(releases, module=None):
+def next_version_number(releases):
     """
     Generates appropriate version number for an incremental release
 
     Args:
         releases(list of str): Previous release numbers
-        module(str): Name of module
 
     Returns:
         str: Incremented version number
@@ -239,9 +238,6 @@ def next_version_number(releases, module=None):
     else:
         last_release = get_last_release(releases)
         version = increment_version_number(last_release)
-        if module:
-            logging.getLogger(name="usermessages").info("Last release for {module} was {last_release}"
-                                                        .format(module=module, last_release=last_release))
     return version
 
 
@@ -403,6 +399,63 @@ def perform_test_build(build_object, local_build, module, version, vcs):
     return message, test_fail
 
 
+def determine_version_to_release(release, next_version, releases, commit=None):
+    usermsg = logging.getLogger(name="usermessages")
+    commit_specified = commit is not None
+    release_specified = release is not None
+
+    if not release_specified:
+        usermsg.info("No release specified; able to test build at {} only.". \
+                     format(commit))
+
+    if next_version:  # Release = next version
+        version = next_version_number(releases)
+        commit = "HEAD"
+        commit_specified = True
+        release_specified = True
+    elif not release_specified:  # Release = @ commit, not of release
+        version = commit
+    else:  # Release of version; check validity of version
+        release = release
+        version = release
+        release_is_valid = check_tag_is_valid(release)
+        release_exists = release in releases
+        # Commit in repository specified
+        if not commit_specified:
+            # Release must already exist to release without a commit
+            if not release_exists:
+                raise ValueError("Aborting: release {} not found and commit "
+                              "not specified.".format(release))
+            # Warn if existing release is of incorrect form
+            else:
+                usermsg.info("Releasing existing release {}.".format(release))
+                if not release_is_valid:
+                    usermsg.warning("Warning: release {} does not conform to "
+                                    "convention.".format(release))
+                    version = format_argument_version(release)
+                    if '.' in release:
+                        usermsg.warning("Release {} contains \'.\' which will"
+                                        " be replaced by \'-\' to: \'{}\'"
+                                        .format(release, version))
+        # No commit reference specified
+        else:
+            # Release must not be in use already
+            if release_exists:
+                raise ValueError(
+                    "Aborting: release {} already exists.".format(release)
+                )
+            # Specified release must be of correct form
+            if not release_is_valid:
+                raise ValueError(
+                    "Aborting: invalid release {}.".format(release)
+                )
+            usermsg.info("Releasing new release {rel} from {comm}.". \
+                         format(rel=release, comm=commit))
+
+    commit_to_release = commit if commit_specified and release_specified else None
+    return version, commit_to_release
+
+
 def _main():
 
     log = logging.getLogger(name="dls_ade")
@@ -420,85 +473,24 @@ def _main():
 
     if args.area == "python3lib":
         vcs = None
-        release = args.release
+        version = args.release
     else:
         server = Server()
         source = server.dev_module_path(module, args.area)
         vcs = server.temp_clone(source)
-        if args.branch:
-            vcs.set_branch(args.branch)
-
-        releases = vcs.list_releases()
-
-        commit = args.commit
-        release = args.release
-        commit_specified = args.commit is not None
-        release_specified = args.release is not None
-
-        if not release_specified:
-            usermsg.info("No release specified; able to test build at {} only.".\
-                         format(commit))
-
-        if args.next_version:  # Release = next version
-            version = next_version_number(releases, module=module)
-            release = version
-            commit = "HEAD"
-            commit_specified = True
-            release_specified = True
-        elif not release_specified:  # Release = @ commit, not of release
-            version = commit
-        else:  # Release of version; check validity of version
-            release = args.release
-            version = release
-            release_is_valid = check_tag_is_valid(release)
-            release_exists = release in releases
-            # Commit in repository specified
-            if not commit_specified:
-                # Release must already exist to release without a commit
-                if not release_exists:
-                    usermsg.error("Aborting: release {} not found and commit "
-                                  "not specified.".format(release))
-                    sys.exit(1)
-                # Warn if existing release is of incorrect form
-                else:
-                    usermsg.info("Releasing existing release {}.".format(release))
-                    if not release_is_valid:
-                        usermsg.warning("Warning: release {} does not conform to "
-                                        "convention.".format(release))
-                        version = format_argument_version(release)
-                        if '.' in release:
-                            usermsg.warning("Release {} contains \'.\' which will"
-                                            " be replaced by \'-\' to: \'{}\'"
-                                            .format(release, version))
-            # No commit reference specified
-            else:
-                # Release must not be in use already
-                if release_exists:
-                    usermsg.error("Aborting: release {} already exists.".\
-                                  format(release))
-                    sys.exit(1)
-                # Specified release must be of correct form
-                else:
-                    if not release_is_valid:
-                        usermsg.error("Aborting: invalid release {}.".\
-                                      format(release))
-                        sys.exit(1)
-                usermsg.info("Releasing new release {rel} from {comm}.".\
-                             format(rel=release, comm=commit))
-
-        if commit_specified and release_specified:  # Make Release if repo required
-            try:
-                usermsg.info("Making tag {ver} at {comm}".\
-                             format(ver=version, comm=commit))
-                vcs.create_new_tag_and_push(release, commit, args.message)
-            except VCSGitError as err:
-                log.exception(err)
-                usermsg.error("Aborting: {msg}".format(msg=err))
-                sys.exit(1)
-
         try:
+            if args.branch:
+                vcs.set_branch(args.branch)
+
+            releases = vcs.list_releases()
+            version, commit_to_tag = determine_version_to_release(
+                args.release, args.next_version, releases, args.commit
+            )
+            if commit_to_tag is not None:  # Make Release if repo required
+                usermsg.info("Making tag {} at {}".format(version, commit_to_tag))
+                vcs.create_new_tag_and_push(version, commit_to_tag, args.message)
             vcs.set_version(version)
-        except VCSGitError as err:
+        except (VCSGitError, ValueError) as err:
             log.exception(err)
             usermsg.error("Aborting: {msg}".format(msg=err))
             sys.exit(1)
@@ -514,7 +506,7 @@ def _main():
 
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build, args.local_build, module, release, vcs)
+            build, args.local_build, module, version, vcs)
         usermsg.info(test_build_message)
         if test_build_fail:
             usermsg.error("Aborting: local test build failed")
@@ -531,7 +523,7 @@ def _main():
                                         build))
     usermsg.info(msg_create_build_job)
 
-    build.submit(module, release, vcs, test=args.test_only)
+    build.submit(module, version, vcs, test=args.test_only)
     usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} "\
                  "submitted to build server queue".format(
         build_job=msg_build_job,
