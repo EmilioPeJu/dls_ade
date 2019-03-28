@@ -1,5 +1,6 @@
 #!/bin/env dls-python
 
+import mock
 import unittest
 from dls_ade import dls_release
 
@@ -747,6 +748,74 @@ class TestPerformTestBuild(unittest.TestCase):
         self.assertEqual(test_message, expected_message)
 
 
+class TestDetermineReleaseOrCommit(unittest.TestCase):
+
+    def setUp(self):
+        self.release = '0-1'
+        self.releases = ['0-1']
+
+    def test_determine_version_to_release_allows_invalid_version_name(self):
+        # A warning is printed but the release continues.
+        dls_release.determine_version_to_release(
+            'invalid-release',
+            False,
+            ['invalid-release']
+        )
+
+    def test_determine_version_to_release_rejects_invalid_version_name_if_commit_specified(self):
+        with self.assertRaises(ValueError):
+            dls_release.determine_version_to_release(
+                'invalid-release',
+                False,
+                self.releases,
+                commit='abcdef'
+            )
+
+    def test_determine_version_to_release_raises_ValueError_if_release_not_in_releases(self):
+        with self.assertRaises(ValueError):
+            dls_release.determine_version_to_release(
+                self.release,
+                False,
+                []
+            )
+    def test_determine_version_to_release_raises_ValueError_if_commit_specified_but_tag_exists(self):
+        with self.assertRaises(ValueError):
+            dls_release.determine_version_to_release(
+                self.release,
+                False,
+                self.releases,
+                commit='abcdef'
+            )
+
+    def test_determine_version_to_release_returns_release_and_None_if_no_commit_specified(self):
+        version, commit_to_release = dls_release.determine_version_to_release(
+            self.release,
+            False,
+            self.releases
+        )
+        self.assertEqual(version, '0-1')
+        self.assertEqual(commit_to_release, None)
+
+    def test_determine_version_to_release_returns_next_version_and_HEAD_if_next_version_specified(self):
+        version, commit_to_release = dls_release.determine_version_to_release(
+            None,
+            True,
+            self.releases
+        )
+        self.assertEqual(version, '0-2')
+        self.assertEqual(commit_to_release, 'HEAD')
+
+    def test_determine_version_to_release_returns_hash_if_only_commit_specified(self):
+        version, commit_to_release = dls_release.determine_version_to_release(
+            None,
+            False,
+            self.releases,
+            commit='abcdef'
+        )
+        self.assertEqual(version, 'abcdef')
+        self.assertEqual(commit_to_release, None)
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version', None)
@@ -784,6 +853,7 @@ class FakeVcs(object):
             #RULES=/path/to/epics/support/module/rules/x-y
         '''
         return file_contents
+
 
 if __name__ == '__main__':
 
