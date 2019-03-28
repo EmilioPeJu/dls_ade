@@ -374,6 +374,8 @@ def perform_test_build(build_object, local_build, module, version, vcs):
         build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a windows or
             RedHat builder instance
         local_build(bool): Specifier to perform test build only
+        module(str): Specify module name
+        version(str): Specify release
         vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
 
     Returns:
