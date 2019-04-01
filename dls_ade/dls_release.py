@@ -423,10 +423,6 @@ def determine_version_to_release(release, next_version, releases, commit=None):
     commit_specified = commit is not None
     release_specified = release is not None
 
-    if not release_specified:
-        usermsg.info("No release specified; able to test build at {} only.". \
-                     format(commit))
-
     if next_version:  # Release = next version
         version = next_version_number(releases)
         commit_to_tag = "HEAD"
@@ -435,7 +431,6 @@ def determine_version_to_release(release, next_version, releases, commit=None):
         commit_to_tag = None
     else:  # Release of version; check validity of version
         version = release
-        release_is_valid = check_tag_is_valid(release)
         release_exists = release in releases
         if not commit_specified:
             # Release must already exist to release without a commit
@@ -443,30 +438,14 @@ def determine_version_to_release(release, next_version, releases, commit=None):
             if not release_exists:
                 raise ValueError("Aborting: release {} not found and commit "
                                  "not specified.".format(release))
-            # Warn if existing release is of incorrect form
             else:
                 usermsg.info("Releasing existing release {}.".format(release))
-                if not release_is_valid:
-                    usermsg.warning("Warning: release {} does not conform to "
-                                    "convention.".format(release))
-                    version = format_argument_version(release)
-                    if '.' in release:
-                        usermsg.warning("Release {} contains \'.\' which will"
-                                        " be replaced by \'-\' to: \'{}\'"
-                                        .format(release, version))
         else:  # Release and commit reference specified
             # Release must not be in use already
             if release_exists:
                 raise ValueError(
                     "Aborting: release {} already exists.".format(release)
                 )
-            # Specified release must be of correct form
-            if not release_is_valid:
-                raise ValueError(
-                    "Aborting: invalid release {}.".format(release)
-                )
-            usermsg.info("Releasing new release {rel} from {comm}.". \
-                         format(rel=release, comm=commit))
             commit_to_tag = commit
 
     return version, commit_to_tag
@@ -492,6 +471,19 @@ def _main():
     vcs = server.temp_clone(source)
 
     try:
+        release = args.release
+        if release is None:
+            usermsg.info("No release specified; able to test "
+                         "build at {} only.".format(args.commit))
+        else:
+            if not check_tag_is_valid(release):
+                usermsg.warning("Warning: release {} does not conform to "
+                                "convention.".format(release))
+                release = format_argument_version(release)
+                if '.' in release:
+                    usermsg.warning("Release {} contains \'.\' which will"
+                                    " be replaced by \'-\' to: \'{}\'"
+                                    .format(args.release, release))
         if args.branch:
             vcs.set_branch(args.branch)
 

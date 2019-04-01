@@ -756,7 +756,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         self.commit = 'abcdef'
 
     def test_determine_version_to_release_allows_invalid_version_name(self):
-        # A warning is printed but the release continues.
+        # This is no longer checked in this function.
         dls_release.determine_version_to_release(
             'invalid-release',
             False,
@@ -783,15 +783,6 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         )
         self.assertEqual(version, self.release)
         self.assertEqual(commit_to_release, self.commit)
-
-    def test_determine_version_to_release_rejects_invalid_version_name_if_commit_specified(self):
-        with self.assertRaises(ValueError):
-            dls_release.determine_version_to_release(
-                'invalid-release',
-                False,
-                self.releases,
-                commit=self.commit
-            )
 
     def test_determine_version_to_release_raises_ValueError_if_release_not_in_releases(self):
         with self.assertRaises(ValueError):
