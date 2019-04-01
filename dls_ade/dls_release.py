@@ -24,7 +24,7 @@ from dls_ade import dlsbuild
 from dls_ade import logconfig
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-from dls_ade.exceptions import VCSGitError, ParsingError
+from dls_ade.exceptions import VCSGitError
 from dls_ade.dls_utilities import check_tag_is_valid
 
 usage = """
@@ -35,6 +35,10 @@ the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
 prod.
 """
+
+
+log = logging.getLogger(name="dls_ade")
+usermsg = logging.getLogger(name="usermessages")
 
 
 def make_parser():
@@ -419,7 +423,6 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                                   commit that needs tagging in VCS, or None
 
     """
-    usermsg = logging.getLogger(name="usermessages")
     commit_specified = commit is not None
     release_specified = release is not None
 
@@ -451,10 +454,38 @@ def determine_version_to_release(release, next_version, releases, commit=None):
     return version, commit_to_tag
 
 
-def _main():
+def normalise_release(release):
+    """Try to normalise the release name.
 
-    log = logging.getLogger(name="dls_ade")
-    usermsg = logging.getLogger(name="usermessages")
+    None is a valid argument.
+
+    Arguments:
+        release(str): the release name
+
+    Returns:
+        str: a valid release name
+
+    Raises:
+          ValueError if the release name cannot be made valid
+
+    """
+    new_release = release
+    if release is not None and not check_tag_is_valid(release):
+        usermsg.warning("Warning: release {} does not conform to "
+                        "convention.".format(release))
+        new_release = format_argument_version(release)
+        if '.' in release:
+            usermsg.warning("Release {} contains \'.\' which will"
+                            " be replaced by \'-\' to: \'{}\'"
+                            .format(release, new_release))
+        if not check_tag_is_valid(new_release):
+            raise ValueError(
+                "Release {} could not be made valid.".format(release)
+            )
+    return new_release
+
+
+def _main():
 
     parser = make_parser()
     args = parser.parse_args()
@@ -471,25 +502,16 @@ def _main():
     vcs = server.temp_clone(source)
 
     try:
-        release = args.release
+        release = normalise_release(args.release)
         if release is None:
             usermsg.info("No release specified; able to test "
                          "build at {} only.".format(args.commit))
-        else:
-            if not check_tag_is_valid(release):
-                usermsg.warning("Warning: release {} does not conform to "
-                                "convention.".format(release))
-                release = format_argument_version(release)
-                if '.' in release:
-                    usermsg.warning("Release {} contains \'.\' which will"
-                                    " be replaced by \'-\' to: \'{}\'"
-                                    .format(args.release, release))
         if args.branch:
             vcs.set_branch(args.branch)
 
         releases = vcs.list_releases()
         version, commit_to_tag = determine_version_to_release(
-            args.release, args.next_version, releases, args.commit
+            release, args.next_version, releases, args.commit
         )
         if commit_to_tag is not None:  # Make Release if repo required
             usermsg.info("Making tag {} at {}".format(version, commit_to_tag))

@@ -830,6 +830,25 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         self.assertEqual(commit_to_release, None)
 
 
+class TestDetermineVersionToRelease(unittest.TestCase):
+
+    def test_normalise_release_returns_valid_release(self):
+        old_release = '1-1'
+        new_release = dls_release.normalise_release(old_release)
+        self.assertEqual(old_release, new_release)
+
+    def test_normalise_release_replaces_dot_with_dash(self):
+        old_release = '1.1'
+        new_release = dls_release.normalise_release(old_release)
+        self.assertEqual(new_release, '1-1')
+
+    def test_normalise_release_raises_ValueError_if_release_not_valid(self):
+        with self.assertRaises(ValueError):
+            dls_release.normalise_release('1.1abc3')
+        with self.assertRaises(ValueError):
+            dls_release.normalise_release('aaa')
+
+
 class FakeOptions(object):
     def __init__(self,**kwargs):
         self.rhel_version = kwargs.get('rhel_version', None)
