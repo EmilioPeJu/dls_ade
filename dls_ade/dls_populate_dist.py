@@ -19,7 +19,6 @@ WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
 CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps', '--wheel-dir='+ WORK_DIST_DIR]
-missing_pkgs=[]
 USAGE_MESSAGE = """Usage: {}
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
@@ -31,19 +30,32 @@ Pipfile.lock
 def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
-def pkgs_to_install(_package, _version):
-    missing_pkgs.append(_package.replace('-','_')+' '+_version[2:])
+def format_pkg_name(_package, _version):
+    return _package.replace('-','_')+' '+_version[2:]
 
 
-def populate_dist(_package, _contents):
-    version = _contents['version']
-    specifier = _package + version  # example: flask==1.0.2
-    prefix_location = os.path.join(CENTRAL_LOCATION, _package,
-                                       version[2:], 'prefix')
+def populate_dist():
 
-    if not os.path.isdir(prefix_location):
-        subprocess.check_call(PIP_COMMAND + [specifier])
-        pkgs_to_install(_package, version)
+    missing_pkgs = []
+
+    try:
+        packages = parse_pipfilelock('Pipfile.lock')
+        for package, contents in packages.items():
+            version = contents['version']
+            specifier = package + version  # example: flask==1.0.2
+            prefix_location = os.path.join(CENTRAL_LOCATION, package,
+                                           version[2:], 'prefix')
+
+            if not os.path.isdir(prefix_location):
+                subprocess.check_call(PIP_COMMAND + [specifier])
+                missing_pkgs.append(format_pkg_name(package, version))
+
+        return missing_pkgs
+    except IOError:
+        sys.exit('Job aborted: Pipfile.lock was not found!')
+
+
+
 
 def main():
 
@@ -51,16 +63,11 @@ def main():
         usage()
         sys.exit(1)
 
-    try:
-        packages = parse_pipfilelock('Pipfile.lock')
-        for package, contents in packages.items():
-            populate_dist(package, contents)
-    except IOError:
-        sys.exit('Job aborted: Pipfile.lock was not found!')
+    pkgs_to_install = populate_dist()
 
-    if missing_pkgs:
+    if pkgs_to_install:
         print("\nEnter the following commands to install necessary dependencies:\n")
-        for item in missing_pkgs:
+        for item in pkgs_to_install:
             print("dls-release.py --python3lib -l " + item)
     else:
         print("All necessary dependencies are installed.")
