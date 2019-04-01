@@ -748,11 +748,12 @@ class TestPerformTestBuild(unittest.TestCase):
         self.assertEqual(test_message, expected_message)
 
 
-class TestDetermineReleaseOrCommit(unittest.TestCase):
+class TestDetermineVersionToRelease(unittest.TestCase):
 
     def setUp(self):
         self.release = '0-1'
         self.releases = ['0-1']
+        self.commit = 'abcdef'
 
     def test_determine_version_to_release_allows_invalid_version_name(self):
         # A warning is printed but the release continues.
@@ -762,13 +763,34 @@ class TestDetermineReleaseOrCommit(unittest.TestCase):
             ['invalid-release']
         )
 
+    def test_determine_version_to_release_allows_commit_but_no_version(self):
+        # A warning is printed but the release continues.
+        version, commit_to_release = dls_release.determine_version_to_release(
+            None,
+            False,
+            ['invalid-release'],
+            commit=self.commit
+        )
+        self.assertEqual(version, self.commit)
+        self.assertEqual(commit_to_release, None)
+
+    def test_determine_version_to_release_allows_commit_and_version(self):
+        version, commit_to_release = dls_release.determine_version_to_release(
+            self.release,
+            False,
+            ['invalid-release'],
+            commit=self.commit
+        )
+        self.assertEqual(version, self.release)
+        self.assertEqual(commit_to_release, self.commit)
+
     def test_determine_version_to_release_rejects_invalid_version_name_if_commit_specified(self):
         with self.assertRaises(ValueError):
             dls_release.determine_version_to_release(
                 'invalid-release',
                 False,
                 self.releases,
-                commit='abcdef'
+                commit=self.commit
             )
 
     def test_determine_version_to_release_raises_ValueError_if_release_not_in_releases(self):
@@ -778,13 +800,14 @@ class TestDetermineReleaseOrCommit(unittest.TestCase):
                 False,
                 []
             )
+
     def test_determine_version_to_release_raises_ValueError_if_commit_specified_but_tag_exists(self):
         with self.assertRaises(ValueError):
             dls_release.determine_version_to_release(
                 self.release,
                 False,
                 self.releases,
-                commit='abcdef'
+                commit=self.commit
             )
 
     def test_determine_version_to_release_returns_release_and_None_if_no_commit_specified(self):
@@ -810,9 +833,9 @@ class TestDetermineReleaseOrCommit(unittest.TestCase):
             None,
             False,
             self.releases,
-            commit='abcdef'
+            commit=self.commit
         )
-        self.assertEqual(version, 'abcdef')
+        self.assertEqual(version, self.commit)
         self.assertEqual(commit_to_release, None)
 
 

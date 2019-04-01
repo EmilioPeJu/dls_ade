@@ -102,7 +102,7 @@ def make_parser():
         help="Redundant argument to preserve backward compatibility")
     parser.add_argument(
         "-c", "--commit", action="store", type=str, dest="commit",
-        help="Perform script actions at the specified commit.")
+        help="Execute test builds only (-T or -l) at the specified commit.")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
@@ -189,10 +189,12 @@ def check_parsed_arguments_valid(args, parser):
         parser.error("Module name not specified")
         logging.debug(args.module_name)
         logging.debug(args.next_version)
-    elif not args.release and not \
-            (args.next_version or (args.test_only and args.commit)):
-        parser.error("Module release not specified; required unless testing a "
-                     "specified commit, or requesting next version.")
+    elif (not args.release and not
+            (args.next_version or
+             (args.commit and args.test_only) or
+             (args.commit and args.local_build))):
+        parser.error("Module release not specified; required unless testing "
+                     "a specified commit, or requesting next version.")
     elif args.area == "etc":
         if args.module_name not in etc_supported_areas:
             parser.error("The only supported etc modules are {} - "
@@ -399,6 +401,24 @@ def perform_test_build(build_object, local_build, vcs):
 
 
 def determine_version_to_release(release, next_version, releases, commit=None):
+    """Determine version that will be released and commit to tag if necessary.
+
+    A tag will be made in two cases:
+     * next_version is true and so the new release name is calculated
+     * a release and a commit are both specified implying that the tag
+       doesn't yet exist and should be created at that commit.
+
+    Arguments:
+        release(str): the name of the release
+        next_version(bool): whether to derive the next version name
+        releases(list(str)): list of the existing releases for the module
+        commit(str): reference to a commit if necessary
+
+    Returns:
+        (version, commit_to_tag): version that will be released
+                                  commit that needs tagging in VCS, or None
+
+    """
     usermsg = logging.getLogger(name="usermessages")
     commit_specified = commit is not None
     release_specified = release is not None
@@ -409,22 +429,20 @@ def determine_version_to_release(release, next_version, releases, commit=None):
 
     if next_version:  # Release = next version
         version = next_version_number(releases)
-        commit = "HEAD"
-        commit_specified = True
-        release_specified = True
-    elif not release_specified:  # Release = @ commit, not of release
+        commit_to_tag = "HEAD"
+    elif not release_specified:  # Test release only of specified commit
         version = commit
+        commit_to_tag = None
     else:  # Release of version; check validity of version
-        release = release
         version = release
         release_is_valid = check_tag_is_valid(release)
         release_exists = release in releases
-        # Commit in repository specified
         if not commit_specified:
             # Release must already exist to release without a commit
+            commit_to_tag = None
             if not release_exists:
                 raise ValueError("Aborting: release {} not found and commit "
-                              "not specified.".format(release))
+                                 "not specified.".format(release))
             # Warn if existing release is of incorrect form
             else:
                 usermsg.info("Releasing existing release {}.".format(release))
@@ -436,8 +454,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                         usermsg.warning("Release {} contains \'.\' which will"
                                         " be replaced by \'-\' to: \'{}\'"
                                         .format(release, version))
-        # No commit reference specified
-        else:
+        else:  # Release and commit reference specified
             # Release must not be in use already
             if release_exists:
                 raise ValueError(
@@ -450,9 +467,9 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                 )
             usermsg.info("Releasing new release {rel} from {comm}.". \
                          format(rel=release, comm=commit))
+            commit_to_tag = commit
 
-    commit_to_release = commit if commit_specified and release_specified else None
-    return version, commit_to_release
+    return version, commit_to_tag
 
 
 def _main():
@@ -511,6 +528,9 @@ def _main():
     if args.local_build:
         usermsg.info("Done. Local test build only.")
         sys.exit(0)
+
+    assert version is not None, ("Version is None; argument checking should "
+                                 "have prevented this")
 
     msg_build_job = "test-release" if args.test_only else "Release"
     msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(
