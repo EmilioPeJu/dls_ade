@@ -423,19 +423,16 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                                   commit that needs tagging in VCS, or None
 
     """
-    commit_specified = commit is not None
-    release_specified = release is not None
-
     if next_version:  # Release = next version
         version = next_version_number(releases)
         commit_to_tag = "HEAD"
-    elif not release_specified:  # Test release only of specified commit
+    elif release is None:  # Test release only of specified commit
         version = commit
         commit_to_tag = None
-    else:  # Release of version; check validity of version
+    else:  # Release of specified version
         version = release
         release_exists = release in releases
-        if not commit_specified:
+        if commit is None:  # Version and no commit: standard release
             # Release must already exist to release without a commit
             commit_to_tag = None
             if not release_exists:
@@ -443,7 +440,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                                  "not specified.".format(release))
             else:
                 usermsg.info("Releasing existing release {}.".format(release))
-        else:  # Release and commit reference specified
+        else:  # Release and commit reference specified: commit will be tagged
             # Release must not be in use already
             if release_exists:
                 raise ValueError(
