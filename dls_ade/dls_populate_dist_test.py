@@ -21,7 +21,7 @@ class PopulateDist(unittest.TestCase):
         self.assertEqual(test_item, 'module_name 1-2-3')
 
     def test_ensure_wheel_is_downloaded(self):
-        test_lockfile_path = '/dls_sw/work/python3/unit-testing'
+        test_lockfile_path = '/dls_sw/work/python3/unit-testing/populate'
         os.chdir(test_lockfile_path)
         dls_populate_dist.populate_dist()
         myfiles = os.listdir('/dls_sw/work/python3/distributions')
@@ -29,7 +29,7 @@ class PopulateDist(unittest.TestCase):
         assert target_wheel in myfiles
 
     def test_populate_dist_returns_item(self):
-        test_lockfile_path = '/dls_sw/work/python3/unit-testing'
+        test_lockfile_path = '/dls_sw/work/python3/unit-testing/populate'
         os.chdir(test_lockfile_path)
         item = dls_populate_dist.populate_dist()
         self.assertEqual(item[0], 'numpy 1.16.2')
