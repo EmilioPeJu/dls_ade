@@ -86,7 +86,9 @@ class GitlabServer(GitServer):
 
     def _is_project(self, path):
         try:
-            self._anon_gitlab_handle.projects.get(path)
+            project = self._anon_gitlab_handle.projects.get(path)
+            name = os.path.split(path)[-1]
+            return name == project.name
         except gitlab.exceptions.GitlabGetError as e:
             if e.response_code == HTTP_NOT_FOUND:
                 return False
