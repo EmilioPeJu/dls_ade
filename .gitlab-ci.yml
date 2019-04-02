@@ -1,0 +1,18 @@
+rhel7_job:
+  tags:
+    - rhel7
+  before_script:
+    - virtualenv --python dls-python venv
+    - source venv/bin/activate
+    - pip install coverage
+    - pip install -r requirements.txt
+    - python setup.py bdist_egg
+  script:
+    - python setup.py nosetests
+    - python setup.py build_sphinx
+  after_script:
+    - source venv/bin/activate
+    - coverage html
+    - mkdir -p /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}
+    - cp -r htmlcov/ /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
+    - echo A coverage report is available at http://www.cs.diamond.ac.uk/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
