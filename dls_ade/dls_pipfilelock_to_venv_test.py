@@ -5,11 +5,15 @@ from dls_ade import dls_pipfilelock_to_venv
 from collections import OrderedDict
 import os
 import shutil
+from tempfile import mkdtemp
 
 class PipfilelockToVenv(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.test_folder = mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.test_folder)
 
     def test_path_list_is_constructed_correctly(self):
         test_dict = OrderedDict([(u'numpy', OrderedDict([(u'hashes', \
@@ -22,17 +26,14 @@ class PipfilelockToVenv(unittest.TestCase):
         self.assertEqual(dls_pipfilelock_to_venv.path_list[0], target_path)
 
     def test_system_exits_when_venv_is_already_present(self):
-        os.chdir('/dls_sw/work/python3/unit-testing/pipfilelock-to-venv')
+        os.chdir(self.test_folder)
         os.mkdir('lightweight-venv')
         with self.assertRaises(SystemExit) as cm:
             dls_pipfilelock_to_venv.create_venv()
         self.assertEqual(cm.exception.args[0], 'lightweight-venv already present!')
-        os.rmdir('lightweight-venv')
 
     def test_venv_is_created_when_all_deps_are_installed(self):
-        test_venv_path = '/dls_sw/work/python3/unit-testing/pipfilelock-to-venv'
-        os.chdir(test_venv_path)
+        os.chdir(self.test_folder)
         dls_pipfilelock_to_venv.absent_pkg_list = []
         dls_pipfilelock_to_venv.create_venv()
         assert os.path.isdir('lightweight-venv')
-        shutil.rmtree('lightweight-venv')
