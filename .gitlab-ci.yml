@@ -1,6 +1,7 @@
 rhel7_job:
   tags:
     - rhel7
+  coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
   before_script:
     - virtualenv --python dls-python venv
     - source venv/bin/activate
