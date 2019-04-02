@@ -2,7 +2,7 @@ rhel7_job:
   tags:
     - rhel7
   before_script:
-    - virtualenv --python dls-python venv
+    - virtualenv --python /dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin/python3 venv
     - source venv/bin/activate
     - pip install coverage
     - pip install -r requirements.txt
