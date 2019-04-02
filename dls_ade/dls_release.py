@@ -454,13 +454,14 @@ def determine_version_to_release(release, next_version, releases, commit=None):
     return version, commit_to_tag
 
 
-def normalise_release(release):
+def normalise_release(release, area):
     """Try to normalise the release name.
 
     None is a valid argument.
 
     Arguments:
         release(str): the release name
+        area(str): the area for release
 
     Returns:
         str: a valid release name
@@ -470,7 +471,7 @@ def normalise_release(release):
 
     """
     new_release = release
-    if release is not None and not check_tag_is_valid(release):
+    if release is not None and not check_tag_is_valid(release, area):
         usermsg.warning("Warning: release {} does not conform to "
                         "convention.".format(release))
         new_release = format_argument_version(release)
@@ -478,7 +479,7 @@ def normalise_release(release):
             usermsg.warning("Release {} contains \'.\' which will"
                             " be replaced by \'-\' to: \'{}\'"
                             .format(release, new_release))
-        if not check_tag_is_valid(new_release):
+        if not check_tag_is_valid(new_release, area):
             raise ValueError(
                 "Release {} could not be made valid.".format(release)
             )
@@ -506,7 +507,7 @@ def _main():
         vcs = server.temp_clone(source)
 
         try:
-            release = normalise_release(args.release)
+            release = normalise_release(args.release, args.area)
             if release is None:
                 usermsg.info("No release specified; able to test "
                              "build at {} only.".format(args.commit))

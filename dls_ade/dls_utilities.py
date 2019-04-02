@@ -1,6 +1,7 @@
 import collections
 import json
 import os
+from packaging import version
 import re
 from dls_ade.exceptions import ParsingError
 
@@ -41,20 +42,31 @@ def check_technical_area(area, module):
         raise ParsingError("Missing technical area under beamline")
 
 
-def check_tag_is_valid(tag):
+def check_tag_is_valid(tag, area=None):
     """
     Checks if a given tag is a valid tag.
 
+    The traditional Diamond versioning is something like X-Y[-Z][dlsA[-B]]
+
+    For Python 3 we are allowing any versions as permitted by PEP-440:
+
+    https://www.python.org/dev/peps/pep-0440/
+
     Args:
         tag(str): proposed tag string
+        area(str): area to check tag against
 
     Returns:
         bool: True if tag is valid, False if not
 
     """
+    if area == 'python3':
+        # VERBOSE allows you to ignore the comments in VERSION_PATTERN.
+        check = re.compile(r"^{}$".format(version.VERSION_PATTERN), re.VERBOSE)
+    else:
+        check = re.compile('[0-9]+\-[0-9]+(\-[0-9]+)?(dls[0-9]+(\-[0-9]+)?)?')
 
-    check = re.compile('[0-9]+\-[0-9]+(\-[0-9]+)?(dls[0-9]+(\-[0-9]+)?)?')
-    result = check.match(tag)
+    result = check.search(tag)
 
     if result is None or result.group() != tag:
         return False
