@@ -24,7 +24,7 @@ from dls_ade import dlsbuild
 from dls_ade import logconfig
 from dls_ade.argument_parser import ArgParser
 from dls_ade.dls_environment import environment
-from dls_ade.exceptions import VCSGitError, ParsingError
+from dls_ade.exceptions import VCSGitError
 from dls_ade.dls_utilities import check_tag_is_valid
 
 usage = """
@@ -35,6 +35,10 @@ the release in git. It will then write a build request file to the build
 server, causing it to schedule a checkout and build of the git release in
 prod.
 """
+
+
+log = logging.getLogger(name="dls_ade")
+usermsg = logging.getLogger(name="usermessages")
 
 
 def make_parser():
@@ -102,7 +106,7 @@ def make_parser():
         help="Redundant argument to preserve backward compatibility")
     parser.add_argument(
         "-c", "--commit", action="store", type=str, dest="commit",
-        help="Perform script actions at the specified commit.")
+        help="Execute test builds only (-T or -l) at the specified commit.")
 
     title = "Build operating system arguments"
     desc = "Note: The following arguments are mutually exclusive - only use" \
@@ -189,10 +193,12 @@ def check_parsed_arguments_valid(args, parser):
         parser.error("Module name not specified")
         logging.debug(args.module_name)
         logging.debug(args.next_version)
-    elif not args.release and not \
-            (args.next_version or (args.test_only and args.commit)):
-        parser.error("Module release not specified; required unless testing a "
-                     "specified commit, or requesting next version.")
+    elif (not args.release and not
+            (args.next_version or
+             (args.commit and args.test_only) or
+             (args.commit and args.local_build))):
+        parser.error("Module release not specified; required unless testing "
+                     "a specified commit, or requesting next version.")
     elif args.area == "etc":
         if args.module_name not in etc_supported_areas:
             parser.error("The only supported etc modules are {} - "
@@ -402,66 +408,84 @@ def perform_test_build(build_object, local_build, module, version, vcs):
 
 
 def determine_version_to_release(release, next_version, releases, commit=None):
-    usermsg = logging.getLogger(name="usermessages")
-    commit_specified = commit is not None
-    release_specified = release is not None
+    """Determine version that will be released and commit to tag if necessary.
 
-    if not release_specified:
-        usermsg.info("No release specified; able to test build at {} only.". \
-                     format(commit))
+    A tag will be made in two cases:
+     * next_version is true and so the new release name is calculated
+     * a release and a commit are both specified implying that the tag
+       doesn't yet exist and should be created at that commit.
 
+    Arguments:
+        release(str): the name of the release
+        next_version(bool): whether to derive the next version name
+        releases(list(str)): list of the existing releases for the module
+        commit(str): reference to a commit if necessary
+
+    Returns:
+        (version, commit_to_tag): version that will be released
+                                  commit that needs tagging in VCS, or None
+
+    """
     if next_version:  # Release = next version
         version = next_version_number(releases)
-        commit = "HEAD"
-        commit_specified = True
-        release_specified = True
-    elif not release_specified:  # Release = @ commit, not of release
+        commit_to_tag = "HEAD"
+    elif release is None:  # Test release only of specified commit
         version = commit
-    else:  # Release of version; check validity of version
-        release = release
+        commit_to_tag = None
+    else:  # Release of specified version
         version = release
-        release_is_valid = check_tag_is_valid(release)
         release_exists = release in releases
-        # Commit in repository specified
-        if not commit_specified:
+        if commit is None:  # Version and no commit: standard release
             # Release must already exist to release without a commit
+            commit_to_tag = None
             if not release_exists:
                 raise ValueError("Aborting: release {} not found and commit "
-                              "not specified.".format(release))
-            # Warn if existing release is of incorrect form
+                                 "not specified.".format(release))
             else:
                 usermsg.info("Releasing existing release {}.".format(release))
-                if not release_is_valid:
-                    usermsg.warning("Warning: release {} does not conform to "
-                                    "convention.".format(release))
-                    version = format_argument_version(release)
-                    if '.' in release:
-                        usermsg.warning("Release {} contains \'.\' which will"
-                                        " be replaced by \'-\' to: \'{}\'"
-                                        .format(release, version))
-        # No commit reference specified
-        else:
+        else:  # Release and commit reference specified: commit will be tagged
             # Release must not be in use already
             if release_exists:
                 raise ValueError(
                     "Aborting: release {} already exists.".format(release)
                 )
-            # Specified release must be of correct form
-            if not release_is_valid:
-                raise ValueError(
-                    "Aborting: invalid release {}.".format(release)
-                )
-            usermsg.info("Releasing new release {rel} from {comm}.". \
-                         format(rel=release, comm=commit))
+            commit_to_tag = commit
 
-    commit_to_release = commit if commit_specified and release_specified else None
-    return version, commit_to_release
+    return version, commit_to_tag
+
+
+def normalise_release(release):
+    """Try to normalise the release name.
+
+    None is a valid argument.
+
+    Arguments:
+        release(str): the release name
+
+    Returns:
+        str: a valid release name
+
+    Raises:
+          ValueError if the release name cannot be made valid
+
+    """
+    new_release = release
+    if release is not None and not check_tag_is_valid(release):
+        usermsg.warning("Warning: release {} does not conform to "
+                        "convention.".format(release))
+        new_release = format_argument_version(release)
+        if '.' in release:
+            usermsg.warning("Release {} contains \'.\' which will"
+                            " be replaced by \'-\' to: \'{}\'"
+                            .format(release, new_release))
+        if not check_tag_is_valid(new_release):
+            raise ValueError(
+                "Release {} could not be made valid.".format(release)
+            )
+    return new_release
 
 
 def _main():
-
-    log = logging.getLogger(name="dls_ade")
-    usermsg = logging.getLogger(name="usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -480,13 +504,18 @@ def _main():
         server = Server()
         source = server.dev_module_path(module, args.area)
         vcs = server.temp_clone(source)
+
         try:
+            release = normalise_release(args.release)
+            if release is None:
+                usermsg.info("No release specified; able to test "
+                             "build at {} only.".format(args.commit))
             if args.branch:
                 vcs.set_branch(args.branch)
 
             releases = vcs.list_releases()
             version, commit_to_tag = determine_version_to_release(
-                args.release, args.next_version, releases, args.commit
+                release, args.next_version, releases, args.commit
             )
             if commit_to_tag is not None:  # Make Release if repo required
                 usermsg.info("Making tag {} at {}".format(version, commit_to_tag))
@@ -517,6 +546,9 @@ def _main():
     if args.local_build:
         usermsg.info("Done. Local test build only.")
         sys.exit(0)
+
+    assert version is not None, ("Version is None; argument checking should "
+                                 "have prevented this")
 
     msg_build_job = "test-release" if args.test_only else "Release"
     msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(

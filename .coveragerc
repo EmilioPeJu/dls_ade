@@ -1,6 +1,5 @@
 [report]
 omit =
-    dls_ade/*svn*
-    dls_ade/dls_release_test.py
+    dls_ade/*_test.py
     docs/
 
