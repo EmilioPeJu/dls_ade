@@ -40,6 +40,7 @@ PREFIX=${build_dir}/${_version}/prefix
 
 # Testing section, this will need correcting for the final version.
 PYTHON=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/dls-python3
+PIP=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/pip3
 export TESTING_ROOT=/dls_sw/work/python3/test-root
 DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
@@ -80,8 +81,10 @@ if [[ -e Pipfile.lock ]]; then
     $PFL_TO_VENV || ReportFailure "Dependencies not installed."
     echo $SITE_PACKAGES >> $(pwd)/lightweight-venv/lib/$PYTHON_VERSION/site-packages/dls-installed-packages.pth
     source lightweight-venv/bin/activate
-    # Use the python from the virtualenv
+    # Use the python from the virtualenv so that the libraries installed
+    # are available. We don't use pip as is not available in the virtualenv.
     python setup.py install --prefix=prefix
 else
-    $PYTHON setup.py install --prefix=prefix
+    # Use pip as it allows installing with no dependencies.
+    $PIP install . --prefix=prefix --no-deps
 fi
