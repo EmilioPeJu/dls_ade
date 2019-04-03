@@ -48,7 +48,9 @@ done
 
 # Installation of dependency
 if $install_dist; then
-    _module=${_module/_/-}
+    # Replace all underscripts with dashes because this is how Python
+    # installs them (?)
+    _module=${_module//_/-}
     prefix_location=$CENTRAL_LOCATION/$_module/$_version/prefix
     site_packages_location=$prefix_location/lib/$PYTHON_VERSION/site-packages
     specifier="$_module==$_version"
