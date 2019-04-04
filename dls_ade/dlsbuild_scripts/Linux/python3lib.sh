@@ -20,7 +20,9 @@
 #   _build_name: The base name to use for log files etc.
 #
 
-
+# Set up DLS environment
+DLS_EPICS_RELEASE=${_epics}
+source /dls_sw/etc/profile
 # Testing section, this will need correcting for the final version.
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
