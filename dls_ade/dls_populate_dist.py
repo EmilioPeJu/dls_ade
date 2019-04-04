@@ -15,10 +15,8 @@ from dls_ade.dls_utilities import parse_pipfilelock
 
 os_version = default_server().replace('redhat', 'RHEL')
 TESTING_ROOT = os.getenv('TESTING_ROOT', "")
-WORK_DIST_DIR = TESTING_ROOT + '/dls_sw/work/python3/distributions'
-CENTRAL_LOCATION = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
-               'wheel', '--no-deps', '--wheel-dir='+ WORK_DIST_DIR]
+               'wheel', '--no-deps']
 USAGE_MESSAGE = """Usage: {}
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
@@ -34,7 +32,7 @@ def format_pkg_name(_package, _version):
     return _package.replace('-','_')+' '+_version[2:]
 
 
-def populate_dist():
+def populate_dist(_work_dist_dir, _central_location):
 
     missing_pkgs = []
 
@@ -43,19 +41,17 @@ def populate_dist():
         for package, contents in packages.items():
             version = contents['version']
             specifier = package + version  # example: flask==1.0.2
-            prefix_location = os.path.join(CENTRAL_LOCATION, package,
+            prefix_location = os.path.join(_central_location, package,
                                            version[2:], 'prefix')
 
             if not os.path.isdir(prefix_location):
-                subprocess.check_call(PIP_COMMAND + [specifier])
+                subprocess.check_call(PIP_COMMAND + ['--wheel-dir='+ _work_dist_dir,
+                                                                         specifier])
                 missing_pkgs.append(format_pkg_name(package, version))
 
         return missing_pkgs
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
-
-
-
 
 def main():
 
@@ -63,7 +59,9 @@ def main():
         usage()
         sys.exit(1)
 
-    pkgs_to_install = populate_dist()
+    work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
+    central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
+    pkgs_to_install = populate_dist(work_dist_dir, central_location)
 
     if pkgs_to_install:
         print("\nEnter the following commands to install necessary dependencies:\n")
