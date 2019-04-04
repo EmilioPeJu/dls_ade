@@ -91,3 +91,15 @@ def parse_pipfilelock(pipfilelock, include_dev=False):
         if include_dev:
             packages.update(j['develop'])
         return packages
+
+def python3_module_installed(path_to_prefix):
+    """ Returns True if module is installed but False is module is not.
+
+    Args:
+        path_to_prefix: path to prefix
+
+    Returns:
+        bool: True if successful
+
+    """
+    return os.path.isdir(path_to_prefix)

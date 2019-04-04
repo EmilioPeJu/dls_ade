@@ -11,7 +11,7 @@ import sys
 import venv
 import shutil
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import parse_pipfilelock
+from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
@@ -49,7 +49,7 @@ def construct_pkg_path(_packages):
 def find_missing_pkgs(_path_list):
     absent_pkg_list = []
     for p in _path_list:
-        if not os.path.exists(p):
+        if not python3_module_installed(p):
             absent_pkg_list.append(p)
     return absent_pkg_list
 

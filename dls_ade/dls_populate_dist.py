@@ -10,7 +10,7 @@ import subprocess
 import sys
 import os
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import parse_pipfilelock
+from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
 os_version = default_server().replace('redhat', 'RHEL')
@@ -44,7 +44,7 @@ def populate_dist(_work_dist_dir, _central_location):
             prefix_location = os.path.join(_central_location, package,
                                            version[2:], 'prefix')
 
-            if not os.path.isdir(prefix_location):
+            if not python3_module_installed(prefix_location):
                 subprocess.check_call(PIP_COMMAND + ['--wheel-dir='+ _work_dist_dir,
                                                                          specifier])
                 missing_pkgs.append(format_pkg_name(package, version))
