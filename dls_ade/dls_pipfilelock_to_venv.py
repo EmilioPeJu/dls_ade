@@ -14,10 +14,10 @@ from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
-TESTING_ROOT = os.getenv('TESTING_ROOT', '/')
+TESTING_ROOT = os.getenv('TESTING_ROOT', '')
 OS_VERSION = default_server().replace('redhat', 'RHEL')
 PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
-OS_DIR = os.path.join(TESTING_ROOT, 'dls_sw/prod/python3', OS_VERSION)
+OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
 force = False
 USAGE_MESSAGE = """Usage: {}
@@ -50,7 +50,7 @@ def find_missing_pkgs(_path_list):
     absent_pkg_list = []
     for p in _path_list:
         module, version = p.split('/')[-6:-4]
-        if not python3_module_installed(TESTING_ROOT, module, version):
+        if not python3_module_installed(module, version):
             absent_pkg_list.append(p)
     return absent_pkg_list
 
