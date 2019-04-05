@@ -66,5 +66,6 @@ target/
 # DLS build dir and virtual environment
 /prefix/
 /venv/
+/lightweight-venv/
 /installed.files
 

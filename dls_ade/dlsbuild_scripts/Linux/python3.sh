@@ -44,6 +44,7 @@ PIP=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/pip3
 export TESTING_ROOT=/dls_sw/work/python3/test-root
 DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
+$PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
 
 
@@ -70,6 +71,7 @@ prod_dist_dir=dls_sw/prod/python3/distributions
 
 # Build phase 1 - Build a wheel and install in prefix, for app or library
 cd $_version || ReportFailure "Can not cd to $_version"
+$PY3_CHECK $_version || ReportFailure "Python3 module check failed."
 $PYTHON setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
 mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
