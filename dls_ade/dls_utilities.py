@@ -93,11 +93,10 @@ def parse_pipfilelock(pipfilelock, include_dev=False):
             packages.update(j['develop'])
         return packages
 
-def python3_module_installed(testing_root, module, version):
+def python3_module_installed(module, version):
     """ Returns True if module is installed but False is module is not.
 
     Args:
-        testing_root: prefix used for testing purposes
         module: package name
         version: package version
 
@@ -105,7 +104,8 @@ def python3_module_installed(testing_root, module, version):
         bool: True if successful False otherwise
 
     """
-
+    TESTING_ROOT = os.getenv('TESTING_ROOT', '')
     os_version = default_server().replace('redhat', 'RHEL')
-    target_path = os.path.join(testing_root, 'dls_sw/prod/python3', os_version, module, version, 'prefix')
+    OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{os_version}'
+    target_path = os.path.join(OS_DIR, module, version, 'prefix')
     return os.path.isdir(target_path)
