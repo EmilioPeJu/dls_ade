@@ -92,14 +92,19 @@ def parse_pipfilelock(pipfilelock, include_dev=False):
             packages.update(j['develop'])
         return packages
 
-def python3_module_installed(path_to_prefix):
+def python3_module_installed(testing_root, module, version):
     """ Returns True if module is installed but False is module is not.
 
     Args:
-        path_to_prefix: path to prefix
+        module: package name
+        version: package version
 
     Returns:
         bool: True if successful
 
     """
-    return os.path.isdir(path_to_prefix)
+    from dls_ade.dlsbuild import default_server
+
+    os_version = default_server().replace('redhat', 'RHEL')
+    target_path = os.path.join(testing_root, 'dls_sw/prod/python3', os_version, module, version, 'prefix')
+    return os.path.isdir(target_path)

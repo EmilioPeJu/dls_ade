@@ -9,12 +9,12 @@ programmatically according to the pip manual (pip 10.0.1).
 import subprocess
 import sys
 import os
-from dls_ade.dlsbuild import default_server
+#from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
-os_version = default_server().replace('redhat', 'RHEL')
-TESTING_ROOT = os.getenv('TESTING_ROOT', "")
+#os_version = default_server().replace('redhat', 'RHEL')
+TESTING_ROOT = os.getenv('TESTING_ROOT', '/')
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps']
 USAGE_MESSAGE = """Usage: {}
@@ -32,7 +32,7 @@ def format_pkg_name(_package, _version):
     return _package.replace('-','_')+' '+_version[2:]
 
 
-def populate_dist(_work_dist_dir, _central_location):
+def populate_dist(_work_dist_dir, _testing_root):
 
     missing_pkgs = []
 
@@ -41,10 +41,8 @@ def populate_dist(_work_dist_dir, _central_location):
         for package, contents in packages.items():
             version = contents['version']
             specifier = package + version  # example: flask==1.0.2
-            prefix_location = os.path.join(_central_location, package,
-                                           version[2:], 'prefix')
 
-            if not python3_module_installed(prefix_location):
+            if not python3_module_installed(_testing_root, package, version[2:]):
                 subprocess.check_call(PIP_COMMAND + ['--wheel-dir='+ _work_dist_dir,
                                                                          specifier])
                 missing_pkgs.append(format_pkg_name(package, version))
@@ -60,8 +58,7 @@ def main():
         sys.exit(1)
 
     work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
-    central_location = TESTING_ROOT + '/dls_sw/prod/python3/' + os_version
-    pkgs_to_install = populate_dist(work_dist_dir, central_location)
+    pkgs_to_install = populate_dist(work_dist_dir, TESTING_ROOT)
 
     if pkgs_to_install:
         print("\nEnter the following commands to install necessary dependencies:\n")
