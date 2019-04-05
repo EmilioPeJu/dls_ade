@@ -11,8 +11,6 @@ class PopulateDist(unittest.TestCase):
 
     def setUp(self):
         self.test_folder = mkdtemp()
-        dls_populate_dist.WORK_DIST_DIR = self.test_folder
-        dls_populate_dist.CENTRAL_LOCATION = self.test_folder
 
     def tearDown(self):
         pass

@@ -4,6 +4,7 @@ import os
 from packaging import version
 import re
 from dls_ade.exceptions import ParsingError
+from dls_ade.dlsbuild import default_server
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 
@@ -96,14 +97,14 @@ def python3_module_installed(testing_root, module, version):
     """ Returns True if module is installed but False is module is not.
 
     Args:
+        testing_root: prefix used for testing purposes
         module: package name
         version: package version
 
     Returns:
-        bool: True if successful
+        bool: True if successful False otherwise
 
     """
-    from dls_ade.dlsbuild import default_server
 
     os_version = default_server().replace('redhat', 'RHEL')
     target_path = os.path.join(testing_root, 'dls_sw/prod/python3', os_version, module, version, 'prefix')

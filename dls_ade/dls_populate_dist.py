@@ -13,7 +13,6 @@ import os
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
-#os_version = default_server().replace('redhat', 'RHEL')
 TESTING_ROOT = os.getenv('TESTING_ROOT', '/')
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps']
