@@ -58,15 +58,17 @@ def main():
         print('ERROR: no Pipfile found. Package is not valid')
         sys.exit(1)
     try:
-        repo = git.Repo('/tmp')
+        repo = git.Repo('.')
     except InvalidGitRepositoryError:
         print('ERROR: no Git repository found. Package is not valid')
         sys.exit(1)
 
     # Compare requirements
     pipenv_requirements = pipfile_data['default']
-    setup_requirements = conf_dict['options']['install_requires']
+    setup_requirements = conf_dict['options'].get('install_requires', [])
     if not compare_requirements(pipenv_requirements, setup_requirements):
+        print('setup.cfg requirements: {}'.format(setup_requirements))
+        print('Pipfile requirements: {}'.format(pipenv_requirements))
         sys.exit('Requirements in setup.cfg and Pipfile do not match')
     # Compare versions
     head_tags = get_tags_on_head(repo)
