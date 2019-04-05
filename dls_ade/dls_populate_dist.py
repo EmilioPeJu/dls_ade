@@ -13,7 +13,7 @@ import os
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
-TESTING_ROOT = os.getenv('TESTING_ROOT', '/')
+TESTING_ROOT = os.getenv('TESTING_ROOT', '')
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
                'wheel', '--no-deps']
 USAGE_MESSAGE = """Usage: {}
@@ -31,7 +31,7 @@ def format_pkg_name(_package, _version):
     return _package.replace('-','_')+' '+_version[2:]
 
 
-def populate_dist(_work_dist_dir, _testing_root):
+def populate_dist(_work_dist_dir):
 
     missing_pkgs = []
 
@@ -41,7 +41,7 @@ def populate_dist(_work_dist_dir, _testing_root):
             version = contents['version']
             specifier = package + version  # example: flask==1.0.2
 
-            if not python3_module_installed(_testing_root, package, version[2:]):
+            if not python3_module_installed(package, version[2:]):
                 subprocess.check_call(PIP_COMMAND + ['--wheel-dir='+ _work_dist_dir,
                                                                          specifier])
                 missing_pkgs.append(format_pkg_name(package, version))
@@ -57,7 +57,7 @@ def main():
         sys.exit(1)
 
     work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
-    pkgs_to_install = populate_dist(work_dist_dir, TESTING_ROOT)
+    pkgs_to_install = populate_dist(work_dist_dir)
 
     if pkgs_to_install:
         print("\nEnter the following commands to install necessary dependencies:\n")

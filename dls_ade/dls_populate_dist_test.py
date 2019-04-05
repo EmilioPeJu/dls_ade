@@ -56,14 +56,14 @@ class PopulateDist(unittest.TestCase):
     def test_ensure_script_exits_when_no_lockfile_present(self):
         os.chdir(self.test_folder)
         with self.assertRaises(SystemExit) as cm:
-            dls_populate_dist.populate_dist(self.test_folder, self.test_folder)
+            dls_populate_dist.populate_dist(self.test_folder)
         self.assertEqual(cm.exception.args[0], 'Job aborted: Pipfile.lock was not found!')
 
     def test_ensure_wheel_is_downloaded(self):
         os.chdir(self.test_folder)
         with open('Pipfile.lock', 'w') as f:
             f.write(PopulateDist.lockfile)
-        dls_populate_dist.populate_dist(self.test_folder, self.test_folder)
+        dls_populate_dist.populate_dist(self.test_folder)
         myfiles = os.listdir(self.test_folder)
         target_wheel = 'numpy-1.16.2-cp37-cp37m-manylinux1_x86_64.whl'
         assert target_wheel in myfiles
@@ -72,5 +72,5 @@ class PopulateDist(unittest.TestCase):
         os.chdir(self.test_folder)
         with open('Pipfile.lock', 'w') as f:
             f.write(PopulateDist.lockfile)
-        item = dls_populate_dist.populate_dist(self.test_folder, self.test_folder)
+        item = dls_populate_dist.populate_dist(self.test_folder)
         self.assertEqual(item[0], 'numpy 1.16.2')
