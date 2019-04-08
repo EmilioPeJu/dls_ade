@@ -15,7 +15,9 @@ import json
 import logging
 from dls_ade.argument_parser import ArgParser
 from dls_ade.get_module_creator import get_module_creator
-from dls_ade import logconfig
+from dls_ade import logconfig, Server
+from dls_ade.dls_utilities import remove_git_at_end
+from dls_ade.exceptions import VerificationError
 
 usage = ("Default <area> is 'support'."
          "\nStart a new diamond module of a particular type."
@@ -57,11 +59,21 @@ def make_parser():
     parser.add_module_name_arg()
 
     parser.add_argument(
-        "-n", "--no-import", action="store_true", dest="no_import",
-        help="Creates the module but doesn't store it on the server")
-    parser.add_argument(
         "-f", "--fullname", action="store_true", dest="fullname",
-        help="create new-style ioc, with full ioc name in path")
+        help="Create new-style ioc, with full ioc name in path"
+    )
+
+    # The following arguments cannot be used together
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "-n", "--no-import", action="store_true", dest="no_import",
+        help="Creates the module but doesn't store it on the server"
+    )
+    group.add_argument(
+        "-e", "--empty", action="store_true", dest="empty",
+        help="Initialize an empty remote repository on the server. Does not "
+             "create a local repo nor commit any files."
+    )
 
     return parser
 
@@ -78,7 +90,18 @@ def _main():
     module_name = args.module_name
     area = args.area
     fullname = args.fullname
+    create_empty_remote_only = args.empty
     export_to_server = not args.no_import
+
+    if create_empty_remote_only:
+        try:
+            create_empty_remote(area, module_name)
+            usermsg.info(
+                "Created new empty remote repo %s/%s", area, module_name
+            )
+        except VerificationError as e:
+            log.error(e.message)
+        return
 
     module_creator = get_module_creator(module_name, area, fullname)
 
@@ -92,6 +115,24 @@ def _main():
 
     msg = module_creator.get_print_message()
     usermsg.info(msg)
+
+
+def create_empty_remote(area, module_name):
+    """Create the module on the server without populating it
+
+    Args:
+        area(str): module area (support, python, ...)
+        module_name(str): Module name
+    """
+    server = Server()
+    module_path = remove_git_at_end(
+        server.dev_module_path(module_name, area=area)
+    )
+    if server.is_server_repo(module_path):
+        raise VerificationError(
+            "Module {} already exists on server".format(module_path)
+        )
+    server.create_remote_repo(module_path)
 
 
 def main():
