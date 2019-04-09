@@ -100,7 +100,7 @@ def _main():
                 "Created new empty remote repo %s/%s", area, module_name
             )
         except VerificationError as e:
-            log.error(e.message)
+            usermsg.error(e.message)
         return
 
     module_creator = get_module_creator(module_name, area, fullname)
