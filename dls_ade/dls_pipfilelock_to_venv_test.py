@@ -37,7 +37,7 @@ class PipfilelockToVenv(unittest.TestCase):
         absent_pkg_list = []
         path_list = ['/dls_sw/prod/python3/RHEL7-x86_64/numpy/1.16.2/prefix/lib/python3.7/site-packages']
         dls_pipfilelock_to_venv.create_venv(absent_pkg_list, path_list)
-        assert os.path.isdir('lightweight-venv')
+        self.assertTrue(os.path.isdir('lightweight-venv'))
 
     def test_paths_file_created_correctly(self):
         os.chdir(self.test_folder)
@@ -45,4 +45,4 @@ class PipfilelockToVenv(unittest.TestCase):
         path_list = ['/dls_sw/prod/python3/RHEL7-x86_64/numpy/1.16.2/prefix/lib/python3.7/site-packages']
         dls_pipfilelock_to_venv.create_venv(absent_pkg_list, path_list)
         file = 'lightweight-venv/lib/python3.7/site-packages/dls-installed-packages.pth'
-        assert os.path.isfile(file)
+        self.assertTrue(os.path.isfile(file))
