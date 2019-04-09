@@ -38,20 +38,10 @@ class PopulateDist(unittest.TestCase):
 
     def setUp(self):
         self.test_folder = mkdtemp()
+        os.environ['TESTING_ROOT'] = self.test_folder
 
     def tearDown(self):
         pass
-
-    def test_conversion_from_dash_to_underscore_is_ok(self):
-        package, version = 'module-name', '1-2-3'
-        test_list = dls_populate_dist.format_pkg_name(package, version)
-        test_module_name = test_list.split()[0]
-        self.assertEqual(test_module_name, 'module_name')
-
-    def test_ensure_missing_pkgs_list_correctly_filled_with_items(self):
-        package, version = 'module-name', '==1-2-3'
-        test_item = dls_populate_dist.format_pkg_name(package, version)
-        self.assertEqual(test_item, 'module_name 1-2-3')
 
     def test_ensure_script_exits_when_no_lockfile_present(self):
         os.chdir(self.test_folder)
