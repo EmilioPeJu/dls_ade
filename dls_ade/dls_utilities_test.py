@@ -1,9 +1,13 @@
 from dls_ade import dls_utilities
 import unittest
+import os
 
 from dls_ade.exceptions import ParsingError
 
 from dls_ade.dls_utilities import check_tag_is_valid
+from dls_ade.dls_utilities import python3_module_installed
+
+from tempfile import mkdtemp
 
 
 class TagFormatTest(unittest.TestCase):
@@ -77,3 +81,25 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
             dls_utilities.check_technical_area(area, module)
         except ParsingError as error:
             self.assertEqual(str(error), expected_error_msg)
+
+class PythonThreePipeline(unittest.TestCase):
+
+    def test_module_is_installed(self):
+        self.test_folder = mkdtemp()
+        os.environ['TESTING_ROOT'] = self.test_folder
+        module = 'test'
+        version = '1.2.3'
+        os.chdir(self.test_folder)
+        dir_path = f'dls_sw/prod/python3/RHEL7-x86_64/{module}/{version}/prefix'
+        os.makedirs(dir_path)
+        success = python3_module_installed(module, version)
+        assert success
+
+    def test_module_is_not_installed(self):
+        self.test_folder = mkdtemp()
+        os.environ['TESTING_ROOT'] = self.test_folder
+        module = 'test'
+        version = '1.2.3'
+        success = python3_module_installed(module, version)
+        assert not success
+
