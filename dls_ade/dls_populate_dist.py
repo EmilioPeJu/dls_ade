@@ -28,7 +28,7 @@ def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
 def format_pkg_name(_package, _version):
-    return _package.replace('-','_')+' '+_version[2:]
+    return _package+' '+_version[2:]
 
 
 def populate_dist(_work_dist_dir):
