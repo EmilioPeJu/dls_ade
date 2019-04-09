@@ -101,7 +101,7 @@ def python3_module_installed(module, version):
         version: package version
 
     Returns:
-        bool: True if successful False otherwise
+        bool: True if package exists, False otherwise
 
     """
     TESTING_ROOT = os.getenv('TESTING_ROOT', '')

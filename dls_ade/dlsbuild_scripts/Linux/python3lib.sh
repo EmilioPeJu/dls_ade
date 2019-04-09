@@ -27,10 +27,12 @@ source /dls_sw/etc/profile
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+#DLS_ADE_LOCATION=~/RHEL7/dls_ade
 DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/$PYTHON_VERSION/site-packages
 
+#export TESTING_ROOT=~/testing-root2
 export TESTING_ROOT=/dls_sw/work/python3/test-root
 CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/$OS_VERSION
 WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
@@ -40,19 +42,31 @@ export PATH=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin:$PATH
 
 
 # Copy dist (and lockfile if there is one) from work to prod folder
-install_dist=false
+copied_dist=false
 
 for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$_module-$_version*"); do
     cp $dist $PROD_DIST_DIR
-    install_dist=true
+    copied_dist=true
 done
 
+if ! $copied_dist; then
+    if [[ $_module =~ '-' ]]; then
+        underscore_module=${_module//-/_}
+        for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$underscore_module-$_version*"); do
+            cp $dist $PROD_DIST_DIR
+            copied_dist=true
+        done
+    elif [[ $_module =~ '_' ]]; then
+        dash_module=${_module//_/-}
+        for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$dash_module-$_version*"); do
+            cp $dist $PROD_DIST_DIR
+            copied_dist=true
+        done
+    fi
+fi
 
 # Installation of dependency
-if $install_dist; then
-    # Replace all underscripts with dashes because this is how Python
-    # installs them (?)
-    _module=${_module//_/-}
+if $copied_dist; then
     prefix_location=$CENTRAL_LOCATION/$_module/$_version/prefix
     site_packages_location=$prefix_location/lib/$PYTHON_VERSION/site-packages
     specifier="$_module==$_version"
