@@ -56,7 +56,7 @@ class PopulateDist(unittest.TestCase):
         dls_populate_dist.populate_dist(self.test_folder)
         myfiles = os.listdir(self.test_folder)
         target_wheel = 'numpy-1.16.2-cp37-cp37m-manylinux1_x86_64.whl'
-        assert target_wheel in myfiles
+        self.assertIn(target_wheel, myfiles)
 
     def test_populate_dist_returns_item(self):
         os.chdir(self.test_folder)
@@ -64,3 +64,11 @@ class PopulateDist(unittest.TestCase):
             f.write(PopulateDist.lockfile)
         item = dls_populate_dist.populate_dist(self.test_folder)
         self.assertEqual(item[0], 'numpy 1.16.2')
+
+    def test_populate_dist_returns_nothing_when_package_installed(self):
+        os.chdir(self.test_folder)
+        with open('Pipfile.lock', 'w') as f:
+            f.write(PopulateDist.lockfile)
+        os.makedirs('dls_sw/prod/python3/RHEL7-x86_64/numpy/1.16.2/prefix')
+        item = dls_populate_dist.populate_dist(self.test_folder)
+        self.assertFalse(item)

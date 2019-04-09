@@ -93,13 +93,14 @@ class PythonThreePipeline(unittest.TestCase):
         dir_path = f'dls_sw/prod/python3/RHEL7-x86_64/{module}/{version}/prefix'
         os.makedirs(dir_path)
         success = python3_module_installed(module, version)
-        assert success
+        self.assertTrue(success)
 
     def test_module_is_not_installed(self):
         self.test_folder = mkdtemp()
         os.environ['TESTING_ROOT'] = self.test_folder
         module = 'test'
         version = '1.2.3'
+        os.chdir(self.test_folder)
         success = python3_module_installed(module, version)
-        assert not success
+        self.assertFalse(success)
 
