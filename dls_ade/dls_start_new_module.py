@@ -69,13 +69,28 @@ def make_parser():
         "-n", "--no-import", action="store_true", dest="no_import",
         help="Creates the module but doesn't store it on the server"
     )
+
     group.add_argument(
         "-e", "--empty", action="store_true", dest="empty",
         help="Initialize an empty remote repository on the server. Does not "
              "create a local repo nor commit any files."
     )
 
+    parser.add_argument(
+        "-q", "--ignore_existing", action="store_true", dest="ignore_existing",
+        help="When used together with -e/--empty, this script will exit "
+             "silently with success if a repository with the given name "
+             "already exists on the server."
+    )
+
     return parser
+
+
+def verify_args(args):
+    if args.ignore_existing and not args.empty:
+        raise VerificationError(
+            "--ignore_existing can only be used with --empty"
+        )
 
 
 def _main():
@@ -84,6 +99,12 @@ def _main():
 
     parser = make_parser()
     args = parser.parse_args()
+
+    try:
+        verify_args(args)
+    except VerificationError as e:
+        usermsg.error(e.message)
+        return 1
 
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
@@ -100,8 +121,10 @@ def _main():
                 "Created new empty remote repo %s/%s", area, module_name
             )
         except VerificationError as e:
-            usermsg.error(e.message)
-        return
+            if not args.ignore_existing:
+                usermsg.error(e.message)
+                return 1
+        return 0
 
     module_creator = get_module_creator(module_name, area, fullname)
 
