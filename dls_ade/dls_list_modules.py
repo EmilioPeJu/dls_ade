@@ -82,7 +82,7 @@ def _main():
         source = server.dev_area_path(args.area)
 
     print_msg = "Modules in {area}:\n".format(area=search_area)
-    print_msg += "\n".join(get_module_list(source, search_area))
+    print_msg += "\n".join(sorted(get_module_list(source, search_area)))
     usermsg.info(print_msg)
 
 
