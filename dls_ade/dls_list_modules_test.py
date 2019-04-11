@@ -42,7 +42,7 @@ class PrintModuleListTest(unittest.TestCase):
 
         dls_list_modules.get_module_list(source)
 
-        self.server_mock.get_server_repo_list.assert_called_once_with()
+        self.server_mock.get_server_repo_list.assert_called_once_with(None)
 
     def test_given_valid_source_then_list_of_modules(self):
         self.server_mock.get_server_repo_list.return_value =\
