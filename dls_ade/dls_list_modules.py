@@ -38,7 +38,7 @@ def make_parser():
     return parser
 
 
-def get_module_list(source):
+def get_module_list(source, area=None):
     """
     Prints the modules in the area of the repository specified by source.
 
@@ -48,7 +48,7 @@ def get_module_list(source):
         list: List of modules (list of str)
     """
     server = Server()
-    split_list = server.get_server_repo_list()
+    split_list = server.get_server_repo_list(area)
     modules = []
     for module_path in split_list:
         if module_path.startswith(source + '/'):
@@ -82,7 +82,7 @@ def _main():
         source = server.dev_area_path(args.area)
 
     print_msg = "Modules in {area}:\n".format(area=search_area)
-    print_msg += "\n".join(get_module_list(source))
+    print_msg += "\n".join(get_module_list(source, search_area))
     usermsg.info(print_msg)
 
 

@@ -37,7 +37,7 @@ class GitServer(object):
         repo_list = self.get_server_repo_list()
         return server_repo_path in repo_list
 
-    def get_server_repo_list(self):
+    def get_server_repo_list(self, area=None):
         """
         Returns list of module repository paths from the git server.
 

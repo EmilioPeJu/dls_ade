@@ -98,7 +98,7 @@ class GitlabServer(GitServer):
                 raise
         return True
 
-    def get_server_repo_list(self):
+    def get_server_repo_list(self, area=None):
         """
         Returns list of module repository paths from all projects
 
@@ -107,7 +107,13 @@ class GitlabServer(GitServer):
         """
 
         repos = []
-        projects = self._anon_gitlab_handle.projects.list(all=True)
+        if area is None:
+            # get all the projects in Gitlab
+            projects = self._anon_gitlab_handle.projects.list(all=True)
+        else:
+            projects = (self._anon_gitlab_handle.groups
+                                                .get(self.dev_area_path(area))
+                                                .projects.list(all=True))
 
         for project in projects:
             repo_path = os.path.join(project.namespace["full_path"],
