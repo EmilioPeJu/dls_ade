@@ -21,23 +21,28 @@ from dls_ade.dls_utilities import remove_git_at_end
 from dls_ade.exceptions import VerificationError, ParsingError
 
 usage = ("""Default <area> is 'support'.
-Start a new Diamond module of a particular type, using a template appropriate 
-for the chosen area. In the case of 'support' or 'ioc' modules, makeBaseApp is 
+Start a new Diamond module of a particular type, using a template appropriate
+for the chosen area. In the case of 'support' or 'ioc' modules, makeBaseApp is
 used with the DLS template.
 
-The module is created locally in the current working directory. Unless the 
---no-import flag is used, a remote repository will then be created on the server
-and an initial commit pushed to it.
+The module is created locally in the current working directory. Unless the
+--no-import flag is used, a remote repository will then be created on the
+server and an initial commit pushed to it.
 
 IOC modules:
-    If the --ioc flag is used, <module_name> is expected to be of the 
-    form '<Domain>/<Domain>-<Technical area>-IOC-<Number>' 
-    i.e. BL02I/BL02I-VA-IOC-03 
+    If the --ioc flag is used, <module_name> is expected to be of the
+    form '<Domain>/<Domain>-<Technical area>-IOC-<Number>'
+    i.e. BL02I/BL02I-VA-IOC-03
 
-Beamline UI modules:
-    If the Technical Area is UI then a special template is used, 
-    to create a top level module for screens and gda,
-    e.g. BL02I/BL02I-UI-IOC-01""")
+Beamline CSS UI modules:
+    With the --ioc flag and the Technical Area is UI then a special template is
+    used, to create a top level module for a beamline with a CSS synoptic.
+    e.g. BL02I/BL02I-UI-IOC-01
+
+Beamline EDM UI modules:
+    With the --ioc flag and a name of the form BLxxI/BL, a special template is
+    used, to create a top level module for a beamline with an EDM synoptic.
+    e.g. BL02I/BL""")
 
 
 def make_parser():
@@ -58,12 +63,7 @@ def make_parser():
 
     parser = ArgParser(usage, supported_areas)
     parser.add_module_name_arg()
-    parser.formatter_class=argparse.RawDescriptionHelpFormatter
-
-    parser.add_argument(
-        "-f", "--fullname", action="store_true", dest="fullname",
-        help="Create new-style ioc, with full ioc name in path"
-    )
+    parser.formatter_class = argparse.RawDescriptionHelpFormatter
 
     # The following arguments cannot be used together
     group = parser.add_mutually_exclusive_group()
@@ -112,7 +112,6 @@ def _main():
 
     module_name = args.module_name
     area = args.area
-    fullname = args.fullname
     create_empty_remote_only = args.empty
     export_to_server = not args.no_import
 
@@ -129,7 +128,7 @@ def _main():
         return 0
 
     try:
-        module_creator = get_module_creator(module_name, area, fullname)
+        module_creator = get_module_creator(module_name, area, False)
     except ParsingError as e:
         usermsg.error(e.message)
         return 1

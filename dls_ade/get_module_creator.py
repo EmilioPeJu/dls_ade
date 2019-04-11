@@ -4,6 +4,11 @@ from dls_ade import module_template as mt
 from dls_ade import module_creator as mc
 from dls_ade.exceptions import ParsingError
 
+base_ioc_name_err_message = (
+    "IOC name should be of the form:\n"
+    "  <Domain>/<Domain>-<Technical area>-IOC-<Number> or <Domain>/BL\n"
+    "but the IOC name given was {name}. "
+)
 
 def get_module_creator(module_name, area="support", fullname=False):
     """Returns a :class:`ModuleCreator` subclass object.
@@ -125,70 +130,29 @@ def get_module_creator_ioc(module_name, fullname=False):
         "ioc_number": "01"
     }
 
-    if technical_area == "BL":
-        if dash_separated:
-            app_name = "-".join(cols)
-            module_path = domain + "/" + app_name
-        else:
-            app_name = domain
-            module_path = domain + "/" + technical_area
-
-        template_args["app_name"] = app_name
-        return mc.ModuleCreatorWithApps(module_path, area,
-                                        mt.ModuleTemplateIOCBL,
-                                        **template_args)
-    elif technical_area == "UI":
-        module_template_cls = mt.ModuleTemplateIOCUI
-
-
+    # Regular IOC name
+    # e.g. BL99P-TS-IOC-01 - use this for app name
     if dash_separated:
         app_name = "-".join(cols)
         module_path = domain + "/" + app_name
-        template_args['app_name'] = app_name
-        return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        **template_args)
 
-    if len(cols) == 3 and cols[2]:
-        ioc_number = cols[2]
+        # e.g. BLXXI/BLXXI-UI-IOC-01
+        if technical_area == "UI":
+            module_template_cls = mt.ModuleTemplateIOCUI
+            module_path = domain + "/" + app_name
+
+    # e.g. BLXXI/BL
+    elif technical_area == "BL":
+        module_template_cls = mt.ModuleTemplateIOCBL
+        app_name = domain
+        module_path = domain + "/" + "BL"
+
     else:
-        ioc_number = "01"
+        raise ParsingError(base_ioc_name_err_message.format(name=module_name))
 
-    app_name = "-".join([domain, technical_area, "IOC", ioc_number])
-
-    template_args.update({
-        'app_name': app_name,
-        'ioc_number': ioc_number
-    })
-
-    if fullname:
-        module_path = domain + "/" + app_name
-        return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
-                                        **template_args)
-    else:
-        # This part is here to retain compatibility with "old-style" modules,
-        # in which a single repo (or module) named "domain/technical_area"
-        # contains multiple domain-technical_area-IOC-xxApp's. This code is
-        # included in here to retain compatibility with the older svn scripts.
-        # The naming is ambiguous, however. I will continue to use the name
-        # 'module' to refer to the repo, but be aware that start_new_module and
-        # module_creator don't have to actually create new modules (repos)
-        # on the server in this instance.
-        server = Server()
-        module_path = domain + "/" + technical_area
-        server_repo_path = server.dev_module_path(module_path, area)
-        if server.is_server_repo(server_repo_path):
-            # Adding new App to old style "domain/tech_area" module that
-            # already exists on the remote server.
-            return mc.ModuleCreatorAddAppToModule(module_path, area,
-                                                  module_template_cls,
-                                                  **template_args)
-        else:
-            # Otherwise, the behaviour is exactly the same as that given
-            # by the ordinary IOC class as module_path is the only thing
-            # that is different
-            return mc.ModuleCreatorWithApps(module_path, area,
-                                            module_template_cls,
-                                            **template_args)
+    template_args['app_name'] = app_name
+    return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
+                                    **template_args)
 
 
 def split_ioc_module_name(module_name):
@@ -211,11 +175,6 @@ def split_ioc_module_name(module_name):
     """
     slash_tokens = module_name.split('/')
 
-    base_err_message = (
-        "IOC name should be of the form:\n" 
-        "  <Domain>/<Domain>-<Technical area>-IOC-<Number>\n"
-        "but the IOC name given was {name}. ")
-
     # No slash present in name e.g. "BL99P-TS-IOC-01"
     if len(slash_tokens) <= 1:
 
@@ -223,22 +182,22 @@ def split_ioc_module_name(module_name):
         # e.g. "BL99P-TS-IOC-01
         if module_name.count("-") == 3:
             tokens = module_name.split("-")
-            err_message = (base_err_message
+            err_message = (base_ioc_name_err_message
                            + "\nDid you mean {technical_area}/{name} ?")
             raise ParsingError(err_message.format(technical_area=tokens[0],
                                                   name=module_name))
 
         # Malformed IOC name
         # e.g. BL99P-TS-
-        raise ParsingError(base_err_message.format(name=module_name))
+        raise ParsingError(base_ioc_name_err_message.format(name=module_name))
 
     # Trailing slash
     elif not slash_tokens[1]:
-        raise ParsingError(base_err_message.format(name=module_name))
+        raise ParsingError(base_ioc_name_err_message.format(name=module_name))
 
     # Slash present in name.
     # e.g. "test/module" or "test/module/02" or "BL99P/BL99P-TS-IOC-01"
-    else:
+    elif len(slash_tokens) == 2:
         domain = slash_tokens[0]
         dash_tokens = slash_tokens[1].split('-')
 
@@ -252,5 +211,6 @@ def split_ioc_module_name(module_name):
         else:
             return True, dash_tokens
 
-
-
+    # More than one slash - not allowed
+    else:
+        raise ParsingError(base_ioc_name_err_message.format(name=module_name))

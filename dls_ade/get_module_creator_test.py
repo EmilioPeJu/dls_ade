@@ -142,61 +142,10 @@ class GetModuleCreatorTestIOC(GetModuleCreatorTest):
                                                         technical_area="module",
                                                         ioc_number="01")
 
-    def test_given_module_name_slash_separated_with_fullname_true_then_module_creator_with_apps_returned_with_correct_args_used(self):
+    def test_given_module_name_slash_separated_and_more_than_one_slash_raises_exception(self):
 
-        new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=True)
-
-        self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-02", "ioc", self.mt_mocks['IOC'],
-                                                        app_name="test-module-IOC-02",
-                                                        domain="test",
-                                                        technical_area="module",
-                                                        ioc_number="02")
-
-    def test_given_module_name_slash_separated_with_fullname_true_but_no_ioc_number_then_module_creator_with_apps_returned_with_correct_args_used(self):
-
-        new_ioc_creator = get_mc.get_module_creator_ioc("test/module", fullname=True)
-
-        self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'],
-                                                        app_name="test-module-IOC-01",
-                                                        domain="test",
-                                                        technical_area="module",
-                                                        ioc_number="01")
-
-    @patch('dls_ade.Server.dev_module_path', return_value="controlstest/ioc/test/module")
-    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_not_in_remote_repo_then_module_creator_with_apps_returned_with_correct_args_used(self, _):
-
-        self.mock_is_server_repo.return_value = False
-
-        new_ioc_creator = get_mc.get_module_creator_ioc("test/module/01", fullname=False)
-
-        self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
-        self.mock_is_server_repo.assert_called_once_with(
-            "controlstest/ioc/test/module")
-        self.mock_nmc_with_apps.assert_called_once_with("test/module", "ioc",
-                                                        self.mt_mocks['IOC'],
-                                                        app_name="test-module-IOC-01",
-                                                        domain="test",
-                                                        technical_area="module",
-                                                        ioc_number="01")
-
-    @patch('dls_ade.Server.dev_module_path', return_value="controlstest/ioc/test/module")
-    def test_given_module_name_slash_separated_with_fullname_false_and_module_path_in_remote_repo_then_module_creator_add_to_module_returned_with_correct_args_used(self, _):
-
-        self.mock_is_server_repo.return_value = True
-
-        new_ioc_creator = get_mc.get_module_creator_ioc("test/module/02", fullname=False)
-
-        self.assertEqual(new_ioc_creator, "ModuleCreatorAddApp")
-        self.mock_is_server_repo.assert_called_once_with(
-            "controlstest/ioc/test/module")
-        self.mock_nmc_add_app.assert_called_once_with("test/module", "ioc",
-                                                      self.mt_mocks['IOC'],
-                                                      app_name="test-module-IOC-02",
-                                                      domain="test",
-                                                      technical_area="module",
-                                                      ioc_number="02")
+        with self.assertRaises(ParsingError):
+            get_mc.get_module_creator_ioc("test/module/02")
 
 
 class GetModuleCreatorTestIOCBL(GetModuleCreatorTest):
@@ -219,16 +168,6 @@ class GetModuleCreatorTestIOCBL(GetModuleCreatorTest):
                                                         technical_area="BL",
                                                         ioc_number="01")
 
-    def test_given_module_name_dash_separated_then_module_creator_with_apps_returned_with_correct_args_used(self):
-
-        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test/test-BL-IOC-01", "ioc")
-
-        self.assertEqual(new_ioc_bl_creator, "ModuleCreatorWithApps")
-        self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'],
-                                                        app_name="test-BL-IOC-01",
-                                                        domain="test",
-                                                        technical_area="BL",
-                                                        ioc_number="01")
 
 
 class GetModuleCreatorTestIOCUI(GetModuleCreatorTest):
@@ -261,6 +200,12 @@ class SplitIOCModuleNameTest(unittest.TestCase):
         self.assertFalse(dash_sep)
         self.assertEqual(cols, ["part_one", "part_two"])
 
+    def test_given_module_name_slash_separated_with_more_than_one_slash_raises_exception(self):
+        with self.assertRaises(ParsingError) as e:
+            get_mc.split_ioc_module_name("part_one/part_two/part_three")
+
+        self.assertTrue("part_one/part_two/part_three" in str(e.exception))
+
     def test_given_module_name_slash_separated_with_second_part_empty_then_function_raises_exception_with_correct_message(self):
 
         with self.assertRaises(ParsingError) as e:
@@ -280,8 +225,6 @@ class SplitIOCModuleNameTest(unittest.TestCase):
 
         self.assertTrue(dash_sep)
         self.assertEqual(cols, ["part_one", "part_two"])
-
-
 
     def test_given_neither_slash_nor_dash_separated_then_exception_raised_with_correct_message(self):
 

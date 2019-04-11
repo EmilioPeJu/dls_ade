@@ -25,12 +25,6 @@ class MakeParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "no_import")
         self.assertIn("--no-import", option.option_strings)
 
-    def test_fullname_argument_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-f']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "fullname")
-        self.assertIn("--fullname", option.option_strings)
-
     @patch("dls_ade.dls_start_new_module.Server.create_remote_repo")
     @patch("dls_ade.dls_start_new_module.Server.is_server_repo")
     def test_create_empty_project_name_taken(self,
