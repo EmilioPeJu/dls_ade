@@ -48,6 +48,10 @@ def get_module_list(source, area=None):
         list: List of modules (list of str)
     """
     server = Server()
+    if area == 'ioc':
+        # get list of all projects
+        # the ioc area is formed mainly by groups
+        area = None
     split_list = server.get_server_repo_list(area)
     modules = []
     for module_path in split_list:
