@@ -127,7 +127,7 @@ def get_module_creator_ioc(module_name, fullname=False):
 
     if technical_area == "BL":
         if dash_separated:
-            app_name = module_name
+            app_name = "-".join(cols)
             module_path = domain + "/" + app_name
         else:
             app_name = domain
@@ -142,7 +142,7 @@ def get_module_creator_ioc(module_name, fullname=False):
 
 
     if dash_separated:
-        app_name = module_name
+        app_name = "-".join(cols)
         module_path = domain + "/" + app_name
         template_args['app_name'] = app_name
         return mc.ModuleCreatorWithApps(module_path, area, module_template_cls,
@@ -206,20 +206,51 @@ def split_ioc_module_name(module_name):
             name.
 
     Raises:
-        ParsingError: If the module cannot be split by '-' or '/'.
+        ParsingError: If the name is not of the correct form
 
     """
-    cols = module_name.split('/')
-    dash_separated = False
+    slash_tokens = module_name.split('/')
 
-    if len(cols) <= 1 or not cols[1]:
-        cols = module_name.split('-')
-        dash_separated = True
+    base_err_message = (
+        "IOC name should be of the form:\n" 
+        "  <Domain>/<Domain>-<Technical area>-IOC-<Number>\n"
+        "but the IOC name given was {name}. ")
 
-        # This has different check to retain compatibility with old svn script.
-        if len(cols) <= 1:
-            err_message = ("Need a name with '-' or '/' in it, got "
-                           "{module:s}")
-            raise ParsingError(err_message.format(module=module_name))
+    # No slash present in name e.g. "BL99P-TS-IOC-01"
+    if len(slash_tokens) <= 1:
 
-    return dash_separated, cols
+        # Well-formed IOC name but domain omitted
+        # e.g. "BL99P-TS-IOC-01
+        if module_name.count("-") == 3:
+            tokens = module_name.split("-")
+            err_message = (base_err_message
+                           + "\nDid you mean {technical_area}/{name} ?")
+            raise ParsingError(err_message.format(technical_area=tokens[0],
+                                                  name=module_name))
+
+        # Malformed IOC name
+        # e.g. BL99P-TS-
+        raise ParsingError(base_err_message.format(name=module_name))
+
+    # Trailing slash
+    elif not slash_tokens[1]:
+        raise ParsingError(base_err_message.format(name=module_name))
+
+    # Slash present in name.
+    # e.g. "test/module" or "test/module/02" or "BL99P/BL99P-TS-IOC-01"
+    else:
+        domain = slash_tokens[0]
+        dash_tokens = slash_tokens[1].split('-')
+
+        # No dashes in second part
+        # e.g. BL99P/BL
+        if len(dash_tokens) == 1:
+            return False, slash_tokens
+
+        # Dashes in second part
+        # e.g. BL99P/BL99P-TS-IOC-01
+        else:
+            return True, dash_tokens
+
+
+

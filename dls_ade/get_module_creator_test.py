@@ -124,9 +124,16 @@ class GetModuleCreatorTestIOC(GetModuleCreatorTest):
 
         self.assertTrue("test_module" in str(e.exception))
 
+    def test_given_module_name_without_domain_raises_exception(self):
+
+        with self.assertRaises(ParsingError) as e:
+            get_mc.get_module_creator_ioc("test-module-IOC-01")
+
+        self.assertTrue("test/test-module-IOC-01" in str(e.exception))
+
     def test_given_module_name_dash_separated_then_module_creator_with_apps_returned_with_correct_args_used(self):
 
-        new_ioc_creator = get_mc.get_module_creator_ioc("test-module-IOC-01")
+        new_ioc_creator = get_mc.get_module_creator_ioc("test/test-module-IOC-01")
 
         self.assertEqual(new_ioc_creator, "ModuleCreatorWithApps")
         self.mock_nmc_with_apps.assert_called_once_with("test/test-module-IOC-01", "ioc", self.mt_mocks['IOC'],
@@ -214,7 +221,7 @@ class GetModuleCreatorTestIOCBL(GetModuleCreatorTest):
 
     def test_given_module_name_dash_separated_then_module_creator_with_apps_returned_with_correct_args_used(self):
 
-        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test-BL-IOC-01", "ioc")
+        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test/test-BL-IOC-01", "ioc")
 
         self.assertEqual(new_ioc_bl_creator, "ModuleCreatorWithApps")
         self.mock_nmc_with_apps.assert_called_once_with("test/test-BL-IOC-01", "ioc", self.mt_mocks['IOCBL'],
@@ -235,7 +242,7 @@ class GetModuleCreatorTestIOCUI(GetModuleCreatorTest):
 
     def test_given_module_name_dash_separated_then_module_creator_with_apps_returned_with_correct_args_used(self):
 
-        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test-UI-IOC-01", "ioc")
+        new_ioc_bl_creator = get_mc.get_module_creator_ioc("test/test-UI-IOC-01", "ioc")
 
         self.assertEqual(new_ioc_bl_creator, "ModuleCreatorWithApps")
         self.mock_nmc_with_apps.assert_called_once_with("test/test-UI-IOC-01", "ioc", self.mt_mocks['IOCUI'],
@@ -261,19 +268,20 @@ class SplitIOCModuleNameTest(unittest.TestCase):
 
         self.assertTrue("part_one/" in str(e.exception))
 
+    def test_given_module_name_dash_separated_without_technical_area_raises_exception(self):
+        with self.assertRaises(ParsingError) as e:
+            get_mc.split_ioc_module_name("part_one-part_two")
+
+        self.assertTrue("part_one-part_two" in str(e.exception))
+
     def test_given_module_name_dash_separated_with_second_part_not_empty_then_function_returns_correctly(self):
 
-        dash_sep, cols = get_mc.split_ioc_module_name("part_one-part_two")
+        dash_sep, cols = get_mc.split_ioc_module_name("part_one/part_one-part_two")
 
         self.assertTrue(dash_sep)
         self.assertEqual(cols, ["part_one", "part_two"])
 
-    def test_given_module_name_dash_separated_with_second_part_empty_then_function_returns_correctly(self):
 
-        dash_sep, cols = get_mc.split_ioc_module_name("part_one-")
-
-        self.assertTrue(dash_sep)
-        self.assertEqual(cols, ["part_one", ""])
 
     def test_given_neither_slash_nor_dash_separated_then_exception_raised_with_correct_message(self):
 
@@ -281,4 +289,3 @@ class SplitIOCModuleNameTest(unittest.TestCase):
             get_mc.split_ioc_module_name("this_has_no_separator")
 
         self.assertTrue("this_has_no_separator" in str(e.exception))
-        self.assertTrue(all(x in str(e.exception) for x in ["'-'", "'/'"]))
