@@ -13,6 +13,7 @@ GITLAB_RELEASE_URL = "https://gitlab.diamond.ac.uk"
 TOKEN_HELP_LINK = "https://confluence.diamond.ac.uk/display/CNTRLS/" \
                   "How+to+generate+a+GitLab+API+token+for+use+with+dls_ade"
 GITLAB_API_VERSION = 4
+GITLAB_PER_PAGE = 100
 HTTP_NOT_FOUND = 404
 # make sure the file mode is 440
 USER_TOKEN_FILE_PATH = os.path.expanduser("~/.config/gitlab/token")
@@ -43,7 +44,8 @@ class GitlabServer(GitServer):
 
         self._anon_gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
                                                  private_token="",
-                                                 api_version=GITLAB_API_VERSION
+                                                 api_version=GITLAB_API_VERSION,
+                                                 per_page=GITLAB_PER_PAGE
                                                  )
         self._private_gitlab_handle = None
 
@@ -105,8 +107,7 @@ class GitlabServer(GitServer):
         """
 
         repos = []
-        projects = self._anon_gitlab_handle.projects.list(all=True,
-                                                          per_page=1000)
+        projects = self._anon_gitlab_handle.projects.list(all=True)
 
         for project in projects:
             repo_path = os.path.join(project.namespace["full_path"],
