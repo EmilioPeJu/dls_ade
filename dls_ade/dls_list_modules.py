@@ -81,8 +81,12 @@ def _main():
         search_area = args.area
         source = server.dev_area_path(args.area)
 
+    usermsg.info("Listing modules in the %s area\n"
+                 "Hold on, this may take a little while ...",
+                 search_area)
+    module_list = sorted(get_module_list(source, search_area))
     print_msg = "Modules in {area}:\n".format(area=search_area)
-    print_msg += "\n".join(sorted(get_module_list(source, search_area)))
+    print_msg += "\n".join(module_list)
     usermsg.info(print_msg)
 
 
