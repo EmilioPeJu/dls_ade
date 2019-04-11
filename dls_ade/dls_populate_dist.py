@@ -38,7 +38,11 @@ def populate_dist(_work_dist_dir):
     try:
         packages = parse_pipfilelock('Pipfile.lock')
         for package, contents in packages.items():
-            version = contents['version']
+            try:
+                version = contents['version']
+            except KeyError as e:
+                error_msg = 'Failed to find a version for {} in Pipfile.lock'
+                sys.exit(error_msg.format(package))
             specifier = package + version  # example: flask==1.0.2
 
             if not python3_module_installed(package, version[2:]):
@@ -49,6 +53,7 @@ def populate_dist(_work_dist_dir):
         return missing_pkgs
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
+
 
 def main():
 
