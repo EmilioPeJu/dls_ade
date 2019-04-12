@@ -98,26 +98,28 @@ class GitlabServer(GitServer):
                 raise
         return True
 
-    def get_server_repo_list(self, area=None):
+    def get_server_repo_list(self, path=GIT_ROOT_DIR):
         """
-        Returns list of module repository paths from all projects
+        Returns list of module repository paths from all projects below
+        'path' in the Gitlab server tree.
+
+        Arguments:
+            path: Gitlab server path
 
         Returns:
             List[str]: Repository paths on the server.
         """
+        projects = (
+            self._anon_gitlab_handle.groups.get(path).projects.list(
+                all=True, include_subgroups=True
+            )
+        )
 
         repos = []
-        if area is None:
-            # get all the projects in Gitlab
-            projects = self._anon_gitlab_handle.projects.list(all=True)
-        else:
-            projects = (self._anon_gitlab_handle.groups
-                                                .get(self.dev_area_path(area))
-                                                .projects.list(all=True))
-
         for project in projects:
-            repo_path = os.path.join(project.namespace["full_path"],
-                                     project.name)
+            repo_path = os.path.join(
+                project.namespace["full_path"], project.name
+            )
             repo_path = "{}.git".format(repo_path)
             repos.append(repo_path)
 
@@ -188,7 +190,7 @@ class GitlabServer(GitServer):
     @staticmethod
     def dev_area_path(area="support"):
         """
-        Return the full server path for the given area.
+        Return the full server path for the given area e.g. controls/support
 
         Args:
             area(str): The area of the module.
