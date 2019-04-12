@@ -44,12 +44,13 @@ def get_module_list(source):
 
     Args:
         source(str): Suffix of URL to list from e.g. controls/ioc/BL15I
-        area(str): area to filter search by e.g. ioc
+
     Returns:
         list: List of modules (list of str)
     """
     server = Server()
     repos = server.get_server_repo_list(source)
+    # Strip source from the front and .git from the end.
     modules = [remove_git_at_end(p.split(source + '/')[-1]) for p in repos]
     return modules
 

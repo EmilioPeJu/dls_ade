@@ -103,6 +103,8 @@ class GitlabServer(GitServer):
         Returns list of module repository paths from all projects below
         'path' in the Gitlab server tree.
 
+        Includes .git suffix.
+
         Arguments:
             path: Gitlab server path
 
