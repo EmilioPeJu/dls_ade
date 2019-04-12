@@ -42,24 +42,15 @@ class PrintModuleListTest(unittest.TestCase):
 
         dls_list_modules.get_module_list(source)
 
-        self.server_mock.get_server_repo_list.assert_called_once_with(None)
+        self.server_mock.get_server_repo_list.assert_called_once_with(source)
 
     def test_given_valid_source_then_list_of_modules(self):
-        self.server_mock.get_server_repo_list.return_value =\
-            ["test/source/module", "test/source2/module2"]
+        self.server_mock.get_server_repo_list.return_value = [
+            "test/source/module", "test/source/module2.git"
+        ]
 
         source = "test/source"
 
         module_list = dls_list_modules.get_module_list(source)
         self.assertIsNotNone(module_list)
-        self.assertListEqual(module_list, ['module'])
-
-    def test_given_invalid_source_then_empty_list_of_modules(self):
-        self.server_mock.get_server_repo_list.return_value = \
-            ["test/not_source/module"]
-
-        source = "test/source"
-
-        module_list = dls_list_modules.get_module_list(source)
-        self.assertIsNotNone(module_list)
-        self.assertListEqual(module_list, [])
+        self.assertListEqual(module_list, ['module', 'module2'])

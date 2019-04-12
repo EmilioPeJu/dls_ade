@@ -204,7 +204,8 @@ class GitServer(object):
 
     def dev_group_path(self, group, area="support"):
         """
-        Return the full server path for the given group of  modules in an area.
+        Return the full server path for the given group of modules in an area
+        e.g. controls/ioc/SR24I.
 
         Args:
             area(str): The area of the module.
@@ -218,7 +219,8 @@ class GitServer(object):
 
     def dev_module_path(self, module, area="support"):
         """
-        Return the full server path for the given module and area.
+        Return the full server path for the given module and area
+        e.g. controls/support/zebra.git.
 
         Args:
             area(str): The area of the module.

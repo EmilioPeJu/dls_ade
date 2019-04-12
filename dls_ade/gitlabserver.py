@@ -6,6 +6,16 @@ import gitlab
 from dls_ade.gitserver import GitServer
 from dls_ade.dls_utilities import GIT_ROOT_DIR
 
+def test_given_invalid_source_then_empty_list_of_modules(self):
+    self.server_mock.get_server_repo_list.return_value = \
+        ["test/not_source/module"]
+
+    source = "test/source"
+
+    module_list = dls_list_modules.get_module_list(source)
+    self.assertIsNotNone(module_list)
+    self.assertListEqual(module_list, [])
+
 GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_CLONE_URL = "ssh://git@gitlab.diamond.ac.uk"
@@ -98,26 +108,31 @@ class GitlabServer(GitServer):
                 raise
         return True
 
-    def get_server_repo_list(self, area=None):
+    def get_server_repo_list(self, path=GIT_ROOT_DIR):
         """
-        Returns list of module repository paths from all projects
+        Returns list of module repository paths from all projects below
+        'path' in the Gitlab server tree.
+
+        Includes .git suffix.
+
+        Arguments:
+            path: Gitlab server path
 
         Returns:
             List[str]: Repository paths on the server.
         """
+        projects = (
+            self._anon_gitlab_handle.groups.get(path).projects.list(
+                all=True, include_subgroups=True
+            )
+        )
+        print(projects)
 
         repos = []
-        if area is None:
-            # get all the projects in Gitlab
-            projects = self._anon_gitlab_handle.projects.list(all=True)
-        else:
-            projects = (self._anon_gitlab_handle.groups
-                                                .get(self.dev_area_path(area))
-                                                .projects.list(all=True))
-
         for project in projects:
-            repo_path = os.path.join(project.namespace["full_path"],
-                                     project.name)
+            repo_path = os.path.join(
+                project.namespace["full_path"], project.name
+            )
             repo_path = "{}.git".format(repo_path)
             repos.append(repo_path)
 
@@ -188,7 +203,7 @@ class GitlabServer(GitServer):
     @staticmethod
     def dev_area_path(area="support"):
         """
-        Return the full server path for the given area.
+        Return the full server path for the given area e.g. controls/support
 
         Args:
             area(str): The area of the module.
