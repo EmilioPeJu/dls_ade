@@ -6,6 +6,16 @@ import gitlab
 from dls_ade.gitserver import GitServer
 from dls_ade.dls_utilities import GIT_ROOT_DIR
 
+def test_given_invalid_source_then_empty_list_of_modules(self):
+    self.server_mock.get_server_repo_list.return_value = \
+        ["test/not_source/module"]
+
+    source = "test/source"
+
+    module_list = dls_list_modules.get_module_list(source)
+    self.assertIsNotNone(module_list)
+    self.assertListEqual(module_list, [])
+
 GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
 GITLAB_CLONE_URL = "ssh://git@gitlab.diamond.ac.uk"
@@ -116,6 +126,7 @@ class GitlabServer(GitServer):
                 all=True, include_subgroups=True
             )
         )
+        print(projects)
 
         repos = []
         for project in projects:
