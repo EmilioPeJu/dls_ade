@@ -76,7 +76,8 @@ def _main():
     usermsg.info("Listing modules in the %s area\n"
                  "Hold on, this may take a little while ...",
                  search_area)
-    module_list = sorted(get_module_list(source))
+    # Sort ignoring case of module name.
+    module_list = sorted(get_module_list(source), key=lambda x: x.lower())
     print_msg = "Modules in {area}:\n".format(area=search_area)
     print_msg += "\n".join(module_list)
     usermsg.info(print_msg)
