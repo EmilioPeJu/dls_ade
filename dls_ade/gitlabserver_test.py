@@ -19,6 +19,7 @@ class GetServerRepoList(unittest.TestCase):
     def test_get_server_repo_list_returns_correct_path(self, mock_gitlab):
         gl = GitlabServer()
         group_mock = MagicMock()
+        # Make sure the call to handle.groups.get() returns the correct mock.
         gl._anon_gitlab_handle.groups.get.return_value = group_mock
         group_mock.projects.list.return_value = FAKE_PROJECT_LIST
         projects = gl.get_server_repo_list()

@@ -126,7 +126,6 @@ class GitlabServer(GitServer):
                 all=True, include_subgroups=True
             )
         )
-        print(projects)
 
         repos = []
         for project in projects:
