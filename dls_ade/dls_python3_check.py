@@ -47,6 +47,7 @@ def compare_requirements(pipenv_reqs, setup_reqs):
                 pipenv_req, setup_req
             ))
             return False
+    return True
 
 
 def get_tags_on_head(repo):
