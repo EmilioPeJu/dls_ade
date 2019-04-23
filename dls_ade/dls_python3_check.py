@@ -2,6 +2,7 @@
 """
 from distutils.errors import DistutilsFileError
 from setuptools.config import read_configuration
+from packaging.requirements import Requirement
 import sys
 
 import git
@@ -23,7 +24,29 @@ def usage():
 
 
 def compare_requirements(pipenv_reqs, setup_reqs):
-    return sorted(list(pipenv_reqs.keys())) == sorted(list(setup_reqs))
+    """Compare two different sets of requirements.
+
+    Arguments:
+        pipenv_reqs: list of name and specifier strings
+        setup_reqs: list of name and specifier strings
+
+    Returns:
+        True if the requirements are compatible.
+    """
+    for pipenv_spec, setup_spec in zip(sorted(pipenv_reqs), sorted(setup_reqs)):
+        pipenv_req = Requirement(pipenv_spec)
+        setup_req = Requirement(setup_spec)
+        if pipenv_req.name != setup_req.name:
+            print('Requirements {} and {} do not match'.format(
+                pipenv_req, setup_req
+            ))
+            return False
+        # If setup.cfg has specifiers, they must match Pipfile exactly.
+        if setup_req.specifier and setup_req.specifier != pipenv_req.specifier:
+            print('Requirements {} and {} do not match'.format(
+                pipenv_req, setup_req
+            ))
+            return False
 
 
 def get_tags_on_head(repo):
@@ -34,6 +57,15 @@ def get_tags_on_head(repo):
             matching_tags.append(tag.name)
 
     return matching_tags
+
+
+def load_pipenv_requirements(pipfile):
+    pipfile_data = Pipfile.load(pipfile).data
+    pipenv_requirements = []
+    for req in sorted(pipfile_data['default']):
+        pipenv_requirements.append(req + pipfile_data['default'][req])
+
+    return pipenv_requirements
 
 
 def main():
@@ -48,12 +80,15 @@ def main():
     # Load data
     try:
         conf_dict = read_configuration('setup.cfg')
+        setup_requirements = sorted(
+            conf_dict['options'].get('install_requires', [])
+        )
     except DistutilsFileError:
         print('WARNING: no setup.cfg file found; checks cannot be made')
         # We can't check but we must allow the build to continue.
         sys.exit()
     try:
-        pipfile_data = Pipfile.load('Pipfile').data
+        pipenv_requirements = load_pipenv_requirements('Pipfile')
     except FileNotFoundError:
         print('ERROR: no Pipfile found. Package is not valid')
         sys.exit(1)
@@ -64,11 +99,9 @@ def main():
         sys.exit(1)
 
     # Compare requirements
-    pipenv_requirements = pipfile_data['default']
-    setup_requirements = conf_dict['options'].get('install_requires', [])
     if not compare_requirements(pipenv_requirements, setup_requirements):
-        print('setup.cfg requirements: {}'.format(setup_requirements))
-        print('Pipfile requirements: {}'.format(pipenv_requirements))
+        print('setup.cfg requirements: {}'.format(sorted(setup_requirements)))
+        print('Pipfile requirements: {}'.format(sorted(pipenv_requirements)))
         sys.exit('Requirements in setup.cfg and Pipfile do not match')
     # Compare versions
     head_tags = get_tags_on_head(repo)
