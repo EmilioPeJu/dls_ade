@@ -37,6 +37,7 @@ def compare_requirements(reqs1, reqs2):
         req1 = Requirement(spec1)
         req2 = Requirement(spec2)
         if req1.name != req2.name or req1.specifier != req2.specifier:
+            print('Requirements {} and {} do not match'.format(req1, req2))
             return False
     return True
 
@@ -54,8 +55,13 @@ def get_tags_on_head(repo):
 def load_pipenv_requirements(pipfile):
     pipfile_data = Pipfile.load(pipfile).data
     pipenv_requirements = []
-    for req in sorted(pipfile_data['default']):
-        pipenv_requirements.append(req + pipfile_data['default'][req])
+    default_requirements = pipfile_data['default']
+    for req in sorted(default_requirements):
+        specifier = default_requirements[req]
+        # Asterisk in Pipfile equals no identifier in setup.cfg.
+        if specifier != '*':
+            req += specifier
+        pipenv_requirements.append(req)
 
     return pipenv_requirements
 
