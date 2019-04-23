@@ -23,29 +23,20 @@ def usage():
     print(USAGE.format(sys.argv[0]))
 
 
-def compare_requirements(pipenv_reqs, setup_reqs):
+def compare_requirements(reqs1, reqs2):
     """Compare two different sets of requirements.
 
     Arguments:
-        pipenv_reqs: list of name and specifier strings
-        setup_reqs: list of name and specifier strings
+        reqs1: list of name and specifier strings
+        reqs2: list of name and specifier strings
 
     Returns:
         True if the requirements are compatible.
     """
-    for pipenv_spec, setup_spec in zip(sorted(pipenv_reqs), sorted(setup_reqs)):
-        pipenv_req = Requirement(pipenv_spec)
-        setup_req = Requirement(setup_spec)
-        if pipenv_req.name != setup_req.name:
-            print('Requirements {} and {} do not match'.format(
-                pipenv_req, setup_req
-            ))
-            return False
-        # If setup.cfg has specifiers, they must match Pipfile exactly.
-        if setup_req.specifier and setup_req.specifier != pipenv_req.specifier:
-            print('Requirements {} and {} do not match'.format(
-                pipenv_req, setup_req
-            ))
+    for spec1, spec2 in zip(sorted(reqs1), sorted(reqs2)):
+        req1 = Requirement(spec1)
+        req2 = Requirement(spec2)
+        if req1.name != req2.name or req1.specifier != req2.specifier:
             return False
     return True
 
