@@ -12,7 +12,7 @@ install:
   - python setup.py bdist_egg
 
 script:
-  - python setup.py nosetests
+  - python setup.py test
   - python setup.py build_sphinx
 
 

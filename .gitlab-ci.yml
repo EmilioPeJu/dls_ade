@@ -9,7 +9,7 @@ rhel7_job:
     - pip install -r requirements.txt
     - python setup.py bdist_egg
   script:
-    - python setup.py nosetests
+    - python setup.py test
     - python setup.py build_sphinx
   after_script:
     - source venv/bin/activate

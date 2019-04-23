@@ -24,8 +24,8 @@ Setup a virtualenv in the root of the project and install the dependencies:
   # Optional: Build the docs with sphinx
   python setup.py build_sphinx
   
-  # Optional: Run the unittests with nose
-  python setup.py nosetests
+  # Optional: Run the unittests with pytest
+  python setup.py test
 ```
 
 ## dls-release.py offline testing
