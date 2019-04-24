@@ -24,6 +24,11 @@ class CompareRequirements(unittest.TestCase):
         req2 = ['b==3.4']
         self.assertFalse(compare_requirements(req1, req2))
 
+    def test_compare_requirements_accepts_dash_vs_underscore(self):
+        req1 = ['a-b==3.4']
+        req2 = ['a_b==3.4']
+        self.assertTrue(compare_requirements(req1, req2))
+
 
 class GetTagsOnHead(unittest.TestCase):
 

@@ -3,6 +3,7 @@
 from distutils.errors import DistutilsFileError
 from setuptools.config import read_configuration
 from packaging.requirements import Requirement
+from pip._vendor.distlib.util import normalize_name
 import sys
 
 import git
@@ -49,8 +50,9 @@ def compare_requirements(reqs1, reqs2):
     for spec1, spec2 in zip(sorted(reqs1), sorted(reqs2)):
         req1 = Requirement(spec1)
         req2 = Requirement(spec2)
-        if req1.name != req2.name or req1.specifier != req2.specifier:
-            print('Requirements {} and {} do not match'.format(req1, req2))
+        # Allow variants of module name in the same way as PyPI and Pipenv.
+        if (normalize_name(req1.name) != normalize_name(req2.name) or
+                req1.specifier != req2.specifier):
             return False
     return True
 
