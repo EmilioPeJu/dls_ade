@@ -120,3 +120,27 @@ def python3_module_installed(module, version):
             target_path = os.path.join(module_dir, version, 'prefix')
             return os.path.isdir(target_path)
     return False
+
+def python3_module_path(module, version):
+    """
+    Returns the actual path of the discovered module or None if module
+    is not installed.
+
+    Args:
+        module:
+        version:
+
+    Returns:
+        string: full file path
+    """
+    TESTING_ROOT = os.getenv('TESTING_ROOT', '')
+    os_version = default_server().replace('redhat', 'RHEL')
+    OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{os_version}'
+    released_modules = os.listdir(OS_DIR)
+    for r in released_modules:
+        normalized_name = normalize_name(r)
+        if normalize_name(module) == normalized_name:
+            module_dir = os.path.join(OS_DIR, r)
+            target_path = os.path.join(module_dir, version, 'prefix')
+            return target_path
+    return None
