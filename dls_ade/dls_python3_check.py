@@ -44,6 +44,8 @@ def compare_requirements(reqs1, reqs2):
     Returns:
         True if the requirements are compatible.
     """
+    if not len(reqs1) == len(reqs2):
+        return False
     for spec1, spec2 in zip(sorted(reqs1), sorted(reqs2)):
         req1 = Requirement(spec1)
         req2 = Requirement(spec2)

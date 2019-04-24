@@ -9,6 +9,11 @@ class CompareRequirements(unittest.TestCase):
         requirements = ['a==1', 'b>=1.3', 'c~=3.4']
         self.assertTrue(compare_requirements(requirements, requirements))
 
+    def test_compare_requirements_refuses_different_length_lists(self):
+        req1 = ['a', 'b']
+        req2 = ['a']
+        self.assertFalse(compare_requirements(req1, req2))
+
     def test_compare_requirements_accepts_unordered_lists(self):
         req1 = ['a==1', 'b<=3.4']
         req2 = ['b<=3.4', 'a==1']
