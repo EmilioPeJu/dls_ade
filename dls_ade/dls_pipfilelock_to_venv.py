@@ -11,7 +11,8 @@ import sys
 import venv
 import shutil
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
+from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed, python3_module_path
+
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
@@ -34,29 +35,25 @@ def venv_command():
     venv.create('lightweight-venv', system_site_packages=True, clear=False,
                 symlinks=False, with_pip=False)
 
+
 def construct_pkg_path(_packages):
     path_list = []
+    missing_pkgs = []
     for package, contents in _packages.items():
         version_string = contents['version']
         assert version_string.startswith('==')
         version = version_string[2:]
-        file_path = '{}/{}/{}/prefix/lib/{}/site-packages'.format(
-            OS_DIR, package, version, PYTHON_VERSION
-        )
-        path_list.append(file_path)
-    return path_list
+        file_path = python3_module_path(package, version)
+        if file_path is None:
+            missing_module = '{} {}'.format(package, version)
+            missing_pkgs.append(missing_module)
+        else:
+            site_packages_path = f'/lib/{PYTHON_VERSION}/site-packages'
+            path_list.append(file_path + site_packages_path)
+    return path_list, missing_pkgs
 
-def find_missing_pkgs(_path_list):
-    absent_pkg_list = []
-    for p in _path_list:
-        module, version = p.split('/')[-6:-4]
-        if not python3_module_installed(module, version):
-            absent_pkg_list.append(p)
-    return absent_pkg_list
 
-def create_venv(_absent_pkg_list, _path_list):
-    if not _absent_pkg_list:
-
+def create_venv(_path_list):
         if not os.path.exists('lightweight-venv'):
             venv_command()
         elif os.path.exists('lightweight-venv') and force:
@@ -69,10 +66,7 @@ def create_venv(_absent_pkg_list, _path_list):
             for path in _path_list:
                 f.write(path + '\n')
         print('lightweight-venv with dls-installed-packages.pth has been created successfully!')
-    else:
-        print('The following packages need to be installed:')
-        print('\n'.join(_absent_pkg_list))
-        sys.exit(1)
+
 
 def main():
     pipfilelock = 'Pipfile.lock'
@@ -94,6 +88,10 @@ def main():
     except IOError:
         sys.exit('Job aborted: Pipfile.lock was not found!')
 
-    path_list = construct_pkg_path(packages)
-    absent_pkg_list = find_missing_pkgs(path_list)
-    create_venv(absent_pkg_list, path_list)
+    path_list, missing_pkgs = construct_pkg_path(packages)
+    if missing_pkgs:
+        print('The following packages need to be installed:')
+        print('\n'.join(missing_pkgs))
+        sys.exit(1)
+    else:
+        create_venv(path_list)
