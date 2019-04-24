@@ -7,12 +7,15 @@ import os
 import shutil
 from tempfile import mkdtemp
 
+
 class PipfilelockToVenv(unittest.TestCase):
 
     def setUp(self):
+        self.starting_dir = os.getcwd()
         self.test_folder = mkdtemp()
 
     def tearDown(self):
+        os.chdir(self.starting_dir)
         shutil.rmtree(self.test_folder)
 
     def test_path_list_is_constructed_correctly(self):

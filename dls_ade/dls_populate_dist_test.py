@@ -3,7 +3,9 @@
 import unittest
 from dls_ade import dls_populate_dist
 import os
+import shutil
 from tempfile import mkdtemp
+
 
 class PopulateDist(unittest.TestCase):
 
@@ -37,11 +39,15 @@ class PopulateDist(unittest.TestCase):
 }'''
 
     def setUp(self):
+        self.starting_dir = os.getcwd()
         self.test_folder = mkdtemp()
         os.environ['TESTING_ROOT'] = self.test_folder
+        self.os_dir = os.path.join(self.test_folder, 'dls_sw/prod/python3/RHEL7-x86_64')
+        os.makedirs(self.os_dir)
 
     def tearDown(self):
-        pass
+        os.chdir(self.starting_dir)
+        shutil.rmtree(self.test_folder)
 
     def test_ensure_script_exits_when_no_lockfile_present(self):
         os.chdir(self.test_folder)
