@@ -19,7 +19,8 @@ class ArgParser(ArgumentParser):
         area = self.add_mutually_exclusive_group(required=False)
         area.add_argument(
             "-a", "--area", action="store", type=str, default="support", dest="area",
-            help="Set area, e.g. " + ", ".join(supported_areas))
+            help="Set the area to use",
+            choices=supported_areas)
         area.add_argument(
             "-p", "--python", action="store_true", dest="python",
             help="Set 'python' area")
