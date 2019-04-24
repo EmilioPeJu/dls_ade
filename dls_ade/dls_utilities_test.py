@@ -7,6 +7,8 @@ from dls_ade.exceptions import ParsingError
 
 from dls_ade.dls_utilities import check_tag_is_valid
 from dls_ade.dls_utilities import python3_module_installed
+from dls_ade.dls_utilities import python3_module_path
+
 
 from tempfile import mkdtemp
 
@@ -134,3 +136,11 @@ class PythonThreePipeline(unittest.TestCase):
         success = python3_module_installed(lower_module, version)
         self.assertTrue(success)
 
+    def test_module_path_is_created_correctly(self):
+        module = 'test'
+        version = '1.2.3'
+        os_dir = 'dls_sw/prod/python3/RHEL7-x86_64'
+        os.makedirs(f'{self.test_folder}/{os_dir}/{module}/{version}/prefix')
+        module_path = python3_module_path(module, version)
+        target_module_path = f'{self.test_folder}/{os_dir}/{module}/{version}/prefix'
+        self.assertEqual(module_path, target_module_path)
