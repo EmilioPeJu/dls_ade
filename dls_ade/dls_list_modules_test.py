@@ -7,7 +7,7 @@ else:
     import builtins
 
 import unittest
-from mock import patch, ANY, MagicMock
+from mock import patch, MagicMock
 
 
 p = patch('dls_ade.Server')

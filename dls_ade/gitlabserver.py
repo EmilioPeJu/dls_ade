@@ -105,7 +105,8 @@ class GitlabServer(GitServer):
         """
 
         repos = []
-        projects = self._anon_gitlab_handle.projects.list(all=True)
+        projects = self._anon_gitlab_handle.projects.list(all=True,
+                                                          per_page=1000)
 
         for project in projects:
             repo_path = os.path.join(project.namespace["full_path"],

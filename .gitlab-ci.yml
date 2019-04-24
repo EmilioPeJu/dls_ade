@@ -1,6 +1,7 @@
 rhel7_job:
   tags:
     - rhel7
+  coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
   before_script:
     - virtualenv --python /dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin/python3 venv
     - source venv/bin/activate
@@ -8,7 +9,7 @@ rhel7_job:
     - pip install -r requirements.txt
     - python setup.py bdist_egg
   script:
-    - python setup.py nosetests
+    - python setup.py test
     - python setup.py build_sphinx
   after_script:
     - source venv/bin/activate
@@ -16,3 +17,10 @@ rhel7_job:
     - mkdir -p /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}
     - cp -r htmlcov/ /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
     - echo A coverage report is available at http://www.cs.diamond.ac.uk/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
+
+testbuild_job:
+  tags:
+  - rhel7
+  script:
+  - make clean && make
+  - make install
