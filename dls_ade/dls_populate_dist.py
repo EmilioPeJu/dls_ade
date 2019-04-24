@@ -14,7 +14,7 @@ from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
-PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check', 
+PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check',
                'wheel', '--no-deps']
 USAGE_MESSAGE = """Usage: {}
 
@@ -26,6 +26,7 @@ Pipfile.lock
 
 def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
+
 
 def format_pkg_name(_package, _version):
     return _package+' '+_version[2:]
@@ -46,8 +47,9 @@ def populate_dist(_work_dist_dir):
             specifier = package + version  # example: flask==1.0.2
 
             if not python3_module_installed(package, version[2:]):
-                subprocess.check_call(PIP_COMMAND + ['--wheel-dir='+ _work_dist_dir,
-                                                                         specifier])
+                subprocess.check_call(PIP_COMMAND + [
+                    '--wheel-dir='+ _work_dist_dir, specifier
+                ])
                 missing_pkgs.append(format_pkg_name(package, version))
 
         return missing_pkgs
