@@ -18,6 +18,17 @@ If version is provided, check that it matches the version in setup.cfg.
 Check that the dependencies in setup.cfg match those in Pipfile.
 '''
 
+VERSION_INVALID = '''Version string '{}' is invalid.
+Please use PEP-440-compliant versions.'''
+
+REQUIREMENTS_INVALID = '''Requirements in setup.cfg and Pipfile do not match.
+setup.cfg requirements: {}
+Pipfile requirements: {}'''
+
+NO_MATCHING_TAG = 'No tag on HEAD matches setup.cfg version {}'
+
+VERSION_MISMATCH = 'Release version {} does not match setup.cfg version {}.'
+
 
 def usage():
     print(USAGE.format(sys.argv[0]))
@@ -98,17 +109,17 @@ def main():
 
     # Compare requirements
     if not compare_requirements(pipenv_requirements, setup_requirements):
-        print('setup.cfg requirements: {}'.format(sorted(setup_requirements)))
-        print('Pipfile requirements: {}'.format(sorted(pipenv_requirements)))
-        sys.exit('Requirements in setup.cfg and Pipfile do not match')
+        sys.exit(REQUIREMENTS_INVALID.format(
+            sorted(setup_requirements),
+            sorted(pipenv_requirements)
+        ))
     # Compare versions
     head_tags = get_tags_on_head(repo)
     setup_version = conf_dict['metadata']['version']
+    if '.' not in setup_version:
+        sys.exit(VERSION_INVALID.format(setup_version))
     if setup_version not in head_tags:
-        sys.exit('No tag on HEAD matches setup.cfg version {}'.format(
-            setup_version
-        ))
+        sys.exit(NO_MATCHING_TAG.format(setup_version))
     if provided_version is not None:
         if not setup_version == provided_version:
-            error = 'Release version {} does not match setup.cfg version {}.'
-            sys.exit(error.format(provided_version, setup_version))
+            sys.exit(VERSION_MISMATCH.format(provided_version, setup_version))
