@@ -74,8 +74,8 @@ setup(
                    'dls-tar-module.py = dls_ade.dls_tar_module:main']},
 
     include_package_data=True,
-    tests_require=['nose', 'mock'],
-    test_suite='nose.collector',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest', 'mock'],
 
     zip_safe=False
     )
