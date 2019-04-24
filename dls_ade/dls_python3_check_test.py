@@ -1,6 +1,11 @@
 import mock
+from mock import patch, mock_open
 import unittest
-from dls_ade.dls_python3_check import compare_requirements, get_tags_on_head
+from dls_ade.dls_python3_check import (
+    compare_requirements,
+    get_tags_on_head,
+    load_pipenv_requirements
+)
 
 
 class CompareRequirements(unittest.TestCase):
@@ -42,3 +47,26 @@ class GetTagsOnHead(unittest.TestCase):
         head_tag.commit = DUMMY_COMMIT
         repo.tags = [head_tag, mock.MagicMock()]
         self.assertEqual(get_tags_on_head(repo), [TAG_NAME])
+
+
+class LoadPipenvRequirements(unittest.TestCase):
+
+    def test_load_pipenv_requirements_understands_asterisk(self):
+        PIPFILE = """[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+numpy = "*"
+scipy = "==1.2.1"
+
+[requires]
+python_version = "3.7"
+        """
+
+        with patch('pipfile.api.open', mock_open(read_data=PIPFILE)):
+            reqs = load_pipenv_requirements('dummyfile')
+            assert reqs == ['numpy', 'scipy==1.2.1']
