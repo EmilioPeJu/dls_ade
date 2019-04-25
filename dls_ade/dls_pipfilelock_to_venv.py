@@ -20,11 +20,12 @@ OS_VERSION = default_server().replace('redhat', 'RHEL')
 PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
 OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 
-force = False
 USAGE_MESSAGE = """Usage: {}
 
 Run without arguments from a folder that contains the standard Pipfile.lock
 or specify lockfile name eg package-version.Pipfile.lock
+Force lightweight-venv installation with '-f' or '--force'
+Create a lightweight-venv that includes pip with '-p' or '--pip'
 """
 
 
@@ -53,10 +54,10 @@ def construct_pkg_path(_packages):
     return path_list, missing_pkgs
 
 
-def create_venv(_path_list, _pip):
+def create_venv(_path_list, _pip, _force):
         if not os.path.exists('lightweight-venv'):
             venv_command(_pip)
-        elif os.path.exists('lightweight-venv') and force:
+        elif os.path.exists('lightweight-venv') and _force:
             shutil.rmtree('lightweight-venv')
             venv_command(_pip)
         else:
@@ -70,6 +71,7 @@ def create_venv(_path_list, _pip):
 
 def main():
     pip = False
+    force = False
     pipfilelock = 'Pipfile.lock'
 
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -77,7 +79,6 @@ def main():
         sys.exit(1)
 
     if '-f' in sys.argv or '--force' in sys.argv:
-        global force
         force = True
 
     if '-p' in sys.argv or '--pip' in sys.argv:
@@ -98,4 +99,4 @@ def main():
         print('\n'.join(missing_pkgs))
         sys.exit(1)
     else:
-        create_venv(path_list, pip)
+        create_venv(path_list, pip, force)
