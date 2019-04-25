@@ -79,13 +79,13 @@ export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
 
 # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
-    $PFL_TO_VENV || ReportFailure "Dependencies not installed."
+    # Use the -p argument to install pip, we'll need it.
+    "${PFL_TO_VENV}" -p || ReportFailure "Dependencies not installed."
     echo $SITE_PACKAGES >> $(pwd)/lightweight-venv/lib/$PYTHON_VERSION/site-packages/dls-installed-packages.pth
     source lightweight-venv/bin/activate
-    # Use the python from the virtualenv so that the libraries installed
-    # are available. We don't use pip as is not available in the virtualenv.
-    python setup.py install --prefix=prefix
+    pip install . --prefix=prefix --no-deps
+    # Remove the unneeded pip and setuptools once installation is complete.
+    pip uninstall -y setuptools pip
 else
-    # Use pip as it allows installing with no dependencies.
-    $PIP install . --prefix=prefix --no-deps
+    "${PIP}" install . --prefix=prefix --no-deps
 fi

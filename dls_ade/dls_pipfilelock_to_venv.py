@@ -11,8 +11,7 @@ import sys
 import venv
 import shutil
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed, python3_module_path
-
+from dls_ade.dls_utilities import parse_pipfilelock, python3_module_path
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
