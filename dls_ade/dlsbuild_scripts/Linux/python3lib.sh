@@ -53,18 +53,23 @@ normalized_module=$(normalize_name $_module)
 for released_module in $(ls "$CENTRAL_LOCATION"); do
     normalized_released_module=$(normalize_name ${released_module})
     if [[ ${normalized_released_module} == ${normalized_module} ]]; then
-        released_location="${CENTRAL_LOCATION}/${released_module}"
-        released_version="${released_location}/${_version}"
+        module_location="${CENTRAL_LOCATION}/${released_module}"
+        version_location="${module_location}/${_version}"
     fi
 done
 
-if [[ -d ${released_version} ]]; then
+echo "released module? $version_location"
+
+if [[ -d ${version_location} ]]; then
     if [[ ${_force} == true ]]; then
-        SysLog info "Force: removing previous version: ${released_version}"
-        rm -rf "${released_version}"
+        SysLog info "Force: removing previous version: ${version_location}"
+        rm -rf "${version_location}"
     else
-        ReportFailure "${released_version} is already installed in prod"
+        ReportFailure "${version_location} is already installed in prod"
     fi
+else
+    # Always install using the normalized name.
+    version_location="${CENTRAL_LOCATION}/${normalized_module}/${_version}"
 fi
 
 # First check if there is a matching distribution in prod.
@@ -92,7 +97,7 @@ echo "Matching distributions ${distributions[@]}"
 # Installation of dependency
 if [[ ${#distributions[@]} -gt 0 ]]; then
 
-    prefix_location="$released_version/prefix"
+    prefix_location="$version_location/prefix"
     site_packages_location="$prefix_location/lib/$PYTHON_VERSION/site-packages"
     specifier="$_module==$_version"
 
@@ -100,7 +105,7 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
     # Check if there is Pipfile.lock to create venv
     if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
         pipfilelock=$_module-$_version.Pipfile.lock
-        cd ${released_version}
+        cd ${version_location}
         cp "$PROD_DIST_DIR/$pipfilelock" .
         "$PFL_TO_VENV $pipfilelock" || ReportFailure "Dependencies not installed."
         # Change header to the correct venv
