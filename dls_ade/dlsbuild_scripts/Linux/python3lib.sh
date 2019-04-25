@@ -38,56 +38,72 @@ PROD_DIST_DIR=$TESTING_ROOT/dls_sw/prod/python3/distributions
 
 export PATH=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin:$PATH
 
+# The same as the normalize_name function we use in Python.
+function normalize_name() {
+    name="$1"
+    lower_name=${name,,}
+    lower_dash_name=${lower_name//_/-}
+    echo ${lower_dash_name}
+}
 
-# Copy dist (and lockfile if there is one) from work to prod folder
-copied_dist=false
+distributions=()
+normalized_module=$(normalize_name $_module)
 
-for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$_module-$_version*"); do
-    cp $dist $PROD_DIST_DIR
-    copied_dist=true
+# Check for existing release
+for released_module in $(ls "$CENTRAL_LOCATION"); do
+    normalized_released_module=$(normalize_name ${released_module})
+    if [[ ${normalized_released_module} == ${normalized_module} ]]; then
+        released_location="${CENTRAL_LOCATION}/${released_module}"
+        released_version="${released_location}/${_version}"
+    fi
 done
 
-if ! $copied_dist; then
-    if [[ $_module =~ '-' ]]; then
-        underscore_module=${_module//-/_}
-        for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$underscore_module-$_version*"); do
-            cp $dist $PROD_DIST_DIR
-            copied_dist=true
-        done
-    elif [[ $_module =~ '_' ]]; then
-        dash_module=${_module//_/-}
-        for dist in $(find $WORK_DIST_DIR -maxdepth 1 -iname "$dash_module-$_version*"); do
-            cp $dist $PROD_DIST_DIR
-            copied_dist=true
-        done
+[[ -d ${released_version} ]] && ReportFailure "${released_version} is already installed in prod"
+
+# First check if there is a matching distribution in prod.
+for dist in $(ls "${PROD_DIST_DIR}"); do
+    normalized_dist=$(normalize_name $dist)
+    if [[ ${normalized_dist} == ${normalized_module}*${_version}* ]]; then
+        distributions+=(${PROD_DIST_DIR}/${dist})
     fi
+done
+
+# If not, check if there is one in work and move it to prod.
+if [[ ${#distributions[@]} -eq 0 ]]; then
+    for dist in $(ls "${WORK_DIST_DIR}"); do
+        normalized_dist=$(normalize_name $dist)
+        if [[ ${normalized_dist} == ${normalized_module}*${_version}* ]]; then
+            dist_file="${WORK_DIST_DIR}/${dist}"
+            distributions+=(${dist_file})
+            mv "${dist_file}" "${PROD_DIST_DIR}"
+        fi
+    done
 fi
 
+echo "Matching distributions ${distributions[@]}"
+
 # Installation of dependency
-if $copied_dist; then
-    prefix_location=$CENTRAL_LOCATION/$_module/$_version/prefix
-    site_packages_location=$prefix_location/lib/$PYTHON_VERSION/site-packages
+if [[ ${#distributions[@]} -gt 0 ]]; then
+
+    prefix_location="$released_version/prefix"
+    site_packages_location="$prefix_location/lib/$PYTHON_VERSION/site-packages"
     specifier="$_module==$_version"
 
+    pip3 install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
     # Check if there is Pipfile.lock to create venv
-    if [[ ! -d $site_packages_location ]]; then
-        pip3 install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
-        if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
-            pipfilelock=$_module-$_version.Pipfile.lock
-            cd $CENTRAL_LOCATION/$_module/$_version
-            cp $PROD_DIST_DIR/$pipfilelock .
-            $PFL_TO_VENV $pipfilelock || ReportFailure "Dependencies not installed."
-            # Change header to the correct venv
-            shebang='#!'
-            new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/lightweight-venv/bin/python"
-            for script in $(ls $prefix_location/bin); do
-                sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
-            done
-        else
-            echo "No Pipfile.lock is present"
-        fi
+    if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
+        pipfilelock=$_module-$_version.Pipfile.lock
+        cd ${released_version}
+        cp "$PROD_DIST_DIR/$pipfilelock" .
+        "$PFL_TO_VENV $pipfilelock" || ReportFailure "Dependencies not installed."
+        # Change header to the correct venv
+        shebang='#!'
+        new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/lightweight-venv/bin/python"
+        for script in $(ls $prefix_location/bin); do
+            sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
+        done
     else
-        ReportFailure "$_module-$_version is already installed in prod"
+        echo "No Pipfile.lock is present"
     fi
 else
     ReportFailure "No matching distribution was found for $_module-$_version"
