@@ -31,9 +31,9 @@ or specify lockfile name eg package-version.Pipfile.lock
 def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
-def venv_command():
+def venv_command(_pip):
     venv.create('lightweight-venv', system_site_packages=True, clear=False,
-                symlinks=False, with_pip=False)
+                symlinks=False, with_pip=_pip)
 
 
 def construct_pkg_path(_packages):
@@ -53,12 +53,12 @@ def construct_pkg_path(_packages):
     return path_list, missing_pkgs
 
 
-def create_venv(_path_list):
+def create_venv(_path_list, _pip):
         if not os.path.exists('lightweight-venv'):
-            venv_command()
+            venv_command(_pip)
         elif os.path.exists('lightweight-venv') and force:
             shutil.rmtree('lightweight-venv')
-            venv_command()
+            venv_command(_pip)
         else:
             sys.exit('lightweight-venv already present!')
         paths_file = f'./lightweight-venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
@@ -69,6 +69,7 @@ def create_venv(_path_list):
 
 
 def main():
+    pip = False
     pipfilelock = 'Pipfile.lock'
 
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -78,6 +79,9 @@ def main():
     if '-f' in sys.argv or '--force' in sys.argv:
         global force
         force = True
+
+    if '-p' in sys.argv or '--pip' in sys.argv:
+        pip = True
 
     for argument in sys.argv:
         if 'Pipfile.lock' in argument:
@@ -94,4 +98,4 @@ def main():
         print('\n'.join(missing_pkgs))
         sys.exit(1)
     else:
-        create_venv(path_list)
+        create_venv(path_list, pip)
