@@ -136,11 +136,17 @@ class PythonThreePipeline(unittest.TestCase):
         success = python3_module_installed(lower_module, version)
         self.assertTrue(success)
 
-    def test_module_path_is_created_correctly(self):
+    def test_module_path_is_checked_correctly(self):
         module = 'test'
         version = '1.2.3'
         os_dir = 'dls_sw/prod/python3/RHEL7-x86_64'
-        os.makedirs(f'{self.test_folder}/{os_dir}/{module}/{version}/prefix')
+        target_module_path = f'{self.test_folder}/{os_dir}/{module}/{version}'
+        os.makedirs(target_module_path)
         module_path = python3_module_path(module, version)
-        target_module_path = f'{self.test_folder}/{os_dir}/{module}/{version}/prefix'
         self.assertEqual(module_path, target_module_path)
+
+    def test_module_path_returns_None_if_directory_not_present(self):
+        module = 'test'
+        version = '1.2.3'
+        module_path = python3_module_path(module, version)
+        self.assertEqual(module_path, None)

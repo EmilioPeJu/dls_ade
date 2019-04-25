@@ -121,6 +121,7 @@ def python3_module_installed(module, version):
             return os.path.isdir(target_path)
     return False
 
+
 def python3_module_path(module, version):
     """
     Returns the actual path of the discovered module or None if module
@@ -141,6 +142,8 @@ def python3_module_path(module, version):
         normalized_name = normalize_name(r)
         if normalize_name(module) == normalized_name:
             module_dir = os.path.join(OS_DIR, r)
-            target_path = os.path.join(module_dir, version, 'prefix')
-            return target_path
+            target_path = os.path.join(module_dir, version)
+            if os.path.isdir(target_path):
+                return target_path
     return None
+

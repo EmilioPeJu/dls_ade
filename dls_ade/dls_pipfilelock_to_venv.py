@@ -48,8 +48,8 @@ def construct_pkg_path(_packages):
             missing_module = '{} {}'.format(package, version)
             missing_pkgs.append(missing_module)
         else:
-            site_packages_path = f'/lib/{PYTHON_VERSION}/site-packages'
-            path_list.append(file_path + site_packages_path)
+            site_packages_path = f'prefix/lib/{PYTHON_VERSION}/site-packages'
+            path_list.append(os.path.join(file_path, site_packages_path))
     return path_list, missing_pkgs
 
 
