@@ -1,6 +1,6 @@
 #!/bin/bash
 # ******************************************************************************
-# 
+#
 # Script to build a Diamond production module for support, ioc or matlab areas
 #
 # This is a partial script which builds a module in for the dls-release system.
@@ -26,14 +26,13 @@
 # don't let standard input block the script execution
 exec 0</dev/null
 
-# Set up environment
+# Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
-
 
 build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
 PREFIX=${build_dir}/${_version}/prefix
@@ -75,7 +74,7 @@ $PY3_CHECK $_version || ReportFailure "Python3 module check failed."
 $PYTHON setup.py bdist_wheel
 cp dist/* $TESTING_ROOT/$prod_dist_dir
 mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
-SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages    
+SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
 
 # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock

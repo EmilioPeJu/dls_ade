@@ -20,9 +20,19 @@
 #   _build_name: The base name to use for log files etc.
 #
 
+# Uncomment the following for tracing
+# set -o xtrace
+
+# don't let standard input block the script execution
+exec 0</dev/null
+
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
+# Ensure CA Repeater is running (will close itself if already running)
+EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
+EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
+
 # Testing section, this will need correcting for the final version.
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
