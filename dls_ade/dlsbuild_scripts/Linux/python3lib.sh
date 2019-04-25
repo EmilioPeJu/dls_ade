@@ -58,7 +58,14 @@ for released_module in $(ls "$CENTRAL_LOCATION"); do
     fi
 done
 
-[[ -d ${released_version} ]] && ReportFailure "${released_version} is already installed in prod"
+if [[ -d ${released_version} ]]; then
+    if [[ ${_force} == true ]]; then
+        SysLog info "Force: removing previous version: ${released_version}"
+        rm -rf "${released_version}"
+    else
+        ReportFailure "${released_version} is already installed in prod"
+    fi
+fi
 
 # First check if there is a matching distribution in prod.
 for dist in $(ls "${PROD_DIST_DIR}"); do

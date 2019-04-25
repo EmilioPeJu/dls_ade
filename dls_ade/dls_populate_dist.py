@@ -48,7 +48,7 @@ def populate_dist(_work_dist_dir):
 
             if not python3_module_installed(package, version[2:]):
                 subprocess.check_call(PIP_COMMAND + [
-                    '--wheel-dir='+ _work_dist_dir, specifier
+                    '--wheel-dir=' + _work_dist_dir, specifier
                 ])
                 missing_pkgs.append(format_pkg_name(package, version))
 
