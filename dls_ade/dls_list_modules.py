@@ -43,23 +43,15 @@ def get_module_list(source):
     Prints the modules in the area of the repository specified by source.
 
     Args:
-        source(str): Suffix of URL to list from
+        source(str): Suffix of URL to list from e.g. controls/ioc/BL15I
+
     Returns:
         list: List of modules (list of str)
     """
     server = Server()
-    split_list = server.get_server_repo_list()
-    modules = []
-    for module_path in split_list:
-        if module_path.startswith(source + '/'):
-            # Split module path by area (and IOC domain if given)
-            # -s: controls/support/ADCore -> ADCore
-            # -i: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I/BL16I-MO-IOC-15
-            # -i BL16I: controls/ioc/BL16I/BL16I-MO-IOC-15 -> BL16I-MO-IOC-15
-            module_name = remove_git_at_end(
-                module_path.split(source + '/')[-1])
-
-            modules.append(module_name)
+    repos = server.get_server_repo_list(source)
+    # Strip source from the front and .git from the end.
+    modules = [remove_git_at_end(p.split(source + '/')[-1]) for p in repos]
     return modules
 
 
@@ -81,8 +73,13 @@ def _main():
         search_area = args.area
         source = server.dev_area_path(args.area)
 
+    usermsg.info("Listing modules in the %s area\n"
+                 "Hold on, this may take a little while ...",
+                 search_area)
+    # Sort ignoring case of module name.
+    module_list = sorted(get_module_list(source), key=lambda x: x.lower())
     print_msg = "Modules in {area}:\n".format(area=search_area)
-    print_msg += "\n".join(get_module_list(source))
+    print_msg += "\n".join(module_list)
     usermsg.info(print_msg)
 
 
@@ -93,7 +90,9 @@ def main():
         _main()
     except Exception as e:
         logging.exception(e)
-        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        logging.getLogger("usermessages").exception(
+            "ABORT: Unhandled exception (see trace below): {}".format(e)
+        )
         exit(1)
 
 
