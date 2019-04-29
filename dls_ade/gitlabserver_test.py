@@ -18,7 +18,10 @@ class GetServerRepoList(unittest.TestCase):
     @patch('dls_ade.gitlabserver.gitlab.Gitlab')
     def test_get_server_repo_list_returns_correct_path(self, mock_gitlab):
         gl = GitlabServer()
-        gl._anon_gitlab_handle.projects.list.return_value = FAKE_PROJECT_LIST
+        group_mock = MagicMock()
+        # Make sure the call to handle.groups.get() returns the correct mock.
+        gl._anon_gitlab_handle.groups.get.return_value = group_mock
+        group_mock.projects.list.return_value = FAKE_PROJECT_LIST
         projects = gl.get_server_repo_list()
         self.assertIn('controls/ioc/BL01I-EA-IOC-01.git', projects)
         self.assertIn('controls/support/support_module.git', projects)
