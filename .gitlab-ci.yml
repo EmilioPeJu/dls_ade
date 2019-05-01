@@ -3,7 +3,7 @@ rhel7_job:
     - rhel7
   coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
   before_script:
-    - virtualenv --python /dls_sw/work/tools/RHEL7-x86_64/Python3/prefix/bin/python3 venv
+    - dls-python3 -m venv venv
     - source venv/bin/activate
     - pip install coverage
     - pip install -r requirements.txt

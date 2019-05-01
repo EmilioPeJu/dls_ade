@@ -33,10 +33,12 @@ source /dls_sw/etc/profile
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-# Testing section, this will need correcting for the final version.
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
-PYTHON=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
+PYTHON=/dls_sw/prod/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
+PIP=/dls_sw/prod/tools/${OS_VERSION}/Python3/prefix/bin/pip3
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+
+# Testing section, this will need correcting for the final version.
 DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/$PYTHON_VERSION/site-packages
@@ -46,7 +48,6 @@ CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/$OS_VERSION
 WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
 PROD_DIST_DIR=$TESTING_ROOT/dls_sw/prod/python3/distributions
 
-export PATH=/dls_sw/work/tools/${OS_VERSION}/Python3/prefix/bin:$PATH
 
 # The same as the normalize_name function we use in Python.
 function normalize_name() {
@@ -111,7 +112,7 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
     site_packages_location="$prefix_location/lib/$PYTHON_VERSION/site-packages"
     specifier="$_module==$_version"
 
-    pip3 install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
+    ${PIP} install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
     # Check if there is Pipfile.lock to create venv
     if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
         pipfilelock=$_module-$_version.Pipfile.lock

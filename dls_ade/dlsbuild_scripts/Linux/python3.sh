@@ -37,9 +37,10 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
 PREFIX=${build_dir}/${_version}/prefix
 
+PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/dls-python3
+PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/pip3
+
 # Testing section, this will need correcting for the final version.
-PYTHON=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/dls-python3
-PIP=/dls_sw/work/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/pip3
 export TESTING_ROOT=/dls_sw/work/python3/test-root
 DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
