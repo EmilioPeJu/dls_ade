@@ -34,8 +34,8 @@ EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
-PYTHON=/dls_sw/prod/tools/${OS_VERSION}/Python3/prefix/bin/dls-python3
-PIP=/dls_sw/prod/tools/${OS_VERSION}/Python3/prefix/bin/pip3
+PYTHON=/dls_sw/prod/tools/${OS_VERSION}/Python3/3-7-2/prefix/bin/dls-python3
+PIP=/dls_sw/prod/tools/${OS_VERSION}/Python3/3-7-2/prefix/bin/pip3
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
 # Testing section, this will need correcting for the final version.

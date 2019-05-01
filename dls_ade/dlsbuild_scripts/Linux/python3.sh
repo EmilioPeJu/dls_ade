@@ -37,8 +37,8 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
 PREFIX=${build_dir}/${_version}/prefix
 
-PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/dls-python3
-PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/prefix/bin/pip3
+PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/dls-python3
+PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/pip3
 
 # Testing section, this will need correcting for the final version.
 export TESTING_ROOT=/dls_sw/work/python3/test-root
