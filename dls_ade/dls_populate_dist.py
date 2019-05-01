@@ -6,9 +6,10 @@ Subprocesses are used deliberately as the recommended way of executing pip
 programmatically according to the pip manual (pip 10.0.1).
 
 """
+import logging
+import os
 import subprocess
 import sys
-import os
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
@@ -22,6 +23,8 @@ Reads Pipfile.lock and fetches wheels for all dependencies into the
 distribution directory. Runs without any arguments, on a folder with
 Pipfile.lock
 """
+
+usermsg = logging.getLogger("usermessages")
 
 
 def usage():
@@ -67,8 +70,9 @@ def main():
     pkgs_to_install = populate_dist(work_dist_dir)
 
     if pkgs_to_install:
-        print("\nEnter the following commands to install necessary dependencies:\n")
+        usermsg.info("\nEnter the following commands to "
+                     "install necessary dependencies:\n")
         for item in pkgs_to_install:
-            print("dls-release.py --python3lib -l " + item)
+            usermsg.info("dls-release.py --python3lib -l " + item)
     else:
-        print("All necessary dependencies are installed.")
+        usermsg.info("All necessary dependencies are installed.")

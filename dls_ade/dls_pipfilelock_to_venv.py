@@ -6,10 +6,11 @@ correctly created, so report an error and quit.
 This module must be run with the deployed version of Python 3.
 
 """
+import logging
 import os.path
+import shutil
 import sys
 import venv
-import shutil
 from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_path
 
@@ -18,6 +19,9 @@ TESTING_ROOT = os.getenv('TESTING_ROOT', '')
 OS_VERSION = default_server().replace('redhat', 'RHEL')
 PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
 OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
+VENV_NAME = 'lightweight-venv'
+PATHS_FILENAME = 'dls-installed-packages.pth'
+PATHS_FILE = f'{VENV_NAME}/lib/{PYTHON_VERSION}/site-packages/{PATHS_FILENAME}'
 
 USAGE_MESSAGE = """Usage: {}
 
@@ -27,13 +31,16 @@ Force lightweight-venv installation with '-f' or '--force'
 Create a lightweight-venv that includes pip with '-p' or '--pip'
 """
 
+usermsg = logging.getLogger("usermessages")
+
 
 def usage():
     print(USAGE_MESSAGE.format(sys.argv[0]))
 
-def venv_command(_pip):
-    venv.create('lightweight-venv', system_site_packages=True, clear=False,
-                symlinks=False, with_pip=_pip)
+
+def venv_command(with_pip):
+    venv.create(VENV_NAME, system_site_packages=True, clear=False,
+                symlinks=False, with_pip=with_pip)
 
 
 def construct_pkg_path(_packages):
@@ -53,23 +60,22 @@ def construct_pkg_path(_packages):
     return path_list, missing_pkgs
 
 
-def create_venv(_path_list, _pip, _force):
-        if not os.path.exists('lightweight-venv'):
-            venv_command(_pip)
-        elif os.path.exists('lightweight-venv') and _force:
-            shutil.rmtree('lightweight-venv')
-            venv_command(_pip)
-        else:
-            sys.exit('lightweight-venv already present!')
-        paths_file = f'./lightweight-venv/lib/{PYTHON_VERSION}/site-packages/dls-installed-packages.pth'
-        with open(paths_file, 'w') as f:
-            for path in _path_list:
-                f.write(path + '\n')
-        print('lightweight-venv with dls-installed-packages.pth has been created successfully!')
+def create_venv(_path_list, _include_pip, _force):
+    if not os.path.exists(VENV_NAME):
+        venv_command(_include_pip)
+    elif os.path.exists(VENV_NAME) and _force:
+        shutil.rmtree(VENV_NAME)
+        venv_command(_include_pip)
+    else:
+        sys.exit('lightweight-venv already present!')
+    with open(PATHS_FILE, 'w') as f:
+        for path in _path_list:
+            f.write(path + '\n')
+    usermsg.info('lightweight-venv has been created successfully!')
 
 
 def main():
-    pip = False
+    include_pip = False
     force = False
     pipfilelock = 'Pipfile.lock'
 
@@ -81,7 +87,7 @@ def main():
         force = True
 
     if '-p' in sys.argv or '--pip' in sys.argv:
-        pip = True
+        include_pip = True
 
     for argument in sys.argv:
         if 'Pipfile.lock' in argument:
@@ -94,8 +100,8 @@ def main():
 
     path_list, missing_pkgs = construct_pkg_path(packages)
     if missing_pkgs:
-        print('The following packages need to be installed:')
-        print('\n'.join(missing_pkgs))
+        usermsg.info('The following packages need to be installed:')
+        usermsg.info('\n'.join(missing_pkgs))
         sys.exit(1)
     else:
-        create_venv(path_list, pip, force)
+        create_venv(path_list, include_pip, force)

@@ -1,12 +1,12 @@
 """Perform checks on the validity of a Python 3 module.
 """
+import logging
+import sys
+import git
 from distutils.errors import DistutilsFileError
 from setuptools.config import read_configuration
 from packaging.requirements import Requirement
 from pip._vendor.distlib.util import normalize_name
-import sys
-
-import git
 from git.exc import InvalidGitRepositoryError
 from pipfile import Pipfile
 
@@ -29,6 +29,9 @@ Pipfile requirements: {}'''
 NO_MATCHING_TAG = 'No tag on HEAD matches setup.cfg version {}'
 
 VERSION_MISMATCH = 'Release version {} does not match setup.cfg version {}.'
+
+
+usermsg = logging.getLogger("usermessages")
 
 
 def usage():
@@ -97,18 +100,18 @@ def main():
             conf_dict['options'].get('install_requires', [])
         )
     except DistutilsFileError:
-        print('WARNING: no setup.cfg file found; checks cannot be made')
+        usermsg.warning('No setup.cfg file found; checks cannot be made')
         # We can't check but we must allow the build to continue.
         sys.exit()
     try:
         pipenv_requirements = load_pipenv_requirements('Pipfile')
     except FileNotFoundError:
-        print('ERROR: no Pipfile found. Package is not valid')
+        usermsg.error('No Pipfile found. Package is not valid')
         sys.exit(1)
     try:
         repo = git.Repo('.')
     except InvalidGitRepositoryError:
-        print('ERROR: no Git repository found. Package is not valid')
+        usermsg.error('No Git repository found. Package is not valid')
         sys.exit(1)
 
     # Compare requirements
