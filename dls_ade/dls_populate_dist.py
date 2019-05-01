@@ -9,10 +9,10 @@ programmatically according to the pip manual (pip 10.0.1).
 import subprocess
 import sys
 import os
-#from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
 
 
+WORK_DIST_DIR = '/dls_sw/work/python3/distributions'
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check',
                'wheel', '--no-deps']
@@ -29,7 +29,7 @@ def usage():
 
 
 def format_pkg_name(_package, _version):
-    return _package+' '+_version[2:]
+    return '{} {}'.format(_package, _version[2:])
 
 
 def populate_dist(_work_dist_dir):
@@ -41,7 +41,7 @@ def populate_dist(_work_dist_dir):
         for package, contents in packages.items():
             try:
                 version = contents['version']
-            except KeyError as e:
+            except KeyError:
                 error_msg = 'Failed to find a version for {} in Pipfile.lock'
                 sys.exit(error_msg.format(package))
             specifier = package + version  # example: flask==1.0.2
@@ -63,7 +63,7 @@ def main():
         usage()
         sys.exit(1)
 
-    work_dist_dir = TESTING_ROOT + '/dls_sw/work/python3/distributions'
+    work_dist_dir = os.path.join(TESTING_ROOT, WORK_DIST_DIR)
     pkgs_to_install = populate_dist(work_dist_dir)
 
     if pkgs_to_install:
