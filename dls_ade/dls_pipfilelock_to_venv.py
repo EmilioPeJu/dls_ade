@@ -6,13 +6,16 @@ correctly created, so report an error and quit.
 This module must be run with the deployed version of Python 3.
 
 """
+import argparse
 import logging
 import os.path
 import shutil
 import sys
 import venv
 from dls_ade.dlsbuild import default_server
-from dls_ade.dls_utilities import parse_pipfilelock, python3_module_path
+from dls_ade.dls_utilities import (
+    PIPFILELOCK, parse_pipfilelock, python3_module_path
+ )
 from dls_ade import logconfig
 
 
@@ -24,19 +27,9 @@ VENV_NAME = 'lightweight-venv'
 PATHS_FILENAME = 'dls-installed-packages.pth'
 PATHS_FILE = f'{VENV_NAME}/lib/{PYTHON_VERSION}/site-packages/{PATHS_FILENAME}'
 
-USAGE_MESSAGE = """Usage: {}
-
-Run without arguments from a folder that contains the standard Pipfile.lock
-or specify lockfile name eg package-version.Pipfile.lock
-Force lightweight-venv installation with '-f' or '--force'
-Create a lightweight-venv that includes pip with '-p' or '--pip'
-"""
+DESCRIPTION = """Create a lightweight virtualenv from Pipfile.lock."""
 
 usermsg = logging.getLogger("usermessages")
-
-
-def usage():
-    print(USAGE_MESSAGE.format(sys.argv[0]))
 
 
 def venv_command(with_pip):
@@ -77,28 +70,27 @@ def create_venv(_path_list, _include_pip, _force):
 
 def main():
     logconfig.setup_logging(application='dls-pipfilelock-to-venv.py')
-    include_pip = False
-    force = False
-    pipfilelock = 'Pipfile.lock'
 
-    if '-h' in sys.argv or '--help' in sys.argv:
-        usage()
-        sys.exit(1)
-
-    if '-f' in sys.argv or '--force' in sys.argv:
-        force = True
-
-    if '-p' in sys.argv or '--pip' in sys.argv:
-        include_pip = True
-
-    for argument in sys.argv:
-        if 'Pipfile.lock' in argument:
-            pipfilelock = argument
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument(
+        '-f', '--force', help=f'overwrite existing {VENV_NAME}',
+        action='store_true'
+    )
+    parser.add_argument(
+        '-p', '--pip', help='include Pip in virtualenv',
+        action='store_true'
+    )
+    parser.add_argument(
+        'pipfilelock', nargs='?',
+        help=f'Pipfile.lock to process (default {PIPFILELOCK})',
+        default=PIPFILELOCK
+    )
+    args = parser.parse_args()
 
     try:
-        packages = parse_pipfilelock(pipfilelock)
+        packages = parse_pipfilelock(args.pipfilelock)
     except IOError:
-        sys.exit('Job aborted: Pipfile.lock was not found!')
+        sys.exit(f'Job aborted: {args.pipfilelock} was not found!')
 
     path_list, missing_pkgs = construct_pkg_path(packages)
     if missing_pkgs:
@@ -106,4 +98,4 @@ def main():
         usermsg.info('\n'.join(missing_pkgs))
         sys.exit(1)
     else:
-        create_venv(path_list, include_pip, force)
+        create_venv(path_list, args.pip, args.force)

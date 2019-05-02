@@ -7,7 +7,9 @@ import re
 from dls_ade.exceptions import ParsingError
 from dls_ade.dlsbuild import default_server
 
+
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
+PIPFILELOCK = 'Pipfile.lock'
 
 
 def remove_end_slash(path_string):

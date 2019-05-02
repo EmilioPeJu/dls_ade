@@ -10,7 +10,9 @@ import logging
 import os
 import subprocess
 import sys
-from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
+from dls_ade.dls_utilities import (
+    PIPFILELOCK, parse_pipfilelock, python3_module_installed
+)
 from dls_ade import logconfig
 
 
@@ -21,8 +23,9 @@ PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check',
 USAGE_MESSAGE = """Usage: {}
 
 Reads Pipfile.lock and fetches wheels for all dependencies into the 
-distribution directory. Runs without any arguments, on a folder with
-Pipfile.lock
+distribution directory. 
+
+Runs with no arguments, in a folder with Pipfile.lock.
 """
 
 usermsg = logging.getLogger("usermessages")
@@ -41,7 +44,7 @@ def populate_dist(_work_dist_dir):
     missing_pkgs = []
 
     try:
-        packages = parse_pipfilelock('Pipfile.lock')
+        packages = parse_pipfilelock(PIPFILELOCK)
         for package, contents in packages.items():
             try:
                 version = contents['version']
