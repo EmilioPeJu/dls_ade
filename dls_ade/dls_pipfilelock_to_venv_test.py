@@ -2,7 +2,7 @@
 
 import unittest
 from dls_ade import dls_pipfilelock_to_venv
-from collections import OrderedDict
+import mock
 import os
 import shutil
 from tempfile import mkdtemp
@@ -37,3 +37,26 @@ class PipfilelockToVenv(unittest.TestCase):
         dls_pipfilelock_to_venv.create_venv(path_list, False, False)
         file = 'lightweight-venv/lib/python3.7/site-packages/dls-installed-packages.pth'
         self.assertTrue(os.path.isfile(file))
+
+
+class ConstructPkgPath(unittest.TestCase):
+
+    @mock.patch('dls_ade.dls_pipfilelock_to_venv.python3_module_path')
+    def test_path_list_includes_installed_package(self, mock_module_path):
+        packages = {
+            'pkg1': {'version': '==2.3'}
+        }
+        mock_module_path.return_value = '/tmp/dummy'
+        path_list, missing_packages = dls_pipfilelock_to_venv.construct_pkg_path(packages)
+        assert path_list == ['/tmp/dummy/prefix/lib/python3.7/site-packages']
+        assert missing_packages == []
+
+    @mock.patch('dls_ade.dls_pipfilelock_to_venv.python3_module_path')
+    def test_missing_pkgs_includes_missing_package(self, mock_module_path):
+        packages = {
+            'pkg1': {'version': '==2.3'}
+        }
+        mock_module_path.return_value = None
+        path_list, missing_packages = dls_pipfilelock_to_venv.construct_pkg_path(packages)
+        assert path_list == []
+        assert missing_packages == ['pkg1 2.3']

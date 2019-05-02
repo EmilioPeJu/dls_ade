@@ -14,8 +14,8 @@ import sys
 import venv
 from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import (
-    PIPFILELOCK, parse_pipfilelock, python3_module_path
- )
+    PIPFILELOCK, site_packages, parse_pipfilelock, python3_module_path
+)
 from dls_ade import logconfig
 
 
@@ -25,7 +25,6 @@ PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
 OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 VENV_NAME = 'lightweight-venv'
 PATHS_FILENAME = 'dls-installed-packages.pth'
-PATHS_FILE = f'{VENV_NAME}/lib/{PYTHON_VERSION}/site-packages/{PATHS_FILENAME}'
 
 DESCRIPTION = """Create a lightweight virtualenv from Pipfile.lock."""
 
@@ -49,7 +48,7 @@ def construct_pkg_path(_packages):
             missing_module = '{} {}'.format(package, version)
             missing_pkgs.append(missing_module)
         else:
-            site_packages_path = f'prefix/lib/{PYTHON_VERSION}/site-packages'
+            site_packages_path = site_packages('prefix', PYTHON_VERSION)
             path_list.append(os.path.join(file_path, site_packages_path))
     return path_list, missing_pkgs
 
@@ -62,7 +61,9 @@ def create_venv(_path_list, _include_pip, _force):
         venv_command(_include_pip)
     else:
         sys.exit('lightweight-venv already present!')
-    with open(PATHS_FILE, 'w') as f:
+    site_packages_location = site_packages(VENV_NAME, PYTHON_VERSION)
+    paths_file = os.path.join(site_packages_location, PATHS_FILENAME)
+    with open(paths_file, 'w') as f:
         for path in _path_list:
             f.write(path + '\n')
     usermsg.info('lightweight-venv has been created successfully!')

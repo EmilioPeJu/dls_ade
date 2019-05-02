@@ -94,6 +94,19 @@ def normalise_name(name):
     return re.sub('[-_.]+', '-', name).lower()
 
 
+def site_packages(prefix, python_version):
+    """Return location of the site-packages directory
+
+    Args:
+        prefix: location of the bin and lib directories
+        python_version: e.g. python2.7
+
+    Returns:
+        path to the site-packages directory
+    """
+    return os.path.join(prefix, 'lib', python_version, 'site-packages')
+
+
 def parse_pipfilelock(pipfilelock, include_dev=False):
     """Parse the JSON in Pipfile.lock and return the package info as a dict.
 
