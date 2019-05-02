@@ -6,7 +6,7 @@ import git
 from distutils.errors import DistutilsFileError
 from setuptools.config import read_configuration
 from packaging.requirements import Requirement
-from pip._vendor.distlib.util import normalize_name
+from dls_ade.dls_utilities import normalise_name
 from git.exc import InvalidGitRepositoryError
 from pipfile import Pipfile
 from dls_ade import logconfig
@@ -55,7 +55,7 @@ def compare_requirements(reqs1, reqs2):
         req1 = Requirement(spec1)
         req2 = Requirement(spec2)
         # Allow variants of module name in the same way as PyPI and Pipenv.
-        if (normalize_name(req1.name) != normalize_name(req2.name) or
+        if (normalise_name(req1.name) != normalise_name(req2.name) or
                 req1.specifier != req2.specifier):
             return False
     return True

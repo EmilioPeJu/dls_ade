@@ -2,7 +2,6 @@ import collections
 import json
 import os
 from packaging import version
-from pip._vendor.distlib.util import normalize_name
 import re
 from dls_ade.exceptions import ParsingError
 from dls_ade.dlsbuild import default_server
@@ -78,6 +77,23 @@ def check_tag_is_valid(tag, area=None):
     return True
 
 
+def normalise_name(name):
+    """Normalise a python package name a la PEP 503.
+
+    Note that this is copied from distlib; it is a 'vendored' library in a
+    private package in pipenv, so I have copied the implementation.
+
+    Args:
+        name: package name
+
+    Returns:
+        normalised name
+
+    """
+    # https://www.python.org/dev/peps/pep-0503/#normalized-names
+    return re.sub('[-_.]+', '-', name).lower()
+
+
 def parse_pipfilelock(pipfilelock, include_dev=False):
     """Parse the JSON in Pipfile.lock and return the package info as a dict.
 
@@ -116,8 +132,8 @@ def python3_module_path(module, version):
     )
     released_modules = os.listdir(os_dir)
     for r in released_modules:
-        normalized_name = normalize_name(r)
-        if normalize_name(module) == normalized_name:
+        normalised_name = normalise_name(r)
+        if normalise_name(module) == normalised_name:
             module_dir = os.path.join(os_dir, r)
             target_path = os.path.join(module_dir, version)
             if os.path.isdir(target_path):
@@ -128,7 +144,7 @@ def python3_module_path(module, version):
 def python3_module_installed(module, version):
     """ Returns True if module is installed but False if module is not.
 
-    This will check for the normalized package names, so if ABC-DEF is
+    This will check for the normalised package names, so if ABC-DEF is
     installed but abc_def is requested, this will return True.
 
     Args:

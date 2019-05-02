@@ -49,8 +49,8 @@ WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
 PROD_DIST_DIR=$TESTING_ROOT/dls_sw/prod/python3/distributions
 
 
-# The same as the normalize_name function we use in Python.
-function normalize_name() {
+# The same as the normalise_name function we use in Python.
+function normalise_name() {
     name="$1"
     lower_name=${name,,}
     lower_dash_name=${lower_name//_/-}
@@ -58,12 +58,12 @@ function normalize_name() {
 }
 
 distributions=()
-normalized_module=$(normalize_name $_module)
+normalised_module=$(normalise_name $_module)
 
 # Check for existing release
 for released_module in $(ls "$CENTRAL_LOCATION"); do
-    normalized_released_module=$(normalize_name ${released_module})
-    if [[ ${normalized_released_module} == ${normalized_module} ]]; then
+    normalised_released_module=$(normalise_name ${released_module})
+    if [[ ${normalised_released_module} == ${normalised_module} ]]; then
         module_location="${CENTRAL_LOCATION}/${released_module}"
         version_location="${module_location}/${_version}"
     fi
@@ -79,14 +79,14 @@ if [[ -d ${version_location} ]]; then
         ReportFailure "${version_location} is already installed in prod"
     fi
 else
-    # Always install using the normalized name.
-    version_location="${CENTRAL_LOCATION}/${normalized_module}/${_version}"
+    # Always install using the normalised name.
+    version_location="${CENTRAL_LOCATION}/${normalised_module}/${_version}"
 fi
 
 # First check if there is a matching distribution in prod.
 for dist in $(ls "${PROD_DIST_DIR}"); do
-    normalized_dist=$(normalize_name $dist)
-    if [[ ${normalized_dist} == ${normalized_module}*${_version}* ]]; then
+    normalised_dist=$(normalise_name $dist)
+    if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
         distributions+=(${PROD_DIST_DIR}/${dist})
     fi
 done
@@ -94,8 +94,8 @@ done
 # If not, check if there is one in work and move it to prod.
 if [[ ${#distributions[@]} -eq 0 ]]; then
     for dist in $(ls "${WORK_DIST_DIR}"); do
-        normalized_dist=$(normalize_name $dist)
-        if [[ ${normalized_dist} == ${normalized_module}*${_version}* ]]; then
+        normalised_dist=$(normalise_name $dist)
+        if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
             dist_file="${WORK_DIST_DIR}/${dist}"
             distributions+=(${dist_file})
             mv "${dist_file}" "${PROD_DIST_DIR}"
