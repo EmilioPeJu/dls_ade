@@ -50,6 +50,7 @@ class PopulateDist(unittest.TestCase):
     def tearDown(self):
         os.chdir(self.starting_dir)
         shutil.rmtree(self.test_folder)
+        del os.environ['TESTING_ROOT']
 
     def test_ensure_script_exits_when_no_lockfile_present(self):
         with self.assertRaises(SystemExit) as cm:

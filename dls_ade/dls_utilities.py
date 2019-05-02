@@ -11,6 +11,10 @@ GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 PIPFILELOCK = 'Pipfile.lock'
 
 
+def testing_root():
+    return os.getenv('TESTING_ROOT', '')
+
+
 def remove_end_slash(path_string):
 
     if path_string and path_string.endswith('/'):
@@ -138,10 +142,9 @@ def python3_module_path(module, version):
     Returns:
         string: full file path
     """
-    testing_root = os.getenv('TESTING_ROOT', '')
     os_version = default_server().replace('redhat', 'RHEL')
     os_dir = '{}/dls_sw/prod/python3/{}'.format(
-        testing_root, os_version
+        testing_root(), os_version
     )
     released_modules = os.listdir(os_dir)
     for r in released_modules:

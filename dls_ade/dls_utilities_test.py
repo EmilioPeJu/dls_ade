@@ -98,6 +98,7 @@ class PythonThreePipeline(unittest.TestCase):
     def tearDown(self):
         os.chdir(self.starting_dir)
         shutil.rmtree(self.test_folder)
+        del os.environ['TESTING_ROOT']
 
     def test_module_is_installed(self):
         module = 'test'
