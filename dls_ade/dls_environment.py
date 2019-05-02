@@ -56,8 +56,10 @@ class environment(object):
         self.epics = None
         self.epics_ver_re = re.compile(r"R\d(\.\d+)+")
         self.rhel = None
-        self.areas = \
-            ["support", "ioc", "matlab", "python", "etc", "tools", "epics"]
+        self.areas = [
+            "support", "ioc", "matlab", "python",  "python3",
+            "python3lib", "etc", "tools", "epics"
+        ]
         if epics:
             self.setEpics(epics)
         if rhel:
@@ -254,17 +256,17 @@ class environment(object):
                             ", ".join(self.areas))
 
         if area in ["support", "ioc"]:
-            return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
+            return os.path.join("/dls_sw/work", self.epicsVerDir(), area)
         elif area in ["epics", "etc"]:
-            return os.path.join("/dls_sw", "work", area)
-        elif area in ["tools"]:
-            return os.path.join("/dls_sw", "work", area, self.rhelVerDir())
-        elif area in ["python"]:
-            return os.path.join("/dls_sw", "work", "common", area,
-                                self.rhelVerDir())
+            return os.path.join("/dls_sw/work", area)
+        elif area in ["tools", "python3"]:
+            return os.path.join("/dls_sw/work", area, self.rhelVerDir())
+        elif area == "python":
+            return os.path.join("/dls_sw/work/common", area, self.rhelVerDir())
+        elif area == "matlab":
+            return os.path.join("/dls_sw/work/common", area)
         else:
-            # matlab
-            return os.path.join("/dls_sw", "work", "common", area)
+            raise Exception("Area {} has no dev area".format(area))
 
     def prodArea(self, area="support"):
         """
@@ -363,22 +365,22 @@ class environment(object):
         for line in output.splitlines():
             if line.startswith("URL:"):
                 split = line.split("/")
-                if "/branches/" in line or "/release/" in line:   
+                if "/branches/" in line or "/release/" in line:
                     if "/ioc/" in line and len(split) > 2:
                         return "/".join((split[-3].strip(), split[-2].strip()))
-                    elif len(split) > 1:                 
+                    elif len(split) > 1:
                         return split[-2].strip()
                 else:
                     if "/ioc/" in line and len(split) > 1:
-                        return "/".join((split[-2].strip(), split[-1].strip()))                
+                        return "/".join((split[-2].strip(), split[-1].strip()))
                     else:
-                        return split[-1].strip()    
+                        return split[-1].strip()
 
     def classifyArea(self, path):
         """
         Classify the area of a path, returning
         (area, work/prod/invalid, epicsVer).
-        
+
         Args:
             path(str): Path to a module or area
 
@@ -451,7 +453,7 @@ class environment(object):
             sections = sections[:-1]
 
         # check they are the right length
-        if domain == "work":        
+        if domain == "work":
             if len(sections) == 1 or area in ["ioc", "tools", "python"] and \
                     len(sections) == 2:
                 version = "work"

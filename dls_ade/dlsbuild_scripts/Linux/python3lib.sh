@@ -69,8 +69,6 @@ for released_module in $(ls "$CENTRAL_LOCATION"); do
     fi
 done
 
-echo "released module? $version_location"
-
 if [[ -d ${version_location} ]]; then
     if [[ ${_force} == true ]]; then
         SysLog info "Force: removing previous version: ${version_location}"
