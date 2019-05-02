@@ -11,14 +11,18 @@ import logging
 import os.path
 import shutil
 import sys
-import venv
+try:
+    import venv
+except ImportError:
+    sys.exit('{} must be run using Python 3.'.format(sys.argv[0]))
+
 from dls_ade.dls_utilities import (
     PIPFILELOCK, site_packages, parse_pipfilelock, python3_module_path
 )
 from dls_ade import logconfig
 
 
-PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
+PYTHON_VERSION = 'python{}.{}'.format(sys.version_info[0], sys.version_info[1])
 VENV_NAME = 'lightweight-venv'
 PATHS_FILENAME = 'dls-installed-packages.pth'
 
@@ -66,14 +70,11 @@ def create_venv(_path_list, _include_pip, _force):
 
 
 def main():
-    if sys.version_info[0] == 2:
-        sys.exit('{} must be run using Python 3.'.format(sys.argv[0]))
-
     logconfig.setup_logging(application='dls-pipfilelock-to-venv.py')
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
-        '-f', '--force', help=f'overwrite existing {VENV_NAME}',
+        '-f', '--force', help='overwrite existing {}'.format(VENV_NAME),
         action='store_true'
     )
     parser.add_argument(
@@ -82,7 +83,7 @@ def main():
     )
     parser.add_argument(
         'pipfilelock', nargs='?',
-        help=f'Pipfile.lock to process (default {PIPFILELOCK})',
+        help='Pipfile.lock to process (default {})'.format(PIPFILELOCK),
         default=PIPFILELOCK
     )
     args = parser.parse_args()
@@ -90,7 +91,7 @@ def main():
     try:
         packages = parse_pipfilelock(args.pipfilelock)
     except IOError:
-        sys.exit(f'Job aborted: {args.pipfilelock} was not found!')
+        sys.exit('Job aborted: {} was not found!'.format(args.pipfilelock))
 
     path_list, missing_pkgs = construct_pkg_path(packages)
     if missing_pkgs:

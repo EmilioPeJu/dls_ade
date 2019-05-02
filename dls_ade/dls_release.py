@@ -208,7 +208,7 @@ def check_parsed_arguments_valid(args, parser):
             parser.error("Test builds are not possible for etc modules. "
                          "Use -t to skip the local test build. "
                          "Do not use -T or -l.")
-    # New python3lib area is valid but does not use Git.
+    # python3lib area is valid but does not use Git.
     elif args.area not in git_supported_areas and args.area != "python3lib":
         parser.error("%s area not valid" % args.area)
 
