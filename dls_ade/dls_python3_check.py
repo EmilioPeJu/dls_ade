@@ -9,6 +9,7 @@ from packaging.requirements import Requirement
 from pip._vendor.distlib.util import normalize_name
 from git.exc import InvalidGitRepositoryError
 from pipfile import Pipfile
+from dls_ade import logconfig
 
 
 USAGE = '''{} [version]: check validity of Python 3 module.
@@ -85,6 +86,7 @@ def load_pipenv_requirements(pipfile):
 
 
 def main():
+    logconfig.setup_logging(application='dls-python3-check.py')
     provided_version = None
     if len(sys.argv) > 1:
         if sys.argv[1] in ('-h', '--help'):

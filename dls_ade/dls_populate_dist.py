@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_installed
+from dls_ade import logconfig
 
 
 WORK_DIST_DIR = '/dls_sw/work/python3/distributions'
@@ -61,6 +62,7 @@ def populate_dist(_work_dist_dir):
 
 
 def main():
+    logconfig.setup_logging(application='dls-populate-dist.py')
 
     if len(sys.argv) > 1:
         usage()

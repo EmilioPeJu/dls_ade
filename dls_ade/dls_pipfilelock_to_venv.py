@@ -13,6 +13,7 @@ import sys
 import venv
 from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import parse_pipfilelock, python3_module_path
+from dls_ade import logconfig
 
 
 TESTING_ROOT = os.getenv('TESTING_ROOT', '')
@@ -75,6 +76,7 @@ def create_venv(_path_list, _include_pip, _force):
 
 
 def main():
+    logconfig.setup_logging(application='dls-pipfilelock-to-venv.py')
     include_pip = False
     force = False
     pipfilelock = 'Pipfile.lock'
