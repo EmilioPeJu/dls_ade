@@ -209,78 +209,7 @@ class DevAreaTest(unittest.TestCase):
             env.devArea(area)
 
     @patch('dls_ade.dls_environment.environment.epicsVerDir', return_value='dir')
-    def test_given_version_less_and_support_then_home_diamond_dir(self, _1):
-        expected_path = "/home/diamond/dir/work/support"
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-
-        path = env.devArea()
-
-        self.assertEqual(path, expected_path)
-
-    @patch('dls_ade.dls_environment.environment.epicsVerDir', return_value='dir')
-    def test_given_version_less_and_ioc_then_home_diamond_dir(self, _1):
-        area = "ioc"
-        expected_path = "/home/diamond/dir/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    def test_given_version_less_and_epics_then_home_work(self):
-        area = "epics"
-        expected_path = "/home/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    def test_given_version_less_and_etx_then_home_work(self):
-        area = "etc"
-        expected_path = "/home/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    def test_given_version_less_and_tools_then_home_work(self):
-        area = "tools"
-        expected_path = "/home/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    def test_given_version_less_and_matlab_then_home_diamond_common(self):
-        area = "matlab"
-        expected_path = "/home/diamond/common/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    def test_given_version_less_and_python_then_home_diamond_common(self):
-        area = "python"
-        expected_path = "/home/diamond/common/work/" + area
-
-        env = dls_environment.environment()
-        env.epics = "R3.1"
-        path = env.devArea(area)
-
-        self.assertEqual(path, expected_path)
-
-    @patch('dls_ade.dls_environment.environment.epicsVerDir', return_value='dir')
-    def test_given_version_more_and_support_then_dls_diamond_dir(self, _1):
+    def test_given_support_then_dls_diamond_dir(self, _1):
         expected_path = "/dls_sw/work/dir/support"
         env = dls_environment.environment()
         env.epics = "R3.15"
@@ -290,7 +219,7 @@ class DevAreaTest(unittest.TestCase):
         self.assertEqual(path, expected_path)
 
     @patch('dls_ade.dls_environment.environment.epicsVerDir', return_value='dir')
-    def test_given_version_more_and_ioc_then_dls_diamond_dir(self, _1):
+    def test_given_ioc_then_dls_diamond_dir(self, _1):
         area = 'ioc'
         expected_path = "/dls_sw/work/dir/" + area
         env = dls_environment.environment()
@@ -300,7 +229,7 @@ class DevAreaTest(unittest.TestCase):
 
         self.assertEqual(path, expected_path)
 
-    def test_given_version_more_and_epics_then_dls_work(self):
+    def test_given_epics_then_dls_work(self):
         area = 'epics'
         expected_path = "/dls_sw/work/" + area
         env = dls_environment.environment()
@@ -310,7 +239,7 @@ class DevAreaTest(unittest.TestCase):
 
         self.assertEqual(path, expected_path)
 
-    def test_given_version_more_and_etc_then_dls_work(self):
+    def test_given_etc_then_dls_work(self):
         area = 'etc'
         expected_path = "/dls_sw/work/" + area
         env = dls_environment.environment()
@@ -320,7 +249,7 @@ class DevAreaTest(unittest.TestCase):
 
         self.assertEqual(path, expected_path)
 
-    def test_given_version_more_and_tools_then_dls_work(self):
+    def test_given_tools_then_dls_work(self):
         area = 'tools'
         env = dls_environment.environment()
         expected_path = "/dls_sw/work/" + area + "/" + env.rhelVerDir()
@@ -330,7 +259,7 @@ class DevAreaTest(unittest.TestCase):
 
         self.assertEqual(path, expected_path)
 
-    def test_given_version_more_and_matlab_then_dls_work_common(self):
+    def test_given_matlab_then_dls_work_common(self):
         area = 'matlab'
         expected_path = "/dls_sw/work/common/" + area
         env = dls_environment.environment()
@@ -340,7 +269,7 @@ class DevAreaTest(unittest.TestCase):
 
         self.assertEqual(path, expected_path)
 
-    def test_given_version_more_and_python_then_dls_work_common(self):
+    def test_given_python_then_dls_work_common(self):
         area = 'python'
         env = dls_environment.environment()
         expected_path = "/dls_sw/work/common/" + area + "/" + env.rhelVerDir()

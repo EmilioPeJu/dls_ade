@@ -253,28 +253,18 @@ class environment(object):
             raise Exception("Only the following areas are supported: " +
                             ", ".join(self.areas))
 
-        if self.epicsVer() < "R3.14":
-            if area in ["support", "ioc"]:
-                return os.path.join("/home", "diamond", self.epicsVerDir(),
-                                    "work", area)
-            elif area in ["epics", "etc", "tools"]:
-                return os.path.join("/home", "work", area)
-            else:
-                # matlab or python
-                return os.path.join("/home", "diamond", "common", "work", area)
+        if area in ["support", "ioc"]:
+            return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
+        elif area in ["epics", "etc"]:
+            return os.path.join("/dls_sw", "work", area)
+        elif area in ["tools"]:
+            return os.path.join("/dls_sw", "work", area, self.rhelVerDir())
+        elif area in ["python"]:
+            return os.path.join("/dls_sw", "work", "common", area,
+                                self.rhelVerDir())
         else:
-            if area in ["support", "ioc"]:
-                return os.path.join("/dls_sw", "work", self.epicsVerDir(), area)
-            elif area in ["epics", "etc"]:
-                return os.path.join("/dls_sw", "work", area)
-            elif area in ["tools"]:
-                return os.path.join("/dls_sw", "work", area, self.rhelVerDir())
-            elif area in ["python"]:
-                return os.path.join("/dls_sw", "work", "common", area,
-                                    self.rhelVerDir())
-            else:
-                # matlab
-                return os.path.join("/dls_sw", "work", "common", area)
+            # matlab
+            return os.path.join("/dls_sw", "work", "common", area)
 
     def prodArea(self, area="support"):
         """
