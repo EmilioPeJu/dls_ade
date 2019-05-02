@@ -71,7 +71,7 @@ def main():
         usage()
         sys.exit(1)
 
-    work_dist_dir = os.path.join(TESTING_ROOT, WORK_DIST_DIR)
+    work_dist_dir = TESTING_ROOT + WORK_DIST_DIR
     pkgs_to_install = populate_dist(work_dist_dir)
 
     if pkgs_to_install:
