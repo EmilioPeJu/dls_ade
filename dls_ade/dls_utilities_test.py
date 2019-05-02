@@ -86,7 +86,6 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
             self.assertEqual(str(error), expected_error_msg)
 
 
-
 class PythonThreePipeline(unittest.TestCase):
 
     def setUp(self):
@@ -104,7 +103,7 @@ class PythonThreePipeline(unittest.TestCase):
         module = 'test'
         version = '1.2.3'
         os.chdir(self.test_folder)
-        dir_path = f'{self.os_dir}/{module}/{version}/prefix'
+        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, module, version)
         os.makedirs(dir_path)
         success = python3_module_installed(module, version)
         self.assertTrue(success)
@@ -121,7 +120,7 @@ class PythonThreePipeline(unittest.TestCase):
         underscore_module = 'abc_def'
         version = '1.2.3'
         os.chdir(self.test_folder)
-        dir_path = f'{self.os_dir}/{dash_module}/{version}/prefix'
+        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, dash_module, version)
         os.makedirs(dir_path)
         success = python3_module_installed(underscore_module, version)
         self.assertTrue(success)
@@ -131,7 +130,7 @@ class PythonThreePipeline(unittest.TestCase):
         lower_module = 'abc'
         version = '1.2.3'
         os.chdir(self.test_folder)
-        dir_path = f'{self.os_dir}/{upper_module}/{version}/prefix'
+        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, upper_module, version)
         os.makedirs(dir_path)
         success = python3_module_installed(lower_module, version)
         self.assertTrue(success)
@@ -139,11 +138,10 @@ class PythonThreePipeline(unittest.TestCase):
     def test_module_path_is_checked_correctly(self):
         module = 'test'
         version = '1.2.3'
-        os_dir = 'dls_sw/prod/python3/RHEL7-x86_64'
-        target_module_path = f'{self.test_folder}/{os_dir}/{module}/{version}'
-        os.makedirs(target_module_path)
+        dir_path = '{}/{}/{}'.format(self.os_dir, module, version)
+        os.makedirs(dir_path)
         module_path = python3_module_path(module, version)
-        self.assertEqual(module_path, target_module_path)
+        self.assertEqual(module_path, dir_path)
 
     def test_module_path_returns_None_if_directory_not_present(self):
         module = 'test'

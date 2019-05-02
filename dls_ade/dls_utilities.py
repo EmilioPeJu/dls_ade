@@ -97,33 +97,6 @@ def parse_pipfilelock(pipfilelock, include_dev=False):
         return packages
 
 
-def python3_module_installed(module, version):
-    """ Returns True if module is installed but False if module is not.
-
-    This will check for the normalized package names, so if ABC-DEF is installed
-    but abc_def is requested, this will return True.
-
-    Args:
-        module: package name
-        version: package version
-
-    Returns:
-        bool: True if package exists, False otherwise
-
-    """
-    TESTING_ROOT = os.getenv('TESTING_ROOT', '')
-    os_version = default_server().replace('redhat', 'RHEL')
-    OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{os_version}'
-    released_modules = os.listdir(OS_DIR)
-    for r in released_modules:
-        normalized_name = normalize_name(r)
-        if normalize_name(module) == normalized_name:
-            module_dir = os.path.join(OS_DIR, r)
-            target_path = os.path.join(module_dir, version, 'prefix')
-            return os.path.isdir(target_path)
-    return False
-
-
 def python3_module_path(module, version):
     """
     Returns the actual path of the discovered module or None if module
@@ -136,16 +109,35 @@ def python3_module_path(module, version):
     Returns:
         string: full file path
     """
-    TESTING_ROOT = os.getenv('TESTING_ROOT', '')
+    testing_root = os.getenv('TESTING_ROOT', '')
     os_version = default_server().replace('redhat', 'RHEL')
-    OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{os_version}'
-    released_modules = os.listdir(OS_DIR)
+    os_dir = '{}/dls_sw/prod/python3/{}'.format(
+        testing_root, os_version
+    )
+    released_modules = os.listdir(os_dir)
     for r in released_modules:
         normalized_name = normalize_name(r)
         if normalize_name(module) == normalized_name:
-            module_dir = os.path.join(OS_DIR, r)
+            module_dir = os.path.join(os_dir, r)
             target_path = os.path.join(module_dir, version)
             if os.path.isdir(target_path):
                 return target_path
     return None
+
+
+def python3_module_installed(module, version):
+    """ Returns True if module is installed but False if module is not.
+
+    This will check for the normalized package names, so if ABC-DEF is
+    installed but abc_def is requested, this will return True.
+
+    Args:
+        module: package name
+        version: package version
+
+    Returns:
+        bool: True if package exists, False otherwise
+
+    """
+    return python3_module_path(module, version) is not None
 
