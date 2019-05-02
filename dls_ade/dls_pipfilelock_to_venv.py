@@ -27,7 +27,7 @@ DESCRIPTION = """Create a lightweight virtualenv from Pipfile.lock."""
 usermsg = logging.getLogger("usermessages")
 
 
-def venv_command(with_pip):
+def construct_venv(with_pip):
     venv.create(VENV_NAME, system_site_packages=True, clear=False,
                 symlinks=False, with_pip=with_pip)
 
@@ -51,10 +51,10 @@ def construct_pkg_path(_packages):
 
 def create_venv(_path_list, _include_pip, _force):
     if not os.path.exists(VENV_NAME):
-        venv_command(_include_pip)
+        construct_venv(_include_pip)
     elif os.path.exists(VENV_NAME) and _force:
         shutil.rmtree(VENV_NAME)
-        venv_command(_include_pip)
+        construct_venv(_include_pip)
     else:
         sys.exit('lightweight-venv already present!')
     site_packages_location = site_packages(VENV_NAME, PYTHON_VERSION)
