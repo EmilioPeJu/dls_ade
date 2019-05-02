@@ -111,7 +111,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.type, str)
         self.assertEqual(option.dest, "windows")
-        
+
     def test_has_windows_option_with_short_name_w_long_name_windows(self):
         option = self.parser._option_string_actions['-w']
         self.assertIsNotNone(option)
@@ -407,7 +407,7 @@ class TestNextVersionNumber(unittest.TestCase):
         self.assertEqual(version, expected_version)
 
     def test_given_list_of_one_release_then_return_incremented_latest_version_number(self):
-        
+
         releases = ['5-5']
         expected_version = '5-6'
 
@@ -518,7 +518,7 @@ class TestConstructInfoMessage(unittest.TestCase):
 
     @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     def test_given_default_args_then_construct_specific_string(self, _1):
-        
+
         module = 'dummy'
         version = '1-0'
         branch = None
@@ -644,7 +644,7 @@ class TestCheckEpicsVersion(unittest.TestCase):
 class TestGetModuleEpicsVersion(unittest.TestCase):
 
     def test_given_vcs_object_can_return_filecontents_with_epics_version_mentioned_then_return_epics_version(self):
-        
+
         expected_epics = 'R3.14.12.3'
 
         module_epics = dls_release.get_module_epics_version(FakeVcs())
@@ -676,7 +676,7 @@ class TestPerformTestBuild(unittest.TestCase):
         self.assertIsInstance(test_message, str)
         self.assertIsInstance(test_fail, bool)
 
-    def test_given_local_test_build_not_possible_when_Called_then_return_specific_string(self):
+    def test_given_local_test_build_not_possible_when_called_then_return_specific_string(self):
 
         local_build = False
         module, version = 'test', '1-2-3'
