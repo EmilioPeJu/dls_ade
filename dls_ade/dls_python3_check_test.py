@@ -37,7 +37,7 @@ class CompareRequirements(unittest.TestCase):
 
 class GetTagsOnHead(unittest.TestCase):
 
-    def test_get_tags_on_head_returns_True_if_matching_tag(self):
+    def test_get_tags_on_head_returns_true_if_matching_tag(self):
         DUMMY_COMMIT = 'abcdef'
         TAG_NAME = '1.0'
         repo = mock.MagicMock()
