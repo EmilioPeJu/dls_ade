@@ -69,4 +69,4 @@ python_version = "3.7"
 
         with patch('pipfile.api.open', mock_open(read_data=PIPFILE)):
             reqs = load_pipenv_requirements('dummyfile')
-            assert reqs == ['numpy', 'scipy==1.2.1']
+            assert sorted(reqs) == ['numpy', 'scipy==1.2.1']
