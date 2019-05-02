@@ -282,9 +282,7 @@ class Builder:
         # Submit the build script
         log.info("Build server job parameters: {}".format(params))
         with open(os.path.join(pathname, filename), "w") as f:
-            script = self.build_script(params)
-            print('\n{}\n'.format(script))
-            f.write(script)
+            f.write(self.build_script(params))
 
         # Create a log of the build
         with open(os.path.expanduser(os.path.join("~", ".dls-release-log")), "a") as f:
