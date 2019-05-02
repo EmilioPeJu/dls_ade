@@ -62,6 +62,14 @@ def compare_requirements(reqs1, reqs2):
 
 
 def get_tags_on_head(repo):
+    """Return all the tags on the HEAD of a GitPython repo.
+
+    Args:
+        GitPython Repo object
+
+    Returns:
+        list of all the tag names that are attached to the HEAD commit
+    """
     head = repo.head.commit
     matching_tags = []
     for tag in repo.tags:
