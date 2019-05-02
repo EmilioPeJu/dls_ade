@@ -236,19 +236,7 @@ class environment(object):
             area(str): Area to generate path for
 
         Returns:
-            str:
-                * `epicsVer` < R3.14 and `area` is
-                   support/ioc: /home/diamond/<EpicsVerDir>/work/<area>
-                * `epicsVer` < R3.14 and `area` is
-                   epics/etc/tools: /home/work/<area>
-                * `epicsVer` < R3.14 and `area` is matlab/python:
-                   /home/diamond/common/work/<area>
-                * `epicsVer` > R3.14 and `area` is support/ioc:
-                   /dls_sw/work/<EpicsVerDir>/<area>
-                * `epicsVer` > R3.14 and `area` is epics/etc/tools:
-                   /dls_sw/work/<area>
-                * `epicsVer` > R3.14 and `area` is matlab/python:
-                   /dls_sw/work/common/<area>
+            str: the appropriate work directory
 
         """
         if area not in self.areas:
