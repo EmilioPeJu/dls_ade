@@ -72,15 +72,26 @@ def get_tags_on_head(repo):
 
 
 def load_pipenv_requirements(pipfile):
+    """Load the required packages from Pipfile.
+
+    Load only the packages section, not the dev-packages section.
+
+    Args:
+        pipfile: path to Pipfile
+
+    Returns
+        list of specifiers e.g. numpy, scipy>=1.0.0
+    """
     pipfile_data = Pipfile.load(pipfile).data
     pipenv_requirements = []
     default_requirements = pipfile_data['default']
-    for req in sorted(default_requirements):
-        specifier = default_requirements[req]
+    for package in default_requirements:
+        specifier = package  # e.g. 'scipy'
+        version_specifier = default_requirements[package]  # e.g. '>=1.0.0'
         # Asterisk in Pipfile equals no identifier in setup.cfg.
-        if specifier != '*':
-            req += specifier
-        pipenv_requirements.append(req)
+        if version_specifier != '*':
+            specifier += version_specifier  # e.g. 'scipy>=1.0.0'
+        pipenv_requirements.append(specifier)
 
     return pipenv_requirements
 
