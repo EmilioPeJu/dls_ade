@@ -66,6 +66,9 @@ def create_venv(_path_list, _include_pip, _force):
 
 
 def main():
+    if sys.version_info[0] == 2:
+        sys.exit('{} must be run using Python 3.'.format(sys.argv[0]))
+
     logconfig.setup_logging(application='dls-pipfilelock-to-venv.py')
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
