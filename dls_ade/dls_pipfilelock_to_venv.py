@@ -12,17 +12,13 @@ import os.path
 import shutil
 import sys
 import venv
-from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import (
     PIPFILELOCK, site_packages, parse_pipfilelock, python3_module_path
 )
 from dls_ade import logconfig
 
 
-TESTING_ROOT = os.getenv('TESTING_ROOT', '')
-OS_VERSION = default_server().replace('redhat', 'RHEL')
 PYTHON_VERSION = f'python{sys.version_info[0]}.{sys.version_info[1]}'
-OS_DIR = f'{TESTING_ROOT}/dls_sw/prod/python3/{OS_VERSION}'
 VENV_NAME = 'lightweight-venv'
 PATHS_FILENAME = 'dls-installed-packages.pth'
 
