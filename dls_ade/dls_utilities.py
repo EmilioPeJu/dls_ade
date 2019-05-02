@@ -103,8 +103,8 @@ def python3_module_path(module, version):
     is not installed.
 
     Args:
-        module:
-        version:
+        module: name of module
+        version: version of module
 
     Returns:
         string: full file path
@@ -132,8 +132,8 @@ def python3_module_installed(module, version):
     installed but abc_def is requested, this will return True.
 
     Args:
-        module: package name
-        version: package version
+        module: name of module
+        version: version of module
 
     Returns:
         bool: True if package exists, False otherwise
