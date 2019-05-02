@@ -26,7 +26,7 @@ PYTHON_VERSION = 'python{}.{}'.format(sys.version_info[0], sys.version_info[1])
 VENV_NAME = 'lightweight-venv'
 PATHS_FILENAME = 'dls-installed-packages.pth'
 
-DESCRIPTION = """Create a lightweight virtualenv from Pipfile.lock."""
+DESCRIPTION = 'Create a lightweight virtualenv from Pipfile.lock.'
 
 usermsg = logging.getLogger("usermessages")
 
