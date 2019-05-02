@@ -1,4 +1,29 @@
-rhel7_job:
+# Can we share configuration between python2_job and python3_job?
+
+python2_job:
+  tags:
+    - rhel7
+  coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
+  before_script:
+    - virtualenv --python dls-python venv
+    - source venv/bin/activate
+    - pip install coverage
+    - pip install -r requirements.txt
+    - python setup.py bdist_egg
+    - python setup.py install
+  script:
+    # Ignore one file that runs only on Python 3.
+    - pytest --ignore=dls_ade/dls_pipfilelock_to_venv_test.py
+    - python setup.py build_sphinx
+  after_script:
+  - source venv/bin/activate
+  - coverage html
+  - mkdir -p /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}
+  - cp -r htmlcov/ /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
+  - echo A coverage report is available at http://www.cs.diamond.ac.uk/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
+
+
+python3_job:
   tags:
     - rhel7
   coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
@@ -20,7 +45,7 @@ rhel7_job:
 
 testbuild_job:
   tags:
-  - rhel7
+    - rhel7
   script:
-  - make clean && make
-  - make install
+    - make clean && make
+    - make install
