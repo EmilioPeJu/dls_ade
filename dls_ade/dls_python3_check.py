@@ -93,9 +93,8 @@ def load_pipenv_requirements(pipfile):
     pipfile_data = Pipfile.load(pipfile).data
     pipenv_requirements = []
     default_requirements = pipfile_data['default']
-    for package in default_requirements:
+    for package, version_specifier in default_requirements.items():
         requirement = package  # e.g. 'scipy'
-        version_specifier = default_requirements[package]  # e.g. '>=1.0.0'
         # Asterisk in Pipfile equals no identifier in setup.cfg.
         if version_specifier != '*':
             requirement += version_specifier  # e.g. 'scipy>=1.0.0'
