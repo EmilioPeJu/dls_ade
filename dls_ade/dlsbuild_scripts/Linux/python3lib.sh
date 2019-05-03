@@ -118,7 +118,7 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
         pipfilelock=$_module-$_version.Pipfile.lock
         cd ${version_location}
         cp "$PROD_DIST_DIR/$pipfilelock" .
-        "$PFL_TO_VENV $pipfilelock" || ReportFailure "Dependencies not installed."
+        "$PFL_TO_VENV" "$pipfilelock" || ReportFailure "Dependencies not installed."
         # Change header to the correct venv
         shebang='#!'
         new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/lightweight-venv/bin/python"
