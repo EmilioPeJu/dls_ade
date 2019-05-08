@@ -247,8 +247,10 @@ class environment(object):
             return os.path.join("/dls_sw/work", self.epicsVerDir(), area)
         elif area in ["epics", "etc"]:
             return os.path.join("/dls_sw/work", area)
-        elif area in ["tools", "python3"]:
+        elif area in ["tools"]:
             return os.path.join("/dls_sw/work", area, self.rhelVerDir())
+        elif area in ["python3", "python3lib"]:  # These use the same area
+            return os.path.join("/dls_sw/work/python3", self.rhelVerDir())
         elif area == "python":
             return os.path.join("/dls_sw/work/common", area, self.rhelVerDir())
         elif area == "matlab":
