@@ -78,6 +78,6 @@ def main():
         usermsg.info("\nEnter the following commands to "
                      "install necessary dependencies:\n")
         for item in pkgs_to_install:
-            usermsg.info("dls-release.py --python3lib -l " + item)
+            usermsg.info("dls-release.py --python3lib {}".format(item))
     else:
         usermsg.info("All necessary dependencies are installed.")
