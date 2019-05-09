@@ -45,7 +45,6 @@ export TESTING_ROOT=/dls_sw/work/python3/test-root
 DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
-export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
 
 
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"

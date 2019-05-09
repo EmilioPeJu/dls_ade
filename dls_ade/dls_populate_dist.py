@@ -9,13 +9,16 @@ programmatically according to the pip manual (pip 10.0.1).
 import logging
 import subprocess
 import sys
+from dls_ade.dlsbuild import default_server
 from dls_ade.dls_utilities import (
-    PIPFILELOCK, testing_root, parse_pipfilelock, python3_module_installed
+    PIPFILELOCK, parse_pipfilelock, python3_module_installed
 )
 from dls_ade import logconfig
 
 
-WORK_DIST_DIR = '/dls_sw/work/python3/distributions'
+WORK_DIST_DIR = '/dls_sw/work/python3/{}/distributions'.format(
+    default_server().replace('redhat', 'RHEL')
+)
 PIP_COMMAND = [sys.executable, '-m', 'pip', '--disable-pip-version-check',
                'wheel', '--no-deps']
 USAGE_MESSAGE = """Usage: {}
@@ -69,8 +72,7 @@ def main():
         usage()
         sys.exit(1)
 
-    work_dist_dir = testing_root() + WORK_DIST_DIR
-    pkgs_to_install = populate_dist(work_dist_dir)
+    pkgs_to_install = populate_dist(WORK_DIST_DIR)
 
     if pkgs_to_install:
         usermsg.info("\nEnter the following commands to "

@@ -234,9 +234,7 @@ class Builder:
                      .format(filename=filename, build_dir=build_dir))
         log.info("Local test-build parameters: {}".format(params))
         with open(filename, "w") as f:
-            script = self.build_script(params)
-            print('\n{}\n'.format(script))
-            f.write(script)
+            f.write(self.build_script(params))
 
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
@@ -273,7 +271,6 @@ class Builder:
 
         params = self.build_params(
             build_dir, module, version, vcs, build_name)
-
 
         # generate the filename
         pathname = os.path.join(DLSBUILD_ROOT_DIR, "work", "etc", "build", "queue")

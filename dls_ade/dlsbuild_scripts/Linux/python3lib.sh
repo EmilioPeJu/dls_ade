@@ -43,11 +43,14 @@ DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/$PYTHON_VERSION/site-packages
 
-export TESTING_ROOT=/dls_sw/work/python3/test-root
-CENTRAL_LOCATION=$TESTING_ROOT/dls_sw/prod/python3/$OS_VERSION
-WORK_DIST_DIR=$TESTING_ROOT/dls_sw/work/python3/distributions
-PROD_DIST_DIR=$TESTING_ROOT/dls_sw/prod/python3/distributions
+WORK_DIST_DIR=/dls_sw/work/python3/${OS_VERSION}/distributions
+PROD_DIST_DIR=/dls_sw/prod/python3/${OS_VERSION}/distributions
 
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
+    is_test=false
+else
+    is_test=true
+fi
 
 # The same as the normalise_name function we use in Python.
 function normalise_name() {
@@ -57,14 +60,15 @@ function normalise_name() {
     echo ${lower_dash_name}
 }
 
+
 distributions=()
 normalised_module=$(normalise_name $_module)
 
-# Check for existing release
-for released_module in $(ls "$CENTRAL_LOCATION"); do
+# Check for existing release. Ignore if directory doesn't exist.
+for released_module in $(ls "$_build_dir" 2> /dev/null); do
     normalised_released_module=$(normalise_name ${released_module})
     if [[ ${normalised_released_module} == ${normalised_module} ]]; then
-        module_location="${CENTRAL_LOCATION}/${released_module}"
+        module_location="${_build_dir}/${released_module}"
         version_location="${module_location}/${_version}"
     fi
 done
@@ -78,7 +82,7 @@ if [[ -d ${version_location} ]]; then
     fi
 else
     # Always install using the normalised name.
-    version_location="${CENTRAL_LOCATION}/${normalised_module}/${_version}"
+    version_location="${_build_dir}/${normalised_module}/${_version}"
 fi
 
 # First check if there is a matching distribution in prod.
@@ -89,14 +93,18 @@ for dist in $(ls "${PROD_DIST_DIR}"); do
     fi
 done
 
-# If not, check if there is one in work and move it to prod.
+# If not, check if there is one in work.
 if [[ ${#distributions[@]} -eq 0 ]]; then
     for dist in $(ls "${WORK_DIST_DIR}"); do
         normalised_dist=$(normalise_name $dist)
+
         if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
             dist_file="${WORK_DIST_DIR}/${dist}"
             distributions+=(${dist_file})
-            mv "${dist_file}" "${PROD_DIST_DIR}"
+            # If running on the build server, move file from work to prod.
+            if [[ -w ${PROD_DIST_DIR} ]]; then
+                mv "${dist_file}" "${PROD_DIST_DIR}" || ReportFailure "Cannot copy ${dist_file} to ${PROD_DIST_DIR}"
+            fi
         fi
     done
 fi
@@ -111,6 +119,10 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
     specifier="$_module==$_version"
 
     ${PIP} install --ignore-installed --no-index --no-deps --find-links=$PROD_DIST_DIR --prefix=$prefix_location $specifier
+    # If testing, fall back to installing from work.
+    if [[ $? -ne 0 ]] && [[ ${is_test} == true ]]; then
+        ${PIP} install --ignore-installed --no-index --no-deps --find-links=$WORK_DIST_DIR --prefix=$prefix_location $specifier
+    fi
     # Check if there is Pipfile.lock to create venv
     if [[ -f $PROD_DIST_DIR/$_module-$_version.Pipfile.lock ]]; then
         pipfilelock=$_module-$_version.Pipfile.lock
