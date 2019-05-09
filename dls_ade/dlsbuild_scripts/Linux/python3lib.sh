@@ -131,7 +131,7 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
         "$PFL_TO_VENV" "$pipfilelock" || ReportFailure "Dependencies not installed."
         # Change header to the correct venv
         shebang='#!'
-        new_header="$shebang$CENTRAL_LOCATION/$_module/$_version/lightweight-venv/bin/python"
+        new_header="${shebang}${version_location}/lightweight-venv/bin/python"
         for script in $(ls $prefix_location/bin); do
             sed -i "1 s|^.*$|$new_header|" $prefix_location/bin/$script
         done
