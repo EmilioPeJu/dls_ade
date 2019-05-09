@@ -34,8 +34,7 @@ OS_VERSION=$(lsb_release -sr | cut -d. -f1)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-build_dir=${_build_dir}/RHEL${OS_VERSION}-$(uname -m)/${_module}
-PREFIX=${build_dir}/${_version}/prefix
+build_dir=${_build_dir}/${_module}
 
 PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/dls-python3
 PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/pip3
@@ -47,7 +46,7 @@ PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
 
 
-SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
+SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
 # CHECKOUT MODULE
 mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
