@@ -116,13 +116,19 @@ def main():
     # Load data
     try:
         conf_dict = read_configuration('setup.cfg')
-        setup_requirements = sorted(
-            conf_dict['options'].get('install_requires', [])
-        )
     except DistutilsFileError:
         usermsg.warning('No setup.cfg file found; checks cannot be made')
         # We can't check but we must allow the build to continue.
         sys.exit()
+    if 'install_requires' not in conf_dict['options']:
+        usermsg.warning('install_requires not in setup.cfg file; checks cannot be made')
+        # We can't check but we must allow the build to continue.
+        sys.exit()
+    else:
+        setup_requirements = sorted(
+            conf_dict['options'].get('install_requires')
+        )
+
     try:
         pipenv_requirements = load_pipenv_requirements('Pipfile')
     except FileNotFoundError:
