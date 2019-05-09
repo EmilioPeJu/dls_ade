@@ -38,6 +38,7 @@ build_dir=${_build_dir}/${_module}
 
 PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/dls-python3
 PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/pip3
+PROD_DIST_DIR=dls_sw/prod/python3/distributions
 
 # Testing section, this will need correcting for the final version.
 export TESTING_ROOT=/dls_sw/work/python3/test-root
@@ -65,13 +66,15 @@ fi
 # BUILD MODULE
 
 PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
-prod_dist_dir=dls_sw/prod/python3/distributions
 
 # Build phase 1 - Build a wheel and install in prefix, for app or library
 cd $_version || ReportFailure "Can not cd to $_version"
 $PY3_CHECK $_version || ReportFailure "Python3 module check failed."
 $PYTHON setup.py bdist_wheel
-cp dist/* $TESTING_ROOT/$prod_dist_dir
+# If running on the build server, copy the wheel to the distributions directory.
+if [[ -w ${PROD_DIST_DIR} ]]; then
+    cp dist/* ${PROD_DIST_DIR}
+fi
 mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
 SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
