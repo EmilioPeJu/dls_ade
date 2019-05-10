@@ -58,6 +58,7 @@ def get_module_list(source):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger("output")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -78,9 +79,9 @@ def _main():
                  search_area)
     # Sort ignoring case of module name.
     module_list = sorted(get_module_list(source), key=lambda x: x.lower())
-    print_msg = "Modules in {area}:\n".format(area=search_area)
-    print_msg += "\n".join(module_list)
-    usermsg.info(print_msg)
+    usermsg.info("Modules in {area}:".format(area=search_area))
+    print_msg = "\n".join(module_list)
+    output.info(print_msg)
 
 
 def main():

@@ -39,6 +39,7 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger(name="output")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -54,8 +55,8 @@ def _main():
     vcs = server.temp_clone(source)
 
     branches = vcs_git.list_remote_branches(vcs.repo)
-    usermsg.info("Branches of {module}: {branches}"
-                 .format(module=source, branches=", ".join(branches)))
+    usermsg.info("Branches of {module}:".format(module=source))
+    output.info("{branches}".format(branches=", ".join(branches)))
 
     shutil.rmtree(vcs.repo.working_tree_dir)
 

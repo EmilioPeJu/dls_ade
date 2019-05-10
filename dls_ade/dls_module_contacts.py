@@ -28,6 +28,7 @@ from dls_ade.constants import LDAP_SERVER_URL
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger(name="usermessages")
+output = logging.getLogger(name="output")
 
 usage = """
 Default <area> is 'support'.
@@ -371,7 +372,7 @@ def _main():
         if args.csv:
             module_contacts_str += "Module,Contact,Contact Name,CC,CC Name\n"
         module_contacts_str += "\n".join(print_out)
-        usermsg.info(module_contacts_str)  # print the list of module owners
+        output.info(module_contacts_str)  # print the list of module owners
         return
 
     # If we get to this point, we are assigning contacts
