@@ -35,6 +35,7 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger(name="output")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -67,11 +68,15 @@ def _main():
     logs = list(vcs.repo.iter_commits(last_release_num + "..HEAD",
                                       max_count=1))
     if logs:
-        usermsg.info("Changes have been made to {module}"
-                     " since release {release}".format(module=module, release=last_release_num))
+        output.info("Changes have been made to {module}"
+                    " since release {release}".format(
+            module=module, release=last_release_num
+        ))
     else:
-        usermsg.info("No changes have been made to {module}"
-                     " since most recent release {release}".format(module=module, release=last_release_num))
+        output.info("No changes have been made to {module}"
+                    " since most recent release {release}".format(
+            module=module, release=last_release_num
+        ))
 
     shutil.rmtree(vcs.repo.working_tree_dir)
 

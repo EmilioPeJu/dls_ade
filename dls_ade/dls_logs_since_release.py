@@ -549,6 +549,7 @@ def format_message_width(message, line_len):
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger(name="output")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -621,7 +622,7 @@ def _main():
             messages.append(log)
         if log.endswith(release_marker.format(start)):
             break
-    usermsg.info("\n".join(messages))
+    output.info("\n".join(messages))
 
     shutil.rmtree(vcs.repo.working_tree_dir)
 

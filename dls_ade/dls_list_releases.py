@@ -25,9 +25,10 @@ env = environment()
 usage = """
 Default <area> is 'support'.
 
-List the releases of <module_name> in the <area> area of prod or the repository if -g is true.
-By default uses the epics release number from your environment to work out the area on disk to
-look for the module, this can be overridden with the -e flag.
+List the releases of <module_name> in the <area> area of prod or the repository 
+if -g is true. By default uses the epics release number from your environment 
+to work out the area on disk to look for the module, this can be overridden 
+with the -e flag.
 """
 
 
@@ -88,6 +89,7 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger(name="output")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -137,17 +139,22 @@ def _main():
         if args.git:
             usermsg.info("{}: No releases made in git".format(args.module_name))
         else:
-            usermsg.info("{module}: No releases made for {version}".format(module=args.module_name, version=args.epics_version))
+            usermsg.info("{module}: No releases made for {version}".format(
+                module=args.module_name,
+                version=args.epics_version
+            ))
         return 1
 
     releases = env.sortReleases(releases)
 
     if args.latest:
-        usermsg.info("The latest release for {module} in {target} is: {release}"
-                     .format(module=args.module_name, target=target, release=releases[-1]))
+        usermsg.info("The latest release for {module} in {target} is: "
+                     .format(module=args.module_name, target=target))
+        output.info("{release}".format(release=releases[-1]))
     else:
-        usermsg.info("Previous releases for {module} in {target}: {releases}"
-                     .format(module=args.module_name, target=target, releases=str(releases)))
+        usermsg.info("Previous releases for {module} in {target}"
+                     .format(module=args.module_name, target=target))
+        output.info("{releases}".format(releases=str(releases)))
 
 
 def main():
@@ -157,7 +164,9 @@ def main():
         _main()
     except Exception as e:
         logging.exception(e)
-        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        logging.getLogger("usermessages").exception(
+            "ABORT: Unhandled exception (see trace below): {}".format(e)
+        )
         exit(1)
 
 
