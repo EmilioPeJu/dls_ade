@@ -50,42 +50,42 @@ PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
 # CHECKOUT MODULE
-mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
-cd $build_dir       || ReportFailure "Can not cd to $build_dir"
+mkdir -p ${build_dir} || ReportFailure "Can not mkdir ${build_dir}"
+cd ${build_dir} || ReportFailure "Can not cd to ${build_dir}"
 
-if [ ! -d $_version ]; then
+if [[ ! -d ${_version} ]]; then
     CloneRepo
-elif [ "$_force" == "true" ] ; then
-    SysLog info "Force: removing previous version: ${PWD}/$_version"
-    rm -rf $_version || ReportFailure "Can not rm $_version"
+elif [[ "${_force}" == "true" ]] ; then
+    SysLog info "Force: removing previous version: ${PWD}/${_version}"
+    rm -rf $_version || ReportFailure "Can not rm ${_version}"
     CloneRepo
 elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
-    ReportFailure "Directory $build_dir/$_version not up to date with $_git_dir"
+    ReportFailure "Directory ${build_dir}/${_version} not up to date with ${_git_dir}"
 fi
 
 # BUILD MODULE
 
-PYTHON_VERSION="python$($PYTHON -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+PYTHON_VERSION="python$(${PYTHON} -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
 # Build phase 1 - Build a wheel and install in prefix, for app or library
-cd $_version || ReportFailure "Can not cd to $_version"
-$PY3_CHECK $_version || ReportFailure "Python3 module check failed."
-$PYTHON setup.py bdist_wheel
+cd ${_version} || ReportFailure "Can not cd to ${_version}"
+${PY3_CHECK} ${_version} || ReportFailure "Python3 module check failed."
+${PYTHON} setup.py bdist_wheel
 # If running on the build server, copy the wheel to the distributions directory.
 if [[ -w ${PROD_DIST_DIR} ]]; then
     cp dist/* ${PROD_DIST_DIR}
 fi
-mkdir -p prefix/lib/$PYTHON_VERSION/site-packages
-SITE_PACKAGES=$(pwd)/prefix/lib/$PYTHON_VERSION/site-packages
-export PYTHONPATH=$PYTHONPATH:$SITE_PACKAGES
+mkdir -p prefix/lib/${PYTHON_VERSION}/site-packages
+SITE_PACKAGES=$(pwd)/prefix/lib/${PYTHON_VERSION}/site-packages
+export PYTHONPATH=${PYTHONPATH}:${SITE_PACKAGES}
 
 # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
 if [[ -e Pipfile.lock ]]; then
     # Use the -p argument to install pip, we'll need it.
     "${PFL_TO_VENV}" -p || ReportFailure "Dependencies not installed."
-    echo $SITE_PACKAGES >> $(pwd)/lightweight-venv/lib/$PYTHON_VERSION/site-packages/dls-installed-packages.pth
+    echo ${SITE_PACKAGES} >> $(pwd)/lightweight-venv/lib/${PYTHON_VERSION}/site-packages/dls-installed-packages.pth
     source lightweight-venv/bin/activate
-    pip install . --prefix=prefix --no-deps
+    pip install . --prefix=prefix --no-deps --disable-pip-version-check --no-warn-script-location
     # Remove the unneeded pip and setuptools once installation is complete.
     pip uninstall -y setuptools pip
 else
