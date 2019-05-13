@@ -48,7 +48,7 @@ export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/${PYTHON_VERSION}/site-packages
 WORK_DIST_DIR=/dls_sw/work/python3/${OS_VERSION}/distributions
 PROD_DIST_DIR=/dls_sw/prod/python3/${OS_VERSION}/distributions
 
-if  [[ "${build_dir}" =~ "/prod/" ]] ; then
+if  [[ "${_build_dir}" =~ "/prod/" ]] ; then
     is_test=false
 else
     is_test=true
