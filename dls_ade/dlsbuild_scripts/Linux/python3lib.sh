@@ -25,6 +25,8 @@
 
 # don't let standard input block the script execution
 exec 0</dev/null
+# expand all globs even if they don't match everything
+shopt -s nullglob
 
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
@@ -64,15 +66,11 @@ distributions=()
 normalised_module=$(normalise_name ${_module})
 specifier="${_module}==${_version}"
 
-mkdir -p ${_build_dir} || ReportFailure "Can not mkdir ${_build_dir}"
-cd ${_build_dir} || ReportFailure "Can not cd to ${_build_dir}"
-
-# Check for existing release. Ignore if directory doesn't exist.
-for released_module in $(ls "${_build_dir}"); do
-    normalised_released_module=$(normalise_name ${released_module})
+# Check for existing release.
+for released_module in "${_build_dir}"/* ; do
+    normalised_released_module=$(normalise_name $(basename ${released_module}))
     if [[ ${normalised_released_module} == ${normalised_module} ]]; then
-        module_location="${_build_dir}/${released_module}"
-        version_location="${module_location}/${_version}"
+        version_location="${released_module}/${_version}"
     fi
 done
 
@@ -90,24 +88,22 @@ else
 fi
 
 # First check if there is a matching distribution in prod.
-for dist in $(ls "${PROD_DIST_DIR}"); do
-    normalised_dist=$(normalise_name ${dist})
+for dist in "${PROD_DIST_DIR}"/* ; do
+    normalised_dist=$(normalise_name $(basename ${dist}))
     if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
-        distributions+=(${PROD_DIST_DIR}/${dist})
+        distributions+=(${dist})
     fi
 done
 
 # If not, check if there is one in work.
 if [[ ${#distributions[@]} -eq 0 ]]; then
-    for dist in $(ls "${WORK_DIST_DIR}"); do
-        normalised_dist=$(normalise_name ${dist})
-
+    for dist in "${WORK_DIST_DIR}"/* ; do
+        normalised_dist=$(normalise_name $(basename ${dist}))
         if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
-            dist_file="${WORK_DIST_DIR}/${dist}"
-            distributions+=(${dist_file})
+            distributions+=(${dist})
             # If running on the build server, move file from work to prod.
             if [[ -w ${PROD_DIST_DIR} ]]; then
-                mv "${dist_file}" "${PROD_DIST_DIR}" || ReportFailure "Cannot copy ${dist_file} to ${PROD_DIST_DIR}"
+                mv "${dist}" "${PROD_DIST_DIR}" || ReportFailure "Cannot copy ${dist_file} to ${PROD_DIST_DIR}"
             fi
         fi
     done
@@ -144,8 +140,8 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
         # Change header to the correct venv
         shebang='#!'
         new_header="${shebang}${version_location}/lightweight-venv/bin/python"
-        for script in $(ls ${prefix_location}/bin); do
-            sed -i "1 s|^.*$|${new_header}|" ${prefix_location}/bin/${script}
+        for script in ${prefix_location}/bin/* ; do
+            sed -i "1 s|^.*$|${new_header}|" "${script}"
         done
     else
         echo "No Pipfile.lock is present"
