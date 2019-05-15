@@ -151,7 +151,7 @@ else
         fi
         pfl="${prod_pfl}"
     else
-        if [[ -v prod_pfl ]]; then
+        if [[ -f ${prod_pfl} ]]; then
             pfl="${prod_pfl}"
         fi
     fi
@@ -160,7 +160,7 @@ else
     links_dir=${PROD_DIST_DIR}
 fi
 
-echo "Matching distributions ${distributions[@]}"
+echo "Matching distributions ${distributions[@]}" | tee -a ${log}
 
 # Install the distribution.
 if [[ ${#distributions[@]} -gt 0 ]]; then
@@ -170,18 +170,18 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
     # Check if there is Pipfile.lock to create the lightweight venv first.
     # This will fail if necessary dependencies aren't installed.
     if [[ -v pfl ]]; then
-        echo "Installing venv from $pfl"
+        echo "Installing venv from $pfl" | tee -a ${log}
         cd ${version_location}
         cp "${pfl}" .
         "${PFL_TO_VENV}" "${pipfilelock}" || ReportFailure "Dependencies not installed."
     else
-        echo "No Pipfile.lock is present" >> ${log}
+        echo "No Pipfile.lock is present" | tee -a ${log}
     fi
 
     pip3 install --ignore-installed --no-index --no-deps \
                     --find-links=${links_dir} --prefix=${prefix_location} \
                     ${specifier} >> ${log} 2>&1 || \
-                    ReportFailure "Failed to install $?"
+                    ReportFailure "Failed to install ${specifier}: $?"
     if [[ -d lightweight-venv ]]; then
         # Change header to the correct venv
         shebang='#!'
