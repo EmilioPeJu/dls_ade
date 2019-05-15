@@ -36,11 +36,11 @@ EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
-PYTHON=/dls_sw/prod/tools/${OS_VERSION}/Python3/3-7-2/prefix/bin/dls-python3
-PIP=/dls_sw/prod/tools/${OS_VERSION}/Python3/3-7-2/prefix/bin/pip3
-PYTHON_VERSION="python$(${PYTHON} -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
-# Testing section, this will need correcting for the final version.
+# e.g. python3.7
+PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+
+# This can be corrected once configure-tool assigns a version to dls_ade.
 DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/${PYTHON_VERSION}/site-packages
@@ -62,8 +62,22 @@ function normalise_name() {
     echo ${lower_dash_name}
 }
 
-distributions=()
+function match_dist() {
+    local normalised_dist=$(normalise_name $(basename $1))
+    if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]] && \
+       [[ ${normalised_dist} != *pipfile.lock ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+prod_distributions=()
+work_distributions=()
+pipfilelock=${_module}-${_version}.Pipfile.lock
 normalised_module=$(normalise_name ${_module})
+prod_pfl=${PROD_DIST_DIR}/${pipfilelock}
+work_pfl=${WORK_DIST_DIR}/${pipfilelock}
 specifier="${_module}==${_version}"
 
 # Check for existing release.
@@ -75,38 +89,75 @@ for released_module in "${_build_dir}"/* ; do
 done
 
 # Remove existing release if _force is true.
-if [[ -d ${version_location} ]]; then
+if [[ -d "${version_location}" ]]; then
     if [[ ${_force} == true ]]; then
         SysLog info "Force: removing previous version: ${version_location}"
         rm -rf "${version_location}"
     else
-        ReportFailure "${version_location} is already installed in prod"
+        ReportFailure "${version_location} is already installed."
     fi
 else
     # Always install using the normalised name.
     version_location="${_build_dir}/${normalised_module}/${_version}"
 fi
 
-# First check if there is a matching distribution in prod.
+log=${version_location}/${_build_name}.log
+mkdir -p $(dirname ${log})
+
+# Locate matching distributions in prod and work.
 for dist in "${PROD_DIST_DIR}"/* ; do
-    normalised_dist=$(normalise_name $(basename ${dist}))
-    if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
-        distributions+=(${dist})
+    if match_dist "${dist}"; then
+        prod_distributions+=(${dist})
     fi
 done
 
-# If not, check if there is one in work.
-if [[ ${#distributions[@]} -eq 0 ]]; then
-    for dist in "${WORK_DIST_DIR}"/* ; do
-        normalised_dist=$(normalise_name $(basename ${dist}))
-        if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]]; then
-            distributions+=(${dist})
-            # If running on the build server, move file from work to prod.
-            if [[ -w ${PROD_DIST_DIR} ]]; then
-                mv "${dist}" "${PROD_DIST_DIR}" || ReportFailure "Cannot copy ${dist_file} to ${PROD_DIST_DIR}"
-            fi
+for dist in "${WORK_DIST_DIR}"/* ; do
+    if match_dist "${dist}"; then
+        work_distributions+=(${dist})
+    fi
+done
+
+# Determine which files to use for installation.
+if [[ ${is_test} == true ]]; then
+    # Test build: use files in prod, and fall back to work.
+    if [[ ${#prod_distributions[@]} -gt 0 ]]; then
+        distributions=(${prod_distributions[@]})
+        links_dir=${PROD_DIST_DIR}
+    elif [[ ${#work_distributions[@]} -gt 0 ]]; then
+        distributions=(${work_distributions[@]})
+        links_dir=${WORK_DIST_DIR}
+    fi
+    if [[ -f "${prod_pfl}" ]]; then
+        pfl="${prod_pfl}"
+    elif [[ -f "${work_pfl}" ]]; then
+        pfl="${work_pfl}"
+    fi
+else
+    # Production build: copy files from work then build from prod.
+    if [[ ${#work_distributions[@]} -gt 0 ]]; then
+        if [[ ${_force} == ${true} ]]; then
+            mv "${work_distributions[@]}" "${PROD_DIST_DIR}"
+        else  # Set no-clobber option to mv
+            mv -n "${work_distributions[@]}" "${PROD_DIST_DIR}" || \
+            ReportFailure "Could not move ${work_distributions[@]} to ${PROD_DIST_DIR}"
         fi
-    done
+    fi
+    if [[ -f "${work_pfl}" ]]; then
+        if [[ ${_force} == true ]]; then
+            mv "${work_pfl}" "${PROD_DIST_DIR}"
+        else
+            mv -n "${work_pfl}" "${PROD_DIST_DIR}" || \
+            ReportFailure "Could not move ${work_pfl} to ${PROD_DIST_DIR}"
+        fi
+        pfl="${prod_pfl}"
+    else
+        if [[ -v prod_pfl ]]; then
+            pfl="${prod_pfl}"
+        fi
+    fi
+
+    distributions=(${prod_distributions[@]})
+    links_dir=${PROD_DIST_DIR}
 fi
 
 echo "Matching distributions ${distributions[@]}"
@@ -116,35 +167,28 @@ if [[ ${#distributions[@]} -gt 0 ]]; then
 
     prefix_location="${version_location}/prefix"
     site_packages_location="${prefix_location}/lib/${PYTHON_VERSION}/site-packages"
-
-    output=$(${PIP} install --ignore-installed --no-index --no-deps \
-                    --find-links=${PROD_DIST_DIR} --prefix=${prefix_location} \
-                    ${specifier} 2>&1)
-    # If testing, fall back to installing from work.
-    if [[ $? -ne 0 ]]; then
-        if [[ ${is_test} == true ]]; then
-        ${PIP} install --ignore-installed --no-index --no-deps \
-                       --find-links=${WORK_DIST_DIR} \
-                       --prefix=${prefix_location} ${specifier}
-        else
-            echo ${output}
-            ReportFailure "Failed to install ${specifier} from ${PROD_DIST_DIR}"
-        fi
-    fi
-    # Check if there is Pipfile.lock to create venv
-    pipfilelock=${_module}-${_version}.Pipfile.lock
-    if [[ -f ${PROD_DIST_DIR}/${pipfilelock} ]]; then
+    # Check if there is Pipfile.lock to create the lightweight venv first.
+    # This will fail if necessary dependencies aren't installed.
+    if [[ -v pfl ]]; then
+        echo "Installing venv from $pfl"
         cd ${version_location}
-        cp "${PROD_DIST_DIR}/${pipfilelock}" .
+        cp "${pfl}" .
         "${PFL_TO_VENV}" "${pipfilelock}" || ReportFailure "Dependencies not installed."
+    else
+        echo "No Pipfile.lock is present" >> ${log}
+    fi
+
+    pip3 install --ignore-installed --no-index --no-deps \
+                    --find-links=${links_dir} --prefix=${prefix_location} \
+                    ${specifier} >> ${log} 2>&1 || \
+                    ReportFailure "Failed to install $?"
+    if [[ -d lightweight-venv ]]; then
         # Change header to the correct venv
         shebang='#!'
         new_header="${shebang}${version_location}/lightweight-venv/bin/python"
         for script in ${prefix_location}/bin/* ; do
             sed -i "1 s|^.*$|${new_header}|" "${script}"
         done
-    else
-        echo "No Pipfile.lock is present"
     fi
 else
     ReportFailure "No matching distribution was found for ${specifier}"
