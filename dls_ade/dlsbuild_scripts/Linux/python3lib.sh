@@ -119,21 +119,21 @@ done
 
 # Determine which files to use for installation.
 if [[ ${is_test} == true ]]; then
-    # Test build: use files in prod, and fall back to work.
-    if [[ ${#prod_distributions[@]} -gt 0 ]]; then
-        distributions=(${prod_distributions[@]})
-        links_dir=${PROD_DIST_DIR}
-    elif [[ ${#work_distributions[@]} -gt 0 ]]; then
+    # Test build: use files in work if present, otherwise look in prod.
+    if [[ ${#work_distributions[@]} -gt 0 ]]; then
         distributions=(${work_distributions[@]})
         links_dir=${WORK_DIST_DIR}
+    elif [[ ${#prod_distributions[@]} -gt 0 ]]; then
+        distributions=(${prod_distributions[@]})
+        links_dir=${PROD_DIST_DIR}
     fi
-    if [[ -f "${prod_pfl}" ]]; then
-        pfl="${prod_pfl}"
-    elif [[ -f "${work_pfl}" ]]; then
+    if [[ -f "${work_pfl}" ]]; then
         pfl="${work_pfl}"
+    elif [[ -f "${prod_pfl}" ]]; then
+        pfl="${prod_pfl}"
     fi
 else
-    # Production build: copy files from work then build from prod.
+    # Production build: move files from work then build from prod.
     if [[ ${#work_distributions[@]} -gt 0 ]]; then
         if [[ ${_force} == ${true} ]]; then
             mv "${work_distributions[@]}" "${PROD_DIST_DIR}"
