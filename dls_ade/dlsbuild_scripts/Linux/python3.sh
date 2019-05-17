@@ -41,9 +41,9 @@ PIP=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/Python3/3-7-2/prefix/bin/pi
 PROD_DIST_DIR=dls_sw/prod/python3/distributions
 
 # Testing section, this will need correcting for the final version.
-export TESTING_ROOT=/dls_sw/work/python3/test-root
 DLS_ADE_LOCATION=/dls_sw/work/python3/RHEL${OS_VERSION}-$(uname -m)/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
+export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
 PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
 
 
