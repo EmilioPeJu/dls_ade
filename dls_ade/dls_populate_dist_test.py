@@ -76,9 +76,10 @@ class PopulateDist(unittest.TestCase):
         item = dls_populate_dist.populate_dist(self.test_folder)
         self.assertEqual(item[0], 'numpy 1.16.2')
 
-    def test_populate_dist_returns_nothing_when_package_installed(self):
+    @mock.patch('dls_ade.dls_populate_dist.python3_module_installed')
+    def test_populate_dist_returns_nothing_when_package_installed(self, mock_module_installed):
+        mock_module_installed.return_value = True
         with open('Pipfile.lock', 'w') as f:
             f.write(PopulateDist.lockfile)
-        os.makedirs('dls_sw/prod/python3/RHEL7-x86_64/numpy/1.16.2/prefix')
         item = dls_populate_dist.populate_dist(self.test_folder)
         self.assertFalse(item)

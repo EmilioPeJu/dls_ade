@@ -9,6 +9,7 @@ from dls_ade.dlsbuild import default_server
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
 PIPFILELOCK = 'Pipfile.lock'
+PY3_ROOT_DIR = '/dls_sw/prod/python3'
 
 
 def remove_end_slash(path_string):
@@ -139,7 +140,7 @@ def python3_module_path(module, version):
         string: full file path
     """
     os_version = default_server().replace('redhat', 'RHEL')
-    os_dir = '/dls_sw/prod/python3/{}'.format(os_version)
+    os_dir = '{}/{}'.format(PY3_ROOT_DIR, os_version)
     released_modules = os.listdir(os_dir)
     for r in released_modules:
         normalised_name = normalise_name(r)

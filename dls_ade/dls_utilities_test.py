@@ -1,7 +1,8 @@
 from dls_ade import dls_utilities
-import unittest
+import mock
 import os
 import shutil
+import unittest
 
 from dls_ade.exceptions import ParsingError
 
@@ -91,14 +92,15 @@ class PythonThreePipeline(unittest.TestCase):
     def setUp(self):
         self.starting_dir = os.getcwd()
         self.test_folder = mkdtemp()
-        os.environ['TESTING_ROOT'] = self.test_folder
         self.os_dir = os.path.join(self.test_folder, 'dls_sw/prod/python3/RHEL7-x86_64')
+        self.old_py3_dir = dls_utilities.PY3_ROOT_DIR
+        dls_utilities.PY3_ROOT_DIR = os.path.join(self.test_folder, 'dls_sw/prod/python3')
         os.makedirs(self.os_dir)
 
     def tearDown(self):
         os.chdir(self.starting_dir)
         shutil.rmtree(self.test_folder)
-        del os.environ['TESTING_ROOT']
+        dls_utilities.PY3_ROOT_DIR = self.old_py3_dir
 
     def test_module_is_installed(self):
         module = 'test'
@@ -106,15 +108,13 @@ class PythonThreePipeline(unittest.TestCase):
         os.chdir(self.test_folder)
         dir_path = '{}/{}/{}/prefix'.format(self.os_dir, module, version)
         os.makedirs(dir_path)
-        success = python3_module_installed(module, version)
-        self.assertTrue(success)
+        self.assertTrue(python3_module_installed(module, version))
 
     def test_module_is_not_installed(self):
         module = 'test'
         version = '1.2.3'
         os.chdir(self.test_folder)
-        success = python3_module_installed(module, version)
-        self.assertFalse(success)
+        self.assertFalse(python3_module_installed(module, version))
 
     def test_python3_module_installed_catches_mismatched_underscore(self):
         dash_module = 'abc-def'
