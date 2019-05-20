@@ -59,11 +59,11 @@ def check_tag_is_valid(tag):
         alpha_beta_z = "((alpha|beta){z})?".format(z=optional_number)
     )
 
-    pattern = '{u_v_w}{dls_x_y}{alpha_beta_z}'.format(**regex_pieces)
+    pattern = '^{u_v_w}{dls_x_y}{alpha_beta_z}$'.format(**regex_pieces)
     check = re.compile(pattern)
     result = check.match(tag)
 
-    if result is None or result.group() != tag:
+    if result is None:
         return False
 
     return True

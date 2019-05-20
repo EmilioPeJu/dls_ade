@@ -430,16 +430,15 @@ def determine_version_to_release(release, next_version, releases, commit=None):
         version = commit
         commit_to_tag = None
     else:  # Release of specified version
-        version = release
         release_exists = release in releases
         if commit is None:  # Version and no commit: standard release
-            # Release must already exist to release without a commit
+            # Tag must already exist to release without a commit
             commit_to_tag = None
             if not release_exists:
                 raise ValueError("Aborting: release {} not found and commit "
                                  "not specified.".format(release))
-            else:
-                usermsg.info("Releasing existing release {}.".format(release))
+            usermsg.info("Releasing from existing tag {}.".format(release))
+            version = release
         else:  # Release and commit reference specified: commit will be tagged
             # Release must not be in use already
             if release_exists:
