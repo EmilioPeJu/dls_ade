@@ -447,6 +447,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                     "Aborting: release {} already exists.".format(release)
                 )
             commit_to_tag = commit
+            version = normalise_release(release)
 
     return version, commit_to_tag
 
@@ -455,6 +456,10 @@ def normalise_release(release):
     """Try to normalise the release name.
 
     None is a valid argument.
+
+    Note that the current policy to is accept any release name if an existing
+    tag is to be used, and only perform the normalisation on tags to be created
+    by this script.
 
     Arguments:
         release(str): the release name
@@ -499,7 +504,7 @@ def _main():
     vcs = server.temp_clone(source)
 
     try:
-        release = normalise_release(args.release)
+        release = args.release
         if release is None:
             usermsg.info("No release specified; able to test "
                          "build at {} only.".format(args.commit))
