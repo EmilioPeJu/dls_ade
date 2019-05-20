@@ -50,8 +50,8 @@ class ParserTest(unittest.TestCase):
         dls_release.make_parser()
 
         parser_mock.assert_called_once_with(
-            help_msg="Change the epics version. "
-                     "This will determine which build server your job is built on for epics modules. "
+            help_msg="Change the EPICS version. This will determine which "
+                     "build server your job is built on for EPICS modules. "
                      "Default is from your environment")
 
     def test_force_option_has_correct_attributes(self):

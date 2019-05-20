@@ -27,13 +27,13 @@ from dls_ade.dls_environment import environment
 from dls_ade.exceptions import VCSGitError
 from dls_ade.dls_utilities import check_tag_is_valid
 
-usage = """
-Default <area> is 'support'.
-Release <module_name> at version <release> from <area>.
-This script will do a test build of the module, and if it succeeds, will create
-the release in git. It will then write a build request file to the build
-server, causing it to schedule a checkout and build of the git release in
-prod.
+usage = """Default <area> is 'support'.
+ Release <module_name> at tag <release> from <area>.
+ This script will do a test build of the module. If it succeeds, a build
+ request file is written to the build server, causing it to schedule a clone
+ and build of the git tag in prod.
+ A tag named <release> must already exist on the server, unless the --commit
+ option is used, in which case the tag is created at the named commit.
 """
 
 
@@ -73,15 +73,16 @@ def make_parser():
     parser.add_branch_flag(
         help_msg="Release from a branch")
     parser.add_epics_version_flag(
-        help_msg="Change the epics version. This will determine which build "
-                 "server your job is built on for epics modules. Default is "
+        help_msg="Change the EPICS version. This will determine which build "
+                 "server your job is built on for EPICS modules. Default is "
                  "from your environment")
 
     parser.add_argument(
         "-f", "--force", action="store_true", dest="force", default=None,
-        help="force a release. If the release exists in prod it is removed. "
-        "If the release exists in git it is exported to prod, otherwise "
-        "the release is created in git and exported to prod")
+        help="Force a release. If the release exists in prod it is removed "
+             "(otherwise in this case the default behaviour is to rebuild "
+             "the existing release). Overrides some sanity checks and is "
+             "therefore to be used with caution.")
     parser.add_argument(
         "-t", "--no-test-build", action="store_true", dest="skip_test",
         help="If set, this will skip the local test build "
@@ -91,7 +92,7 @@ def make_parser():
         help="If set, this will only do the local test build and no more.")
     parser.add_argument(
         "-T", "--test_build-only", action="store_true", dest="test_only",
-        help="If set, this will only do a test build on the build server")
+        help="If set, this will only do a test build on the build server.")
     parser.add_argument(
         "-m", "--message", action="store", type=str, dest="message",
         default="",
@@ -102,14 +103,21 @@ def make_parser():
         "-n", "--next_version", action="store_true", dest="next_version",
         help="Use the next version number as the release version")
     parser.add_argument(
-        "-g", "--redundant_argument", action="store_true", dest="redundant_argument",
+        "-g", "--redundant_argument", action="store_true",
+        dest="redundant_argument",
         help="Redundant argument to preserve backward compatibility")
     parser.add_argument(
         "-c", "--commit", action="store", type=str, dest="commit",
-        help="Execute test builds only (-T or -l) at the specified commit.")
+        help="If <release> is given, "
+             "this option causes the tag to be created "
+             "on the server, at the given COMMIT. The <release> is "
+             "checked against the DLS naming convention. "
+             "This option can also be used to execute only test builds "
+             "at the given commit by omitting <release> and using "
+             "either -T or -l. This avoids having to tag to do a test build.")
 
     title = "Build operating system arguments"
-    desc = "Note: The following arguments are mutually exclusive - only use" \
+    desc = "Note: The following arguments are mutually exclusive - only use " \
            "one"
 
     # Can only add description to group, so have to nest inside ordinary group
@@ -272,7 +280,7 @@ def increment_version_number(last_release):
         str: Minimally incremented version number
 
     """
-    numre = re.compile("\d+|[^\d]+")
+    numre = re.compile(r"\d+|[^\d]+")
     tokens = numre.findall(last_release)
     for i in reversed(range(0, len(tokens))):
         if tokens[i].isdigit():
@@ -550,15 +558,18 @@ def _main():
     msg_build_job = "test-release" if args.test_only else "Release"
     msg_create_build_job = "Creating {buildjob} job for {info_msg}".format(
         buildjob=msg_build_job,
-        info_msg=construct_info_message(module, args.branch, args.area, version,
-                                        build))
+        info_msg=construct_info_message(module, args.branch, args.area,
+                                        version, build))
     usermsg.info(msg_create_build_job)
 
     build.submit(vcs, test=args.test_only)
-    usermsg.info("{build_job} job for {area}-module: \'{module}\' {version} "\
-                 "submitted to build server queue".format(
-        build_job=msg_build_job,
-        area=args.area, module=module, version=str(version)))
+    usermsg.info(
+        "{build_job} job for {area}-module: \'{module}\' {version} "
+        "submitted to build server queue".format(
+            build_job=msg_build_job,
+            area=args.area, module=module, version=str(version)
+        )
+    )
 
 
 def main():
@@ -568,7 +579,9 @@ def main():
         _main()
     except Exception as e:
         logging.exception(e)
-        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        logging.getLogger("usermessages").exception(
+            "ABORT: Unhandled exception (see trace below): {}".format(e)
+        )
         exit(1)
 
 
