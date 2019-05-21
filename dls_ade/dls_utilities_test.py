@@ -10,13 +10,16 @@ class TagFormatTest(unittest.TestCase):
 
     def test_approves_correct_tags(self):
 
-        ex_valid_tags = ['2-51', '21-5-3', '2-5dls1', '2-5dls2-3']
+        ex_valid_tags = ['2-51', '21-5-3', '2-5dls1', '2-5dls2-3',
+                         '12-34-56dls78-90', '1-2alpha', '1-2alpha9',
+                         '1-2-3beta4', '1-2-3dls4-5beta']
         for ex_valid_tag in ex_valid_tags:
             self.assertTrue(check_tag_is_valid(ex_valid_tag))
 
     def test_rejects_incorrect_tags(self):
 
-        ex_invalid_tags = ['2-5a', 'abcdef']
+        ex_invalid_tags = ['2-5a', 'abcdef', '1', '8-', '8-5-',
+                           '2-5a0']
         for ex_invalid_tag in ex_invalid_tags:
             self.assertFalse(check_tag_is_valid(ex_invalid_tag))
 
