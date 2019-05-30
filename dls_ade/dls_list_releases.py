@@ -122,7 +122,7 @@ def _main():
 
     else:
         # List branches from prod
-        target = "prod"
+        target = "prod for {os}".format(os=env.rhelVerDir())
         source = env.prodArea(args.area)
         release_dir = os.path.join(source, args.module_name)
 
@@ -149,7 +149,7 @@ def _main():
                      .format(module=args.module_name, target=target))
         output.info("{release}".format(release=releases[-1]))
     else:
-        usermsg.info("Previous releases for {module} in {target}"
+        usermsg.info("Previous releases for {module} in {target}:"
                      .format(module=args.module_name, target=target))
         output.info("{releases}".format(releases=str(releases)))
 
