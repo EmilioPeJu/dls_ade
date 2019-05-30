@@ -20,8 +20,6 @@ from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 
-env = environment()
-
 usage = """
 Default <area> is 'support'.
 
@@ -94,9 +92,12 @@ def _main():
     parser = make_parser()
     args = parser.parse_args()
 
+    env = environment()
+
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     env.check_epics_version(args.epics_version)
+    env.check_rhel_version(str(args.rhel_version))
     check_technical_area(args.area, args.module_name)
 
     # Force check of repo, not file system, for tools, etc and epics
