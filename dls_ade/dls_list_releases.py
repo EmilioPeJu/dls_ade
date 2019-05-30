@@ -36,7 +36,7 @@ def get_rhel_version():
     """
     Checks if platform is Linux redhat, if so returns base version number from
     environment (e.g. returns 6 if 6.7), if not returns default of 6.
-    
+
     Returns:
         str: Rhel version number
     """
@@ -104,7 +104,7 @@ def _main():
     if args.area in ["etc", "tools", "epics"]:
         args.git = True
 
-    # Check for the existence of releases of this module/IOC    
+    # Check for the existence of releases of this module/IOC
     releases = []
     if args.git:
 
@@ -113,6 +113,7 @@ def _main():
         # List branches of repository
         target = "the repository"
         source = server.dev_module_path(args.module_name, args.area)
+        log.debug(source)
 
         vcs = server.temp_clone(source)
         releases = vcs_git.list_module_releases(vcs.repo)
@@ -122,11 +123,6 @@ def _main():
         # List branches from prod
         target = "prod"
         source = env.prodArea(args.area)
-        if args.area == 'python' and args.rhel_version >= 6:
-            source = os.path.join(source,
-                                  "RHEL{0}-{1}".format(args.rhel_version,
-                                                       platform.machine()))
-            log.debug(source)
         release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
