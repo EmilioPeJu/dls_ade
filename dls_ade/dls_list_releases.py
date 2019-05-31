@@ -20,8 +20,6 @@ from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 
-env = environment()
-
 usage = """
 Default <area> is 'support'.
 
@@ -36,7 +34,7 @@ def get_rhel_version():
     """
     Checks if platform is Linux redhat, if so returns base version number from
     environment (e.g. returns 6 if 6.7), if not returns default of 6.
-    
+
     Returns:
         str: Rhel version number
     """
@@ -94,9 +92,12 @@ def _main():
     parser = make_parser()
     args = parser.parse_args()
 
+    env = environment()
+
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     env.check_epics_version(args.epics_version)
+    env.check_rhel_version(str(args.rhel_version))
     check_technical_area(args.area, args.module_name)
 
     # Force check of repo, not file system, for tools, etc and epics
@@ -104,7 +105,7 @@ def _main():
     if args.area in ["etc", "tools", "epics"]:
         args.git = True
 
-    # Check for the existence of releases of this module/IOC    
+    # Check for the existence of releases of this module/IOC
     releases = []
     if args.git:
 
@@ -113,6 +114,7 @@ def _main():
         # List branches of repository
         target = "the repository"
         source = server.dev_module_path(args.module_name, args.area)
+        log.debug(source)
 
         vcs = server.temp_clone(source)
         releases = vcs_git.list_module_releases(vcs.repo)
@@ -120,13 +122,8 @@ def _main():
 
     else:
         # List branches from prod
-        target = "prod"
+        target = "prod for {os}".format(os=env.rhelVerDir())
         source = env.prodArea(args.area)
-        if args.area == 'python' and args.rhel_version >= 6:
-            source = os.path.join(source,
-                                  "RHEL{0}-{1}".format(args.rhel_version,
-                                                       platform.machine()))
-            log.debug(source)
         release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
@@ -152,7 +149,7 @@ def _main():
                      .format(module=args.module_name, target=target))
         output.info("{release}".format(release=releases[-1]))
     else:
-        usermsg.info("Previous releases for {module} in {target}"
+        usermsg.info("Previous releases for {module} in {target}:"
                      .format(module=args.module_name, target=target))
         output.info("{releases}".format(releases=str(releases)))
 
