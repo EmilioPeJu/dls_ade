@@ -45,7 +45,6 @@ if "%_module%"=="base" (
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
-    exit /b %ERRORLEVEL%
 )
 
 cd /d "%build_dir%"
