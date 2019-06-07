@@ -10,7 +10,7 @@
 ::   _epics     : The DLS_EPICS_RELEASE to use
 ::   _build_dir : The parent directory in the file system in which to build the
 ::                module. This does not include module or version directories.
-::   _svn_dir   : The directory in subversion where the module is located.
+::   _git_dir   : The directory in git where the module is located.
 ::   _module    : The module name
 ::   _version   : The module version
 ::   _area      : The build area
@@ -32,7 +32,6 @@ if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
     exit /b %ERRORLEVEL%
 )
-set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 if "%_module%"=="base" (
     set "build_dir=%_build_dir:/=\%\%_epics:_64=%"
@@ -60,19 +59,18 @@ if "%_force%"=="true" (
 )
 
 if not exist %_module% (
-    svn checkout %_svn_dir% %_module%
+    git clone --depth=100 %_git_dir% %_module%
     if errorlevel 1 (
-        call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        call :ReportFailure %ERRORLEVEL% Can not check out %_git_dir%
         exit /b %ERRORLEVEL%
     )
-    cd %_module%
-) else (
-    cd %_module%
-    svn switch %_svn_dir%
-    if errorlevel 1 (
-        call :ReportFailure %ERRORLEVEL% Can not switch to %_svn_dir%
-        exit /b %ERRORLEVEL%
-    )
+)
+
+cd %_module%
+git fetch --depth=1 origin tag %_version% && git checkout %_version%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not switch to %_git_dir%
+    exit /b %ERRORLEVEL%
 )
 
 :: Build
