@@ -1,11 +1,12 @@
 :: ****************************************************************************
 :: 
-:: Script to build a Diamond production module.in the support or ioc areas
+:: Script to build a Diamond production module in the support or ioc areas
 ::
-:: This is a partial script which builds a module in for the dls-release
+:: This is a partial script which builds a module for the dls-release
 :: system. The script is prepended with a list of variables before invocation
 :: by the dls-release mechanism. These variables are:
 ::
+::   _profile   : Optional override of the profile batch script
 ::   _email     : The email address of the user who initiated the build
 ::   _epics     : The DLS_EPICS_RELEASE to use
 ::   _build_dir : The parent directory in the file system in which to build the
