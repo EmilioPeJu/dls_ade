@@ -134,13 +134,14 @@ def make_parser():
         "-w", "--windows", action="store", dest="windows", type=str,
         help="Release the module or IOC only for the Windows version. "
         "If the module has already been released with the same version "
-        "the build server will rebuild that release for windows. "
+        "the build server will rebuild that release for Windows. "
         "Existing unix builds of the same module version will not be "
-        "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
-        "Both 32 and 64 bit builds default to R3.14.12.3 on the same "
-        "Server 2008 64-bit build server. Possible options are: "
-        "32 (win32-x86 on Server 2008) 64 (windows-x64 on Server 2008) "
-        "64_2012 (windows-x64 on Server 2012)")
+        "affected. If the EPICS version is different to the default "
+        "it must be specified explicitly. Possible options are: "
+        "32 (win32-x86, R3.14.12.3, Server 2008),"
+        "64 (windows-x64, R3.14.12.3, Server 2008), "
+        "64_2012 (windows-x64, R3.14.12.7, Server 2012)"
+        )
 
     return parser
 
