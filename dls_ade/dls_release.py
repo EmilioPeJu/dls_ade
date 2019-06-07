@@ -133,14 +133,14 @@ def make_parser():
     group.add_argument(
         "-w", "--windows", action="store", dest="windows", type=str,
         help="Release the module or IOC only for the Windows version. "
-        "Note that the windows build server can not create a test build. "
-        "A configure/RELEASE.win32-x86 or configure/RELEASE.windows64 file"
-        " must exist in the module in order for the build to start. "
         "If the module has already been released with the same version "
         "the build server will rebuild that release for windows. "
         "Existing unix builds of the same module version will not be "
         "affected. Must specify 32 or 64 after the flag to choose 32/64-bit. "
-        "Both 32 and 64 bit builds are built on the same 64-bit build server")
+        "Both 32 and 64 bit builds default to R3.14.12.3 on the same "
+        "Server 2008 64-bit build server. Possible options are: "
+        "32 (win32-x86 on Server 2008) 64 (windows-x64 on Server 2008) "
+        "64_2012 (windows-x64 on Server 2012)")
 
     return parser
 

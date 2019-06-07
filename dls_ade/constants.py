@@ -37,6 +37,6 @@ SERVER_SHORTCUT = {
     "7": "redhat7-x86_64",
     "32": "windows6-x86",
     "64": "windows6-AMD64",
-    "64-2012": "windows6_3-AMD64",
+    "64_2012": "windows6_3-AMD64",
 }
 
