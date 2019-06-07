@@ -23,16 +23,20 @@ SYSLOG_SERVER_PORT = _syslog_server[1]
 BUILD_SERVERS = {
     "Linux": {
         "redhat6-x86_64": ["R3.14.12.3"],
-        "redhat7-x86_64": ["R3.14.12.7"]
+        "redhat7-x86_64": ["R3.14.12.7"],
     },
     "Windows": {
-        "windows6-x86"   : ["R3.14.12.3"],
-        "windows6-AMD64" : ["R3.14.12.3"]
+        "windows6-x86"     : ["R3.14.12.3"],
+        "windows6-AMD64"   : ["R3.14.12.3"],
+        "windows6_3-AMD64" : ["R3.14.12.7"],
     }
 }
+
 SERVER_SHORTCUT = {
     "6": "redhat6-x86_64",
     "7": "redhat7-x86_64",
     "32": "windows6-x86",
-    "64": "windows6-AMD64"}
+    "64": "windows6-AMD64",
+    "64-2012": "windows6_3-AMD64",
+}
 
