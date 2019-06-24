@@ -56,7 +56,7 @@ if [[ ! -d ${_version} ]]; then
     CloneRepo
 elif [[ "${_force}" == "true" ]] ; then
     SysLog info "Force: removing previous version: ${PWD}/${_version}"
-    rm -rf $_version || ReportFailure "Can not rm ${_version}"
+    rm -rf ${_version} || ReportFailure "Can not rm ${_version}"
     CloneRepo
 elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
     ReportFailure "Directory ${build_dir}/${_version} not up to date with ${_git_dir}"
@@ -80,24 +80,33 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         echo "Building wheel ..."
         dls-python3 setup.py bdist_wheel
         # If running on the build server, copy the wheel to the distributions directory.
-        echo "PROD_DIST_DIR $PROD_DIST_DIR"
         if [[ -w ${PROD_DIST_DIR} ]]; then
             echo "Copying distribution files to ${PROD_DIST_DIR}"
             cp dist/* ${PROD_DIST_DIR}
         fi
-        mkdir -p prefix/lib/${PYTHON_VERSION}/site-packages
-        SITE_PACKAGES=$(pwd)/prefix/lib/${PYTHON_VERSION}/site-packages
-        export PYTHONPATH=${PYTHONPATH}:${SITE_PACKAGES}
 
-        # Build phase 2 - Create venv from Pipfile.lock on condition there is Pipfile.lock
+        # Build phase 2:
+        # - if a Pipfile.lock is committed, use it to create a virtualenv.
+        #   That virtualenv can be used to run any command-line scripts.
+        # - if no Pipfile.lock is committed, just install into prefix
+        #   with no dependencies.
         if [[ -e Pipfile.lock ]]; then
-            # Use the -p argument to install pip, we'll need it.
+            # Create the lightweight virtualenv.
+            # Use the -p argument to install pip into the virtualenv, we'll need it.
             "${PFL_TO_VENV}" -p || ReportFailure "Dependencies not installed."
-            echo ${SITE_PACKAGES} >> $(pwd)/lightweight-venv/lib/${PYTHON_VERSION}/site-packages/dls-installed-packages.pth
+            # Install this module into prefix using the virtualenv.
             source lightweight-venv/bin/activate
             pip install . --prefix=prefix --no-deps --disable-pip-version-check --no-warn-script-location
             # Remove the unneeded pip and setuptools once installation is complete.
             pip uninstall -y setuptools pip
+            # Ensure that this module, installed in the prefix directory,
+            # is available to the python installed in the lightweight
+            # virtualenv.
+            PREFIX_SITE_PACKAGES=$(pwd)/prefix/lib/${PYTHON_VERSION}/site-packages
+            VENV_SITE_PACKAGES=$(pwd)/lightweight-venv/lib/${PYTHON_VERSION}/site-packages
+            echo ${PREFIX_SITE_PACKAGES} >> ${VENV_SITE_PACKAGES}/dls-installed-packages.pth
+            # Deactivate the virtualenv.
+            deactivate
         else
             pip3 install . --prefix=prefix --no-deps
         fi
