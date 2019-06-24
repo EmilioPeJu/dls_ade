@@ -144,11 +144,26 @@ class TempCloneTest(unittest.TestCase):
         server = GitServer("test@url.ac.uk", "test@clone-url.ac.uk",
                            "test@url.ac.uk")
 
-        server.temp_clone(source)
+        # Do a shallow clone
+        server.temp_clone(source, depth=1)
 
+        mock_clone_from.assert_called_once_with(
+            "test@clone-url.ac.uk/controls/area/test_module", "tempdir",
+            depth=1
+        )
         mock_mkdtemp.assert_called_once_with(suffix="_test_module")
+
+        # Reset mocks
+        mock_clone_from.reset_mock()
+        mock_mkdtemp.reset_mock()
+
+        # Do a normal clone
+        server.temp_clone(source)
         mock_clone_from.assert_called_once_with(
             "test@clone-url.ac.uk/controls/area/test_module", "tempdir")
+
+        mock_mkdtemp.assert_called_once_with(suffix="_test_module")
+
 
     @patch('dls_ade.gitserver.GitServer.get_clone_path',
            return_value="controls/ioc/domain/test_module")
