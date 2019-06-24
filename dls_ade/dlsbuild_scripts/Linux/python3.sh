@@ -37,8 +37,6 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/${_module}
 
-PYTHON=/dls_sw/prod/tools/${OS_ARCH_STRING}/Python3/3-7-2/prefix/bin/dls-python3
-PIP=/dls_sw/prod/tools/${OS_ARCH_STRING}/Python3/3-7-2/prefix/bin/pip3
 PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
 # Testing section, this will need correcting for the final version.
@@ -48,7 +46,7 @@ export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
 PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
 
 
-SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
+SysLog debug "os_version=${OS_ARCH_STRING} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
 # CHECKOUT MODULE
 mkdir -p ${build_dir} || ReportFailure "Can not mkdir ${build_dir}"
@@ -64,7 +62,7 @@ elif [[ (( $(git status -uno --porcelain | wc -l) != 0 )) ]]; then
     ReportFailure "Directory ${build_dir}/${_version} not up to date with ${_git_dir}"
 fi
 
-PYTHON_VERSION="python$(${PYTHON} -V | cut -d" " -f"2" | cut -d"." -f1-2)"
+PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 cd ${_version} || ReportFailure "Can not cd to ${_version}"
 
 # BUILD MODULE
@@ -78,9 +76,9 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         # Build phase 1 - Build a wheel and install in prefix, for app or library
         ${PY3_CHECK} ${_version} || ReportFailure "Python3 module check failed."
         echo "Building source distribution ..."
-        ${PYTHON} setup.py sdist
+        dls-python3 setup.py sdist
         echo "Building wheel ..."
-        ${PYTHON} setup.py bdist_wheel
+        dls-python3 setup.py bdist_wheel
         # If running on the build server, copy the wheel to the distributions directory.
         echo "PROD_DIST_DIR $PROD_DIST_DIR"
         if [[ -w ${PROD_DIST_DIR} ]]; then
@@ -101,7 +99,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             # Remove the unneeded pip and setuptools once installation is complete.
             pip uninstall -y setuptools pip
         else
-            "${PIP}" install . --prefix=prefix --no-deps
+            pip3 install . --prefix=prefix --no-deps
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
