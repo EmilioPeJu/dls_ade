@@ -350,7 +350,8 @@ def _main():
         for module in modules:
             source = server.dev_module_path(module, args.area)
             try:
-                vcs = server.temp_clone(source)
+                # Make a shallow clone to reduce time
+                vcs = server.temp_clone(source, depth=1)
             except ValueError:
                 log.error("Module {} does not exist in {} [{}]".format(
                     module, args.area, source))
