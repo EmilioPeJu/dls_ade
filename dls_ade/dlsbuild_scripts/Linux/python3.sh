@@ -77,6 +77,8 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
     {
         # Build phase 1 - Build a wheel and install in prefix, for app or library
         ${PY3_CHECK} ${_version} || ReportFailure "Python3 module check failed."
+        echo "Building source distribution ..."
+        ${PYTHON} setup.py sdist
         echo "Building wheel ..."
         ${PYTHON} setup.py bdist_wheel
         # If running on the build server, copy the wheel to the distributions directory.
