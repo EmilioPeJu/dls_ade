@@ -321,6 +321,42 @@ def edit_contact_info(repo, contact='', cc=''):
     return commit_message
 
 
+def get_module_contacts(module, area, server=None):
+    """
+    Get the contact and cc for the named module in the given area
+
+    Args:
+        module: Module name
+        area: Repository area
+        server: Optional Server object, will be created if not given.
+
+    Returns:
+        contact, cc_contact
+    """
+
+    # Allows a Server object to be reused if this function
+    # is called repeatedly, but removes the need to create one otherwise
+    if server is None:
+        server = Server()
+
+    source = server.dev_module_path(module, area)
+    local_clone = server.temp_clone(source, depth=1)
+    contact, cc_contact = get_contacts_from_local_clone(local_clone)
+
+    shutil.rmtree(local_clone.repo.working_tree_dir)
+
+    return contact, cc_contact
+
+def get_contacts_from_local_clone(local_clone):
+    # Retrieve contact info
+    contact = local_clone.repo.git.check_attr(
+        "module-contact", ".").split(' ')[-1]
+    cc_contact = local_clone.repo.git.check_attr(
+        "module-cc", ".").split(' ')[-1]
+
+    return contact, cc_contact
+
+
 def _main():
     parser = make_parser()
     args = parser.parse_args()
@@ -348,20 +384,14 @@ def _main():
 
         print_out = []
         for module in modules:
-            source = server.dev_module_path(module, args.area)
             try:
-                # Make a shallow clone to reduce time
-                vcs = server.temp_clone(source, depth=1)
+                contact, cc_contact = get_module_contacts(
+                    module, args.area, server
+                )
             except ValueError:
-                log.error("Module {} does not exist in {} [{}]".format(
-                    module, args.area, source))
+                usermsg.error("Module {} does not exist in {}".format(
+                    module, args.area))
                 continue
-
-            # Retrieve contact info
-            contact = vcs.repo.git.check_attr(
-                "module-contact", ".").split(' ')[-1]
-            cc_contact = vcs.repo.git.check_attr(
-                "module-cc", ".").split(' ')[-1]
 
             if args.csv:
                 print_out.append(output_csv_format(contact, cc_contact, module))
@@ -369,7 +399,6 @@ def _main():
                 print_out.append("{module} Contact: {contact}, CC: {cc}"
                                  .format(cc=cc_contact, contact=contact, module=module))
 
-            shutil.rmtree(vcs.repo.working_tree_dir)
 
         module_contacts_str = ""
         if args.csv:
