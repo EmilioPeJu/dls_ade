@@ -35,18 +35,18 @@ source /dls_sw/etc/profile
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-OS_VERSION=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
-
+# e.g. RHEL7-x86_64
+OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 # e.g. python3.7
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
 # This can be corrected once configure-tool assigns a version to dls_ade.
-DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_VERSION}/dls_ade
+DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_ARCH_STRING}/dls_ade
 PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
 export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/${PYTHON_VERSION}/site-packages
 
-WORK_DIST_DIR=/dls_sw/work/python3/${OS_VERSION}/distributions
-PROD_DIST_DIR=/dls_sw/prod/python3/${OS_VERSION}/distributions
+WORK_DIST_DIR=/dls_sw/work/python3/${OS_ARCH_STRING}/distributions
+PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
 if  [[ "${_build_dir}" =~ "/prod/" ]] ; then
     is_test=false
