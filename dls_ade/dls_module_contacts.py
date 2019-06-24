@@ -17,6 +17,7 @@ import json
 import logging
 import csv
 import ldap
+import argparse
 
 from dls_ade.argument_parser import ArgParser
 from dls_ade import Server
@@ -28,6 +29,7 @@ from dls_ade.constants import LDAP_SERVER_URL
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
 usermsg = logging.getLogger(name="usermessages")
+output = logging.getLogger(name="output")
 
 usage = """
 Default <area> is 'support'.
@@ -35,16 +37,16 @@ Set or get primary contact (contact) and secondary contact (cc) properties
 for <modules> (can just give one module)
 
 e.g.
-%prog ip autosave calc
+%(prog)s ip autosave calc
 # View the contacts for the ip, autosave and calc modules in support area
 
-%prog -s
+%(prog)s -s
 # View all the module contacts and ccs in the support area in csv format
 
-%prog -c tmc43 -d jr76 -p pysvn
+%(prog)s -c tmc43 -d jr76 -p pysvn
 # Set the python module pysvn to have contact tmc43 and cc jr76
 
-%prog -m /tmp/module_contacts_backup.csv
+%(prog)s -m /tmp/module_contacts_backup.csv
 # Import the module contact and cc from /tmp/module_contacts_backup.csv
 # and set them in svn. The csv file must be in the same format as produced
 # by the -s command, but any specified contact and cc names are ignored,
@@ -71,6 +73,7 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
+    parser.formatter_class = argparse.RawDescriptionHelpFormatter
     # nargs='*' makes <modules> an optional positional argument; a list of N
     # entries
     parser.add_argument(
@@ -371,7 +374,7 @@ def _main():
         if args.csv:
             module_contacts_str += "Module,Contact,Contact Name,CC,CC Name\n"
         module_contacts_str += "\n".join(print_out)
-        usermsg.info(module_contacts_str)  # print the list of module owners
+        output.info(module_contacts_str)  # print the list of module owners
         return
 
     # If we get to this point, we are assigning contacts

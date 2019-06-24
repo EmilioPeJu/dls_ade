@@ -36,6 +36,13 @@ default_config = {
             "stream": "ext://sys.stdout"
         },
 
+        "stderr": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "stream": "ext://sys.stderr"
+        },
+
         "local_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             #  "class": "logging.handlers.FileHandler",
@@ -72,6 +79,15 @@ default_config = {
             "propagate": True
         },
         "usermessages": {
+            # Designed for messages which should be visible to the user and
+            # logged but which do not form part of the useful output
+            "level": "INFO",
+            "propagate": True,
+            "handlers": ["stderr"]
+        },
+        "output": {
+            # Designed for messages which are the ouptut of the program
+            # for example that which might be piped
             "level": "INFO",
             "propagate": True,
             "handlers": ["console"]

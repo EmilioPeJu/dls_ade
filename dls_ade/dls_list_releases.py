@@ -20,14 +20,13 @@ from dls_ade.dls_utilities import check_technical_area
 from dls_ade import vcs_git, Server
 from dls_ade import logconfig
 
-env = environment()
-
 usage = """
 Default <area> is 'support'.
 
-List the releases of <module_name> in the <area> area of prod or the repository if -g is true.
-By default uses the epics release number from your environment to work out the area on disk to
-look for the module, this can be overridden with the -e flag.
+List the releases of <module_name> in the <area> area of prod or the repository 
+if -g is true. By default uses the epics release number from your environment 
+to work out the area on disk to look for the module, this can be overridden 
+with the -e flag.
 """
 
 
@@ -35,7 +34,7 @@ def get_rhel_version():
     """
     Checks if platform is Linux redhat, if so returns base version number from
     environment (e.g. returns 6 if 6.7), if not returns default of 6.
-    
+
     Returns:
         str: Rhel version number
     """
@@ -88,21 +87,25 @@ def make_parser():
 def _main():
     log = logging.getLogger(name="dls_ade")
     usermsg = logging.getLogger(name="usermessages")
+    output = logging.getLogger(name="output")
 
     parser = make_parser()
     args = parser.parse_args()
 
+    env = environment()
+
     log.info(json.dumps({'CLI': sys.argv, 'options_args': vars(args)}))
 
     env.check_epics_version(args.epics_version)
+    env.check_rhel_version(str(args.rhel_version))
     check_technical_area(args.area, args.module_name)
 
-    # Force check of repo, not file system, for tools, etc and epics
+    # Force check of repo, not file system, for etc and epics
     # (previous releases are only stored on repo)
-    if args.area in ["etc", "tools", "epics"]:
+    if args.area in ["etc", "epics"]:
         args.git = True
 
-    # Check for the existence of releases of this module/IOC    
+    # Check for the existence of releases of this module/IOC
     releases = []
     if args.git:
 
@@ -111,6 +114,7 @@ def _main():
         # List branches of repository
         target = "the repository"
         source = server.dev_module_path(args.module_name, args.area)
+        log.debug(source)
 
         vcs = server.temp_clone(source)
         releases = vcs_git.list_module_releases(vcs.repo)
@@ -118,13 +122,8 @@ def _main():
 
     else:
         # List branches from prod
-        target = "prod"
+        target = "prod for {os}".format(os=env.rhelVerDir())
         source = env.prodArea(args.area)
-        if args.area == 'python' and args.rhel_version >= 6:
-            source = os.path.join(source,
-                                  "RHEL{0}-{1}".format(args.rhel_version,
-                                                       platform.machine()))
-            log.debug(source)
         release_dir = os.path.join(source, args.module_name)
 
         if os.path.isdir(release_dir):
@@ -137,17 +136,22 @@ def _main():
         if args.git:
             usermsg.info("{}: No releases made in git".format(args.module_name))
         else:
-            usermsg.info("{module}: No releases made for {version}".format(module=args.module_name, version=args.epics_version))
+            usermsg.info("{module}: No releases made for {version}".format(
+                module=args.module_name,
+                version=args.epics_version
+            ))
         return 1
 
     releases = env.sortReleases(releases)
 
     if args.latest:
-        usermsg.info("The latest release for {module} in {target} is: {release}"
-                     .format(module=args.module_name, target=target, release=releases[-1]))
+        usermsg.info("The latest release for {module} in {target} is: "
+                     .format(module=args.module_name, target=target))
+        output.info("{release}".format(release=releases[-1]))
     else:
-        usermsg.info("Previous releases for {module} in {target}: {releases}"
-                     .format(module=args.module_name, target=target, releases=str(releases)))
+        usermsg.info("Previous releases for {module} in {target}:"
+                     .format(module=args.module_name, target=target))
+        output.info("{releases}".format(releases=str(releases)))
 
 
 def main():
@@ -157,7 +161,9 @@ def main():
         _main()
     except Exception as e:
         logging.exception(e)
-        logging.getLogger("usermessages").exception("ABORT: Unhandled exception (see trace below): {}".format(e))
+        logging.getLogger("usermessages").exception(
+            "ABORT: Unhandled exception (see trace below): {}".format(e)
+        )
         exit(1)
 
 

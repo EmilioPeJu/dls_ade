@@ -67,12 +67,21 @@ def check_tag_is_valid(tag, area=None):
     if area == 'python3':
         # VERBOSE allows you to ignore the comments in VERSION_PATTERN.
         check = re.compile(r"^{}$".format(version.VERSION_PATTERN), re.VERBOSE)
+        result = check.search(tag)
     else:
-        check = re.compile('[0-9]+\-[0-9]+(\-[0-9]+)?(dls[0-9]+(\-[0-9]+)?)?')
+        number = "[0-9]+"
+        optional_number = "[0-9]*"
 
-    result = check.search(tag)
+        regex_pieces = dict(
+            u_v_w = "{u}\-{v}(\-{w})?".format(u=number, v=number, w=number),
+            dls_x_y = "(dls{x}(\-{y})?)?".format(x=number, y=number),
+            alpha_beta_z = "((alpha|beta){z})?".format(z=optional_number)
+        )
+        pattern = '^{u_v_w}{dls_x_y}{alpha_beta_z}$'.format(**regex_pieces)
+        check = re.compile(pattern)
+        result = check.match(tag)
 
-    if result is None or result.group() != tag:
+    if result is None:
         return False
 
     return True
