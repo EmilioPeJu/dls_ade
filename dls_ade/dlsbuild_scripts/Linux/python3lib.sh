@@ -146,6 +146,12 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                     mv -n "${work_distributions[@]}" "${PROD_DIST_DIR}" || \
                     ReportFailure "Could not move ${work_distributions[@]} to ${PROD_DIST_DIR}"
                 fi
+                # Look again for prod distributions after the move.
+                for dist in "${PROD_DIST_DIR}"/* ; do
+                    if match_dist "${dist}"; then
+                        prod_distributions+=(${dist})
+                    fi
+                done
             fi
             if [[ -f "${work_pfl}" ]]; then
                 if [[ ${_force} == true ]]; then
@@ -197,6 +203,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 done
             fi
         else
+            echo 1 >${status_log}
             ReportFailure "No matching distribution was found for ${specifier}"
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
