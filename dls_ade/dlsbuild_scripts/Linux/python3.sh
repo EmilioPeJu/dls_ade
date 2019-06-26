@@ -74,7 +74,11 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
 {
     {
         # Build phase 1 - Build a wheel and install in prefix, for app or library
-        ${PY3_CHECK} ${_version} || ReportFailure "Python3 module check failed."
+        if ! ${PY3_CHECK} ${_version}; then
+            echo -e "\nPython 3 check failed." >&2
+            echo 1 >${status_log}
+            exit  # the subshell that was created because the output was piped
+        fi
         echo "Building source distribution ..."
         dls-python3 setup.py sdist
         echo "Building wheel ..."
@@ -93,7 +97,11 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         if [[ -e Pipfile.lock ]]; then
             # Create the lightweight virtualenv.
             # Use the -p argument to install pip into the virtualenv, we'll need it.
-            "${PFL_TO_VENV}" -p || ReportFailure "Dependencies not installed."
+            if ! "${PFL_TO_VENV}" -p; then
+                echo -e "\nCreating lightweight virtualenv failed." >&2
+                echo 1 >${status_log}
+                exit  # the subshell that was created because output is piped
+            fi
             # Install this module into prefix using the virtualenv.
             source lightweight-venv/bin/activate
             pip install . --prefix=prefix --no-deps --disable-pip-version-check --no-warn-script-location
@@ -118,6 +126,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
     # Redirect '1' (STDOUT) of tee (STDERR from above) to build log
     # Redirect '3' (saved STDOUT from above) to build log
 } 1>${build_log} 3>&1  # redirect STDOUT and STDERR to build log
+
 
 if (( $(cat ${status_log}) != 0 )) ; then
     ReportFailure ${PWD}/${error_log}
