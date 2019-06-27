@@ -1,5 +1,4 @@
 from dls_ade import dls_utilities
-import mock
 import os
 import shutil
 import unittest
