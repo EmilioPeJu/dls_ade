@@ -24,6 +24,11 @@ class CompareRequirements(unittest.TestCase):
         req2 = ['b<=3.4', 'a==1']
         self.assertTrue(compare_requirements(req1, req2))
 
+    def test_compare_requirements_accepts_unordered_lists_with_capitalisation(self):
+        req1 = ['PyQt5==1', 'a<=3.4']
+        req2 = ['a<=3.4', 'pyqt5==1']
+        self.assertTrue(compare_requirements(req1, req2))
+
     def test_compare_requirements_refuses_different_specifiers(self):
         req1 = ['b<=3.4']
         req2 = ['b==3.4']

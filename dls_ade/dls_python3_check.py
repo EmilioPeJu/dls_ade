@@ -39,21 +39,26 @@ def usage():
     print(USAGE.format(sys.argv[0]))
 
 
-def compare_requirements(reqs1, reqs2):
+def compare_requirements(specs1, specs2):
     """Compare two different sets of requirements.
 
     Arguments:
-        reqs1: list of name and specifier strings
-        reqs2: list of name and specifier strings
+        specs1: list of name and specifier strings
+        specs2: list of name and specifier strings
 
     Returns:
         True if the requirements are compatible.
     """
+    reqs1 = [Requirement(spec) for spec in specs1]
+    reqs2 = [Requirement(spec) for spec in specs2]
+    # We have to sort by normalised name to ensure we match correctly.
+    sorted_reqs1 = sorted(reqs1, key=lambda x: normalise_name(x.name))
+    sorted_reqs2 = sorted(reqs2, key=lambda x: normalise_name(x.name))
+
     if not len(reqs1) == len(reqs2):
         return False
-    for spec1, spec2 in zip(sorted(reqs1), sorted(reqs2)):
-        req1 = Requirement(spec1)
-        req2 = Requirement(spec2)
+
+    for req1, req2 in zip(sorted_reqs1, sorted_reqs2):
         # Allow variants of module name in the same way as PyPI and Pipenv.
         if (normalise_name(req1.name) != normalise_name(req2.name) or
                 req1.specifier != req2.specifier):
