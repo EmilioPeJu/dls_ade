@@ -102,7 +102,9 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 SysLog info "Force: removing previous version: ${version_location}"
                 rm -rf "${version_location}"
             else
-                ReportFailure "${version_location} is already installed."
+                echo -e "${version_location} is already installed." >&2
+                echo 1 >${status_log}
+                exit  # the subshell
             fi
         else
             # Always install using the normalised name.
@@ -143,8 +145,11 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 if [[ ${_force} == ${true} ]]; then
                     mv "${work_distributions[@]}" "${PROD_DIST_DIR}"
                 else  # Set no-clobber option to mv
-                    mv -n "${work_distributions[@]}" "${PROD_DIST_DIR}" || \
-                    ReportFailure "Could not move ${work_distributions[@]} to ${PROD_DIST_DIR}"
+                    if ! mv -n "${work_distributions[@]}" "${PROD_DIST_DIR}"; then
+                        echo -e "Could not move ${work_distributions[@]} to ${PROD_DIST_DIR}" >&2
+                        echo 1 >${status_log}
+                        exit  # the subshell
+                    fi
                 fi
                 # Look again for prod distributions after the move.
                 for dist in "${PROD_DIST_DIR}"/* ; do
@@ -157,8 +162,11 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 if [[ ${_force} == true ]]; then
                     mv "${work_pfl}" "${PROD_DIST_DIR}"
                 else
-                    mv -n "${work_pfl}" "${PROD_DIST_DIR}" || \
-                    ReportFailure "Could not move ${work_pfl} to ${PROD_DIST_DIR}"
+                    if ! mv -n "${work_pfl}" "${PROD_DIST_DIR}"; then
+                        echo -e "Could not move ${work_pfl} to ${PROD_DIST_DIR}" >&2
+                        echo 1 >${status_log}
+                        exit  # the subshell
+                    fi
                 fi
                 pfl="${prod_pfl}"
             else
@@ -184,7 +192,11 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 echo "Installing venv from $pfl"
                 cd ${version_location}
                 cp "${pfl}" .
-                "${PFL_TO_VENV}" "${pipfilelock}" || ReportFailure "Dependencies not installed."
+                if ! "${PFL_TO_VENV}" "${pipfilelock}"; then
+                    echo -e "\nCreating lightweight virtualenv failed." >&2
+                    echo 1 >${status_log}
+                    exit  # the subshell
+                fi
             else
                 echo "No Pipfile.lock is present"
             fi
@@ -204,7 +216,8 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             fi
         else
             echo 1 >${status_log}
-            ReportFailure "No matching distribution was found for ${specifier}"
+            echo "No matching distribution was found for ${specifier}" >$2
+            exit  # the subshell
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
