@@ -6,6 +6,7 @@ import git
 from distutils.errors import DistutilsFileError
 from setuptools.config import read_configuration
 from packaging.requirements import Requirement
+from dls_ade.dls_pipfilelock_to_venv import parse_pipfilelock, construct_pkg_path
 from dls_ade.dls_utilities import normalise_name
 from git.exc import InvalidGitRepositoryError
 from pipfile import Pipfile
@@ -27,7 +28,7 @@ REQUIREMENTS_INVALID = '''Requirements in setup.cfg and Pipfile do not match.
 setup.cfg requirements: {}
 Pipfile requirements: {}'''
 
-NO_MATCHING_TAG = 'No tag on HEAD matches setup.cfg version {}'
+NO_MATCHING_TAG = 'This commit does not have a tag that matches setup.cfg version {}'
 
 VERSION_MISMATCH = 'Release version {} does not match setup.cfg version {}.'
 
@@ -118,44 +119,60 @@ def main():
         else:
             provided_version = sys.argv[1]
 
-    # Load data
-    try:
-        conf_dict = read_configuration('setup.cfg')
-    except DistutilsFileError:
-        usermsg.warning('No setup.cfg file found; checks cannot be made')
-        # We can't check but we must allow the build to continue.
-        sys.exit()
-    if 'install_requires' not in conf_dict['options']:
-        usermsg.warning('install_requires not in setup.cfg file; checks cannot be made')
-        # We can't check but we must allow the build to continue.
-        sys.exit()
-    else:
-        setup_requirements = sorted(
-            conf_dict['options'].get('install_requires')
-        )
-
-    try:
-        pipenv_requirements = load_pipenv_requirements('Pipfile')
-    except FileNotFoundError:
-        usermsg.error('No Pipfile found. Package is not valid')
-        sys.exit(1)
+    # Load Git repo.
     try:
         repo = git.Repo('.')
     except InvalidGitRepositoryError:
         usermsg.error('No Git repository found. Package is not valid')
         sys.exit(1)
+    # Check for uncommitted changes.
+    if repo.index.diff(None):
+        print('There are uncommitted changes; please commit or stash')
+        sys.exit(1)
+    # Load Pipfile.
+    try:
+        pipenv_requirements = load_pipenv_requirements('Pipfile')
+    except FileNotFoundError:
+        usermsg.error('No Pipfile found. Package is not valid')
+        sys.exit(1)
+    # Load Pipfile.lock if present and check for dependencies.
+    try:
+        packages = parse_pipfilelock('Pipfile.lock')
+        matched_pkgs, missing_pkgs = construct_pkg_path(packages)
+        if missing_pkgs:
+            for p in missing_pkgs:
+                usermsg.error('Dependency {} not installed.'.format(p))
+            sys.exit(1)
+    except FileNotFoundError:
+        pass
 
-    # Compare requirements
+    # Load setup.cfg.
+    try:
+        setup_cfg = read_configuration('setup.cfg')
+    except DistutilsFileError:
+        usermsg.warning('No setup.cfg file found; checks cannot be made')
+        # We can't check but we must allow the build to continue.
+        sys.exit()
+    if 'install_requires' not in setup_cfg['options']:
+        usermsg.warning('install_requires not in setup.cfg file; checks cannot be made')
+        # We can't check but we must allow the build to continue.
+        sys.exit()
+    else:
+        setup_requirements = sorted(
+            setup_cfg['options'].get('install_requires')
+        )
+
+    # Compare requirements.
     if not compare_requirements(pipenv_requirements, setup_requirements):
         sys.exit(REQUIREMENTS_INVALID.format(
             sorted(setup_requirements),
             sorted(pipenv_requirements)
         ))
-    # Compare versions
-    head_tags = get_tags_on_head(repo)
-    setup_version = conf_dict['metadata']['version']
+    # Compare versions.
+    setup_version = setup_cfg['metadata']['version']
     if '.' not in setup_version:
         sys.exit(VERSION_INVALID.format(setup_version))
+    head_tags = get_tags_on_head(repo)
     if setup_version not in head_tags:
         sys.exit(NO_MATCHING_TAG.format(setup_version))
     if provided_version is not None:
