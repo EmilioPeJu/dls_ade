@@ -40,10 +40,8 @@ build_dir=${_build_dir}/${_module}
 PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
 # Testing section, this will need correcting for the final version.
-DLS_ADE_LOCATION=/dls_sw/work/python3/${OS_ARCH_STRING}/dls_ade
-PFL_TO_VENV=${DLS_ADE_LOCATION}/prefix/bin/dls-pipfilelock-to-venv.py
-export PYTHONPATH=${DLS_ADE_LOCATION}/prefix/lib/python3.7/site-packages
-PY3_CHECK=${DLS_ADE_LOCATION}/prefix/bin/dls-python3-check.py
+PY3_UTILS_LOCATION=/dls_sw/prod/python3/${OS_ARCH_STRING}/dls_py3_utils/0.0.1
+export PATH=${PY3_UTILS_LOCATION}/prefix/bin:${PATH}
 
 
 SysLog debug "os_version=${OS_ARCH_STRING} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
@@ -76,7 +74,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
     # is created anyway, so we might as well make it explicit.
     (
         # Build phase 1 - Build a wheel and install in prefix, for app or library
-        if ! ${PY3_CHECK} ${_version}; then
+        if ! dls-py3 check ${_version}; then
             echo -e "\nPython 3 check failed." >&2
             echo 1 >${status_log}
             exit  # the subshell
@@ -99,7 +97,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         if [[ -e Pipfile.lock ]]; then
             # Create the lightweight virtualenv.
             # Use the -p argument to install pip into the virtualenv, we'll need it.
-            if ! "${PFL_TO_VENV}" -p; then
+            if ! dls-py3 pipfilelock-to-venv -p; then
                 echo -e "\nCreating lightweight virtualenv failed." >&2
                 echo 1 >${status_log}
                 exit  # the subshell
