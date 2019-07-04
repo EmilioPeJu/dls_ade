@@ -1,16 +1,9 @@
 from dls_ade import dls_utilities
-import os
-import shutil
 import unittest
 
 from dls_ade.exceptions import ParsingError
 
 from dls_ade.dls_utilities import check_tag_is_valid
-from dls_ade.dls_utilities import python3_module_installed
-from dls_ade.dls_utilities import python3_module_path
-
-
-from tempfile import mkdtemp
 
 
 class TagFormatTest(unittest.TestCase):
@@ -90,65 +83,4 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
             self.assertEqual(str(error), expected_error_msg)
 
 
-class PythonThreePipeline(unittest.TestCase):
 
-    def setUp(self):
-        self.starting_dir = os.getcwd()
-        self.test_folder = mkdtemp()
-        self.os_dir = os.path.join(self.test_folder, 'dls_sw/prod/python3/RHEL7-x86_64')
-        self.old_py3_dir = dls_utilities.PY3_ROOT_DIR
-        dls_utilities.PY3_ROOT_DIR = os.path.join(self.test_folder, 'dls_sw/prod/python3')
-        os.makedirs(self.os_dir)
-
-    def tearDown(self):
-        os.chdir(self.starting_dir)
-        shutil.rmtree(self.test_folder)
-        dls_utilities.PY3_ROOT_DIR = self.old_py3_dir
-
-    def test_module_is_installed(self):
-        module = 'test'
-        version = '1.2.3'
-        os.chdir(self.test_folder)
-        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, module, version)
-        os.makedirs(dir_path)
-        self.assertTrue(python3_module_installed(module, version))
-
-    def test_module_is_not_installed(self):
-        module = 'test'
-        version = '1.2.3'
-        os.chdir(self.test_folder)
-        self.assertFalse(python3_module_installed(module, version))
-
-    def test_python3_module_installed_catches_mismatched_underscore(self):
-        dash_module = 'abc-def'
-        underscore_module = 'abc_def'
-        version = '1.2.3'
-        os.chdir(self.test_folder)
-        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, dash_module, version)
-        os.makedirs(dir_path)
-        success = python3_module_installed(underscore_module, version)
-        self.assertTrue(success)
-
-    def test_python3_module_installed_catches_mismatched_cases(self):
-        upper_module = 'ABC'
-        lower_module = 'abc'
-        version = '1.2.3'
-        os.chdir(self.test_folder)
-        dir_path = '{}/{}/{}/prefix'.format(self.os_dir, upper_module, version)
-        os.makedirs(dir_path)
-        success = python3_module_installed(lower_module, version)
-        self.assertTrue(success)
-
-    def test_module_path_is_checked_correctly(self):
-        module = 'test'
-        version = '1.2.3'
-        dir_path = '{}/{}/{}'.format(self.os_dir, module, version)
-        os.makedirs(dir_path)
-        module_path = python3_module_path(module, version)
-        self.assertEqual(module_path, dir_path)
-
-    def test_module_path_returns_None_if_directory_not_present(self):
-        module = 'test'
-        version = '1.2.3'
-        module_path = python3_module_path(module, version)
-        self.assertEqual(module_path, None)
