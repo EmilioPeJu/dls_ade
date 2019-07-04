@@ -5,7 +5,6 @@ pygelf==0.3.1
 cookiecutter==1.6.0
 wheel==0.33.0
 packaging==19.0
-pipfile==0.0.2
 
 # For docs
 sphinx>=1.6.0

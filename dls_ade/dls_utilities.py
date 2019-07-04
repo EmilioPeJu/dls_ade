@@ -1,10 +1,7 @@
-import collections
-import json
 import os
 from packaging import version
 import re
 from dls_ade.exceptions import ParsingError
-from dls_ade.dlsbuild import default_server
 
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
