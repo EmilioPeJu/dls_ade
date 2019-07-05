@@ -185,6 +185,8 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         # Finally, install the distribution.
         if [[ ${#distributions[@]} -gt 0 ]]; then
 
+            mkdir -p "${version_location}"
+
             prefix_location="${version_location}/prefix"
             site_packages_location="${prefix_location}/lib/${PYTHON_VERSION}/site-packages"
             # Check if there is Pipfile.lock to create the lightweight venv first.
