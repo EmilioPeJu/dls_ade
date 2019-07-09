@@ -100,9 +100,9 @@ def _main():
     env.check_rhel_version(str(args.rhel_version))
     check_technical_area(args.area, args.module_name)
 
-    # Force check of repo, not file system, for tools, etc and epics
+    # Force check of repo, not file system, for etc and epics
     # (previous releases are only stored on repo)
-    if args.area in ["etc", "tools", "epics"]:
+    if args.area in ["etc", "epics"]:
         args.git = True
 
     # Check for the existence of releases of this module/IOC

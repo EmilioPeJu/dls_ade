@@ -1,7 +1,12 @@
-rhel7_job:
+stages:
+ - Run tests
+ - Publish docs
+
+unit_tests_and_coverage:
+  stage: Run tests
   tags:
     - rhel7
-  coverage: '/TOTAL\s*\d*\s*\d*\s*\d*\s*\d*\s*(\d*%)/'
+  coverage: '/TOTAL.*\s+(\d+\%)/'
   before_script:
     - virtualenv --python dls-python venv
     - source venv/bin/activate
@@ -21,6 +26,30 @@ rhel7_job:
 testbuild_job:
   tags:
   - rhel7
+  stage: Run tests
   script:
   - make clean && make
   - make install
+
+docs_install:
+  stage: Publish docs
+  only:
+  - tags
+  tags:
+  - rhel7
+  only:
+  - tags
+  before_script:
+  - virtualenv --python dls-python venv
+  - source venv/bin/activate
+  - pip install coverage
+  - pip install -r requirements.txt
+  - deactivate
+  script:
+  - source venv/bin/activate
+  - make -C docs html
+  - deactivate
+  - DOCS_BUILD_DIR=build/sphinx/html
+  - DOCS_PUBLISH_DIR=/dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/docs/${CI_COMMIT_TAG}
+  - mkdir -p ${DOCS_PUBLISH_DIR}/
+  - cp -rf ${DOCS_BUILD_DIR}/* ${DOCS_PUBLISH_DIR}/

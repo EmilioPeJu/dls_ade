@@ -17,6 +17,7 @@ import json
 import logging
 import csv
 import ldap
+import argparse
 
 from dls_ade.argument_parser import ArgParser
 from dls_ade import Server
@@ -36,16 +37,16 @@ Set or get primary contact (contact) and secondary contact (cc) properties
 for <modules> (can just give one module)
 
 e.g.
-%prog ip autosave calc
+%(prog)s ip autosave calc
 # View the contacts for the ip, autosave and calc modules in support area
 
-%prog -s
+%(prog)s -s
 # View all the module contacts and ccs in the support area in csv format
 
-%prog -c tmc43 -d jr76 -p pysvn
+%(prog)s -c tmc43 -d jr76 -p pysvn
 # Set the python module pysvn to have contact tmc43 and cc jr76
 
-%prog -m /tmp/module_contacts_backup.csv
+%(prog)s -m /tmp/module_contacts_backup.csv
 # Import the module contact and cc from /tmp/module_contacts_backup.csv
 # and set them in svn. The csv file must be in the same format as produced
 # by the -s command, but any specified contact and cc names are ignored,
@@ -72,6 +73,7 @@ def make_parser():
     """
 
     parser = ArgParser(usage)
+    parser.formatter_class = argparse.RawDescriptionHelpFormatter
     # nargs='*' makes <modules> an optional positional argument; a list of N
     # entries
     parser.add_argument(
@@ -319,6 +321,42 @@ def edit_contact_info(repo, contact='', cc=''):
     return commit_message
 
 
+def get_module_contacts(module, area, server=None):
+    """
+    Get the contact and cc for the named module in the given area
+
+    Args:
+        module: Module name
+        area: Repository area
+        server: Optional Server object, will be created if not given.
+
+    Returns:
+        contact, cc_contact
+    """
+
+    # Allows a Server object to be reused if this function
+    # is called repeatedly, but removes the need to create one otherwise
+    if server is None:
+        server = Server()
+
+    source = server.dev_module_path(module, area)
+    local_clone = server.temp_clone(source, depth=1)
+    contact, cc_contact = get_contacts_from_local_clone(local_clone)
+
+    shutil.rmtree(local_clone.repo.working_tree_dir)
+
+    return contact, cc_contact
+
+def get_contacts_from_local_clone(local_clone):
+    # Retrieve contact info
+    contact = local_clone.repo.git.check_attr(
+        "module-contact", ".").split(' ')[-1]
+    cc_contact = local_clone.repo.git.check_attr(
+        "module-cc", ".").split(' ')[-1]
+
+    return contact, cc_contact
+
+
 def _main():
     parser = make_parser()
     args = parser.parse_args()
@@ -346,19 +384,14 @@ def _main():
 
         print_out = []
         for module in modules:
-            source = server.dev_module_path(module, args.area)
             try:
-                vcs = server.temp_clone(source)
+                contact, cc_contact = get_module_contacts(
+                    module, args.area, server
+                )
             except ValueError:
-                log.error("Module {} does not exist in {} [{}]".format(
-                    module, args.area, source))
+                usermsg.error("Module {} does not exist in {}".format(
+                    module, args.area))
                 continue
-
-            # Retrieve contact info
-            contact = vcs.repo.git.check_attr(
-                "module-contact", ".").split(' ')[-1]
-            cc_contact = vcs.repo.git.check_attr(
-                "module-cc", ".").split(' ')[-1]
 
             if args.csv:
                 print_out.append(output_csv_format(contact, cc_contact, module))
@@ -366,7 +399,6 @@ def _main():
                 print_out.append("{module} Contact: {contact}, CC: {cc}"
                                  .format(cc=cc_contact, contact=contact, module=module))
 
-            shutil.rmtree(vcs.repo.working_tree_dir)
 
         module_contacts_str = ""
         if args.csv:

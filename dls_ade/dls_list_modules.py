@@ -18,7 +18,7 @@ usage = """
 Default <area> is 'support'.
 List all modules in the <area> area.
 If <dom_name> given and <area> = 'ioc', list the subdirectories of <dom_name>.
-e.g. %prog -p prints: converter, cothread, dls_nsga, etc.
+e.g. %(prog)s -p prints: converter, cothread, dls_nsga, etc.
 """
 
 
