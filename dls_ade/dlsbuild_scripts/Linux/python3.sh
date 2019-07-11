@@ -39,11 +39,6 @@ build_dir=${_build_dir}/${_module}
 
 PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
-# Testing section, this will need correcting for the final version.
-PY3_UTILS_LOCATION=/dls_sw/prod/python3/${OS_ARCH_STRING}/dls_py3_utils/0.0.1
-export PATH=${PY3_UTILS_LOCATION}/prefix/bin:${PATH}
-
-
 SysLog debug "os_version=${OS_ARCH_STRING} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
 # CHECKOUT MODULE

@@ -40,10 +40,6 @@ OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 # e.g. python3.7
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
-# Testing section, this will need correcting for the final version.
-PY3_UTILS_LOCATION=/dls_sw/prod/python3/${OS_ARCH_STRING}/dls_py3_utils/0.0.1
-export PATH=${PY3_UTILS_LOCATION}/prefix/bin:${PATH}
-
 WORK_DIST_DIR=/dls_sw/work/python3/${OS_ARCH_STRING}/distributions
 PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
