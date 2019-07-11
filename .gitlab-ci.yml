@@ -1,55 +1,57 @@
+# This defines the stages of the Gitlab CI build
+# Jobs in the same stage can be run in parallel
+# Only moves on to the next stage if all jobs from the previous one succeed
 stages:
  - Run tests
  - Publish docs
 
-unit_tests_and_coverage:
-  stage: Run tests
-  tags:
-    - rhel7
-  coverage: '/TOTAL.*\s+(\d+\%)/'
-  before_script:
-    - virtualenv --python dls-python venv
-    - source venv/bin/activate
-    - pip install coverage
-    - pip install -r requirements.txt
-    - python setup.py bdist_egg
-  script:
-    - python setup.py test
-    - python setup.py build_sphinx
-  after_script:
-    - source venv/bin/activate
-    - coverage html
-    - mkdir -p /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}
-    - cp -r htmlcov/ /dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
-    - echo A coverage report is available at http://www.cs.diamond.ac.uk/reports/gitlab-ci/${CI_PROJECT_NAME}/${CI_COMMIT_SHA}
+# Include yml file for CI templates from common repo
+# ==================================================
+# Unfortunately we have to specify the ref and project for each file 
+# individually. It looks like the feature to list files from one project
+# is coming in a Gitlab release soon.
+include:
+  - project: 'controls/reports/ci_templates'
+    ref: 0-5
+    file: 'all_templates.yml'
+    
+# Run unit tests and produce a coverage report
+# ============================================
+Unit tests & coverage:
+    stage: Run tests
+    extends:
+      - .template_pytest_and_coverage
+    script:
+      - python setup.py bdist_egg
+      - python setup.py test
+      - python setup.py build_sphinx
 
-testbuild_job:
-  tags:
-  - rhel7
+# A test build as would be done by the build server
+# =================================================
+Test build:
   stage: Run tests
-  script:
-  - make clean && make
-  - make install
+  extends:
+    - .simple_build
 
-docs_install:
-  stage: Publish docs
-  only:
-  - tags
-  tags:
-  - rhel7
-  only:
-  - tags
-  before_script:
-  - virtualenv --python dls-python venv
-  - source venv/bin/activate
-  - pip install coverage
-  - pip install -r requirements.txt
-  - deactivate
-  script:
-  - source venv/bin/activate
-  - make -C docs html
-  - deactivate
-  - DOCS_BUILD_DIR=build/sphinx/html
-  - DOCS_PUBLISH_DIR=/dls/cs-www/reports/gitlab-ci/${CI_PROJECT_NAME}/docs/${CI_COMMIT_TAG}
-  - mkdir -p ${DOCS_PUBLISH_DIR}/
-  - cp -rf ${DOCS_BUILD_DIR}/* ${DOCS_PUBLISH_DIR}/
+# Build & publish docs
+# ====================
+#
+# Build and keep docs for all tags
+Install docs for tags:
+    stage: Publish docs
+    extends:
+    - .docs_install_template
+    only:
+    - tags
+    variables:
+      DOCS_PUBLISH_DIR: ${DOCS_PUBLISH_ROOT}/${CI_COMMIT_TAG}
+
+# Build docs for latest commit on master branch and overwrite "latest"
+install_docs_for_latest_master:
+    stage: Publish docs
+    extends:
+    - .docs_install_template
+    only:
+    - master
+    variables:
+      DOCS_PUBLISH_DIR: ${DOCS_PUBLISH_ROOT}/latest
