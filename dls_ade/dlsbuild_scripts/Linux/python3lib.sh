@@ -1,7 +1,7 @@
 #!/bin/bash
 # ******************************************************************************
 #
-# Script to build a Diamond production module for support, ioc or matlab areas
+# Script to build a Diamond production module for the python3lib area.
 #
 # This is a partial script which builds a module in for the dls-release system.
 # The script is prepended with a list of variables before invocation by the
@@ -25,18 +25,18 @@
 
 # don't let standard input block the script execution
 exec 0</dev/null
-# expand all globs even if they don't match everything
+# expand all globs even if they don't match anything
 shopt -s nullglob
 
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
+# e.g. RHEL7-x86_64
+OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
-# e.g. RHEL7-x86_64
-OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
 # e.g. python3.7
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
@@ -49,7 +49,8 @@ else
     is_test=true
 fi
 
-# The same as the normalise_name function we use in Python.
+# The same as the normalise_name function we use in Python:
+# all characters to lower-case and swap underscores for hyphens.
 function normalise_name() {
     local name="$1"
     local lower_name=${name,,}
@@ -57,6 +58,8 @@ function normalise_name() {
     echo ${lower_dash_name}
 }
 
+# Return 0 if the argument is a valid Python distribution name matching
+# the variables ${normalised_module} and ${_version}.
 function match_dist() {
     local normalised_dist=$(normalise_name $(basename $1))
     if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]] && \
@@ -69,16 +72,19 @@ function match_dist() {
 
 prod_distributions=()
 work_distributions=()
+# If Pipfile.lock is provided it should have the name
+# ${_module}-${_version}.Pipfile.lock where _module and _version are the
+# arguments to dls-release.py.
 pipfilelock=${_module}-${_version}.Pipfile.lock
 normalised_module=$(normalise_name ${_module})
 prod_pfl=${PROD_DIST_DIR}/${pipfilelock}
 work_pfl=${WORK_DIST_DIR}/${pipfilelock}
 specifier="${_module}==${_version}"
 
-# BUILD MODULE
 error_log=${_build_name}.err
 build_log=${_build_name}.log
 status_log=${_build_name}.sta
+
 
 SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
@@ -114,7 +120,6 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 prod_distributions+=(${dist})
             fi
         done
-
         for dist in "${WORK_DIST_DIR}"/* ; do
             if match_dist "${dist}"; then
                 work_distributions+=(${dist})
@@ -188,7 +193,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             # Check if there is Pipfile.lock to create the lightweight venv first.
             # This will fail if necessary dependencies aren't installed.
             if [[ -v pfl ]]; then
-                echo "Installing venv from $pfl"
+                echo "Installing venv from ${pfl}"
                 cd ${version_location}
                 cp "${pfl}" .
                 if ! dls-py3 pipfilelock-to-venv "${pipfilelock}"; then
@@ -200,13 +205,14 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                 echo "No Pipfile.lock is present"
             fi
 
+            # Perform the actual installation using Pip.
             pip3 install --ignore-installed --no-index --no-deps \
                             --find-links=${links_dir} --prefix=${prefix_location} \
                             ${specifier}
             echo $? >${status_log}
 
             if [[ -d lightweight-venv ]]; then
-                # Change header to the correct venv
+                # Change header to use the lightweight-venv version of Python.
                 shebang='#!'
                 new_header="${shebang}${version_location}/lightweight-venv/bin/python"
                 for script in ${prefix_location}/bin/* ; do

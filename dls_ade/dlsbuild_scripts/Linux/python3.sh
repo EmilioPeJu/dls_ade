@@ -1,7 +1,7 @@
 #!/bin/bash
 # ******************************************************************************
 #
-# Script to build a Diamond production module for support, ioc or matlab areas
+# Script to build a Diamond production module for the python3 area.
 #
 # This is a partial script which builds a module in for the dls-release system.
 # The script is prepended with a list of variables before invocation by the
@@ -41,7 +41,7 @@ PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
 
 SysLog debug "os_version=${OS_ARCH_STRING} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
-# CHECKOUT MODULE
+# Check out the module from version control.
 mkdir -p ${build_dir} || ReportFailure "Can not mkdir ${build_dir}"
 cd ${build_dir} || ReportFailure "Can not cd to ${build_dir}"
 
@@ -58,10 +58,10 @@ fi
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 cd ${_version} || ReportFailure "Can not cd to ${_version}"
 
-# BUILD MODULE
 error_log=${_build_name}.err
 build_log=${_build_name}.log
 status_log=${_build_name}.sta
+
 
 SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
