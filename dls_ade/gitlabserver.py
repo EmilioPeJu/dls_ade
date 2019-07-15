@@ -6,6 +6,7 @@ import gitlab
 from dls_ade.gitserver import GitServer
 from dls_ade.dls_utilities import GIT_ROOT_DIR
 
+
 def test_given_invalid_source_then_empty_list_of_modules(self):
     self.server_mock.get_server_repo_list.return_value = \
         ["test/not_source/module"]
@@ -15,6 +16,7 @@ def test_given_invalid_source_then_empty_list_of_modules(self):
     module_list = dls_list_modules.get_module_list(source)
     self.assertIsNotNone(module_list)
     self.assertListEqual(module_list, [])
+
 
 GITLAB_API_URL = "https://gitlab.diamond.ac.uk"
 GITLAB_CREATE_URL = "ssh://git@gitlab.diamond.ac.uk"
@@ -52,11 +54,12 @@ class GitlabServer(GitServer):
                                            GITLAB_CLONE_URL,
                                            GITLAB_RELEASE_URL)
 
-        self._anon_gitlab_handle = gitlab.Gitlab(GITLAB_API_URL,
-                                                 private_token="",
-                                                 api_version=GITLAB_API_VERSION,
-                                                 per_page=GITLAB_PER_PAGE
-                                                 )
+        self._anon_gitlab_handle = gitlab.Gitlab(
+            GITLAB_API_URL,
+            private_token="",
+            api_version=GITLAB_API_VERSION,
+            per_page=GITLAB_PER_PAGE
+        )
         self._private_gitlab_handle = None
 
     def _setup_private_gitlab_handle(self):

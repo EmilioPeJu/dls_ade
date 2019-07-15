@@ -1,6 +1,5 @@
-[![Build Status](https://travis-ci.org/dls-controls/dls_ade.svg)](https://travis-ci.org/dls-controls/dls_ade)
-[![Coverage Status](https://coveralls.io/repos/github/dls-controls/dls_ade/badge.svg?branch=master)](https://coveralls.io/github/dls-controls/dls_ade?branch=master)
-[![Code Health](https://landscape.io/github/dls-controls/dls_ade/master/landscape.svg?style=flat)](https://landscape.io/github/dls-controls/dls_ade/master)
+[![pipeline status](https://gitlab.diamond.ac.uk/controls/python/dls_ade/badges/master/pipeline.svg)](https://gitlab.diamond.ac.uk/controls/python/dls_ade/commits/master)
+[![coverage report](https://gitlab.diamond.ac.uk/controls/python/dls_ade/badges/master/coverage.svg)](https://gitlab.diamond.ac.uk/controls/python/dls_ade/commits/master)
 
 # DLS Application Development Environment (ADE)
 

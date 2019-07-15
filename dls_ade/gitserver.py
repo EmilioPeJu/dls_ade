@@ -113,7 +113,7 @@ class GitServer(object):
 
         return git_inst
 
-    def temp_clone(self, source):
+    def temp_clone(self, source, depth=None):
         """
         Clones repo to /tmp directory and returns the relevant git.Repo object.
 
@@ -137,9 +137,15 @@ class GitServer(object):
         module = remove_git_at_end(module)
 
         repo_dir = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
+
+        # Build keyword arguments
+        clone_kwargs = {}
+        if depth is not None:
+            clone_kwargs = {"depth": depth}
+
         repo = git.Repo.clone_from(os.path.join(self.clone_url,
                                                 self.get_clone_path(source)),
-                                   repo_dir)
+                                   repo_dir, **clone_kwargs)
 
         git_inst = Git(module, area, self, repo)
 

@@ -74,7 +74,8 @@ setup(
                    'dls-module-contacts.py = dls_ade.dls_module_contacts:main',
                    'dls-release.py = dls_ade.dls_release:main',
                    'dls-start-new-module.py = dls_ade.dls_start_new_module:main',
-                   'dls-tar-module.py = dls_ade.dls_tar_module:main']},
+                   'dls-tar-module.py = dls_ade.dls_tar_module:main',
+                   'dls-gitlab-ci-validate.py = dls_ade.dls_gitlab_ci_validate:main']},
 
     include_package_data=True,
     setup_requires=['pytest-runner'],

@@ -446,7 +446,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
             # Tag must already exist to release without a commit
             commit_to_tag = None
             if not release_exists:
-                raise ValueError("Aborting: release {} not found and commit "
+                raise ValueError("Release {} not found and commit "
                                  "not specified.".format(release))
             usermsg.info("Releasing from existing tag {}.".format(release))
             version = release
@@ -454,7 +454,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
             # Release must not be in use already
             if release_exists:
                 raise ValueError(
-                    "Aborting: release {} already exists.".format(release)
+                    "Release {} already exists.".format(release)
                 )
             commit_to_tag = commit
             version = normalise_release(release)
