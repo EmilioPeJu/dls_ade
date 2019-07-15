@@ -59,7 +59,7 @@ def make_parser():
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
     """
-    supported_areas = ["support", "ioc", "python", "tools"]
+    supported_areas = ["support", "ioc", "python", "python3", "tools"]
 
     parser = ArgParser(usage, supported_areas)
     parser.add_module_name_arg()
