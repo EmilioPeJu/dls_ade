@@ -89,32 +89,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         #   That virtualenv can be used to run any command-line scripts.
         # - if no Pipfile.lock is committed, just install into prefix
         #   with no dependencies.
-        if [[ -e Pipfile.lock ]]; then
-            # Create the lightweight virtualenv.
-            # Use the -p argument to install pip into the virtualenv, we'll need it.
-            if ! dls-py3 pipfilelock-to-venv -p; then
-                echo -e "\nCreating lightweight virtualenv failed." >&2
-                echo 1 >${status_log}
-                exit  # the subshell
-            fi
-            # Install this module into prefix using the virtualenv.
-            source lightweight-venv/bin/activate
-            pip install . --prefix=prefix --no-deps --disable-pip-version-check --no-warn-script-location
-            echo $? >${status_log}
-            # Remove the unneeded pip and setuptools once installation is complete.
-            pip uninstall -y setuptools pip
-            # Ensure that this module, installed in the prefix directory,
-            # is available to the python installed in the lightweight
-            # virtualenv.
-            PREFIX_SITE_PACKAGES=$(pwd)/prefix/lib/${PYTHON_VERSION}/site-packages
-            VENV_SITE_PACKAGES=$(pwd)/lightweight-venv/lib/${PYTHON_VERSION}/site-packages
-            echo ${PREFIX_SITE_PACKAGES} >> ${VENV_SITE_PACKAGES}/dls-installed-packages.pth
-            # Deactivate the virtualenv.
-            deactivate
-        else
-            pip3 install . --prefix=prefix --no-deps
-            echo $? >${status_log}
-        fi
+        dls-py3 install-into-prefix
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
     ) 2>&1 1>&3 | tee ${error_log}  # copy STDERR to error log
