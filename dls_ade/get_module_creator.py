@@ -1,4 +1,6 @@
 import logging
+import re
+
 from dls_ade import Server
 from dls_ade import module_template as mt
 from dls_ade import module_creator as mc
@@ -60,12 +62,10 @@ def get_module_creator(module_name, area="support", fullname=False):
         return get_module_creator_ioc(module_name, fullname)
 
     elif area in ("python", "python3"):
-        valid_name = (module_name.startswith("dls_") and
-                      ("-" not in module_name) and
-                      ("." not in module_name))
+        valid_name = re.match("[a-zA-Z][a-zA-Z_0-9]*$", module_name)
         if not valid_name:
-            raise ParsingError("Python module names must start with 'dls_' "
-                               "and be valid python identifiers")
+            raise ParsingError(
+                    "Python module names must be valid python identifiers")
 
         template = (mt.ModuleTemplatePython if area == "python"
                     else mt.ModuleTemplatePython3)
