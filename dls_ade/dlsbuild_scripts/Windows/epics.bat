@@ -1,16 +1,17 @@
-:: ******************************************************************************
+:: ****************************************************************************
 :: 
-:: Script to build a Diamond production module.in the support or ioc areas
+:: Script to build EPICS base as a Diamond production module
 ::
-:: This is a partial script which builds a module in for the dls-release system.
+:: This is a partial script which builds EPICS base for the dls-release system.
 :: The script is prepended with a list of variables before invocation by the
 :: dls-release mechanism. These variables are:
 ::
+::   _profile   : Optional override of the profile batch script
 ::   _email     : The email address of the user who initiated the build
 ::   _epics     : The DLS_EPICS_RELEASE to use
 ::   _build_dir : The parent directory in the file system in which to build the
 ::                module. This does not include module or version directories.
-::   _svn_dir   : The directory in subversion where the module is located.
+::   _git_dir   : The Git URL to clone
 ::   _module    : The module name
 ::   _version   : The module version
 ::   _area      : The build area
@@ -32,7 +33,6 @@ if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Could not find profile. Aborting build.
     exit /b %ERRORLEVEL%
 )
-set SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
 
 if "%_module%"=="base" (
     set "build_dir=%_build_dir:/=\%\%_epics:_64=%"
@@ -46,7 +46,6 @@ if "%_module%"=="base" (
 mkdir "%build_dir%"
 if errorlevel 1 (
     call :ReportFailure %ERRORLEVEL% Can not mkdir %build_dir%
-    exit /b %ERRORLEVEL%
 )
 
 cd /d "%build_dir%"
@@ -60,19 +59,18 @@ if "%_force%"=="true" (
 )
 
 if not exist %_module% (
-    svn checkout %_svn_dir% %_module%
+    git clone --depth=100 %_git_dir% %_module%
     if errorlevel 1 (
-        call :ReportFailure %ERRORLEVEL% Can not check out %_svn_dir%
+        call :ReportFailure %ERRORLEVEL% Can not check out %_git_dir%
         exit /b %ERRORLEVEL%
     )
-    cd %_module%
-) else (
-    cd %_module%
-    svn switch %_svn_dir%
-    if errorlevel 1 (
-        call :ReportFailure %ERRORLEVEL% Can not switch to %_svn_dir%
-        exit /b %ERRORLEVEL%
-    )
+)
+
+cd %_module%
+git fetch --depth=1 origin tag %_version% && git checkout %_version%
+if errorlevel 1 (
+    call :ReportFailure %ERRORLEVEL% Can not switch to %_git_dir%
+    exit /b %ERRORLEVEL%
 )
 
 :: Build
