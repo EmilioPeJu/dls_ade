@@ -76,7 +76,8 @@ setup(
 
     include_package_data=True,
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'mock'],
+    # pytest only supports Python 3 from vrsion 5.
+    tests_require=['pytest<5.0.0', 'pytest-cov', 'mock'],
 
     zip_safe=False
     )
