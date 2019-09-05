@@ -66,10 +66,10 @@ class GetModuleCreatorTestBase(GetModuleCreatorTest):
 
 class GetModuleCreatorTestPython(GetModuleCreatorTest):
 
-    def test_given_name_with_no_dls_prepended_then_exception_raised(self):
+    def test_given_name_with_leading_numbers_then_exception_raised(self):
 
         with self.assertRaises(ParsingError) as e:
-            get_mc.get_module_creator("test_module", "python")
+            get_mc.get_module_creator("0test_module", "python")
 
         self.assertFalse(self.mock_nmc_base.called)
 
