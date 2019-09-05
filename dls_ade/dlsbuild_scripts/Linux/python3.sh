@@ -90,6 +90,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         # - if no Pipfile.lock is committed, just install into prefix
         #   with no dependencies.
         dls-py3 install-into-prefix
+        echo $? >${status_log}
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
     ) 2>&1 1>&3 | tee ${error_log}  # copy STDERR to error log
