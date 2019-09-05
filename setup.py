@@ -52,8 +52,7 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 2.7'
     ],
     license='APACHE',
     install_requires=[
