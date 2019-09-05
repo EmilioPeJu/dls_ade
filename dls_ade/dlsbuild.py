@@ -253,7 +253,7 @@ class Builder:
             usermsg.info("Local test build failed. Results are in {}".format(build_dir))
         else:
             usermsg.info("Local test build succeeded")
-            #shutil.rmtree(build_dir)
+            shutil.rmtree(build_dir)
         return status
 
     def submit(self, module, version, vcs, test=False):
