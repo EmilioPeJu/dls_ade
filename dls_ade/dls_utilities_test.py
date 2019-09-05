@@ -81,6 +81,3 @@ class CheckTechnicalAreaValidTest(unittest.TestCase):
             dls_utilities.check_technical_area(area, module)
         except ParsingError as error:
             self.assertEqual(str(error), expected_error_msg)
-
-
-

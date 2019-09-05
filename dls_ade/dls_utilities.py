@@ -5,8 +5,6 @@ from dls_ade.exceptions import ParsingError
 
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
-PIPFILELOCK = 'Pipfile.lock'
-PY3_ROOT_DIR = '/dls_sw/prod/python3'
 
 
 def remove_end_slash(path_string):
@@ -82,4 +80,3 @@ def check_tag_is_valid(tag, area=None):
         return False
 
     return True
-
