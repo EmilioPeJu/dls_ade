@@ -164,8 +164,11 @@ class OutputContactInfoTest(unittest.TestCase):
     def setUp(self):
         self.args = MagicMock()
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name',
-           side_effect=["test_contact_name", "test_cc_name"])
+    @patch('dls_ade.dls_module_contacts.lookup_contact_details',
+           side_effect=[
+               ("test_contact_name", "email"),
+               ("test_cc_name", "email")
+           ])
     @patch('dls_ade.vcs_git.git')
     def test_given_contacts_then_output_csv_format(self, _, _2):
         self.args.csv = True
@@ -279,7 +282,7 @@ class ImportFromCSVTest(unittest.TestCase):
 
 class EditContactInfoTest(unittest.TestCase):
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    @patch('dls_ade.dls_module_contacts.lookup_contact_details')
     def test_given_contact_then_set(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
@@ -292,7 +295,7 @@ class EditContactInfoTest(unittest.TestCase):
         self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user123\n")
         self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    @patch('dls_ade.dls_module_contacts.lookup_contact_details')
     def test_given_unchanged_contacts_then_do_not_set(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
@@ -304,7 +307,7 @@ class EditContactInfoTest(unittest.TestCase):
 
         self.assertFalse(len(mock_file.write.call_args_list))
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    @patch('dls_ade.dls_module_contacts.lookup_contact_details')
     def test_given_changed_and_empty_contact_then_do_not_set(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
@@ -317,7 +320,7 @@ class EditContactInfoTest(unittest.TestCase):
         self.assertEqual(mock_file.write.call_args_list[0][0][0], "* module-contact=user789\n")
         self.assertEqual(mock_file.write.call_args_list[1][0][0], "* module-cc=user456\n")
 
-    @patch('dls_ade.dls_module_contacts.lookup_contact_name')
+    @patch('dls_ade.dls_module_contacts.lookup_contact_details')
     def test_given_empty_and_changed_contact_then_change_one_keep_other(self, _1):
         repo_inst = MagicMock()
         repo_inst.working_tree_dir = "test/test_module"
