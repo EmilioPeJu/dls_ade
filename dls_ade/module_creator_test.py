@@ -25,6 +25,8 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
         self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
         self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
         self.mock_getuser.return_value = 'test_login'
+        self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
+        self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
@@ -35,6 +37,8 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
                          'user_login': "test_login",
+                         'full_name': "Name",
+                         'email': "name@abc.ac.uk",
                          'additional': "value"}
 
         base_c = mc.ModuleCreator("test_module", "test_area", self.mock_mt, additional="value")
@@ -45,7 +49,9 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
 
         expected_dict = {'module_name': "test_module",
                          'module_path': "test_module",
-                         'user_login': "test_login"}
+                         'user_login': "test_login",
+                         'full_name': "Name",
+                         'email': "name@abc.ac.uk"}
 
         base_c = mc.ModuleCreator("test_module", "test_area", self.mock_mt)
 
@@ -372,6 +378,8 @@ class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
         self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
         self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
         self.mock_getuser.return_value = 'test_login'
+        self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
+        self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
@@ -383,6 +391,8 @@ class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
                          'module_path': "test_module",
                          'user_login': "test_login",
                          'app_name': "test_app",
+                         'full_name': "Name",
+                         'email': "name@abc.ac.uk",
                          'additional': "value"}
 
         base_c = mc.ModuleCreatorWithApps("test_module", "test_area", self.mock_mt, app_name="test_app", additional="value")
