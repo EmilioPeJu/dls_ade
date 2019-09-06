@@ -18,15 +18,24 @@ def set_up_mock(test_case_object, path):
     return mock_obj
 
 
-class ModuleCreatorClassInitTest(unittest.TestCase):
+class ModuleCreatorTest(unittest.TestCase):
 
     def setUp(self):
-
-        self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
-        self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
-        self.mock_getuser.return_value = 'test_login'
         self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
         self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
+        self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
+        self.mock_getuser.return_value = 'test_login'
+
+    # Required to let the subclasses run the tests.
+    def runTest(self):
+        pass
+
+
+class ModuleCreatorClassInitTest(ModuleCreatorTest):
+
+    def setUp(self):
+        super(ModuleCreatorClassInitTest, self).setUp()
+        self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
@@ -58,9 +67,10 @@ class ModuleCreatorClassInitTest(unittest.TestCase):
         self.mock_mt.assert_called_once_with(expected_dict)
 
 
-class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
+class ModuleCreatorVerifyRemoteRepoTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorVerifyRemoteRepoTest, self).setUp()
 
         self.mock_is_server_repo = set_up_mock(self, 'dls_ade.gitlabserver.GitlabServer.is_server_repo')
 
@@ -98,9 +108,10 @@ class ModuleCreatorVerifyRemoteRepoTest(unittest.TestCase):
         self.assertTrue(self.nmc_obj._remote_repo_valid)
 
 
-class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
+class ModuleCreatorVerifyCanCreateLocalModule(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorVerifyCanCreateLocalModule, self).setUp()
 
         self.mock_exists = set_up_mock(self, 'dls_ade.module_creator.os.path.exists')
         self.mock_is_in_local_repo = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_in_local_repo')
@@ -171,9 +182,10 @@ class ModuleCreatorVerifyCanCreateLocalModule(unittest.TestCase):
         self.assertFalse(self.nmc_obj._remote_repo_valid)
 
 
-class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
+class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorVerifyCanPushLocalRepoToRemoteTest, self).setUp()
 
         self.mock_exists = set_up_mock(self, 'dls_ade.module_creator.os.path.exists')
         self.mock_is_local_repo_root = set_up_mock(self, 'dls_ade.module_creator.vcs_git.is_local_repo_root')
@@ -275,9 +287,10 @@ class ModuleCreatorVerifyCanPushLocalRepoToRemoteTest(unittest.TestCase):
         self.assertFalse(self.nmc_obj._can_push_repo_to_remote)
 
 
-class ModuleCreatorCreateLocalModuleTest(unittest.TestCase):
+class ModuleCreatorCreateLocalModuleTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorCreateLocalModuleTest, self).setUp()
 
         self.mock_os = set_up_mock(self, 'dls_ade.module_creator.os')
         self.mock_vcs_git = set_up_mock(self, 'dls_ade.module_creator.vcs_git')
@@ -321,9 +334,10 @@ class ModuleCreatorCreateLocalModuleTest(unittest.TestCase):
         self.mock_vcs_git.stage_all_files_and_commit.assert_called_once_with(repo_mock, "Initial commit")
 
 
-class ModuleCreatorPrintMessageTest(unittest.TestCase):
+class ModuleCreatorPrintMessageTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorPrintMessageTest, self).setUp()
 
         self.mock_module_template = MagicMock()
         self.nmc_obj = mc.ModuleCreator("test_module", "test_area", self.mock_module_template)
@@ -335,9 +349,10 @@ class ModuleCreatorPrintMessageTest(unittest.TestCase):
         self.mock_module_template.print_message_assert_called_once_with()
 
 
-class ModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
+class ModuleCreatorPushRepoToRemoteTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorPushRepoToRemoteTest, self).setUp()
 
         self.mock_verify_can_push_repo_to_remote = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator.verify_can_push_repo_to_remote')
         self.mock_add_new_remote_and_push = set_up_mock(self, 'dls_ade.module_creator.vcs_git.Git.add_new_remote_and_push')
@@ -371,15 +386,12 @@ class ModuleCreatorPushRepoToRemoteTest(unittest.TestCase):
         self.assertEqual(str(e.exception), "error")
 
 
-class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
+class ModuleCreatorWithAppsClassInitTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorWithAppsClassInitTest, self).setUp()
 
         self.mock_mt = set_up_mock(self, 'dls_ade.module_template.ModuleTemplate')
-        self.mock_getuser = set_up_mock(self, 'dls_ade.module_creator.getuser')
-        self.mock_getuser.return_value = 'test_login'
-        self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
-        self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
 
     def test_given_reasonable_input_then_initialisation_is_successful(self):
 
@@ -409,9 +421,10 @@ class ModuleCreatorWithAppsClassInitTest(unittest.TestCase):
         self.assertEqual(str(e.exception), comp_message)
 
 
-class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
+class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorAddAppToModuleVerifyRemoteRepoTest, self).setUp()
 
         self.mock_check_if_remote_repo_has_app = set_up_mock(self, 'dls_ade.module_creator.ModuleCreatorAddAppToModule._check_if_remote_repo_has_app')
         self.mock_is_server_repo = set_up_mock(self, 'dls_ade.module_creator.Server.is_server_repo')
@@ -419,6 +432,7 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
         self.nmc_obj._remote_repo_valid = False
+
 
     def test_given_remote_repo_valid_true_then_function_returns_immediately(self):
 
@@ -464,9 +478,10 @@ class ModuleCreatorAddAppToModuleVerifyRemoteRepoTest(unittest.TestCase):
         self.assertTrue(self.nmc_obj._remote_repo_valid)
 
 
-class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
+class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp, self).setUp()
 
         self.mock_server = set_up_mock(self, 'dls_ade.module_creator.Server')
         self.mock_exists = set_up_mock(self, 'dls_ade.module_creator.os.path.exists')
@@ -572,12 +587,15 @@ class ModuleCreatorAddAppToModuleCheckIfRemoteRepoHasApp(unittest.TestCase):
         self.assertFalse(exists)
 
 
-class ModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
+class ModuleCreatorAddAppToModulePushRepoToRemoteTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorAddAppToModulePushRepoToRemoteTest, self).setUp()
 
         self.mock_verify_can_push_repo_to_remote = set_up_mock(self, 'dls_ade.module_creator.ModuleCreatorAddAppToModule.verify_can_push_repo_to_remote')
         self.mock_push_to_remote = set_up_mock(self, 'dls_ade.module_creator.vcs_git.Git.push_to_remote')
+        self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
+        self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
 
         self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area", MagicMock(), app_name="test_app")
 
@@ -604,29 +622,32 @@ class ModuleCreatorAddAppToModulePushRepoToRemoteTest(unittest.TestCase):
         self.assertEqual(str(e.exception), "error")
 
 
-class ModuleCreatorAddAppToModuleCreateLocalModuleTest(unittest.TestCase):
+class ModuleCreatorAddAppToModuleCreateLocalModuleTest(ModuleCreatorTest):
 
     def setUp(self):
+        super(ModuleCreatorAddAppToModuleCreateLocalModuleTest, self).setUp()
 
-            self.mock_chdir = set_up_mock(self, 'dls_ade.module_creator.os.chdir')
-            self.mock_git = set_up_mock(self, 'dls_ade.module_creator.vcs_git.Git')
-            self.mock_vcs_git = set_up_mock(self, 'dls_ade.module_creator.vcs_git')
-            self.mock_server = set_up_mock(self, 'dls_ade.module_creator.Server')
-            self.mock_verify_can_create_local_module = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator.verify_can_create_local_module')
+        self.mock_chdir = set_up_mock(self, 'dls_ade.module_creator.os.chdir')
+        self.mock_git = set_up_mock(self, 'dls_ade.module_creator.vcs_git.Git')
+        self.mock_vcs_git = set_up_mock(self, 'dls_ade.module_creator.vcs_git')
+        self.mock_server = set_up_mock(self, 'dls_ade.module_creator.Server')
+        self.mock_verify_can_create_local_module = set_up_mock(self, 'dls_ade.module_creator.ModuleCreator.verify_can_create_local_module')
+        self.mock_lookup_details = set_up_mock(self, 'dls_ade.module_creator.lookup_contact_details')
+        self.mock_lookup_details.return_value = 'Name', 'name@abc.ac.uk'
 
-            self.mock_repo = MagicMock()
-            self.mock_server_inst = MagicMock()
-            self.mock_server_inst.create_new_local_repo.return_value = \
-                self.mock_repo
-            self.mock_server.return_value = self.mock_server_inst
-            self.mock_module_template_cls = MagicMock()
-            self.mock_module_template = MagicMock()
-            self.mock_module_template_cls.return_value = self.mock_module_template
-            self.mock_create_files = self.mock_module_template.create_files
+        self.mock_repo = MagicMock()
+        self.mock_server_inst = MagicMock()
+        self.mock_server_inst.create_new_local_repo.return_value = \
+            self.mock_repo
+        self.mock_server.return_value = self.mock_server_inst
+        self.mock_module_template_cls = MagicMock()
+        self.mock_module_template = MagicMock()
+        self.mock_module_template_cls.return_value = self.mock_module_template
+        self.mock_create_files = self.mock_module_template.create_files
 
-            self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area",
-                                                          self.mock_module_template_cls,
-                                                          app_name="test_app")
+        self.nmc_obj = mc.ModuleCreatorAddAppToModule("test_module", "test_area",
+                                                        self.mock_module_template_cls,
+                                                        app_name="test_app")
 
     def test_given_verify_can_create_local_module_passes_then_flag_set_false_and_clone_and_create_files_called(self):
         expected_commit_message = "Added app, test_app, to module."
