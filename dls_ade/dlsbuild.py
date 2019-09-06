@@ -61,7 +61,7 @@ def get_email(user):
             "OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk",
             ldap.SCOPE_SUBTREE, "(CN=%s)" % user, ['mail'])
         # Just return the first result from the result structure
-        return result[0][1]["mail"][0].decode('ascii')
+        return result[0][1]["mail"][0]
     except:
         # Return default email address
         return "%s@rl.ac.uk" % user
@@ -128,6 +128,7 @@ class Builder:
 
         assert area + self.exten in script_list, \
             "Area %s is not supported for %s builds." % (area, self.os)
+
         self.area = area
 
     def set_epics(self, epics):
