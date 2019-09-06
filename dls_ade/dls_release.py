@@ -511,6 +511,7 @@ def _main():
 
     build = create_build_object(args)
 
+    # python3lib releases don't have any source code
     if args.area == "python3lib":
         vcs = None
         version = args.release
