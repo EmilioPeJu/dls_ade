@@ -81,39 +81,40 @@ prod_pfl=${PROD_DIST_DIR}/${pipfilelock}
 work_pfl=${WORK_DIST_DIR}/${pipfilelock}
 specifier="${_module}==${_version}"
 
+# Establish the directory name for the installation.
+# Check for existing release.
+for released_module in "${_build_dir}"/* ; do
+    normalised_released_module=$(normalise_name $(basename ${released_module}))
+    if [[ ${normalised_released_module} == ${normalised_module} ]]; then
+        version_location="${released_module}/${_version}"
+    fi
+done
+
+# Remove existing release if _force is true.
+if [[ -d "${version_location}" ]]; then
+    if [[ ${_force} == true ]]; then
+        SysLog info "Force: removing previous version: ${version_location}"
+        rm -rf "${version_location}"
+    else
+        ReportFailure "${version_location} is already installed."
+    fi
+else
+    # Always install using the normalised name.
+    version_location="${_build_dir}/${normalised_module}/${_version}"
+fi
+
+mkdir -p "${version_location}"
+cd ${version_location} || ReportFailure "Can not cd to ${version_location}"
+
 error_log=${_build_name}.err
 build_log=${_build_name}.log
 status_log=${_build_name}.sta
-
 
 SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${error_log}"
 {
     # Create a subshell. Because we pipe the output of this section a subshell
     # is created anyway, so we might as well make it explicit.
     (
-        # Check for existing release.
-        for released_module in "${_build_dir}"/* ; do
-            normalised_released_module=$(normalise_name $(basename ${released_module}))
-            if [[ ${normalised_released_module} == ${normalised_module} ]]; then
-                version_location="${released_module}/${_version}"
-            fi
-        done
-
-        # Remove existing release if _force is true.
-        if [[ -d "${version_location}" ]]; then
-            if [[ ${_force} == true ]]; then
-                SysLog info "Force: removing previous version: ${version_location}"
-                rm -rf "${version_location}"
-            else
-                echo -e "${version_location} is already installed." >&2
-                echo 1 >${status_log}
-                exit  # the subshell
-            fi
-        else
-            # Always install using the normalised name.
-            version_location="${_build_dir}/${normalised_module}/${_version}"
-        fi
-
         # Locate matching distributions in prod and work.
         for dist in "${PROD_DIST_DIR}"/* ; do
             if match_dist "${dist}"; then
