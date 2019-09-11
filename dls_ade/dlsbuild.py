@@ -11,6 +11,7 @@ import logging
 
 from dls_ade.constants import BUILD_SERVERS, SERVER_SHORTCUT, DLSBUILD_ROOT_DIR, DLSBUILD_WIN_ROOT_DIR, LDAP_SERVER_URL, SYSLOG_SERVER, SYSLOG_SERVER_PORT
 from dls_ade.dls_environment import environment
+from dls_ade.dls_utilities import lookup_contact_details
 
 # Optional but useful in a library or non-main module:
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -52,21 +53,6 @@ def default_server():
     return server
 
 
-def get_email(user):
-    """Get a users email address from Active directory using LDAP"""
-    try:
-        # Try and get email from Active DIrectory
-        l = ldap.initialize(LDAP_SERVER_URL)
-        result = l.search_s(
-            "OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk",
-            ldap.SCOPE_SUBTREE, "(CN=%s)" % user, ['mail'])
-        # Just return the first result from the result structure
-        return result[0][1]["mail"][0]
-    except:
-        # Return default email address
-        return "%s@rl.ac.uk" % user
-
-
 class Builder:
     "Base class for Diamond build server submissions"
 
@@ -78,7 +64,7 @@ class Builder:
         self.force = False
         self.area = ""
         self.user = getpass.getuser()
-        self.email = get_email(self.user)
+        self.email = lookup_contact_details(self.user)[1]
         self.dls_env = environment()
 
         if server:
