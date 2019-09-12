@@ -175,21 +175,26 @@ class Builder:
             build, time.strftime("%Y%m%d-%H%M%S"),
             self.user, self.area, module.replace("/", "_"), version])
 
-    def build_params(self, build_dir, vcs, build_name):
-        return {
+    def build_params(self, build_dir, module, version, vcs, build_name):
+
+        param_dict = {
             "email"                 : self.email,
             "user"                  : self.user,
             "epics"                 : self.dls_env.epicsVer(),
             "build_dir"             : build_dir,
-            "%s_dir" % vcs.vcs_type : vcs.release_repo,
-            "module"                : vcs.module,
-            "version"               : vcs.version,
+            "module"                : module,
+            "version"               : version,
             "area"                  : self.area,
             "force"                 : "true" if self.force else "false",
             "build_name"            : build_name,
             "dls_syslog_server"     : SYSLOG_SERVER,
             "dls_syslog_server_port": SYSLOG_SERVER_PORT
         }
+        if vcs is not None:
+            vcs_key = '{}_dir'.format(vcs.vcs_type)
+            param_dict[vcs_key] = vcs.release_repo
+
+        return param_dict
 
     def local_test_possible(self):
         """Returns True if a local test build is possible"""
@@ -197,20 +202,20 @@ class Builder:
         remote = self.get_server()
         return local == remote
 
-    def test(self, vcs):
+    def test(self, module, version, vcs):
         """Builds module version on the local system using the code in the
         src_dir directory of subversion."""
 
-        build_name = self.build_name("local", vcs.module, vcs.version)
+        build_name = self.build_name("local", module, version)
         build_dir = os.path.join(
             DLSBUILD_ROOT_DIR, "work", "etc", "build", "test", build_name)
 
         usermsg.info("Test build of module in {}".format(build_dir))
 
         params = self.build_params(
-            build_dir, vcs, build_name)
+            build_dir, module, version, vcs, build_name)
 
-        dirname = tempfile.mkdtemp(suffix="_" + vcs.module.replace("/", "_"))
+        dirname = tempfile.mkdtemp(suffix="_" + module.replace("/", "_"))
         filename = os.path.join(dirname, build_name+self.exten)
         usermsg.info("Got build file {filename} to build module in {build_dir}"
                      .format(filename=filename, build_dir=build_dir))
@@ -238,13 +243,13 @@ class Builder:
             shutil.rmtree(build_dir)
         return status
 
-    def submit(self, vcs, test=False):
+    def submit(self, module, version, vcs, test=False):
         """Submit a job to the build queue to build module version using the
         code in the src_dir directory of subversion. If test is anything
         that evaluates to True it is built in the test directory. Otherwise it
         is a normal production build."""
 
-        build_name = self.build_name("build", vcs.module, vcs.version)
+        build_name = self.build_name("build", module, version)
         if test:
             build_dir = os.path.join(
                 DLSBUILD_ROOT_DIR, "work", "etc", "build", "test", build_name)
@@ -252,7 +257,7 @@ class Builder:
             build_dir = self.dls_env.prodArea(self.area)
 
         params = self.build_params(
-            build_dir, vcs, build_name)
+            build_dir, module, version, vcs, build_name)
 
         # generate the filename
         pathname = os.path.join(DLSBUILD_ROOT_DIR, "work", "etc", "build", "queue")

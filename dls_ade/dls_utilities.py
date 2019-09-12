@@ -1,8 +1,13 @@
 import ldap
 import logging
-import os, re
+import os
+import re
+
+from packaging import version
+
 from dls_ade.constants import LDAP_SERVER_URL
 from dls_ade.exceptions import FedIdError, ParsingError
+
 
 
 GIT_ROOT_DIR = os.getenv('GIT_ROOT_DIR', "controls")
@@ -35,7 +40,7 @@ def check_technical_area(area, module):
         module(str): Module to check
 
     Raises:
-        :class:`exceptions.ValueError`: Missing technical area under beamline
+        ParsingError if there is no technical area for a beamline
 
     """
 
@@ -43,30 +48,40 @@ def check_technical_area(area, module):
         raise ParsingError("Missing technical area under beamline")
 
 
-def check_tag_is_valid(tag):
+def check_tag_is_valid(tag, area=None):
     """
     Checks if a given tag is a valid tag.
 
+    The traditional Diamond versioning is something like X-Y[-Z][dlsA[-B]]
+
+    For Python 3 we are allowing any versions as permitted by PEP-440:
+
+    https://www.python.org/dev/peps/pep-0440/
+
     Args:
         tag(str): proposed tag string
+        area(str): area to check tag against
 
     Returns:
         bool: True if tag is valid, False if not
 
     """
+    if area == 'python3':
+        # VERBOSE allows you to ignore the comments in VERSION_PATTERN.
+        check = re.compile(r"^{}$".format(version.VERSION_PATTERN), re.VERBOSE)
+        result = check.search(tag)
+    else:
+        number = "[0-9]+"
+        optional_number = "[0-9]*"
 
-    number = "[0-9]+"
-    optional_number = "[0-9]*"
-
-    regex_pieces = dict(
-        u_v_w = "{u}\-{v}(\-{w})?".format(u=number, v=number, w=number),
-        dls_x_y = "(dls{x}(\-{y})?)?".format(x=number, y=number),
-        alpha_beta_z = "((alpha|beta){z})?".format(z=optional_number)
-    )
-
-    pattern = '^{u_v_w}{dls_x_y}{alpha_beta_z}$'.format(**regex_pieces)
-    check = re.compile(pattern)
-    result = check.match(tag)
+        regex_pieces = dict(
+            u_v_w = "{u}\-{v}(\-{w})?".format(u=number, v=number, w=number),
+            dls_x_y = "(dls{x}(\-{y})?)?".format(x=number, y=number),
+            alpha_beta_z = "((alpha|beta){z})?".format(z=optional_number)
+        )
+        pattern = '^{u_v_w}{dls_x_y}{alpha_beta_z}$'.format(**regex_pieces)
+        check = re.compile(pattern)
+        result = check.match(tag)
 
     if result is None:
         return False

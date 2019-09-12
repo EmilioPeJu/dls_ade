@@ -56,6 +56,11 @@ class ArgParserParseArgsTest(unittest.TestCase):
 
         self.assertEqual(args.area, "python")
 
+    def test_given_double_dash_python3_in_args_then_area_is_python3(self):
+        args = self.parser.parse_args("--python3".split())
+
+        self.assertEqual(args.area, "python3")
+
 
 class AddModuleNameTest(unittest.TestCase):
 

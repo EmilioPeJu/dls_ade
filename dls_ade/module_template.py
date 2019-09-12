@@ -329,6 +329,26 @@ class ModuleTemplatePython(ModuleTemplate):
         return message
 
 
+class ModuleTemplatePython3(ModuleTemplatePython):
+    """Class for managing creation of Python 3 modules.
+
+    It is substantially the same as Python modules, although the templates
+    are different.
+    """
+
+    def __init__(self, template_args):
+        super(ModuleTemplatePython, self).__init__(template_args)
+        # Override the template file location.
+        self._set_template_files_from_area("python3")
+
+    def get_print_message(self):
+        message = """
+A new Python 3 module has been created in the {0:s} directory.
+Edit setup.cfg to make sure it has the correct metadata.
+Python code should typically be added to the {0:s} package.
+""".format(self._template_args['module_path'])
+        return message
+
 class ModuleTemplateWithApps(ModuleTemplate):
     """Abstract class to implement the 'app_name' attribute.
 

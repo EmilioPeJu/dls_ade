@@ -752,7 +752,7 @@ class CheckGitAttributesTest(unittest.TestCase):
         self.assertFalse(return_value)
 
     @patch('dls_ade.vcs_git.git.Repo')
-    def test_given_some_attributes_dont_exist_but_we_set_value_to_unspecified_then_function_returns_True(self, mock_repo_class):
+    def test_given_some_attributes_dont_exist_but_we_set_value_to_unspecified_then_function_returns_true(self, mock_repo_class):
 
         mock_repo = MagicMock()
         mock_repo_class.return_value = mock_repo

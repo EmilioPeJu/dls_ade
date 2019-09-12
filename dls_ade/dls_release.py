@@ -195,7 +195,7 @@ def check_parsed_arguments_valid(args, parser):
             * <args.area> area not supported by git
 
     """
-    git_supported_areas = ["support", "ioc", "epics", "python", "matlab",
+    git_supported_areas = ["support", "ioc", "epics", "python", "matlab", "python3",
                            "tools", "targetOS", "etc"]
     etc_supported_areas = ["init", "Launcher"]
     if not args.module_name:
@@ -217,8 +217,9 @@ def check_parsed_arguments_valid(args, parser):
             parser.error("Test builds are not possible for etc modules. "
                          "Use -t to skip the local test build. "
                          "Do not use -T or -l.")
-    elif args.area not in git_supported_areas:
-        parser.error("%s area not supported by git" % args.area)
+    # python3lib area is valid but does not use Git.
+    elif args.area not in git_supported_areas and args.area != "python3lib":
+        parser.error("%s area not valid" % args.area)
 
 
 def format_argument_version(arg_version):
@@ -380,7 +381,7 @@ def get_module_epics_version(vcs):
     return module_epics
 
 
-def perform_test_build(build_object, local_build, vcs):
+def perform_test_build(build_object, local_build, module, version, vcs):
     """
     Test build the module and return whether it was successful
 
@@ -388,6 +389,8 @@ def perform_test_build(build_object, local_build, vcs):
         build_object(:class:`~dls_ade.dlsbuild.Builder`): Either a windows or
             RedHat builder instance
         local_build(bool): Specifier to perform test build only
+        module(str): Specify module name
+        version(str): Specify release
         vcs(:class:`~dls_ade.vcs_git.Git`): Git version control system instance
 
     Returns:
@@ -403,7 +406,7 @@ def perform_test_build(build_object, local_build, vcs):
         message += "same OS as build server"
     else:
         message += "Performing test build on local system"
-        if build_object.test(vcs) != 0:
+        if build_object.test(module, version, vcs) != 0:
             test_fail = True
             message += "\nTest build failed."
         else:
@@ -460,7 +463,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
     return version, commit_to_tag
 
 
-def normalise_release(release):
+def normalise_release(release, area):
     """Try to normalise the release name.
 
     None is a valid argument.
@@ -471,6 +474,7 @@ def normalise_release(release):
 
     Arguments:
         release(str): the release name
+        area(str): the area for release
 
     Returns:
         str: a valid release name
@@ -480,7 +484,7 @@ def normalise_release(release):
 
     """
     new_release = release
-    if release is not None and not check_tag_is_valid(release):
+    if release is not None and not check_tag_is_valid(release, area):
         usermsg.warning("Warning: release {} does not conform to "
                         "convention.".format(release))
         new_release = format_argument_version(release)
@@ -488,7 +492,7 @@ def normalise_release(release):
             usermsg.warning("Release {} contains \'.\' which will"
                             " be replaced by \'-\' to: \'{}\'"
                             .format(release, new_release))
-        if not check_tag_is_valid(new_release):
+        if not check_tag_is_valid(new_release, area):
             raise ValueError(
                 "Release {} could not be made valid.".format(release)
             )
@@ -507,30 +511,35 @@ def _main():
 
     build = create_build_object(args)
 
-    server = Server()
-    source = server.dev_module_path(module, args.area)
-    vcs = server.temp_clone(source)
+    # python3lib releases don't have any source code
+    if args.area == "python3lib":
+        vcs = None
+        version = args.release
+    else:
+        server = Server()
+        source = server.dev_module_path(module, args.area)
+        vcs = server.temp_clone(source)
 
-    try:
-        release = args.release
-        if release is None:
-            usermsg.info("No release specified; able to test "
-                         "build at {} only.".format(args.commit))
-        if args.branch:
-            vcs.set_branch(args.branch)
+        try:
+            release = args.release
+            if release is None:
+                usermsg.info("No release specified; able to test "
+                             "build at {} only.".format(args.commit))
+            if args.branch:
+                vcs.set_branch(args.branch)
 
-        releases = vcs.list_releases()
-        version, commit_to_tag = determine_version_to_release(
-            release, args.next_version, releases, args.commit
-        )
-        if commit_to_tag is not None:  # Make Release if repo required
-            usermsg.info("Making tag {} at {}".format(version, commit_to_tag))
-            vcs.create_new_tag_and_push(version, commit_to_tag, args.message)
-        vcs.set_version(version)
-    except (VCSGitError, ValueError) as err:
-        log.exception(err)
-        usermsg.error("Aborting: {msg}".format(msg=err))
-        sys.exit(1)
+            releases = vcs.list_releases()
+            version, commit_to_tag = determine_version_to_release(
+                release, args.next_version, releases, args.commit
+            )
+            if commit_to_tag is not None:  # Make Release if repo required
+                usermsg.info("Making tag {} at {}".format(version, commit_to_tag))
+                vcs.create_new_tag_and_push(version, commit_to_tag, args.message)
+            vcs.set_version(version)
+        except (VCSGitError, ValueError) as err:
+            log.exception(err)
+            usermsg.error("Aborting: {msg}".format(msg=err))
+            sys.exit(1)
 
     if args.area in ["ioc", "support"]:
         module_epics = get_module_epics_version(vcs)
@@ -543,7 +552,7 @@ def _main():
 
     if not args.skip_test:
         test_build_message, test_build_fail = perform_test_build(
-            build, args.local_build, vcs)
+            build, args.local_build, module, version, vcs)
         usermsg.info(test_build_message)
         if test_build_fail:
             usermsg.error("Aborting: local test build failed")
@@ -563,7 +572,7 @@ def _main():
                                         version, build))
     usermsg.info(msg_create_build_job)
 
-    build.submit(vcs, test=args.test_only)
+    build.submit(module, version, vcs, test=args.test_only)
     usermsg.info(
         "{build_job} job for {area}-module: \'{module}\' {version} "
         "submitted to build server queue".format(

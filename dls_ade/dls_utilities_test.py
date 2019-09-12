@@ -17,11 +17,22 @@ class TagFormatTest(unittest.TestCase):
             self.assertTrue(check_tag_is_valid(ex_valid_tag))
 
     def test_rejects_incorrect_tags(self):
-
         ex_invalid_tags = ['2-5a', 'abcdef', '1', '8-', '8-5-',
                            '2-5a0']
         for ex_invalid_tag in ex_invalid_tags:
             self.assertFalse(check_tag_is_valid(ex_invalid_tag))
+
+    def test_approves_correct_python3_tags(self):
+        valid_python3_tags = ['1.2', '1.2.3rc4', '1.2+dls3']
+        for tag in valid_python3_tags:
+            self.assertTrue(check_tag_is_valid(tag, 'python3'))
+
+    def test_rejects_incorrect_python3_tags(self):
+        invalid_python3_tags = ['aaa', '1.2.3xrc4', '1.2dls3']
+        for tag in invalid_python3_tags:
+            print(tag)
+            self.assertFalse(check_tag_is_valid(tag, 'python3'))
+
 
 class RemoveEndSlash(unittest.TestCase):
 

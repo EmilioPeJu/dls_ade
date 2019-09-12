@@ -265,7 +265,7 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
         self.args.release = "version"
         self.args.area = "archive"
 
-        expected_error_message = self.args.area + " area not supported by git"
+        expected_error_message = self.args.area + " area not valid"
 
         dls_release.check_parsed_arguments_valid(self.args, self.parser)
 
@@ -673,31 +673,34 @@ class TestPerformTestBuild(unittest.TestCase):
     def test_given_any_option_when_called_then_return_string_and_test_failure_bool(self):
 
         local_build = False
+        module, version = 'test', '1-2-3'
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertIsInstance(test_message, str)
         self.assertIsInstance(test_fail, bool)
 
-    def test_given_local_test_build_not_possible_when_Called_then_return_specific_string(self):
+    def test_given_local_test_build_not_possible_when_called_then_return_specific_string(self):
 
         local_build = False
+        module, version = 'test', '1-2-3'
         self.fake_build.local_test_possible = MagicMock(return_value=False)
         expected_message = "Local test build not possible since local system "
         expected_message += "not the same OS as build server"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
     def test_given_local_test_build_possible_then_returned_string_begins_with_specific_string(self):
 
         local_build = False
+        module, version = 'test', '1-2-3'
         expected_message = "Performing test build on local system"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertTrue(
             test_message.startswith(expected_message),
@@ -706,10 +709,11 @@ class TestPerformTestBuild(unittest.TestCase):
     def test_given_local_test_possible_and_build_fails_then_return_test_failed(self):
 
         local_build = False
+        module, version = 'test', '1-2-3'
         self.fake_build.test.return_value = 1
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertTrue(test_fail)
 
@@ -717,22 +721,24 @@ class TestPerformTestBuild(unittest.TestCase):
 
         local_build = False
         version = '0-1'
+        module = 'test'
         vcs = FakeVcs(version=version)
         self.fake_build.test.return_value = 1
 
-        dls_release.perform_test_build(self.fake_build, local_build, vcs)
+        dls_release.perform_test_build(self.fake_build, local_build, module, version, vcs)
 
-        self.fake_build.test.assert_called_once_with(vcs)
+        self.fake_build.test.assert_called_once_with(module, version, vcs)
 
     def test_given_test_possible_and_build_works_then_return_test_not_failed_and_message_ends_with_specific_string(self):
 
         local_build = False
+        module, version = 'test', '1-2-3'
         self.fake_build.test.return_value = 0
         expected_message_end = "Test build successful. Continuing with build"
         expected_message_end += " server submission"
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertFalse(test_fail)
         self.assertTrue(
@@ -742,12 +748,13 @@ class TestPerformTestBuild(unittest.TestCase):
     def test_given_test_possible_and_build_works_and_local_build_option_then_message_ends_without_continuation_info(self):
 
         local_build = True
+        module, version = 'test', '1-2-3'
         self.fake_build.test.return_value = 0
         expected_message = "Performing test build on local system"
         expected_message += '\nTest build successful.'
 
         test_message, test_fail = dls_release.perform_test_build(
-            self.fake_build, local_build, FakeVcs())
+            self.fake_build, local_build, module, version, FakeVcs())
 
         self.assertEqual(test_message, expected_message)
 
@@ -838,19 +845,19 @@ class TestDetermineVersionToRelease(unittest.TestCase):
 
     def test_normalise_release_returns_valid_release(self):
         old_release = '1-1'
-        new_release = dls_release.normalise_release(old_release)
+        new_release = dls_release.normalise_release(old_release, 'support')
         self.assertEqual(old_release, new_release)
 
     def test_normalise_release_replaces_dot_with_dash(self):
         old_release = '1.1'
-        new_release = dls_release.normalise_release(old_release)
+        new_release = dls_release.normalise_release(old_release, 'python')
         self.assertEqual(new_release, '1-1')
 
     def test_normalise_release_raises_ValueError_if_release_not_valid(self):
         with self.assertRaises(ValueError):
-            dls_release.normalise_release('1.1abc3')
+            dls_release.normalise_release('1.1abc3', 'ioc')
         with self.assertRaises(ValueError):
-            dls_release.normalise_release('aaa')
+            dls_release.normalise_release('aaa', 'ioc')
 
 
 class FakeOptions(object):

@@ -52,12 +52,14 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2.7'
     ],
     license='APACHE',
-    install_requires=['GitPython==2.1.8', 'python-ldap==3.1.0', 'six==1.10.0',
-                      'pygelf==0.3.1', 'cookiecutter==1.6.0',
-                      'python-gitlab==1.6.0'],
+    install_requires=[
+        'GitPython==2.1.8', 'python-ldap==3.1.0', 'six==1.10.0',
+        'pygelf==0.3.1', 'cookiecutter==1.6.0', 'python-gitlab==1.6.0',
+        'packaging==19.0'
+    ],
     packages=["dls_ade"],
     package_data={"dls_ade": additional_files},
     # define console_scripts
