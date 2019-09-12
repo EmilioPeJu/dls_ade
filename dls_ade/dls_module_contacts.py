@@ -16,14 +16,13 @@ import shutil
 import json
 import logging
 import csv
-import ldap
 import argparse
 
 from dls_ade.argument_parser import ArgParser
 from dls_ade import Server
 from dls_ade.exceptions import FedIdError
 from dls_ade import logconfig
-from dls_ade.constants import LDAP_SERVER_URL
+from dls_ade.dls_utilities import lookup_contact_details
 
 # Optional but useful in a library or non-main module:
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -125,55 +124,6 @@ def check_parsed_args_compatible(imp, modules, contact, cc, parser):
         return 1
 
 
-def lookup_contact_name(fed_id):
-    """
-    Perform an LDAP search to find the Name and Surname corresponding to a
-    FED-ID.
-
-    Args:
-        fed_id(str): FED-ID to search for
-
-    Returns:
-        str: Contact name
-
-    Raises: FedIdError if the fed_id cannot be found in LDAP
-
-    """
-
-    # Set up ldap search parameters
-    l = ldap.initialize(LDAP_SERVER_URL)
-    basedn = "dc=fed,dc=cclrc,dc=ac,dc=uk"
-    search_filter = "(&(cn={}))".format(fed_id)
-    search_attribute = ["givenName", "sn"]
-    search_scope = ldap.SCOPE_SUBTREE
-
-    # Perform search, print message so user knows where program hangs
-    # The lookup can hang at l.result() if the FED-ID does not exist.
-    log.debug("Performing search for {}".format(fed_id))
-    l.simple_bind_s()
-    ldap_result_id = l.search(basedn, search_scope, search_filter,
-                              search_attribute)
-    ldap_output = l.result(ldap_result_id, 0)
-    log.debug(ldap_output)
-    # ldap_output has the form:
-    # (100, [('CN=<FED-ID>,OU=DLS,DC=fed,DC=cclrc,DC=ac,DC=uk',
-    # {'givenName': ['<FirstName>'], 'sn': ['<Surname>']})])
-
-    if ldap_output[0] == 115:
-        # If the FED-ID does not exist, ldap_output will look like:
-        # (115, [(None,
-        # ['ldap://res02.fed.cclrc.ac.uk/DC=res02,DC=fed,DC=cclrc,DC=ac,DC=uk'])])
-        raise FedIdError("\"{}\" is not a FedID in LDAP".format(fed_id))
-
-    # Extract contact name from output
-    name_info_dict = ldap_output[1][0][1]
-    # name_info_dict: {'givenName': ['<FirstName>'], 'sn': ['<Surname>']}
-    contact_name = \
-        name_info_dict['givenName'][0].decode('utf-8') + ' ' + name_info_dict['sn'][0].decode('utf-8')
-
-    return contact_name
-
-
 def output_csv_format(contact, cc_contact, module):
     """
     Format contact info string in CSV format.
@@ -191,7 +141,7 @@ def output_csv_format(contact, cc_contact, module):
     # function
     if contact != 'unspecified':
         try:
-            contact_name = lookup_contact_name(contact)
+            contact_name = lookup_contact_details(contact)[0]
         except FedIdError as exception:
             log.error(exception.message)
             contact_name = contact
@@ -199,7 +149,7 @@ def output_csv_format(contact, cc_contact, module):
         contact_name = contact
     if cc_contact != 'unspecified':
         try:
-            cc_name = lookup_contact_name(cc_contact)
+            cc_name = lookup_contact_details(cc_contact)[0]
         except FedIdError as exception:
             log.error(exception.message)
             cc_name = contact
@@ -291,13 +241,13 @@ def edit_contact_info(repo, contact='', cc=''):
     # if they don't lookup...() will (possibly) hang and raise an exception
     if contact:
         contact = contact.strip()
-        lookup_contact_name(contact)
+        lookup_contact_details(contact)[0]
     else:
         contact = current_contact
 
     if cc:
         cc = cc.strip()
-        lookup_contact_name(cc)
+        lookup_contact_details(cc)[0]
     else:
         cc = current_cc
 

@@ -122,7 +122,9 @@ class TestCreateBuildObject(unittest.TestCase):
 
     def setUp(self):
 
-        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+        self.mock_lookup_contact_details = set_up_mock(
+            self, 'dls_ade.dlsbuild.lookup_contact_details'
+        )
 
     @patch('dls_ade.dls_release.dlsbuild.default_build')
     def test_given_empty_options_then_default_build_called_with_None(self, mock_default):
@@ -514,7 +516,9 @@ class TestConstructInfoMessage(unittest.TestCase):
 
     def setUp(self):
 
-        self.mock_get_email = set_up_mock(self, 'dls_ade.dlsbuild.get_email')
+        self.mock_lookup_contact_details = set_up_mock(
+            self, 'dls_ade.dlsbuild.lookup_contact_details'
+        )
 
     @patch('dls_ade.dlsbuild.default_server', return_value='redhat6-x86_64')
     def test_given_default_args_then_construct_specific_string(self, _1):

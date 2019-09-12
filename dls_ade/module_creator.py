@@ -4,8 +4,10 @@ import logging
 from getpass import getuser
 
 from dls_ade import vcs_git, Server
-from dls_ade.exceptions import (RemoteRepoError, VerificationError,
-                                ArgumentError)
+from dls_ade.exceptions import (
+    RemoteRepoError, VerificationError, ArgumentError
+)
+from dls_ade.dls_utilities import lookup_contact_details
 
 
 class ModuleCreator(object):
@@ -59,10 +61,15 @@ class ModuleCreator(object):
         self.abs_module_path = os.path.join(self._cwd, self._module_path)
         self._server_repo_path = self.server.dev_module_path(self._module_path,
                                                              self._area)
+        full_name, email = lookup_contact_details(getuser())
 
-        template_args = {'module_name': self._module_name,
-                         'module_path': self._module_path,
-                         'user_login': getuser()}
+        template_args = {
+            'module_name': self._module_name,
+            'module_path': self._module_path,
+            'user_login': getuser(),
+            'full_name': full_name,
+            'email': email
+        }
 
         if kwargs:
             template_args.update(kwargs)

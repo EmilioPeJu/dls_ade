@@ -305,7 +305,7 @@ class ModuleTemplateTools(ModuleTemplate):
 
 class ModuleTemplatePython(ModuleTemplate):
     """Class for the management of the creation of new Python modules."""
-    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login']
+    REQUIRED_ARGS = ['module_name', 'module_path', 'user_login', 'full_name', 'email']
 
     def __init__(self, template_args):
         """Initialise template args and default template files."""
