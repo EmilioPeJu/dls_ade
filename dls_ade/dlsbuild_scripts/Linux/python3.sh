@@ -95,6 +95,17 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         #   with no dependencies.
         dls-py3 install-into-prefix
         echo $? >${status_log}
+
+        if [[ ${is_test} == false ]]; then
+            # If successful, run make-defaults
+            if (( ! $(cat $status_log) )) ; then
+                TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
+                SysLog info "Running make-defaults" $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
+                $TOOLS_BUILD/make-defaults $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
+            fi
+        fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
     ) 2>&1 1>&3 | tee ${error_log}  # copy STDERR to error log
