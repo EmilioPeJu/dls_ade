@@ -94,8 +94,10 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             # If successful, run make-defaults
             if (( ! $(cat $status_log) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-                SysLog info "Running make-defaults" $TOOLS_DIR $TOOLS_BUILD/RELEASE.$RHEL
-                $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.$RHEL
+                SysLog info "Running make-defaults" $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
+                $TOOLS_BUILD/make-defaults $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
             fi
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
