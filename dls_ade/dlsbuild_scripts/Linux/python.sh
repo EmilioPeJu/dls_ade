@@ -36,9 +36,10 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/${_module}
 PREFIX=${build_dir}/${_version}/prefix
-PYTHON=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)/defaults/bin/dls-python
+RHEL=RHEL${OS_VERSION}-$(uname -m)
+PYTHON=/dls_sw/prod/tools/$RHEL/defaults/bin/dls-python
 INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
-TOOLS_DIR=/dls_sw/prod/tools/RHEL${OS_VERSION}-$(uname -m)
+TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
 
@@ -93,8 +94,8 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             # If successful, run make-defaults
             if (( ! $(cat $status_log) )) ; then
                 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-                SysLog info "Running make-defaults" $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
-                $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+                SysLog info "Running make-defaults" $TOOLS_DIR $TOOLS_BUILD/RELEASE.$RHEL
+                $TOOLS_BUILD/make-defaults $TOOLS_DIR $TOOLS_BUILD/RELEASE.$RHEL
             fi
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
