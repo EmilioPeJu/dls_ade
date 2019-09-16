@@ -29,17 +29,21 @@ exec 0</dev/null
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-# e.g. RHEL7-x86_64
-OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)  # e.g. 7
+RHEL=RHEL${OS_VERSION}-$(uname -m)  # e.g. RHEL7-x86_64
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/${_module}
+PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
 
-PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
+export is_test=true
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
+    is_test=false
+fi
 
-SysLog debug "os_version=${OS_ARCH_STRING} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
+SysLog debug "os_version=${RHEL} python=$(which dls-python3) install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} build_dir=${build_dir}"
 
 # Check out the module from version control.
 mkdir -p ${build_dir} || ReportFailure "Can not mkdir ${build_dir}"
@@ -79,7 +83,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         echo "Building wheel ..."
         dls-python3 setup.py bdist_wheel
         # If running on the build server, copy the wheel to the distributions directory.
-        if [[ -w ${PROD_DIST_DIR} ]]; then
+        if [[ ${is_test} == false ]]; then
             echo "Copying distribution files to ${PROD_DIST_DIR}"
             cp dist/* ${PROD_DIST_DIR}
         fi

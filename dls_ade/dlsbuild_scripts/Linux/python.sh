@@ -1,6 +1,6 @@
 #!/bin/bash
 # ******************************************************************************
-# 
+#
 # Script to build a Diamond production module for support, ioc or matlab areas
 #
 # This is a partial script which builds a module in for the dls-release system.
@@ -29,14 +29,14 @@ exec 0</dev/null
 # Set up environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-OS_VERSION=$(lsb_release -sr | cut -d. -f1)
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)  # e.g. 7
+RHEL=RHEL${OS_VERSION}-$(uname -m)  # e.g. RHEL7-x86_64
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/${_module}
 PREFIX=${build_dir}/${_version}/prefix
-RHEL=RHEL${OS_VERSION}-$(uname -m)
 PYTHON=/dls_sw/prod/tools/$RHEL/defaults/bin/dls-python
 INSTALL_DIR=${PREFIX}/lib/python2.7/site-packages
 TOOLS_DIR=/dls_sw/prod/tools/$RHEL
@@ -86,7 +86,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         echo $? >$status_log
 
         # This is a bit of a hack to only install in production builds
-        if  [[ "$build_dir" =~ "/prod/" && "$(cat $status_log)" == "0" ]] ; then
+        if  [[ "$is_test" == false && "$(cat $status_log)" == "0" ]] ; then
             SysLog info "Doing make install in prod"
             make install
             echo $? >$status_log

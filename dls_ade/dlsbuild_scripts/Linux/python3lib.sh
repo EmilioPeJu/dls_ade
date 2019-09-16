@@ -31,8 +31,8 @@ shopt -s nullglob
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-# e.g. RHEL7-x86_64
-OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)  # e.g. 7
+RHEL=RHEL${OS_VERSION}-$(uname -m)  # e.g. RHEL7-x86_64
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
@@ -40,13 +40,12 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 # e.g. python3.7
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
-WORK_DIST_DIR=/dls_sw/work/python3/${OS_ARCH_STRING}/distributions
-PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
+WORK_DIST_DIR=/dls_sw/work/python3/${RHEL}/distributions
+PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
 
-if  [[ "${_build_dir}" =~ "/prod/" ]] ; then
+export is_test=true
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
     is_test=false
-else
-    is_test=true
 fi
 
 # The same as the normalise_name function we use in Python:
