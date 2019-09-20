@@ -42,6 +42,7 @@ PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
 WORK_DIST_DIR=/dls_sw/work/python3/${RHEL}/distributions
 PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
+TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 
 export is_test=true
 if  [[ "$build_dir" =~ "/prod/" ]] ; then

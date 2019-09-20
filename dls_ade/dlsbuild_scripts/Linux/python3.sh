@@ -37,6 +37,7 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 
 build_dir=${_build_dir}/${_module}
 PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
+TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 
 export is_test=true
 if  [[ "$build_dir" =~ "/prod/" ]] ; then
