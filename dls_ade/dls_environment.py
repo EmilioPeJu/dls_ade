@@ -58,7 +58,7 @@ class environment(object):
         self.rhel = None
         self.areas = [
             "support", "ioc", "matlab", "python",  "python3",
-            "python3lib", "etc", "tools", "epics"
+            "python3ext", "etc", "tools", "epics"
         ]
         if epics:
             self.setEpics(epics)
@@ -249,7 +249,7 @@ class environment(object):
             return os.path.join("/dls_sw/work", area)
         elif area in ["tools"]:
             return os.path.join("/dls_sw/work", area, self.rhelVerDir())
-        elif area in ["python3", "python3lib"]:  # These use the same area
+        elif area in ["python3", "python3ext"]:  # These use the same area
             return os.path.join("/dls_sw/work/python3", self.rhelVerDir())
         elif area == "python":
             return os.path.join("/dls_sw/work/common", area, self.rhelVerDir())
