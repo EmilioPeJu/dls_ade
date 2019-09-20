@@ -46,7 +46,7 @@ mkdir -p $build_dir                         || ReportFailure "Can not mkdir $bui
 cd $build_dir                               || ReportFailure "Can not cd to $build_dir"
 
 export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
-if  [[ "$build_dir" =~ "/prod/" ]] ; then
+if  [[ "$_build_dir" = "/dls_sw/epics" ]] ; then
     is_test=false
 fi
 
