@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ******************************************************************************
-# 
+#
 # Script to build a Diamond tools module.
 #
 # This is a partial script which builds a module in for the dls-release system.
@@ -34,11 +34,11 @@ if [ ! -z "$(ls $work_tar_dir/)" -a -w $prod_tar_dir ]; then
 fi
 
 # Ensure there is a architecture dependent build directory available
-OS_VERSION=$(lsb_release -sr | cut -d. -f1)
-
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)  # e.g. 7
+RHEL=RHEL${OS_VERSION}-$(uname -m)  # e.g. RHEL7-x86_64
 
 TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
-TOOLS_ROOT=/dls_sw/prod/tools/RHEL$OS_VERSION-$(uname -m)
+TOOLS_ROOT=/dls_sw/prod/tools/$RHEL
 build_dir=$_build_dir
 
 mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_module}"
@@ -91,7 +91,7 @@ if (( $(cat ${_version}/${_build_name}.sta) != 0 )) ; then
     ReportFailure ${PWD}/${_version}/${_build_name}.log
 fi
 
-SysLog info "make-defaults: " $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
-$TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.RHEL$OS_VERSION-$(uname -m)
+SysLog info "make-defaults: $build_dir $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)"
+$TOOLS_BUILD/make-defaults $build_dir $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
 
 SysLog info "Build complete"

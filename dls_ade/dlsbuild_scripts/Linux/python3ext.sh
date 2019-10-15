@@ -31,8 +31,8 @@ shopt -s nullglob
 # Set up DLS environment
 DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
-# e.g. RHEL7-x86_64
-OS_ARCH_STRING=RHEL$(lsb_release -sr | cut -d. -f1)-$(uname -m)
+OS_VERSION=$(lsb_release -sr | cut -d. -f1)  # e.g. 7
+RHEL=RHEL${OS_VERSION}-$(uname -m)  # e.g. RHEL7-x86_64
 # Ensure CA Repeater is running (will close itself if already running)
 EPICS_CA_SERVER_PORT=5064 EPICS_CA_REPEATER_PORT=5065 caRepeater &
 EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
@@ -40,13 +40,13 @@ EPICS_CA_SERVER_PORT=6064 EPICS_CA_REPEATER_PORT=6065 caRepeater &
 # e.g. python3.7
 PYTHON_VERSION="python$(dls-python3 -V | cut -d" " -f"2" | cut -d"." -f1-2)"
 
-WORK_DIST_DIR=/dls_sw/work/python3/${OS_ARCH_STRING}/distributions
-PROD_DIST_DIR=/dls_sw/prod/python3/${OS_ARCH_STRING}/distributions
+WORK_DIST_DIR=/dls_sw/work/python3/${RHEL}/distributions
+PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
+TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 
-if  [[ "${_build_dir}" =~ "/prod/" ]] ; then
+export is_test=true
+if  [[ "$build_dir" =~ "/prod/" ]] ; then
     is_test=false
-else
-    is_test=true
 fi
 
 # The same as the normalise_name function we use in Python:
@@ -224,6 +224,17 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             echo 1 >${status_log}
             echo "No matching distribution was found for ${specifier}" >$2
             exit  # the subshell
+        fi
+
+        if [[ ${is_test} == false ]]; then
+            # If successful, run make-defaults
+            if (( ! $(cat $status_log) )) ; then
+                TOOLS_BUILD=/dls_sw/prod/etc/build/tools_build
+                SysLog info "Running make-defaults" $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
+                $TOOLS_BUILD/make-defaults $TOOLS_DIR\
+                    $TOOLS_BUILD/RELEASE.$RHEL $OS_VERSION $(uname -m)
+            fi
         fi
         # Redirect '2' (STDERR) to '1' (STDOUT) so it can be piped to tee
         # Redirect '1' (STDOUT) to '3' (a new file descriptor) to save it for later
