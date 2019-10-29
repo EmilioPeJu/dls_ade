@@ -416,7 +416,8 @@ def perform_test_build(build_object, local_build, module, version, vcs):
     return message, test_fail
 
 
-def determine_version_to_release(release, next_version, releases, commit=None):
+def determine_version_to_release(release, area, next_version, releases,
+                                 commit=None):
     """Determine version that will be released and commit to tag if necessary.
 
     A tag will be made in two cases:
@@ -458,7 +459,7 @@ def determine_version_to_release(release, next_version, releases, commit=None):
                     "Release {} already exists.".format(release)
                 )
             commit_to_tag = commit
-            version = normalise_release(release)
+            version = normalise_release(release, area)
 
     return version, commit_to_tag
 
@@ -530,7 +531,7 @@ def _main():
 
             releases = vcs.list_releases()
             version, commit_to_tag = determine_version_to_release(
-                release, args.next_version, releases, args.commit
+                release, args.area, args.next_version, releases, args.commit
             )
             if commit_to_tag is not None:  # Make Release if repo required
                 usermsg.info("Making tag {} at {}".format(version, commit_to_tag))
