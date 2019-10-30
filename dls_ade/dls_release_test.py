@@ -770,6 +770,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         # This is no longer checked in this function.
         dls_release.determine_version_to_release(
             'invalid-release',
+            'area',
             False,
             ['invalid-release']
         )
@@ -778,6 +779,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         # A warning is printed but the release continues.
         version, commit_to_release = dls_release.determine_version_to_release(
             None,
+            'area',
             False,
             ['invalid-release'],
             commit=self.commit
@@ -788,6 +790,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
     def test_determine_version_to_release_allows_commit_and_version(self):
         version, commit_to_release = dls_release.determine_version_to_release(
             self.release,
+            'area',
             False,
             ['invalid-release'],
             commit=self.commit
@@ -799,6 +802,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         with self.assertRaises(ValueError):
             dls_release.determine_version_to_release(
                 self.release,
+                'area',
                 False,
                 []
             )
@@ -807,6 +811,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
         with self.assertRaises(ValueError):
             dls_release.determine_version_to_release(
                 self.release,
+                'area',
                 False,
                 self.releases,
                 commit=self.commit
@@ -815,6 +820,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
     def test_determine_version_to_release_returns_release_and_None_if_no_commit_specified(self):
         version, commit_to_release = dls_release.determine_version_to_release(
             self.release,
+            'area',
             False,
             self.releases
         )
@@ -824,6 +830,7 @@ class TestDetermineVersionToRelease(unittest.TestCase):
     def test_determine_version_to_release_returns_next_version_and_HEAD_if_next_version_specified(self):
         version, commit_to_release = dls_release.determine_version_to_release(
             None,
+            'area',
             True,
             self.releases
         )
@@ -833,15 +840,13 @@ class TestDetermineVersionToRelease(unittest.TestCase):
     def test_determine_version_to_release_returns_hash_if_only_commit_specified(self):
         version, commit_to_release = dls_release.determine_version_to_release(
             None,
+            'area',
             False,
             self.releases,
             commit=self.commit
         )
         self.assertEqual(version, self.commit)
         self.assertEqual(commit_to_release, None)
-
-
-class TestDetermineVersionToRelease(unittest.TestCase):
 
     def test_normalise_release_returns_valid_release(self):
         old_release = '1-1'
