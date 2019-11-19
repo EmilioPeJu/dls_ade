@@ -45,7 +45,7 @@ mkdir -p $build_dir/${_module} || ReportFailure "Can not mkdir $build_dir/${_mod
 cd $build_dir/${_module} || ReportFailure "Can not cd to $build_dir/${_module}"
 export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
 
-if  [[ "$build_dir" =~ "/prod/" ]] ; then
+if  [[ "$_build_dir" =~ "/prod/" ]] ; then
     is_test=false
 fi
 

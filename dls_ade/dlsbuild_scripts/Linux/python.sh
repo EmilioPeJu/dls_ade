@@ -44,7 +44,7 @@ TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 SysLog debug "os_version=${OS_VERSION} python=${PYTHON} install_dir=${INSTALL_DIR} tools_dir=${TOOLS_DIR} prefix=${PREFIX} build_dir=${build_dir}"
 
 export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
-if  [[ "$build_dir" =~ "/prod/" ]] ; then
+if  [[ "$_build_dir" =~ "/prod/" ]] ; then
     is_test=false
 fi
 
