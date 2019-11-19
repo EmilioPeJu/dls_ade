@@ -1,7 +1,7 @@
 #!/bin/env -i /bin/bash
 
 # ******************************************************************************
-# 
+#
 # Script to build a Diamond production module for support, ioc or matlab areas
 #
 # This is a partial script which builds a module in for the dls-release system.
