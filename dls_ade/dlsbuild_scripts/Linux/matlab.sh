@@ -1,6 +1,6 @@
 #!/bin/bash
 # ******************************************************************************
-# 
+#
 # Script to build a Diamond production module for support, ioc or matlab areas
 #
 # This is a partial script which builds a module in for the dls-release system.
@@ -33,7 +33,7 @@ mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir       || ReportFailure "Can not cd to $build_dir"
 
 export is_test=true # if is_test - can clone the entire repository; may be requesting an SHA hash
-if  [[ "$build_dir" =~ "/prod/" ]] ; then
+if  [[ "$_build_dir" =~ "/prod/" ]] ; then
     is_test=false
 fi
 

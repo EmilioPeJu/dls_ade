@@ -40,7 +40,7 @@ PROD_DIST_DIR=/dls_sw/prod/python3/${RHEL}/distributions
 TOOLS_DIR=/dls_sw/prod/tools/$RHEL
 
 export is_test=true
-if  [[ "$build_dir" =~ "/prod/" ]] ; then
+if  [[ "$_build_dir" =~ "/prod/" ]] ; then
     is_test=false
 fi
 
