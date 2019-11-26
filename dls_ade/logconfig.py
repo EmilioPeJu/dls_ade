@@ -8,6 +8,7 @@ the project or site requirements.
 import os
 import os.path
 import json
+import logging
 import logging.config
 import getpass
 import threading
