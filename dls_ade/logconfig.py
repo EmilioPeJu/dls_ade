@@ -161,7 +161,7 @@ def setup_logging(
     if dict_config is not None:
         if application is not None:
             try:
-                default_config['handlers']['graylog_gelf'].update({'application': str(application)})
+                dict_config['handlers']['graylog_gelf'].update({'application': str(application)})
             except KeyError:
                 pass
         logging.config.dictConfig(dict_config)
