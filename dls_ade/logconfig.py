@@ -138,7 +138,8 @@ def setup_logging(
             a path to a configuration file.
         default_level (int): Logging level to set as default. Ignored if a log
             configuration is found elsewhere.
- 
+        application (str): Application name for Graylog.
+
     Returns: None
     """
     dict_config = None
