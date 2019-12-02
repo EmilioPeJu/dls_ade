@@ -28,6 +28,9 @@ DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 build_dir=${_build_dir}/${_module}
 
+# Use Matlab licence server.
+export MLM_LICENSE_FILE=@172.23.100.30
+
 # Checkout module
 mkdir -p $build_dir || ReportFailure "Can not mkdir $build_dir"
 cd $build_dir       || ReportFailure "Can not cd to $build_dir"
