@@ -66,6 +66,7 @@ setup(
     entry_points={'console_scripts':
                   ['dls-changes-since-release.py = dls_ade.dls_changes_since_release:main',
                    'dls-checkout-module.py = dls_ade.dls_checkout_module:main',
+                   'dls-last-release.py = dls_ade.dls_last_release:main',
                    'dls-list-branches.py = dls_ade.dls_list_branches:main',
                    'dls-list-modules.py = dls_ade.dls_list_modules:main',
                    'dls-list-releases.py = dls_ade.dls_list_releases:main',
