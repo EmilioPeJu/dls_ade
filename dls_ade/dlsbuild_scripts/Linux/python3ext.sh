@@ -127,6 +127,9 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             fi
         done
 
+        echo "Matching distributions in work: ${work_distributions[@]}"
+        echo "Matching distributions in prod ${prod_distributions[@]}"
+
         # Determine which files to use for installation.
         if [[ ${is_test} == true ]]; then
             # Test build: use files in work if present, otherwise look in prod.
@@ -145,6 +148,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
         else
             # Production build: move files from work then build from prod.
             if [[ ${#work_distributions[@]} -gt 0 ]]; then
+                echo "Moving ${work_distributions[@]} to ${PROD_DIST_DIR}"
                 if [[ ${_force} == ${true} ]]; then
                     mv "${work_distributions[@]}" "${PROD_DIST_DIR}"
                 else  # Set no-clobber option to mv
@@ -222,7 +226,7 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
             fi
         else
             echo 1 >${status_log}
-            echo "No matching distribution was found for ${specifier}" >$2
+            echo "No matching distribution was found for ${specifier}" >&2
             exit  # the subshell
         fi
 
