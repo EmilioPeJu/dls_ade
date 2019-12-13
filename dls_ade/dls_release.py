@@ -220,6 +220,8 @@ def check_parsed_arguments_valid(args, parser):
     # python3ext area is valid but does not use Git.
     elif args.area not in git_supported_areas and args.area != "python3ext":
         parser.error("%s area not valid" % args.area)
+    elif args.area in {"python3", "python3ext"} and args.rhel_version == "6":
+        parser.error("%s releases cannot be made for RHEL6" % args.area)
 
 
 def format_argument_version(arg_version):
