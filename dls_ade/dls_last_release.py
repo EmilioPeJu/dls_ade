@@ -264,11 +264,11 @@ def get_build_status(build_job):
 
 
 def get_message_list(response_dict_list):
-    return map(lambda x : x["message"], response_dict_list)
+    return list(map(lambda x : x["message"], response_dict_list))
 
 
 def get_timestamp_list(response_dict_list):
-    return map(lambda x : x["timestamp"], response_dict_list)
+    return list(map(lambda x : x["timestamp"], response_dict_list))
 
 
 def parse_timestamp(timestamp):
@@ -337,7 +337,7 @@ def find_err_file(response_dict_list):
         str: Err file location
     """
     message_list = get_message_list(response_dict_list)
-    start_message = filter(lambda m: m.startswith(STARTED_STR), message_list)[0]
+    start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
     try:
         err_file = start_message.split("errors: " )[1].split(".err")[0] + ".err"
     except IndexError:
@@ -356,7 +356,7 @@ def find_log_file(response_dict_list):
         str: Log file location
     """
     message_list = get_message_list(response_dict_list)
-    start_message = filter(lambda m: m.startswith(STARTED_STR), message_list)[0]
+    start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
     try:
         log_file = start_message.split("Build log: " )[1].split(".log")[0] + ".log"
     except IndexError:
