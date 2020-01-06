@@ -271,6 +271,36 @@ class TestCheckParsedOptionsValid(unittest.TestCase):
 
         self.mock_error.assert_called_once_with(expected_error_message)
 
+    def test_python3_with_rhel_6_raises_error(self):
+
+        areas = {"python3", "python3ext"}
+        for area in areas:
+            self.args.module_name = "module"
+            self.args.release = "version"
+            self.args.rhel_version = "6"
+            self.args.area = area
+
+            expected_error_message = self.args.area + " releases cannot be " \
+                                                      "made for RHEL6"
+
+            dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+            self.mock_error.assert_called_once_with(expected_error_message)
+            self.mock_error.reset_mock()
+
+    def test_python3_with_rhel_7_does_not_raise_error(self):
+
+        areas = {"python3", "python3ext"}
+        for area in areas:
+            self.args.module_name = "module"
+            self.args.release = "version"
+            self.args.rhel_version = "7"
+            self.args.area = area
+
+            dls_release.check_parsed_arguments_valid(self.args, self.parser)
+
+            self.mock_error.assert_not_called()
+
     def test_given_git_and_epics_area_else_good_options_then_error_not_raised(self):
 
         self.args.module_name = "module"
