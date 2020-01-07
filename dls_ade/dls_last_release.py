@@ -143,8 +143,8 @@ def parse_graylog_response(graylog_response):
     dicts = []
     for row in reader:
         dictline = {}
-        for h in range(len(header)):
-            dictline[header[h]] = row[h]
+        for h, hline in enumerate(header):
+            dictline[hline] = row[h]
         dicts.append(dictline)
     dicts = sorted(dicts, key=lambda i: i["timestamp"], reverse=True)
     return dicts
@@ -255,11 +255,11 @@ def get_build_status(build_job):
 
 
 def get_message_list(response_dict_list):
-    return list(map(lambda x : x["message"], response_dict_list))
+    return [x["message"] for x in response_dict_list]
 
 
 def get_timestamp_list(response_dict_list):
-    return list(map(lambda x : x["timestamp"], response_dict_list))
+    return [x["timestamp"] for x in response_dict_list]
 
 
 def parse_timestamp(timestamp):
@@ -328,7 +328,7 @@ def find_err_file(response_dict_list):
         str: Err file location
     """
     message_list = get_message_list(response_dict_list)
-    start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
+    start_message = [m for m in message_list if m.startswith(STARTED_STR)][0]
     try:
         err_file = start_message.split("errors: ")[1].split(".err")[0] + ".err"
     except IndexError:
@@ -347,7 +347,7 @@ def find_log_file(response_dict_list):
         str: Log file location
     """
     message_list = get_message_list(response_dict_list)
-    start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
+    start_message = [m for m in message_list if m.startswith(STARTED_STR)][0]
     try:
         log_file = start_message.split("Build log: ")[1].split(".log")[0] + ".log"
     except IndexError:
@@ -420,24 +420,24 @@ def _main():
     build_jobs = get_build_jobs(
         user=args.user, n=args.nresults, local_only=args.local_only,
         build_only=args.build_only)
-    for i in range(len(build_jobs)):
+    for job in build_jobs:
         waiting = False
 
         if args.wait:
-            while not is_build_complete(build_jobs[i]):
+            while not is_build_complete(job):
                 waiting = True
                 sys.stdout.write(
-                    "Waiting for {}: {}\r".format(build_jobs[i],
+                    "Waiting for {}: {}\r".format(job,
                                                   time.ctime()))
                 sys.stdout.flush()
                 #print(time.ctime(), end="\r", flush=True)#python 3 equivalent
                 time.sleep(1)
 
         if waiting:
-            print("\rCompleted job: {}: {}\n".format(build_jobs[i],
+            print("\rCompleted job: {}: {}\n".format(job,
                                                      time.ctime()))
 
-        status_dict = get_build_status(build_jobs[i])
+        status_dict = get_build_status(job)
         display_build_job_info(status_dict)
 
         if args.errors and ERR_FILE in status_dict and os.path.isfile(status_dict[ERR_FILE]):
