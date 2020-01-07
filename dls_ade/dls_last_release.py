@@ -77,7 +77,7 @@ def make_parser():
         help="If set, wait for the most recent build to finish")
     parser.add_argument(
         "-u", "--user", action="store", type=str,
-        default=USER, 
+        default=USER,
         help="User (default is $USER). Use FED ID or 'all' to see builds for all users")
     parser.add_argument(
         "-e", "--errors", action="store_true",
@@ -127,8 +127,8 @@ def graylog_request(params):
         reponse object: Graylog response
     """
     url = "https://" + GELFLOG_SERVER + "/api/search/universal/relative"
-    auth = (TOKEN,"token")
-    r = requests.get(url, auth=auth,params=params)
+    auth = (TOKEN, "token")
+    r = requests.get(url, auth=auth, params=params)
     return r
 
 
@@ -154,8 +154,8 @@ def parse_graylog_response(graylog_response):
         dictline = {}
         for h in range(len(header)):
             dictline[header[h]] = row[h]
-        dicts.append(dictline);
-    dicts = sorted(dicts, key = lambda i: i["timestamp"], reverse=True)
+        dicts.append(dictline)
+    dicts = sorted(dicts, key=lambda i: i["timestamp"], reverse=True)
     return dicts
 
 
@@ -226,10 +226,10 @@ def extract_build_jobs(response_dict_list, n=1):
         build_name = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
         build_jobs.append(build_name)
     return build_jobs
-     
+
 
 def get_build_jobs(user=USER, n=1, local_only=False, build_only=False):
-    """Get a list of latest n builds for a specific user or all users 
+    """Get a list of latest n builds for a specific user or all users
 
     Args:
         user(str): Fed ID or "all"
@@ -276,7 +276,7 @@ def parse_timestamp(timestamp):
     [time, rest] = rest.split(".")
     return time + " " + date
 
-  
+
 def print_err_file(err_file):
     with open(err_file) as f:
         for line in f:
@@ -285,7 +285,7 @@ def print_err_file(err_file):
 
 def display_build_job_info(status_dict):
     for key, value in status_dict.iteritems():
-        print("\r{:<{}s}: {}".format(key, LJUST , value))
+        print("\r{:<{}s}: {}".format(key, LJUST, value))
     print("")
 
 
@@ -339,7 +339,7 @@ def find_err_file(response_dict_list):
     message_list = get_message_list(response_dict_list)
     start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
     try:
-        err_file = start_message.split("errors: " )[1].split(".err")[0] + ".err"
+        err_file = start_message.split("errors: ")[1].split(".err")[0] + ".err"
     except IndexError:
         err_file = "No err file available"
     return err_file
@@ -358,7 +358,7 @@ def find_log_file(response_dict_list):
     message_list = get_message_list(response_dict_list)
     start_message = list(filter(lambda m: m.startswith(STARTED_STR), message_list))[0]
     try:
-        log_file = start_message.split("Build log: " )[1].split(".log")[0] + ".log"
+        log_file = start_message.split("Build log: ")[1].split(".log")[0] + ".log"
     except IndexError:
         log_file = "No log file available"
     return log_file
@@ -398,7 +398,7 @@ def build_status(build_name, response_dict_list):
     #if len(response_dict_list) == 0 and is_valid_build_job(build_name):
     if len(response_dict_list) == 0:
         status_dict[STATUS_STR] = status
-        return status_dict      
+        return status_dict
 
     complete = is_finished(response_dict_list)
     started = is_started(response_dict_list)
@@ -416,7 +416,7 @@ def build_status(build_name, response_dict_list):
     status_dict[STATUS_STR] = status
     return status_dict
 
- 
+
 def _main():
 
     log = logging.getLogger(name="dls_ade")
@@ -431,13 +431,13 @@ def _main():
         build_only=args.build_only)
     for i in range(len(build_jobs)):
         waiting = False
-        
+
         if args.wait:
             while not is_build_complete(build_jobs[i]):
                 waiting = True
                 sys.stdout.write(
-                  "Waiting for {}: {}\r".format(build_jobs[i],
-                                                time.ctime()))
+                    "Waiting for {}: {}\r".format(build_jobs[i],
+                                                  time.ctime()))
                 sys.stdout.flush()
                 #print(time.ctime(), end="\r", flush=True)#python 3 equivalent
                 time.sleep(1)
@@ -448,7 +448,7 @@ def _main():
 
         status_dict = get_build_status(build_jobs[i])
         display_build_job_info(status_dict)
-    
+
         if args.errors and ERR_FILE in status_dict and os.path.isfile(status_dict[ERR_FILE]):
             print_err_file(status_dict[ERR_FILE])
 
