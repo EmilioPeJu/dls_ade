@@ -35,10 +35,13 @@ FIND_BUILD_STR = {LOCAL: '"Local test-build parameters"',
 STARTED_STR = ("Starting build", "Building tool", "Building etc")
 FINISHED_STR = ("Build complete", "Build job failed")
 
+WINDOWS_WARNING = "Cannot retrieve build status for windows builds"
+
 #TODO:
 '''
-windows builds ---> At the moment they will get stuch in "Queueing" because the windows
-                    build script does not currently log to graylog
+windows builds ---> At the moment they will get stuck in "Queueing" because the windows
+                    build script does not currently log to graylog. Checks whether builds
+                    are windows and displays a warning message
 '''
 
 usage = """
@@ -192,6 +195,11 @@ def create_build_job_query(user, local_only=False, build_only=False):
     return create_graylog_query(query_str)
 
 
+def create_windows_query(build_job):
+    query_str = 'message:"Build request file: ' + build_job + '"'
+    return create_graylog_query(query_str)
+
+
 def create_build_validity_query(build_job):
     query_str = 'message:"\'build_name\': \'' + build_job + '\',"'
     return create_graylog_query(query_str)
@@ -285,6 +293,23 @@ def display_build_job_info(status_dict):
         if key in status_dict:
             job_info += "{:<{}s}: {}\n".format(key, LJUST, status_dict[key])
     logging.getLogger("output").info(job_info)
+
+
+def is_windows(build_job):
+    """Check if windows build
+
+    Args:
+        build_job(str): Build job name
+
+    Returns:
+        bool: True if windows build
+    """
+    if build_job.startswith("local") or "_etc_" in build_job or "_tools_" in build_job:
+        windows = False
+    else:
+        graylog_dicts_list = get_graylog_response(create_windows_query(build_job))
+        windows = ".windows" in graylog_dicts_list[0]["message"]
+    return windows
 
 
 def is_valid_build_job(build_job):
@@ -411,10 +436,15 @@ def _main():
     build_jobs = get_build_jobs(
         user=args.user, njobs=args.nresults, local_only=args.local_only,
         build_only=args.build_only)
+
     for job in build_jobs:
         waiting = False
+        windows = is_windows(job)
 
-        if args.wait:
+        if windows:
+            usermsg.info("\r{:<{}s}: {}".format("Warning", LJUST, WINDOWS_WARNING))
+
+        if args.wait and not windows:
             while not is_build_complete(job):
                 waiting = True
                 sys.stdout.write(
