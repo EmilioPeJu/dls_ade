@@ -50,7 +50,7 @@ class ParserTest(unittest.TestCase):
     def test_nresults_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-n']
         self.assertIsInstance(option, _StoreAction)
-        self.assertEqual(option.dest, "n")
+        self.assertEqual(option.dest, "nresults")
         self.assertIn("--nresults", option.option_strings)
 
     def test_local_only_option_has_correct_attributes(self):
@@ -103,10 +103,10 @@ def test_is_finished(status_dict_area, expected):
 def test_is_started(status_dict_area, expected):
     assert dls_last_release.is_started(status_dict_area) == expected
 
-@pytest.mark.parametrize("status_dict_area,expected", [
-    (response_etc, "No log file available"),
-    (response_ioc, "/dls_sw/prod/R3.14.12.3/ioc/SR09J/SR09J-CS-IOC-01/5-10/build_20191101-103043_rjq35657_ioc_SR09J_SR09J-CS-IOC-01_5-10.log")
+@pytest.mark.parametrize("status_dict_area,ext,expected", [
+    (response_etc, "log", "No log file available"),
+    (response_ioc, "log", "/dls_sw/prod/R3.14.12.3/ioc/SR09J/SR09J-CS-IOC-01/5-10/build_20191101-103043_rjq35657_ioc_SR09J_SR09J-CS-IOC-01_5-10.log")
 ])
-def test_find_log_file(status_dict_area, expected):
-    assert dls_last_release.find_log_file(status_dict_area) == expected
+def test_find_log_file(status_dict_area, expected, ext):
+    assert dls_last_release.find_file(status_dict_area, ext) == expected
 
