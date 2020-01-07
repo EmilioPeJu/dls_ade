@@ -280,8 +280,9 @@ def print_err_file(err_file):
 
 
 def display_build_job_info(status_dict):
-    for key, value in status_dict.iteritems():
-        logging.getLogger("output").info("\r{:<{}s}: {}".format(key, LJUST, value))
+    for key in [LOG_FILE, ERR_FILE, JOB_NAME, STATUS_STR]:
+        if key in status_dict:
+            logging.getLogger("output").info("\r{:<{}s}: {}".format(key, LJUST, status_dict[key]))
     logging.getLogger("output").info("")
 
 
