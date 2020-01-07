@@ -24,6 +24,9 @@ STATUS_STR = "Job status"
 LOG_FILE = "Log file"
 ERR_FILE = "Err msgs"
 
+LOG_FILE_MSG = "Build log: "
+ERR_FILE_MSG = "errors: "
+
 LOCAL = "Local"
 BUILD = "Build"
 FIND_BUILD_STR = {LOCAL: '"Local test-build parameters"',
@@ -319,42 +322,26 @@ def is_started(response_dict_list):
     return any(m.startswith(STARTED_STR) for m in message_list)
 
 
-def find_err_file(response_dict_list):
-    """Extract error file path from response dict list
+def find_file(response_dict_list, ext):
+    """Extract log or err file path from response dict list
 
     Args:
         response_dict_list(list of str): Graylog response dict list after getting a graylog
                                          response with a create_build_status_query query str
 
     Returns:
-        str: Err file location
+        str: Log or Err file location
     """
     message_list = get_message_list(response_dict_list)
     start_message = [m for m in message_list if m.startswith(STARTED_STR)][0]
     try:
-        err_file = start_message.split("errors: ")[1].split(".err")[0] + ".err"
+        if ext == "log":
+            filepath = start_message.split(LOG_FILE_MSG)[1].split(".log")[0] + ".log"
+        elif ext == "err":
+            filepath = start_message.split(ERR_FILE_MSG)[1].split(".err")[0] + ".err"
     except IndexError:
-        err_file = "No err file available"
-    return err_file
-
-
-def find_log_file(response_dict_list):
-    """Extract log file path from response dict list
-
-    Args:
-        response_dict_list(list of str): Graylog response dict list after getting a graylog
-                                         response with a create_build_status_query query str
-
-    Returns:
-        str: Log file location
-    """
-    message_list = get_message_list(response_dict_list)
-    start_message = [m for m in message_list if m.startswith(STARTED_STR)][0]
-    try:
-        log_file = start_message.split("Build log: ")[1].split(".log")[0] + ".log"
-    except IndexError:
-        log_file = "No log file available"
-    return log_file
+        filepath = "No " + ext + " file available"
+    return filepath
 
 
 def get_complete_status(response_dict_list):
@@ -397,8 +384,8 @@ def build_status(build_name, response_dict_list):
     started = is_started(response_dict_list)
 
     if started:
-        status_dict[LOG_FILE] = find_log_file(response_dict_list)
-        status_dict[ERR_FILE] = find_err_file(response_dict_list)
+        status_dict[LOG_FILE] = find_file(response_dict_list, "log")
+        status_dict[ERR_FILE] = find_file(response_dict_list, "err")
 
     if complete:
         status = get_complete_status(response_dict_list)
