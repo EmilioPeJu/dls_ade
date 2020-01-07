@@ -60,7 +60,6 @@ def make_parser():
         * -e (errors)
         * -n (nresults)
         * -l (local)
-        * -b (build)
 
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
@@ -83,15 +82,11 @@ def make_parser():
         "-n", "--nresults", action="store", type=int,
         default=1,
         help="Number of results to display (default is 1)")
+    parser.add_argument(
+        "-l", "--local", action="store_true",
+        default=False,
+        help="Include local builds")
 
-    # The following arguments cannot be used together
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-l", "--local-only", action="store_true",
-        default=False, help="If set, only local builds will be shown")
-    group.add_argument(
-        "-b", "--build-only", action="store_true",
-        default=False, help="If set, only build server builds will be shown")
     return parser
 
 
@@ -171,25 +166,22 @@ def get_graylog_response(params):
     return parse_graylog_response(res)
 
 
-def create_build_job_query(user, local_only=False, build_only=False):
+def create_build_job_query(user, local=False):
     """Create the query to get build jobs from graylog
 
     Args:
         user(str): Fed ID
-        local_only(bool): If True search string for local builds only
-        build_only(bool): If True search string for non-local builds only
+        local(bool): If True also search string for local builds
 
     Returns:
         str: Query string for a graylog request to get build jobs
     """
     query_str = 'application:dls-release.py AND (message:'
-    if local_only:
-        query_str += FIND_BUILD_STR[LOCAL] + ")"
-    elif build_only:
-        query_str += FIND_BUILD_STR[BUILD] + ")"
-    else:
+    if local:
         query_str += FIND_BUILD_STR[BUILD] + ' OR message:' \
                   + FIND_BUILD_STR[LOCAL] + ")"
+    else:
+        query_str += FIND_BUILD_STR[BUILD] + ")"
     if user != "all":
         query_str += " AND username:" + user
     return create_graylog_query(query_str)
@@ -232,19 +224,18 @@ def extract_build_jobs(response_dict_list, njobs=1):
     return build_jobs
 
 
-def get_build_jobs(user=USER, njobs=1, local_only=False, build_only=False):
+def get_build_jobs(user=USER, njobs=1, local=False):
     """Get a list of latest njobs builds for a specific user or all users
 
     Args:
         user(str): Fed ID or "all"
         njobs(int): Number of results
-        local_only(bool): If True search string for local builds only
-        build_only(bool): If True search string for non-local builds only
+        local(bool): If True also search string for local builds
 
     Returns:
         list of str: List of build names
     """
-    graylog_dicts_list = get_graylog_response(create_build_job_query(user, local_only, build_only))
+    graylog_dicts_list = get_graylog_response(create_build_job_query(user, local))
     build_jobs = extract_build_jobs(graylog_dicts_list, njobs=njobs)
     return build_jobs
 
@@ -256,8 +247,7 @@ def get_build_status(build_job):
     Args:
         user(str): Fed ID or "all"
         n(int): Number of results
-        local_only(bool): If True search string for local builds only
-        build_only(bool): If True search string for non-local builds only
+        local(bool): If True also search string for local builds
 
     Returns:
         dict: Dictionary with build name, log file, err file and build status
@@ -434,8 +424,7 @@ def _main():
     args = parser.parse_args()
 
     build_jobs = get_build_jobs(
-        user=args.user, njobs=args.nresults, local_only=args.local_only,
-        build_only=args.build_only)
+        user=args.user, njobs=args.nresults, local=args.local)
 
     for job in build_jobs:
         waiting = False

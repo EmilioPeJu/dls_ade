@@ -53,17 +53,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "nresults")
         self.assertIn("--nresults", option.option_strings)
 
-    def test_local_only_option_has_correct_attributes(self):
+    def test_local_option_has_correct_attributes(self):
         option = self.parser._option_string_actions['-l']
         self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "local_only")
-        self.assertIn("--local-only", option.option_strings)
-
-    def test_build_only_option_has_correct_attributes(self):
-        option = self.parser._option_string_actions['-b']
-        self.assertIsInstance(option, _StoreTrueAction)
-        self.assertEqual(option.dest, "build_only")
-        self.assertIn("--build-only", option.option_strings)
+        self.assertEqual(option.dest, "local")
+        self.assertIn("--local", option.option_strings)
 
 
 @pytest.mark.parametrize("build_name,status_dict_area,expected", [
