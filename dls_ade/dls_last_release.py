@@ -5,22 +5,13 @@ Last release
 """
 
 import os
-import re
 import time
 import sys
-import shutil
-import json
-import platform
 import logging
-import requests
 import csv
-import ast
 import argparse
+import requests
 
-from dls_ade.dls_environment import environment
-from dls_ade.argument_parser import ArgParser
-from dls_ade.dls_utilities import check_technical_area
-from dls_ade import vcs_git, Server
 from dls_ade.constants import GELFLOG_SERVER
 from dls_ade import logconfig
 
