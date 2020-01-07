@@ -199,32 +199,33 @@ def create_build_status_query(build_job):
     return create_graylog_query(query_str)
 
 
-def extract_build_jobs(response_dict_list, n=1):
+def extract_build_jobs(response_dict_list, njobs=1):
     """Produce a list of build names from a graylog response
 
     Args:
         response_dict_list(list of dicts): The response from a graylog query
                                            using the create_build_job_query query str
+        njobs(int): Number of build jobs to extract. Defaults to 1
 
     Returns:
         list of str: List of build names
     """
     build_jobs = []
-    if n > len(response_dict_list):
+    if njobs > len(response_dict_list):
         print(str(len(response_dict_list)) + " build jobs in time period")
-        n = len(response_dict_list)
-    for i in range(n):
+        njobs = len(response_dict_list)
+    for i in range(njobs):
         build_name = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
         build_jobs.append(build_name)
     return build_jobs
 
 
-def get_build_jobs(user=USER, n=1, local_only=False, build_only=False):
-    """Get a list of latest n builds for a specific user or all users
+def get_build_jobs(user=USER, njobs=1, local_only=False, build_only=False):
+    """Get a list of latest njobs builds for a specific user or all users
 
     Args:
         user(str): Fed ID or "all"
-        n(int): Number of results
+        njobs(int): Number of results
         local_only(bool): If True search string for local builds only
         build_only(bool): If True search string for non-local builds only
 
@@ -232,7 +233,7 @@ def get_build_jobs(user=USER, n=1, local_only=False, build_only=False):
         list of str: List of build names
     """
     graylog_dicts_list = get_graylog_response(create_build_job_query(user, local_only, build_only))
-    build_jobs = extract_build_jobs(graylog_dicts_list, n=n)
+    build_jobs = extract_build_jobs(graylog_dicts_list, njobs=njobs)
     return build_jobs
 
 
@@ -418,7 +419,7 @@ def _main():
     args = parser.parse_args()
 
     build_jobs = get_build_jobs(
-        user=args.user, n=args.nresults, local_only=args.local_only,
+        user=args.user, njobs=args.nresults, local_only=args.local_only,
         build_only=args.build_only)
     for job in build_jobs:
         waiting = False
