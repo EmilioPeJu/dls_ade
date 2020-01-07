@@ -345,6 +345,7 @@ def find_file(response_dict_list, ext):
     Args:
         response_dict_list(list of str): Graylog response dict list after getting a graylog
                                          response with a create_build_status_query query str
+        ext (str): File extension. Should be "log" or "err" 
 
     Returns:
         str: Log or Err file location
