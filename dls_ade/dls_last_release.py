@@ -212,7 +212,8 @@ def extract_build_jobs(response_dict_list, njobs=1):
     """
     build_jobs = []
     if njobs > len(response_dict_list):
-        print(str(len(response_dict_list)) + " build jobs in time period")
+        logging.getLogger("usermessages").info(str(len(response_dict_list)) +
+                                               " build jobs in time period")
         njobs = len(response_dict_list)
     for i in range(njobs):
         build_name = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
@@ -272,13 +273,13 @@ def parse_timestamp(timestamp):
 def print_err_file(err_file):
     with open(err_file) as f:
         for line in f:
-            print(line)
+            logging.getLogger("output").info(line)
 
 
 def display_build_job_info(status_dict):
     for key, value in status_dict.iteritems():
-        print("\r{:<{}s}: {}".format(key, LJUST, value))
-    print("")
+        logging.getLogger("output").info("\r{:<{}s}: {}".format(key, LJUST, value))
+    logging.getLogger("output").info("")
 
 
 def is_valid_build_job(build_job):
@@ -431,12 +432,11 @@ def _main():
                     "Waiting for {}: {}\r".format(job,
                                                   time.ctime()))
                 sys.stdout.flush()
-                #print(time.ctime(), end="\r", flush=True)#python 3 equivalent
+                #output.info(time.ctime(), end="\r", flush=True)#python 3 equivalent
                 time.sleep(1)
 
         if waiting:
-            print("\rCompleted job: {}: {}\n".format(job,
-                                                     time.ctime()))
+            output.info("\rCompleted job: {}: {}\n".format(job, time.ctime()))
 
         status_dict = get_build_status(job)
         display_build_job_info(status_dict)
