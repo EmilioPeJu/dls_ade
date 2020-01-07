@@ -73,27 +73,27 @@ def make_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "-w", "--wait", action="store_true", dest="wait",
+        "-w", "--wait", action="store_true",
         help="If set, wait for the most recent build to finish")
     parser.add_argument(
-        "-u", "--user", action="store", type=str, dest="user",
+        "-u", "--user", action="store", type=str,
         default=USER, 
         help="User (default is $USER). Use FED ID or 'all' to see builds for all users")
     parser.add_argument(
-        "-e", "--errors", action="store_true", dest="errors",
+        "-e", "--errors", action="store_true",
         help="If set, print build errors")
     parser.add_argument(
-        "-n", "--nresults", action="store", type=int, dest="n",
+        "-n", "--nresults", action="store", type=int,
         default=1,
         help="Number of results to display (default is 1)")
 
     # The following arguments cannot be used together
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "-l", "--local-only", action="store_true", dest="local_only",
+        "-l", "--local-only", action="store_true",
         default=False, help="If set, only local builds will be shown")
     group.add_argument(
-        "-b", "--build-only", action="store_true", dest="build_only",
+        "-b", "--build-only", action="store_true",
         default=False, help="If set, only build server builds will be shown")
     return parser
 
@@ -427,7 +427,7 @@ def _main():
     args = parser.parse_args()
 
     build_jobs = get_build_jobs(
-        user=args.user, n=args.n, local_only=args.local_only,
+        user=args.user, n=args.nresults, local_only=args.local_only,
         build_only=args.build_only)
     for i in range(len(build_jobs)):
         waiting = False
