@@ -206,6 +206,12 @@ SysLog info "Starting build. Build log: ${PWD}/${build_log} errors: ${PWD}/${err
                     echo 1 >${status_log}
                     exit  # the subshell
                 fi
+                # Add the bin directory to PATH to tell Pip that we intend to install
+                # executables there.
+                # For packages with executables but no Pipfile.lock we don't do this
+                # so that we get a warning from Pip about installing an executable
+                # not on the path.
+                export PATH="${PATH}:${prefix_location}/bin"
             else
                 echo "No Pipfile.lock is present"
             fi
