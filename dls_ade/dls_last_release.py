@@ -60,6 +60,7 @@ def make_parser():
         * -e (errors)
         * -n (nresults)
         * -l (local)
+        * -t (time)
 
     Returns:
         :class:`argparse.ArgumentParser`:  ArgParse instance
@@ -86,11 +87,15 @@ def make_parser():
         "-l", "--local", action="store_true",
         default=False,
         help="Include local builds")
+    parser.add_argument(
+        "-t", "--time_frame", action="store", type=int,
+        default=2,
+        help="Graylog search period in hours. Default is 2 hours.")
 
     return parser
 
 
-def create_graylog_query(query_str):
+def create_graylog_query(query_str, time_frame):
     """Create the parameters
 
     Args:
@@ -101,7 +106,7 @@ def create_graylog_query(query_str):
     """
     query_params = {
         "query": query_str,
-        "range": str(3*24*60*60),
+        "range": str(time_frame*60*60),
         "fields":"message, build_name",
         "limit": 800
     }
@@ -166,7 +171,7 @@ def get_graylog_response(params):
     return parse_graylog_response(res)
 
 
-def create_build_job_query(user, local=False):
+def create_build_job_query(user, time_frame, local=False):
     """Create the query to get build jobs from graylog
 
     Args:
@@ -184,25 +189,25 @@ def create_build_job_query(user, local=False):
         query_str += FIND_BUILD_STR[BUILD] + ")"
     if user != "all":
         query_str += " AND username:" + user
-    return create_graylog_query(query_str)
+    return create_graylog_query(query_str, time_frame)
 
 
-def create_windows_query(build_job):
+def create_windows_query(build_job, time_frame):
     query_str = 'message:"Build request file: ' + build_job + '"'
-    return create_graylog_query(query_str)
+    return create_graylog_query(query_str, time_frame)
 
 
-def create_build_validity_query(build_job):
+def create_build_validity_query(build_job, time_frame):
     query_str = 'message:"\'build_name\': \'' + build_job + '\',"'
-    return create_graylog_query(query_str)
+    return create_graylog_query(query_str, time_frame)
 
 
-def create_build_status_query(build_job):
+def create_build_status_query(build_job, time_frame):
     query_str = 'application_name:dcs_build_job* AND build_name:"' + build_job + '"'
-    return create_graylog_query(query_str)
+    return create_graylog_query(query_str, time_frame)
 
 
-def extract_build_jobs(response_dict_list, njobs=1):
+def extract_build_jobs(response_dict_list, time_frame, njobs=1):
     """Produce a list of build names from a graylog response
 
     Args:
@@ -216,7 +221,9 @@ def extract_build_jobs(response_dict_list, njobs=1):
     build_jobs = []
     if njobs > len(response_dict_list):
         logging.getLogger("usermessages").info(str(len(response_dict_list)) +
-                                               " build jobs in time period")
+                                               " build jobs in last " +
+                                               str(time_frame) +
+                                               " hours. Use -t to specify search range")
         njobs = len(response_dict_list)
     for i in range(njobs):
         build_name = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
@@ -224,7 +231,7 @@ def extract_build_jobs(response_dict_list, njobs=1):
     return build_jobs
 
 
-def get_build_jobs(user=USER, njobs=1, local=False):
+def get_build_jobs(time_frame, user=USER, njobs=1, local=False):
     """Get a list of latest njobs builds for a specific user or all users
 
     Args:
@@ -235,12 +242,12 @@ def get_build_jobs(user=USER, njobs=1, local=False):
     Returns:
         list of str: List of build names
     """
-    graylog_dicts_list = get_graylog_response(create_build_job_query(user, local))
-    build_jobs = extract_build_jobs(graylog_dicts_list, njobs=njobs)
+    graylog_dicts_list = get_graylog_response(create_build_job_query(user, time_frame, local))
+    build_jobs = extract_build_jobs(graylog_dicts_list, time_frame, njobs=njobs)
     return build_jobs
 
 
-def get_build_status(build_job):
+def get_build_status(build_job, time_frame):
     """Find the status of a build job. The status of the build job, location or the
        log and err files in a dictionary.
 
@@ -252,7 +259,7 @@ def get_build_status(build_job):
     Returns:
         dict: Dictionary with build name, log file, err file and build status
     """
-    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job))
+    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job, time_frame))
     status_dict = build_status(build_job, graylog_dicts_list)
     return status_dict
 
@@ -285,7 +292,7 @@ def display_build_job_info(status_dict):
     logging.getLogger("output").info(job_info)
 
 
-def is_windows(build_job):
+def is_windows(build_job, time_frame):
     """Check if windows build
 
     Args:
@@ -297,12 +304,12 @@ def is_windows(build_job):
     if build_job.startswith("local") or "_etc_" in build_job or "_tools_" in build_job:
         windows = False
     else:
-        graylog_dicts_list = get_graylog_response(create_windows_query(build_job))
+        graylog_dicts_list = get_graylog_response(create_windows_query(build_job, time_frame))
         windows = ".windows" in graylog_dicts_list[0]["message"]
     return windows
 
 
-def is_valid_build_job(build_job):
+def is_valid_build_job(build_job, time_frame):
     """Check validity of build job name
 
     Args:
@@ -311,11 +318,11 @@ def is_valid_build_job(build_job):
     Returns:
         bool: True if valid build job name
     """
-    graylog_dicts_list = get_graylog_response(create_build_validity_query(build_job))
+    graylog_dicts_list = get_graylog_response(create_build_validity_query(build_job, time_frame))
     return len(graylog_dicts_list) > 0
 
 
-def is_build_complete(build_job):
+def is_build_complete(build_job, time_frame):
     """Check whether build job has either completed successfully
        or failed
 
@@ -325,7 +332,7 @@ def is_build_complete(build_job):
     Returns:
         bool: True if build job has completed or failed
     """
-    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job))
+    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job, time_frame))
     return is_finished(graylog_dicts_list)
 
 
@@ -345,7 +352,7 @@ def find_file(response_dict_list, ext):
     Args:
         response_dict_list(list of str): Graylog response dict list after getting a graylog
                                          response with a create_build_status_query query str
-        ext (str): File extension. Should be "log" or "err" 
+        ext (str): File extension. Should be "log" or "err"
 
     Returns:
         str: Log or Err file location
@@ -425,17 +432,17 @@ def _main():
     args = parser.parse_args()
 
     build_jobs = get_build_jobs(
-        user=args.user, njobs=args.nresults, local=args.local)
+        time_frame=args.time_frame, user=args.user, njobs=args.nresults, local=args.local)
 
     for job in build_jobs:
         waiting = False
-        windows = is_windows(job)
+        windows = is_windows(job, args.time_frame)
 
         if windows:
             usermsg.info("\r{:<{}s}: {}".format("Warning", LJUST, WINDOWS_WARNING))
 
         if args.wait and not windows:
-            while not is_build_complete(job):
+            while not is_build_complete(job, args.time_frame):
                 waiting = True
                 sys.stdout.write(
                     "Waiting for {}: {}\r".format(job,
@@ -447,7 +454,7 @@ def _main():
         if waiting:
             output.info("\rCompleted job: {}: {}\n".format(job, time.ctime()))
 
-        status_dict = get_build_status(job)
+        status_dict = get_build_status(job, args.time_frame)
         display_build_job_info(status_dict)
 
         if args.errors and ERR_FILE in status_dict and os.path.isfile(status_dict[ERR_FILE]):

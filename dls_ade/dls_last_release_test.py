@@ -59,6 +59,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "local")
         self.assertIn("--local", option.option_strings)
 
+    def test_time_frame_option_has_correct_attributes(self):
+        option = self.parser._option_string_actions['-t']
+        self.assertIsInstance(option, _StoreAction)
+        self.assertEqual(option.dest, "time_frame")
+        self.assertIn("--time_frame", option.option_strings)
+
 
 @pytest.mark.parametrize("build_name,status_dict_area,expected", [
     (response_etc[0]["build_name"], response_etc, status_dict_etc),
