@@ -16,7 +16,7 @@ from dls_ade.constants import GELFLOG_SERVER
 from dls_ade import logconfig
 
 USER = os.getenv("USER")
-TOKEN = "582e10ggh6gi8fb28of7d9f33v9mc2oda7fepl2eqmvvg3ta1g6"
+TOKEN = "1pqc889ahskd3t6mfgm00rhm451hduo5je9kvlg8c1n61i4i23s3"
 LJUST = 12
 
 JOB_NAME = "Job name"
