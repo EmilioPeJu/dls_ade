@@ -305,7 +305,12 @@ def is_windows(build_job, time_frame):
         windows = False
     else:
         graylog_dicts_list = get_graylog_response(create_windows_query(build_job, time_frame))
-        windows = ".windows" in graylog_dicts_list[0]["message"]
+        try:
+            windows = ".windows" in graylog_dicts_list[0]["message"]
+        except IndexError:
+            logging.getLogger("usermessages").error("Cannot determine linux/windows build for " +
+                                                    build_job)
+            sys.exit(1)
     return windows
 
 
