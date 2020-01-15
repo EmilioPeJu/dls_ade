@@ -50,20 +50,35 @@ if  [[ "$_build_dir" =~ "/prod/" ]] ; then
 fi
 
 # The same as the normalise_name function we use in Python:
-# all characters to lower-case and swap underscores for hyphens.
+# all characters to lower-case and swap any sequence of periods,
+# hyphens and underscores for a single hyphen.
 function normalise_name() {
     local name="$1"
     local lower_name=${name,,}
-    local lower_dash_name=${lower_name//_/-}
+    extglob_status=$(shopt extglob)
+    # Turn on extglob for the next command.
+    shopt -s extglob
+    local lower_dash_name=${lower_name//+([-_.])/-}
+    if [[ "${extglob_status}" == *off ]]; then
+        shopt -u extglob
+    fi
     echo ${lower_dash_name}
 }
 
 # Return 0 if the argument is a valid Python distribution name matching
 # the variables ${normalised_module} and ${_version}.
 function match_dist() {
-    local normalised_dist=$(normalise_name $(basename $1))
-    if [[ ${normalised_dist} == ${normalised_module}*${_version}* ]] && \
-       [[ ${normalised_dist} != *pipfile.lock ]]; then
+    local dist_basename=$(basename $1)
+    # I can't find an explicit specification, but it appears that the package
+    # name in a wheel filename must not include '-'.
+    # Split wheel name into parts separated by '-' by replacing '-' with ' '
+    # and then reading as an array.
+    local name_parts=(${dist_basename//-/ })
+    local normalised_dist_pkg=$(normalise_name ${name_parts[0]})
+    local dist_version=${name_parts[1]}
+    if [[ ${normalised_dist_pkg} == ${normalised_module} ]] && \
+       [[ ${dist_version} == ${_version} ]] && \
+       [[ ${dist_basename} != *Pipfile.lock ]]; then
         return 0
     else
         return 1
