@@ -16,6 +16,7 @@ from dls_ade.constants import GELFLOG_SERVER
 from dls_ade import logconfig
 
 USER = os.getenv("USER")
+# Read-only API token for Graylog - see GRAYLOG_TOKEN.md
 TOKEN = "1pqc889ahskd3t6mfgm00rhm451hduo5je9kvlg8c1n61i4i23s3"
 LJUST = 12
 
