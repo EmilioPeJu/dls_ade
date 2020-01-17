@@ -29,7 +29,7 @@ DLS_EPICS_RELEASE=${_epics}
 source /dls_sw/etc/profile
 build_dir=${_build_dir}
 
-SysLog info "Building etc in ${build_dir}"
+SysLog info "Starting build. Building etc in ${build_dir}"
 
 # Checkout module
 cd $build_dir                    || ReportFailure "Cannot cd to $build_dir"

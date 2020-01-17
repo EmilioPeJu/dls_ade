@@ -32,7 +32,7 @@ BUILD = "Build"
 FIND_BUILD_STR = {LOCAL: '"Local test-build parameters"',
                   BUILD: '"Build server job parameters"'}
 #Tools and etc have different messages at start of build
-STARTED_STR = ("Starting build", "Building tool", "Building etc")
+STARTED_STR = "Starting build"
 FINISHED_STR = ("Build complete", "Build job failed")
 
 WINDOWS_WARNING = "Cannot retrieve build status for windows builds"
