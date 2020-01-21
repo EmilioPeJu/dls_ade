@@ -251,22 +251,6 @@ def get_build_jobs(time_frame, user=USER, njobs=1, local=False):
     return build_jobs
 
 
-def get_build_status(build_job, time_frame):
-    """Find the status of a build job. The status of the build job, location or the
-       log and err files in a dictionary.
-
-    Args:
-        time_frame(int): Graylog search period in hour
-        build_job(str): Build job name
-
-    Returns:
-        dict: Dictionary with build name, log file, err file and build status
-    """
-    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job, time_frame))
-    status_dict = build_status(build_job, graylog_dicts_list)
-    return status_dict
-
-
 def get_message_list(response_dict_list):
     return [x["message"] for x in response_dict_list]
 
@@ -398,17 +382,19 @@ def get_complete_status(response_dict_list):
     return status + " at " + parse_timestamp(complete_timestamp)
 
 
-def build_status(build_name, response_dict_list):
-    """Fill in the fields of a status dictionary using result of a graylog request
+def get_build_status(build_name, time_frame):
+    """Find the status of a build job. The status of the build job, location or the
+       log and err files in a dictionary.
 
     Args:
         build_name(str): build name
-        response_dict_list(list of str): Graylog response dict list after getting a graylog
-                                         response with a create_build_status_query query str
+        time_frame(int): Graylog search period in hours
 
     Returns:
         dict: Dictionary with build name, log file, err file and build status
     """
+    response_dict_list = get_graylog_response(create_build_status_query(build_name, time_frame))
+
     status = "Queueing"
     status_dict = {JOB_NAME: build_name}
     #if len(response_dict_list) == 0 and is_valid_build_job(build_name):
@@ -417,14 +403,16 @@ def build_status(build_name, response_dict_list):
         return status_dict
 
     complete = is_finished(response_dict_list)
-    started = is_started(response_dict_list)
+
+    if complete:
+        status = get_complete_status(response_dict_list)
+        started = True
+    else:
+        started = is_started(response_dict_list)
 
     if started:
         status_dict[LOG_FILE] = find_file(response_dict_list, "log")
         status_dict[ERR_FILE] = find_file(response_dict_list, "err")
-
-    if complete:
-        status = get_complete_status(response_dict_list)
 
     if started and not complete:
         status = "Running"

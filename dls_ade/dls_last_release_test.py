@@ -23,6 +23,8 @@ status_dict_ioc = {'Log file': '/dls_sw/prod/R3.14.12.3/ioc/SR09J/SR09J-CS-IOC-0
 
 test_content = '"timestamp","message","build_name"\n"2019-11-04T14:04:45.337Z","M1"\n"2019-11-04T14:04:45.332Z","M2"\n"2019-11-04T14:04:47.566Z","M3","BN3"\n"2019-11-04T14:04:46.706Z","M4","BN4"'
 
+time_frame = 2
+
 class ParserTest(unittest.TestCase):
 
     def setUp(self):
@@ -65,19 +67,19 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(option.dest, "time_frame")
         self.assertIn("--time_frame", option.option_strings)
 
-
-@pytest.mark.parametrize("build_name,status_dict_area,expected", [
-    (response_etc[0]["build_name"], response_etc, status_dict_etc),
-    (response_ioc[0]["build_name"], response_ioc, status_dict_ioc)
+@pytest.mark.parametrize("build_name, time_frame, status_dict_area,expected", [
+    (response_etc[0]["build_name"], time_frame, response_etc, status_dict_etc),
+    (response_ioc[0]["build_name"], time_frame, response_ioc, status_dict_ioc)
 ])
-def test_build_status(build_name,status_dict_area, expected):
-    assert dls_last_release.build_status(build_name, status_dict_area) == expected
+def test_build_status(build_name, time_frame, status_dict_area, expected):
+    with mock.patch('dls_ade.dls_last_release.get_graylog_response') as mocked_graylog_status_response:
+        mocked_graylog_status_response.return_value = status_dict_area
+        assert dls_last_release.get_build_status(build_name, time_frame) == expected
 
 @mock.patch("dls_ade.dls_last_release.requests")
 def test_graylog_request_calls_correctly(mock_graylog):
     test_request = "Test request"
     dls_last_release.graylog_request(test_request)
-
     assert mock_graylog.called_once_with(content=test_request)
 
 @pytest.mark.parametrize("response", [
