@@ -177,6 +177,7 @@ def create_build_job_query(user, time_frame, local=False):
 
     Args:
         user(str): Fed ID
+        time_frame(int): Graylog search period in hours
         local(bool): If True also search string for local builds
 
     Returns:
@@ -214,6 +215,7 @@ def extract_build_jobs(response_dict_list, time_frame, njobs=1):
     Args:
         response_dict_list(list of dicts): The response from a graylog query
                                            using the create_build_job_query query str
+        time_frame(int): Graylog search period in hours
         njobs(int): Number of build jobs to extract. Defaults to 1
 
     Returns:
@@ -236,6 +238,7 @@ def get_build_jobs(time_frame, user=USER, njobs=1, local=False):
     """Get a list of latest njobs builds for a specific user or all users
 
     Args:
+        time_frame(int): Graylog search period in hours
         user(str): Fed ID or "all"
         njobs(int): Number of results
         local(bool): If True also search string for local builds
@@ -253,9 +256,8 @@ def get_build_status(build_job, time_frame):
        log and err files in a dictionary.
 
     Args:
-        user(str): Fed ID or "all"
-        n(int): Number of results
-        local(bool): If True also search string for local builds
+        time_frame(int): Graylog search period in hour
+        build_job(str): Build job name
 
     Returns:
         dict: Dictionary with build name, log file, err file and build status
@@ -298,6 +300,7 @@ def is_windows(build_job, time_frame):
 
     Args:
         build_job(str): Build job name
+        time_frame(int): Graylog search period in hours
 
     Returns:
         bool: True if windows build
@@ -320,6 +323,7 @@ def is_valid_build_job(build_job, time_frame):
 
     Args:
         build_job(str): Build job name
+        time_frame(int): Graylog search period in hours
 
     Returns:
         bool: True if valid build job name
@@ -334,6 +338,7 @@ def is_build_complete(build_job, time_frame):
 
     Args:
         build_job(str): Build job name
+        time_frame(int): Graylog search period in hours
 
     Returns:
         bool: True if build job has completed or failed
