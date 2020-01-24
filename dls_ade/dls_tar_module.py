@@ -115,7 +115,6 @@ def check_file_paths(release_dir, archive, untar):
 
 def _main():
     log = logging.getLogger(name="dls_ade")
-    usermsg = logging.getLogger("usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -126,20 +125,20 @@ def _main():
     env.check_epics_version(args.epics_version)
     env.check_rhel_version(args.rhel_version)
     check_technical_area(args.area, args.module_name)
-    
-    # Check for the existence of release of this module/IOC    
+
+    # Check for the existence of release of this module/IOC
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)
     release_dir = os.path.join(w_dir, args.release)
     archive = release_dir + ".tar.gz"
 
     check_file_paths(release_dir, archive, args.untar)
-    
+
     # Create build object for release
     build = dlsbuild.ArchiveBuild(args.rhel_version, args.epics_version, args.untar)
-    
+
     if args.epics_version:
         build.set_epics(args.epics_version)
-    
+
     build.set_area(args.area)
 
     git = vcs_git.Git(args.module_name, args.area)
