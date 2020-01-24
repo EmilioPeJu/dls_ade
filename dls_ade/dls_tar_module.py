@@ -23,13 +23,15 @@ from dls_ade import logconfig
 
 env = environment()
 
-usage = """
+USAGE = """
 Default <area> is 'support'.
 This script removes all O.* directories from a release of a module and
 tars it up before deleting the release directory. <module_name>/<module_release>
 will be stored as <module_name>/<module_release>.tar.gz. Running the script with
 a -u flag will untar the module and remove the archive (reversing the original process)
 """
+
+SUPPORTED_AREAS = ["support", "ioc", "python", "matlab"]
 
 
 def make_parser():
@@ -49,7 +51,7 @@ def make_parser():
 
     """
 
-    parser = ArgParser(usage)
+    parser = ArgParser(USAGE, SUPPORTED_AREAS)
     parser.add_module_name_arg()
     parser.add_release_arg()
     parser.add_epics_version_flag()
@@ -57,7 +59,7 @@ def make_parser():
 
     parser.add_argument(
         "-u", "--untar", action="store_true", dest="untar",
-        help="Untar archive created with dls-archive-module.py")
+        help="Untar archive created with dls-tar-module.py")
 
     return parser
 
@@ -74,7 +76,7 @@ def check_area_archivable(area):
             archived
 
     """
-    if area not in ["support", "ioc", "python", "matlab"]:
+    if area not in SUPPORTED_AREAS:
         raise ValueError("Modules in area " + area + " cannot be archived")
 
 
