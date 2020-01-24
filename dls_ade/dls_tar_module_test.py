@@ -113,12 +113,14 @@ class CheckFilePaths(unittest.TestCase):
             self.assertEqual(str(error), expected_error_message)
 
 
-def test_check_area_archivable_given_invalid_area_then_error_raised():
-    area = "not_an_area"
+@pytest.mark.parametrize('area', ['not-an-area', 'epics', 'etc', 'python3ext'])
+def test_check_area_archivable_given_invalid_area_then_error_raised(area):
     with pytest.raises(ValueError):
         dls_tar_module.check_area_archivable(area)
 
 
-@pytest.mark.parametrize('area', ['support', 'ioc', 'python', 'matlab'])
+@pytest.mark.parametrize(
+    'area', ['support', 'ioc', 'python', 'python3', 'matlab', 'tools']
+)
 def test_check_area_archivable_given_valid_area_then_no_error_raised(area):
     dls_tar_module.check_area_archivable(area)
