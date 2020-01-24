@@ -146,7 +146,7 @@ def _main():
     git = vcs_git.Git(args.module_name, args.area)
     git.set_version(args.release)
 
-    build.submit(git)
+    build.submit(args.module_name, args.release, git)
 
 
 def main():
