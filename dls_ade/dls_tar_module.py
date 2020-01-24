@@ -1,6 +1,4 @@
 #!/bin/env dls-python
-# This script comes from the dls_scripts python module
-
 """
 This script removes all O.* directories from a release of a module and tars it
 up before deleting the release directory.
@@ -31,7 +29,9 @@ will be stored as <module_name>/<module_release>.tar.gz. Running the script with
 a -u flag will untar the module and remove the archive (reversing the original process)
 """
 
-SUPPORTED_AREAS = ["support", "ioc", "python", "matlab"]
+# Don't support areas epics (risky), etc (non-standard) and
+# python3ext (the release area is the same as python3).
+SUPPORTED_AREAS = ["support", "ioc", "matlab", "python", "python3", "tools"]
 
 
 def make_parser():
