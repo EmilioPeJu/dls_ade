@@ -209,6 +209,19 @@ def create_build_status_query(build_job, time_frame):
     return create_graylog_query(query_str, time_frame)
 
 
+def create_build_started_query(build_job, time_frame):
+    query_str = ('application_name:dcs_build_job* AND build_name:"' +
+                 build_job + '"' + ' AND message:"Starting build"')
+    return create_graylog_query(query_str, time_frame)
+
+
+def create_build_finished_query(build_job, time_frame):
+    query_str = ('application_name:dcs_build_job* AND build_name:"' +
+                 build_job + '" ' +
+                 'AND (message:"Build complete" OR message:"Build job failed")')
+    return create_graylog_query(query_str, time_frame)
+
+
 def extract_build_jobs(response_dict_list, time_frame, njobs=1):
     """Produce a list of build names from a graylog response
 
@@ -229,8 +242,8 @@ def extract_build_jobs(response_dict_list, time_frame, njobs=1):
                                                " hours. Use -t to specify search range")
         njobs = len(response_dict_list)
     for i in range(njobs):
-        build_name = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
-        build_jobs.append(build_name)
+        build_job = response_dict_list[i]["message"].split("build_name': '")[1].split("',")[0]
+        build_jobs.append(build_job)
     return build_jobs
 
 
@@ -249,14 +262,6 @@ def get_build_jobs(time_frame, user=USER, njobs=1, local=False):
     graylog_dicts_list = get_graylog_response(create_build_job_query(user, time_frame, local))
     build_jobs = extract_build_jobs(graylog_dicts_list, time_frame, njobs=njobs)
     return build_jobs
-
-
-def get_message_list(response_dict_list):
-    return [x["message"] for x in response_dict_list]
-
-
-def get_timestamp_list(response_dict_list):
-    return [x["timestamp"] for x in response_dict_list]
 
 
 def parse_timestamp(timestamp):
@@ -302,58 +307,51 @@ def is_windows(build_job, time_frame):
     return windows
 
 
-def is_valid_build_job(build_job, time_frame):
-    """Check validity of build job name
+def get_completed_dict(build_job, time_frame):
+    """Return job completion dict if job has completed
 
     Args:
         build_job(str): Build job name
         time_frame(int): Graylog search period in hours
 
     Returns:
-        bool: True if valid build job name
+        response_dict(dicts): The response from a graylog query using the
+                              create_build_finished_query query str.
+                              None if build job not complete.
     """
-    graylog_dicts_list = get_graylog_response(create_build_validity_query(build_job, time_frame))
-    return len(graylog_dicts_list) > 0
+    finished_dicts_list = get_graylog_response(create_build_finished_query(build_job, time_frame))
+    if len(finished_dicts_list) == 1:
+        return finished_dicts_list[0]
 
 
-def is_build_complete(build_job, time_frame):
-    """Check whether build job has either completed successfully
-       or failed
+def get_started_dict(build_job, time_frame):
+    """Return job started dict if job has started
 
     Args:
         build_job(str): Build job name
         time_frame(int): Graylog search period in hours
 
     Returns:
-        bool: True if build job has completed or failed
+        response_dict(dicts): The response from a graylog query using the
+                              create_started_finished_query query str.
+                              None if build job not started.
     """
-    graylog_dicts_list = get_graylog_response(create_build_status_query(build_job, time_frame))
-    return is_finished(graylog_dicts_list)
+    started_dicts_list = get_graylog_response(create_build_started_query(build_job, time_frame))
+    if len(started_dicts_list) == 1:
+        return started_dicts_list[0]
 
 
-def is_finished(response_dict_list):
-    message_list = get_message_list(response_dict_list)
-    return any(m.startswith(FINISHED_STR) for m in message_list)
-
-
-def is_started(response_dict_list):
-    message_list = get_message_list(response_dict_list)
-    return any(m.startswith(STARTED_STR) for m in message_list)
-
-
-def find_file(response_dict_list, ext):
+def find_file(started_dict, ext):
     """Extract log or err file path from response dict list
 
     Args:
-        response_dict_list(list of str): Graylog response dict list after getting a graylog
-                                         response with a create_build_status_query query str
+        started_dict(dict): Graylog response dict from get_started_dict
         ext (str): File extension. Should be "log" or "err"
 
     Returns:
         str: Log or Err file location
     """
-    message_list = get_message_list(response_dict_list)
-    start_message = [m for m in message_list if m.startswith(STARTED_STR)][0]
+    start_message = started_dict["message"]
     try:
         if ext == "log":
             filepath = start_message.split(LOG_FILE_MSG)[1].split(".log")[0] + ".log"
@@ -364,57 +362,45 @@ def find_file(response_dict_list, ext):
     return filepath
 
 
-def get_complete_status(response_dict_list):
+def get_completed_status(completed_dict):
     """Determine whether build job completed successfully
 
     Args:
-        response_dict_list(list of str): Graylog response dict list after getting a graylog
-                                         response with a create_build_status_query query str
+        completed_dict(dict): Graylog response dict from get_completed_dict
 
     Returns:
         str: Status of build job
     """
-    message_list = get_message_list(response_dict_list)
-    index = [message_list.index(m) for m in message_list if m.startswith(FINISHED_STR)][0]
-    complete_message = message_list[index]
-    complete_timestamp = get_timestamp_list(response_dict_list)[index]
+    complete_message = completed_dict["message"]
+    complete_timestamp = completed_dict["timestamp"]
     status = [s for s in FINISHED_STR if complete_message.startswith(s)][0]
     return status + " at " + parse_timestamp(complete_timestamp)
 
 
-def get_build_status(build_name, time_frame):
+def get_build_status(build_job, time_frame):
     """Find the status of a build job. The status of the build job, location or the
        log and err files in a dictionary.
 
     Args:
-        build_name(str): build name
+        build_job(str): build job name
         time_frame(int): Graylog search period in hours
 
     Returns:
         dict: Dictionary with build name, log file, err file and build status
     """
-    response_dict_list = get_graylog_response(create_build_status_query(build_name, time_frame))
-
     status = "Queueing"
-    status_dict = {JOB_NAME: build_name}
-    #if len(response_dict_list) == 0 and is_valid_build_job(build_name):
-    if len(response_dict_list) == 0:
-        status_dict[STATUS_STR] = status
-        return status_dict
+    status_dict = {JOB_NAME: build_job}
 
-    complete = is_finished(response_dict_list)
+    started = get_started_dict(build_job, time_frame)
+    if started is not None:
+        status_dict[LOG_FILE] = find_file(started, "log")
+        status_dict[ERR_FILE] = find_file(started, "err")
 
-    if complete:
-        status = get_complete_status(response_dict_list)
-        started = True
-    else:
-        started = is_started(response_dict_list)
+    completed = get_completed_dict(build_job, time_frame)
+    if completed is not None:
+        status = get_completed_status(completed)
 
-    if started:
-        status_dict[LOG_FILE] = find_file(response_dict_list, "log")
-        status_dict[ERR_FILE] = find_file(response_dict_list, "err")
-
-    if started and not complete:
+    if started and not completed:
         status = "Running"
 
     status_dict[STATUS_STR] = status
@@ -441,7 +427,7 @@ def _main():
             usermsg.info("\r{:<{}s}: {}".format("Warning", LJUST, WINDOWS_WARNING))
 
         if args.wait and not windows:
-            while not is_build_complete(job, args.time_frame):
+            while get_completed_dict(job, args.time_frame) is None:
                 waiting = True
                 sys.stdout.write(
                     "Waiting for {}: {}\r".format(job,
