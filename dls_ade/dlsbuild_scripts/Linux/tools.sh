@@ -82,7 +82,7 @@ TOOLS_SUPPORT=$TOOLS_ROOT" "$release_file"
 fi
 
 # Build
-SysLog info "Building tool. Build log: ${PWD}/${_version}/${_build_name}.log"
+SysLog info "Starting build. Build log: ${PWD}/${_version}/${_build_name}.log"
 build_program_log=${PWD}/${_version}/build_program_${_build_name}.log
 $TOOLS_BUILD/build_program -n $_build_name ${_version} > ${build_program_log} 2>&1 \
   || ReportFailure "Build aborted. Failed command: build_program -n ${_build_name} ${_version} " $(cat ${build_program_log})
