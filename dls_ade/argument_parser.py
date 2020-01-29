@@ -21,15 +21,20 @@ class ArgParser(ArgumentParser):
             "-a", "--area", action="store", type=str, default="support", dest="area",
             help="Set the area to use",
             choices=supported_areas)
-        area.add_argument(
-            "-p", "--python", action="store_true", dest="python",
-            help="Set 'python' area")
-        area.add_argument(
-            "-i", "--ioc", action="store_true", dest="ioc",
-            help="Set 'ioc' area")
-        area.add_argument(
-            "--python3", action="store_true", dest="python3",
-            help="Set 'python3' area")
+        if "python" in supported_areas:
+            area.add_argument(
+                "-p", "--python", action="store_true",
+                dest="python", help="Set 'python' area"
+            )
+        if "ioc" in supported_areas:
+            area.add_argument(
+                "-i", "--ioc", action="store_true", dest="ioc", help="Set 'ioc' area"
+            )
+        if "python3" in supported_areas:
+            area.add_argument(
+                "--python3", action="store_true", dest="python3",
+                help="Set 'python3' area"
+            )
 
     def parse_args(self, args=None, namespace=None):
         """

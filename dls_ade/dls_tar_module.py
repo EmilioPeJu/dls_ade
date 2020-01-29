@@ -1,6 +1,4 @@
 #!/bin/env dls-python
-# This script comes from the dls_scripts python module
-
 """
 This script removes all O.* directories from a release of a module and tars it
 up before deleting the release directory.
@@ -23,13 +21,17 @@ from dls_ade import logconfig
 
 env = environment()
 
-usage = """
+USAGE = """
 Default <area> is 'support'.
 This script removes all O.* directories from a release of a module and
 tars it up before deleting the release directory. <module_name>/<module_release>
 will be stored as <module_name>/<module_release>.tar.gz. Running the script with
 a -u flag will untar the module and remove the archive (reversing the original process)
 """
+
+# Don't support areas epics (risky), etc (non-standard) and
+# python3ext (the release area is the same as python3).
+SUPPORTED_AREAS = ["support", "ioc", "matlab", "python", "python3", "tools"]
 
 
 def make_parser():
@@ -49,7 +51,7 @@ def make_parser():
 
     """
 
-    parser = ArgParser(usage)
+    parser = ArgParser(USAGE, SUPPORTED_AREAS)
     parser.add_module_name_arg()
     parser.add_release_arg()
     parser.add_epics_version_flag()
@@ -57,7 +59,7 @@ def make_parser():
 
     parser.add_argument(
         "-u", "--untar", action="store_true", dest="untar",
-        help="Untar archive created with dls-archive-module.py")
+        help="Untar archive created with dls-tar-module.py")
 
     return parser
 
@@ -74,7 +76,7 @@ def check_area_archivable(area):
             archived
 
     """
-    if area not in ["support", "ioc", "python", "matlab"]:
+    if area not in SUPPORTED_AREAS:
         raise ValueError("Modules in area " + area + " cannot be archived")
 
 
@@ -115,7 +117,6 @@ def check_file_paths(release_dir, archive, untar):
 
 def _main():
     log = logging.getLogger(name="dls_ade")
-    usermsg = logging.getLogger("usermessages")
 
     parser = make_parser()
     args = parser.parse_args()
@@ -126,26 +127,26 @@ def _main():
     env.check_epics_version(args.epics_version)
     env.check_rhel_version(args.rhel_version)
     check_technical_area(args.area, args.module_name)
-    
-    # Check for the existence of release of this module/IOC    
+
+    # Check for the existence of release of this module/IOC
     w_dir = os.path.join(env.prodArea(args.area), args.module_name)
     release_dir = os.path.join(w_dir, args.release)
     archive = release_dir + ".tar.gz"
 
     check_file_paths(release_dir, archive, args.untar)
-    
+
     # Create build object for release
     build = dlsbuild.ArchiveBuild(args.rhel_version, args.epics_version, args.untar)
-    
+
     if args.epics_version:
         build.set_epics(args.epics_version)
-    
+
     build.set_area(args.area)
 
     git = vcs_git.Git(args.module_name, args.area)
     git.set_version(args.release)
 
-    build.submit(git)
+    build.submit(args.module_name, args.release, git)
 
 
 def main():

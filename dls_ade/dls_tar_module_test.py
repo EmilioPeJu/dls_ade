@@ -1,12 +1,12 @@
 #!/bin/env dls-python
 
-from dls_ade import dls_tar_module
+import pytest
 import unittest
-
-from mock import patch, ANY, MagicMock
+from mock import patch
 from argparse import _StoreAction
 from argparse import _StoreTrueAction
 
+from dls_ade import dls_tar_module
 
 class MakeParserTest(unittest.TestCase):
 
@@ -38,36 +38,6 @@ class MakeParserTest(unittest.TestCase):
         self.assertIsInstance(option, _StoreAction)
         self.assertEqual(option.dest, "epics_version")
         self.assertIn("--epics_version", option.option_strings)
-
-
-class CheckAreaArchivableTest(unittest.TestCase):
-
-    def test_given_invalid_area_then_error_raised(self):
-        area = "not_an_area"
-        try:
-            dls_tar_module.check_area_archivable(area)
-        except Exception as error:
-            self.assertEqual(str(error), "Modules in area " + area + " cannot be archived")
-
-    def test_given_support_area_then_no_error_raised(self):
-        area = 'support'
-
-        dls_tar_module.check_area_archivable(area)
-
-    def test_given_ioc_area_then_no_error_raised(self):
-        area = 'ioc'
-
-        dls_tar_module.check_area_archivable(area)
-
-    def test_given_python_area_then_error_raised(self):
-        area = 'python'
-
-        dls_tar_module.check_area_archivable(area)
-
-    def test_given_matlab_area_then_error_raised(self):
-        area = 'matlab'
-
-        dls_tar_module.check_area_archivable(area)
 
 
 class CheckFilePaths(unittest.TestCase):
@@ -141,3 +111,16 @@ class CheckFilePaths(unittest.TestCase):
             dls_tar_module.check_file_paths(release_dir, archive, untar)
         except Exception as error:
             self.assertEqual(str(error), expected_error_message)
+
+
+@pytest.mark.parametrize('area', ['not-an-area', 'epics', 'etc', 'python3ext'])
+def test_check_area_archivable_given_invalid_area_then_error_raised(area):
+    with pytest.raises(ValueError):
+        dls_tar_module.check_area_archivable(area)
+
+
+@pytest.mark.parametrize(
+    'area', ['support', 'ioc', 'python', 'python3', 'matlab', 'tools']
+)
+def test_check_area_archivable_given_valid_area_then_no_error_raised(area):
+    dls_tar_module.check_area_archivable(area)
