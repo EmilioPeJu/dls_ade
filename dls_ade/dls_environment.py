@@ -346,26 +346,6 @@ class environment(object):
 
         return sorted_releases
 
-    def svnName(self, path):
-        """
-        Find the name that the module is under in svn. Very dls specific.
-        """
-        output = Popen(["svn", "info", path],
-                       stdout=PIPE, stderr=STDOUT).communicate()[0]
-        for line in output.splitlines():
-            if line.startswith("URL:"):
-                split = line.split("/")
-                if "/branches/" in line or "/release/" in line:
-                    if "/ioc/" in line and len(split) > 2:
-                        return "/".join((split[-3].strip(), split[-2].strip()))
-                    elif len(split) > 1:
-                        return split[-2].strip()
-                else:
-                    if "/ioc/" in line and len(split) > 1:
-                        return "/".join((split[-2].strip(), split[-1].strip()))
-                    else:
-                        return split[-1].strip()
-
     def classifyArea(self, path):
         """
         Classify the area of a path, returning
@@ -413,6 +393,7 @@ class environment(object):
         # classify the area
         area, domain, epics_ver = self.classifyArea(path)
         e = self
+        module = None
         if epics_ver != self.epicsVer:
             e = self.__class__(epics_ver)
         if os.path.isfile(os.path.join(path, "etc", "module.ini")):
@@ -423,9 +404,6 @@ class environment(object):
             # try and find name from configure/module.ini
             module = self.getNameFromIni(
                 os.path.join(path, "configure", "module.ini"))
-        else:
-            # try and find the name in svn
-            module = self.svnName(path)
         # deal with valid domains
         if domain == "work":
             root = e.devArea(area)
