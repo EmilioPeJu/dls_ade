@@ -539,9 +539,11 @@ class ModuleTemplateMatlab(ModuleTemplate):
 
 class ModuleTemplateIOCUI(ModuleTemplateWithApps):
 
+    REQUIRED_ARGS = ['module_name']
+
     def __init__(self, template_args):
         super(ModuleTemplateIOCUI, self).__init__(template_args)
-
+        self.add_required_args(ModuleTemplateIOCUI.REQUIRED_ARGS)
         self.cookiecutter_template = "dls_css_template_module"
 
     def get_print_message(self):
