@@ -626,18 +626,12 @@ class ModuleTemplateIOCUITest(unittest.TestCase):
                                               'module_path': "test_module_path",
                                               'user_login': "test_login",
                                               'app_name': "test_app_name"})
-        self.template_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            mt.COOKIECUTTER_TEMPLATES_FOLDER,
-            self.mt_obj.cookiecutter_template
-        )
 
     @patch("dls_ade.module_template.cookiecutter")
     def test_given_create_files_called_then_cookiecutter_called(self, mock_cookiecutter):
         mock_cookiecutter.return_value = 'dummy-basename'
-        self.mt_obj._run_cookiecutter()
+        self.mt_obj.create_files()
         self.assertEqual(mock_cookiecutter.call_args[1].get("template"),
-                         self.template_path)
+            "https://gitlab.diamond.ac.uk/controls/templates/"
+            "dls_css_template_module")
 
-    def test_cookiecutter_template_folder_exists(self):
-        self.assertTrue(os.path.isdir(self.template_path))

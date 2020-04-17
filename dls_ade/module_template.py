@@ -10,7 +10,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 log = logging.getLogger(__name__)
 
 TEMPLATES_FOLDER = "module_templates"
-COOKIECUTTER_TEMPLATES_FOLDER = "cookiecutter_templates"
+COOKIECUTTER_BASE_URL = "https://gitlab.diamond.ac.uk/controls/templates"
 
 
 class ModuleTemplate(object):
@@ -50,7 +50,7 @@ class ModuleTemplate(object):
         # template_args given contain the required ones.
         self._verify_template_args()
 
-        self._cookiecutter_template_path = ""
+        self._cookiecutter_template_url = ""
 
     def add_required_args(self, required_args):
         self._required_template_args.update(required_args)
@@ -219,7 +219,7 @@ class ModuleTemplate(object):
         template args, firstly it tries using module_name if it does not exits, it
         uses app_name otherwise CookieCutter's defaults
         """
-        if self._cookiecutter_template_path:
+        if self._cookiecutter_template_url:
             log.info("Running CookieCutter using template: %s",
                      self.cookiecutter_template)
             _cwd = os.getcwd()
@@ -234,7 +234,7 @@ class ModuleTemplate(object):
                 self._template_args['project_name'] = project_name
 
             project_path = cookiecutter(
-                template=self._cookiecutter_template_path, no_input=True,
+                template=self._cookiecutter_template_url, no_input=True,
                 overwrite_if_exists=True,
                 extra_context=self._template_args)
 
@@ -251,21 +251,14 @@ class ModuleTemplate(object):
 
         if none is used, it returns an empty string
         """
-        return os.path.basename(self._cookiecutter_template_path)
+        return os.path.basename(self._cookiecutter_template_url)
 
     @cookiecutter_template.setter
     def cookiecutter_template(self, template_name):
-        """Set this property to defined the CookieCutter template used"""
-        template_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            COOKIECUTTER_TEMPLATES_FOLDER,
-            template_name
-        )
+        """Set this property to define the CookieCutter template used"""
 
-        if not os.path.isdir(template_path):
-            raise TemplateFolderError(template_path)
-
-        self._cookiecutter_template_path = template_path
+        self._cookiecutter_template_url = os.path.join(COOKIECUTTER_BASE_URL,
+            template_name)
 
     def get_print_message(self):
         """Return a string with a message to detail the user's next steps."""
@@ -550,7 +543,7 @@ class ModuleTemplateIOCUI(ModuleTemplateWithApps):
     def __init__(self, template_args):
         super(ModuleTemplateIOCUI, self).__init__(template_args)
 
-        self.cookiecutter_template = "CSS_IOC"
+        self.cookiecutter_template = "dls_css_template_module"
 
     def get_print_message(self):
         module_path = self._template_args['module_path']
