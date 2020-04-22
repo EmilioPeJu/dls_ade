@@ -322,17 +322,15 @@ class ModuleTemplatePython(ModuleTemplate):
         return message
 
 
-class ModuleTemplatePython3(ModuleTemplatePython):
-    """Class for managing creation of Python 3 modules.
+class ModuleTemplatePython3(ModuleTemplate):
+    """Class for managing creation of Python 3 modules."""
 
-    It is substantially the same as Python modules, although the templates
-    are different.
-    """
+    REQUIRED_ARGS = ['module_name']
 
     def __init__(self, template_args):
-        super(ModuleTemplatePython, self).__init__(template_args)
-        # Override the template file location.
-        self._set_template_files_from_area("python3")
+        super(ModuleTemplatePython3, self).__init__(template_args)
+        self.add_required_args(ModuleTemplatePython3.REQUIRED_ARGS)
+        self.cookiecutter_template = "dls_python3_template_module"
 
     def get_print_message(self):
         message = """
@@ -341,6 +339,7 @@ Edit setup.cfg to make sure it has the correct metadata.
 Python code should typically be added to the {0:s} package.
 """.format(self._template_args['module_path'])
         return message
+
 
 class ModuleTemplateWithApps(ModuleTemplate):
     """Abstract class to implement the 'app_name' attribute.
@@ -540,9 +539,11 @@ class ModuleTemplateMatlab(ModuleTemplate):
 
 class ModuleTemplateIOCUI(ModuleTemplateWithApps):
 
+    REQUIRED_ARGS = ['module_name']
+
     def __init__(self, template_args):
         super(ModuleTemplateIOCUI, self).__init__(template_args)
-
+        self.add_required_args(ModuleTemplateIOCUI.REQUIRED_ARGS)
         self.cookiecutter_template = "dls_css_template_module"
 
     def get_print_message(self):
