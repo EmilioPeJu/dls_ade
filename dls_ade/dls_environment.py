@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with 'dls.environment'.  If not, see <http://www.gnu.org/licenses/>.
 
+import distro
 import logging
 import os
 import re
-import platform
 from subprocess import Popen, PIPE, STDOUT
 try:
     from ConfigParser import SafeConfigParser
@@ -123,11 +123,10 @@ class environment(object):
 
         self.rhel = default_rhel
 
-        platform_dist = platform.dist()
+        platform_dist = distro.linux_distribution()
         if len(platform_dist) == 3:
             version = platform_dist[1].split(".")
-            if len(version) > 0:
-                self.rhel = platform.dist()[1].split('.')[0]
+            self.rhel = version[0]
 
     def copy(self):
         """

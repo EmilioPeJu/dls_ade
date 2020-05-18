@@ -110,14 +110,14 @@ class SetEpicsFromEnvTest(unittest.TestCase):
 
 class SetRhelFromPlatformTest(unittest.TestCase):
 
-    @patch('platform.dist', return_value=["redhat","5.2","Maipo"])
+    @patch('distro.linux_distribution', return_value=["redhat","5.2","Maipo"])
     def test_given_platform_then_set(self, _1):
         env = dls_environment.environment()
         env.setRhelFromPlatform()
 
         self.assertEqual(env.rhel, "5")
 
-    @patch('platform.dist', return_value="")
+    @patch('distro.linux_distribution', return_value="")
     def test_given_no_platform_then_default(self, _1):
         env = dls_environment.environment()
         env.setRhelFromPlatform()
