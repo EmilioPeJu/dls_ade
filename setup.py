@@ -57,7 +57,7 @@ setup(
     license='APACHE',
     install_requires=[
         'GitPython==2.1.8', 'python-ldap==3.4.0', 'six==1.10.0',
-        'pygelf==0.3.1', 'cookiecutter==1.6.0', 'python-gitlab==1.6.0',
+        'pygelf==0.3.1', 'cookiecutter==2.1.1', 'python-gitlab==1.6.0',
         'packaging==19.0', 'distro==1.5.0'
     ],
     packages=["dls_ade"],
